@@ -48,7 +48,7 @@
 
  ***************************************************************/
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -65,7 +65,7 @@
 
 #include "m_string.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef EOVERFLOW

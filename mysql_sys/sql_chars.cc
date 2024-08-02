@@ -36,7 +36,7 @@
 
 #include "my_sys.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 static void hint_lex_init_maps(CHARSET_INFO *cs,

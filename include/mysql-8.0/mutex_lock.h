@@ -29,7 +29,7 @@
 
 #include <mysql/psi/mysql_mutex.h>
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

@@ -34,7 +34,7 @@
 /* PSI_memory_key */
 #include "mysql/components/services/psi_memory_bits.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /* myf */

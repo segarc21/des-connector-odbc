@@ -141,12 +141,12 @@ SQLRETURN DBC::set_error(myodbc_errid errid, const char* errtext,
        its list
 */
 
-SQLRETURN SQL_API my_SQLAllocEnv(SQLHENV *phenv)
+SQLRETURN SQL_API DES_SQLAllocEnv(SQLHENV *phenv)
 {
   ENV *env;
 
   std::lock_guard<std::mutex> env_guard(g_lock);
-  myodbc_init(); // This will call mysql_library_init()
+  desodbc_init(); // This will call mysql_library_init()
 
 #ifndef USE_IODBC
     env = new ENV(SQL_OV_ODBC3_80);
@@ -220,7 +220,7 @@ SQLRETURN SQL_API my_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
           "MyODBC needs at least version: %ld",
           mysql_get_client_version(), MIN_MYSQL_VERSION);
 
-        return(set_env_error((ENV*)henv, MYERR_S1000, buff, 0));
+        return(set_env_error((ENV*)henv, DESERR_S1000, buff, 0));
     }
 
     if (!penv->odbc_ver)
@@ -596,7 +596,7 @@ SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT HandleType,
     {
         case SQL_HANDLE_ENV:
             CHECK_ENV_OUTPUT(OutputHandlePtr);
-            error= my_SQLAllocEnv(OutputHandlePtr);
+            error= DES_SQLAllocEnv(OutputHandlePtr);
             break;
 
         case SQL_HANDLE_DBC:
@@ -618,7 +618,7 @@ SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT HandleType,
             break;
 
         default:
-            return ((DBC*)InputHandle)->set_error(MYERR_S1C00, NULL, 0);
+            return ((DBC*)InputHandle)->set_error(DESERR_S1C00, NULL, 0);
     }
 
     return error;

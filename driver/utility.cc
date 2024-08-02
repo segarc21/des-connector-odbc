@@ -349,7 +349,7 @@ char *fix_str(char *to, const char *from, int length)
         return "";
     if ( length == SQL_NTS )
         return (char *)from;
-    myodbc::strmake(to,from,length);
+    desodbc::strmake(to,from,length);
     return to;
 }
 
@@ -490,7 +490,7 @@ copy_wchar_result(STMT *stmt,
   char *src_end;
   SQLWCHAR *result_end;
   ulong used_chars= 0, error_count= 0;
-  myodbc::CHARSET_INFO *from_cs = utf8_charset_info;
+  desodbc::CHARSET_INFO *from_cs = utf8_charset_info;
 
   if (!result_len)
     result= NULL; /* Don't copy anything! */
@@ -543,7 +543,7 @@ copy_wchar_result(STMT *stmt,
     /* Find the conversion functions. */
     auto mb_wc = from_cs->cset->mb_wc;
     auto wc_mb = utf16_charset_info->cset->wc_mb;
-    myodbc::my_wc_t wc = 0;
+    desodbc::my_wc_t wc = 0;
     UTF16 ubuf[5] = {0, 0, 0, 0, 0};
     int to_cnvres;
 
@@ -935,7 +935,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
   switch (field->type) {
   case MYSQL_TYPE_BIT:
     if (buff)
-      (void)myodbc_stpmov(buff, "bit");
+      (void)desodbc_stpmov(buff, "bit");
     /*
       MySQL's BIT type can have more than one bit, in which case we treat
       it as a BINARY field.
@@ -945,43 +945,43 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
   case MYSQL_TYPE_DECIMAL:
   case MYSQL_TYPE_NEWDECIMAL:
     if (buff)
-      (void)myodbc_stpmov(buff, "decimal");
+      (void)desodbc_stpmov(buff, "decimal");
     return SQL_DECIMAL;
 
   case MYSQL_TYPE_TINY:
     /* MYSQL_TYPE_TINY could either be a TINYINT or a single CHAR. */
     if (buff)
     {
-      buff= myodbc_stpmov(buff, (field->flags & NUM_FLAG) ? "tinyint" : "char");
+      buff= desodbc_stpmov(buff, (field->flags & NUM_FLAG) ? "tinyint" : "char");
       if (field->flags & UNSIGNED_FLAG)
-        (void)myodbc_stpmov(buff, " unsigned");
+        (void)desodbc_stpmov(buff, " unsigned");
     }
     return (field->flags & NUM_FLAG) ? SQL_TINYINT : SQL_CHAR;
 
   case MYSQL_TYPE_SHORT:
     if (buff)
     {
-      buff= myodbc_stpmov(buff, "smallint");
+      buff= desodbc_stpmov(buff, "smallint");
       if (field->flags & UNSIGNED_FLAG)
-        (void)myodbc_stpmov(buff, " unsigned");
+        (void)desodbc_stpmov(buff, " unsigned");
     }
     return SQL_SMALLINT;
 
   case MYSQL_TYPE_INT24:
     if (buff)
     {
-      buff= myodbc_stpmov(buff, "mediumint");
+      buff= desodbc_stpmov(buff, "mediumint");
       if (field->flags & UNSIGNED_FLAG)
-        (void)myodbc_stpmov(buff, " unsigned");
+        (void)desodbc_stpmov(buff, " unsigned");
     }
     return SQL_INTEGER;
 
   case MYSQL_TYPE_LONG:
     if (buff)
     {
-      buff= myodbc_stpmov(buff, "integer");
+      buff= desodbc_stpmov(buff, "integer");
       if (field->flags & UNSIGNED_FLAG)
-        (void)myodbc_stpmov(buff, " unsigned");
+        (void)desodbc_stpmov(buff, " unsigned");
     }
     return SQL_INTEGER;
 
@@ -989,12 +989,12 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     if (buff)
     {
       if (stmt->dbc->ds.opt_NO_BIGINT)
-        buff= myodbc_stpmov(buff, "int");
+        buff= desodbc_stpmov(buff, "int");
       else
-        buff= myodbc_stpmov(buff, "bigint");
+        buff= desodbc_stpmov(buff, "bigint");
 
       if (field->flags & UNSIGNED_FLAG)
-        (void)myodbc_stpmov(buff, " unsigned");
+        (void)desodbc_stpmov(buff, " unsigned");
     }
 
     if (stmt->dbc->ds.opt_NO_BIGINT)
@@ -1005,41 +1005,41 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
   case MYSQL_TYPE_FLOAT:
     if (buff)
     {
-      buff= myodbc_stpmov(buff, "float");
+      buff= desodbc_stpmov(buff, "float");
       if (field->flags & UNSIGNED_FLAG)
-        (void)myodbc_stpmov(buff, " unsigned");
+        (void)desodbc_stpmov(buff, " unsigned");
     }
     return SQL_REAL;
 
   case MYSQL_TYPE_DOUBLE:
     if (buff)
     {
-      buff= myodbc_stpmov(buff, "double");
+      buff= desodbc_stpmov(buff, "double");
       if (field->flags & UNSIGNED_FLAG)
-        (void)myodbc_stpmov(buff, " unsigned");
+        (void)desodbc_stpmov(buff, " unsigned");
     }
     return SQL_DOUBLE;
 
   case MYSQL_TYPE_NULL:
     if (buff)
-      (void)myodbc_stpmov(buff, "null");
+      (void)desodbc_stpmov(buff, "null");
     return SQL_VARCHAR;
 
   case MYSQL_TYPE_YEAR:
     if (buff)
-      (void)myodbc_stpmov(buff, "year");
+      (void)desodbc_stpmov(buff, "year");
     return SQL_SMALLINT;
 
   case MYSQL_TYPE_TIMESTAMP:
     if (buff)
-      (void)myodbc_stpmov(buff, "timestamp");
+      (void)desodbc_stpmov(buff, "timestamp");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_TIMESTAMP;
     return SQL_TIMESTAMP;
 
   case MYSQL_TYPE_DATETIME:
     if (buff)
-      (void)myodbc_stpmov(buff, "datetime");
+      (void)desodbc_stpmov(buff, "datetime");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_TIMESTAMP;
     return SQL_TIMESTAMP;
@@ -1047,21 +1047,21 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
   case MYSQL_TYPE_NEWDATE:
   case MYSQL_TYPE_DATE:
     if (buff)
-      (void)myodbc_stpmov(buff, "date");
+      (void)desodbc_stpmov(buff, "date");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_DATE;
     return SQL_DATE;
 
   case MYSQL_TYPE_TIME:
     if (buff)
-      (void)myodbc_stpmov(buff, "time");
+      (void)desodbc_stpmov(buff, "time");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_TIME;
     return SQL_TIME;
 
   case MYSQL_TYPE_STRING:
     if (buff)
-      (void)myodbc_stpmov(buff, field_is_binary ? "binary" : "char");
+      (void)desodbc_stpmov(buff, field_is_binary ? "binary" : "char");
 
     // Return the wide type only if driver is unicode and field charset
     // is multibyte.
@@ -1075,7 +1075,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
   case MYSQL_TYPE_VARCHAR:
   case MYSQL_TYPE_VAR_STRING:
     if (buff)
-      (void)myodbc_stpmov(buff, field_is_binary ? "varbinary" : "varchar");
+      (void)desodbc_stpmov(buff, field_is_binary ? "varbinary" : "varchar");
 
     return field_is_binary ? SQL_VARBINARY :
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
@@ -1083,7 +1083,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
 
   case MYSQL_TYPE_TINY_BLOB:
     if (buff)
-      (void)myodbc_stpmov(buff, field_is_binary ? "tinyblob" : "tinytext");
+      (void)desodbc_stpmov(buff, field_is_binary ? "tinyblob" : "tinytext");
 
     return field_is_binary ? SQL_LONGVARBINARY :
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
@@ -1095,16 +1095,16 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       switch(field->length)
       {
         case 255:
-          (void)myodbc_stpmov(buff, field_is_binary ? "tinyblob" : "tinytext");
+          (void)desodbc_stpmov(buff, field_is_binary ? "tinyblob" : "tinytext");
           break;
         case 16777215:
-          (void)myodbc_stpmov(buff, field_is_binary ? "mediumblob" : "mediumtext");
+          (void)desodbc_stpmov(buff, field_is_binary ? "mediumblob" : "mediumtext");
           break;
         case 4294967295UL:
-          (void)myodbc_stpmov(buff, field_is_binary ? "longblob" : "longtext");
+          (void)desodbc_stpmov(buff, field_is_binary ? "longblob" : "longtext");
           break;
         default:
-          (void)myodbc_stpmov(buff, field_is_binary ? "blob" : "text");
+          (void)desodbc_stpmov(buff, field_is_binary ? "blob" : "text");
       }
     }
     return field_is_binary ? SQL_LONGVARBINARY :
@@ -1113,7 +1113,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
 
   case MYSQL_TYPE_MEDIUM_BLOB:
     if (buff)
-      (void)myodbc_stpmov(buff, field_is_binary ? "mediumblob" : "mediumtext");
+      (void)desodbc_stpmov(buff, field_is_binary ? "mediumblob" : "mediumtext");
 
     return field_is_binary ? SQL_LONGVARBINARY :
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
@@ -1121,7 +1121,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
 
   case MYSQL_TYPE_LONG_BLOB:
     if (buff)
-      (void)myodbc_stpmov(buff, field_is_binary ? "longblob" : "longtext");
+      (void)desodbc_stpmov(buff, field_is_binary ? "longblob" : "longtext");
 
     return field_is_binary ? SQL_LONGVARBINARY :
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
@@ -1129,27 +1129,27 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
 
   case MYSQL_TYPE_ENUM:
     if (buff)
-      (void)myodbc_stpmov(buff, "enum");
+      (void)desodbc_stpmov(buff, "enum");
     return SQL_CHAR;
 
   case MYSQL_TYPE_SET:
     if (buff)
-      (void)myodbc_stpmov(buff, "set");
+      (void)desodbc_stpmov(buff, "set");
     return SQL_CHAR;
 
   case MYSQL_TYPE_GEOMETRY:
     if (buff)
-      (void)myodbc_stpmov(buff, "geometry");
+      (void)desodbc_stpmov(buff, "geometry");
     return SQL_LONGVARBINARY;
 
   case MYSQL_TYPE_JSON:
     if (buff)
-      (void)myodbc_stpmov(buff, "json");
+      (void)desodbc_stpmov(buff, "json");
     return stmt->dbc->unicode ? SQL_WLONGVARCHAR : SQL_LONGVARCHAR;
 
   case MYSQL_TYPE_VECTOR:
     if (buff)
-      (void)myodbc_stpmov(buff, "vector");
+      (void)desodbc_stpmov(buff, "vector");
     return SQL_VARBINARY;
   }
 
@@ -2002,7 +2002,7 @@ int str_to_ts(SQL_TIMESTAMP_STRUCT *ts, const char *str, int len, int zeroToMin,
 
     if (length < DATETIME_DIGITS)
     {
-      myodbc::strfill(buff + length, DATETIME_DIGITS - length, '0');
+      desodbc::strfill(buff + length, DATETIME_DIGITS - length, '0');
     }
     else
     {
@@ -2464,7 +2464,7 @@ ulong myodbc_escape_string(STMT *stmt,
   /*get_charset_by_csname(charset,
                         MYF(MY_CS_PRIMARY),
                         MYF(0));*/
-  myodbc::CHARSET_INFO *charset_info= stmt->dbc->cxn_charset_info;
+  desodbc::CHARSET_INFO *charset_info= stmt->dbc->cxn_charset_info;
   my_bool use_mb_flag= use_mb(charset_info);
   for (end= from + length; from < end; ++from)
   {
@@ -3656,7 +3656,7 @@ get_fractional_part(const char * str, int len, BOOL dont_use_set_locale,
     while (*str && str < end)
     {
       if (str[0] == locale_decimal_point[0] &&
-          myodbc::is_prefix(str, locale_decimal_point))
+          desodbc::is_prefix(str, locale_decimal_point))
       {
         decptr= str;
         break;
@@ -3671,7 +3671,7 @@ get_fractional_part(const char * str, int len, BOOL dont_use_set_locale,
   {
     char buff[10], *ptr;
 
-    myodbc::strfill(buff, sizeof(buff)-1, '0');
+    desodbc::strfill(buff, sizeof(buff)-1, '0');
     str= decptr + decpoint_len;
 
     for (ptr= buff; str < end && ptr < buff + sizeof(buff); ++ptr)
@@ -3866,7 +3866,7 @@ void tempBuf::operator=(const tempBuf& b)
 
   @return the position where LIMIT OFFS, ROWS is ending
 */
-const char* get_limit_numbers(myodbc::CHARSET_INFO* cs, const char *query, const char * query_end,
+const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end,
                        unsigned long long *offs_out, unsigned int *rows_out)
 {
   char digit_buf[30];
@@ -3932,7 +3932,7 @@ const char* get_limit_numbers(myodbc::CHARSET_INFO* cs, const char *query, const
   @return position of "FOR UPDATE" or "LOCK IN SHARE MODE" inside a query.
           Otherwise returns NULL.
 */
-const char* check_row_locking(myodbc::CHARSET_INFO* cs, const char * query, const char * query_end, BOOL is_share_mode)
+const char* check_row_locking(desodbc::CHARSET_INFO* cs, const char * query, const char * query_end, BOOL is_share_mode)
 {
   const char *before_token= query_end;
   const char *token= NULL;
@@ -3958,7 +3958,7 @@ const char* check_row_locking(myodbc::CHARSET_INFO* cs, const char * query, cons
 }
 
 
-MY_LIMIT_CLAUSE find_position4limit(myodbc::CHARSET_INFO* cs, const char *query, const char * query_end)
+MY_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end)
 {
   MY_LIMIT_CLAUSE result(0,0,NULL,NULL);
   char *limit_pos = NULL;
@@ -4004,7 +4004,7 @@ MY_LIMIT_CLAUSE find_position4limit(myodbc::CHARSET_INFO* cs, const char *query,
 }
 
 
-BOOL myodbc_isspace(myodbc::CHARSET_INFO* cs, const char * begin, const char *end)
+BOOL myodbc_isspace(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
 {
   int ctype;
   cs->cset->ctype(cs, &ctype, (const uchar*) begin, (const uchar*) end);
@@ -4012,7 +4012,7 @@ BOOL myodbc_isspace(myodbc::CHARSET_INFO* cs, const char * begin, const char *en
   return ctype & _MY_SPC;
 }
 
-BOOL myodbc_isnum(myodbc::CHARSET_INFO* cs, const char * begin, const char *end)
+BOOL myodbc_isnum(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
 {
   int ctype;
   cs->cset->ctype(cs, &ctype, (const uchar*)begin, (const uchar*)end);
@@ -4060,9 +4060,9 @@ int get_session_variable(STMT *stmt, const char *var, char *result)
 
   if (var)
   {
-    to= myodbc_stpmov(buff, "SHOW SESSION VARIABLES LIKE '");
-    to= myodbc_stpmov(to, var);
-    to= myodbc_stpmov(to, "'");
+    to= desodbc_stpmov(buff, "SHOW SESSION VARIABLES LIKE '");
+    to= desodbc_stpmov(to, var);
+    to= desodbc_stpmov(to, "'");
     *to= '\0';
 
     if (!SQL_SUCCEEDED(stmt->dbc->execute_query(buff, SQL_NTS, TRUE)))

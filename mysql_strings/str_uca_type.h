@@ -29,7 +29,7 @@
 
 #include "my_inttypes.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

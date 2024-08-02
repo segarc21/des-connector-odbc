@@ -33397,3 +33397,602 @@ events:
         
       exitCode: 1
 ...
+
+---
+events:
+  -
+    kind: "try_run-v1"
+    backtrace:
+      - "cmake/FindMySQL.cmake:801 (try_run)"
+      - "CMakeLists.txt:246 (INCLUDE)"
+    directories:
+      source: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+      binary: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+    buildResult:
+      variable: "_compile_result"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_2e57f.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.3.1+2badb37d1 for .NET Framework
+        Build started 02/08/2024 22:41:03.
+        Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_2e57f.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_2e57f.dir\\Debug\\".
+          Creating directory "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\Debug\\".
+          Creating directory "cmTC_2e57f.dir\\Debug\\cmTC_2e57f.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_2e57f.dir\\Debug\\cmTC_2e57f.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Program Files\\MySQL\\MySQL Server 8.0\\include" /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_2e57f.dir\\Debug\\\\" /Fd"cmTC_2e57f.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\getmysqlversion.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.33.31630 for x64
+          getmysqlversion.c
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /I"C:\\Program Files\\MySQL\\MySQL Server 8.0\\include" /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_2e57f.dir\\Debug\\\\" /Fd"cmTC_2e57f.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\getmysqlversion.c"
+        Link:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\bin\\HostX64\\x64\\link.exe /ERRORREPORT:QUEUE /OUT:"C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\Debug\\cmTC_2e57f.exe" /INCREMENTAL /ILK:"cmTC_2e57f.dir\\Debug\\cmTC_2e57f.ilk" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp/Debug/cmTC_2e57f.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp/Debug/cmTC_2e57f.lib" /MACHINE:X64  /machine:x64 cmTC_2e57f.dir\\Debug\\getmysqlversion.obj
+          cmTC_2e57f.vcxproj -> C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\Debug\\cmTC_2e57f.exe
+        FinalizeBuildStatus:
+          Deleting file "cmTC_2e57f.dir\\Debug\\cmTC_2e57f.tlog\\unsuccessfulbuild".
+          Touching "cmTC_2e57f.dir\\Debug\\cmTC_2e57f.tlog\\cmTC_2e57f.lastbuildstate".
+        Done Building Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_2e57f.vcxproj" (default targets).
+        
+        Build succeeded.
+            0 Warning(s)
+            0 Error(s)
+        
+        Time Elapsed 00:00:02.57
+        
+      exitCode: 0
+    runResult:
+      variable: "_run_result"
+      cached: true
+      stdout: |
+        8.0.39
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "CMakeLists.txt:330 (TRY_COMPILE)"
+    directories:
+      source: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+      binary: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+    buildResult:
+      variable: "COMPILE_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_1ae5e.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.3.1+2badb37d1 for .NET Framework
+        Build started 02/08/2024 22:41:08.
+        Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_1ae5e.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_1ae5e.dir\\Debug\\".
+          Creating directory "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\Debug\\".
+          Creating directory "cmTC_1ae5e.dir\\Debug\\cmTC_1ae5e.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_1ae5e.dir\\Debug\\cmTC_1ae5e.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\bin\\HostX64\\x64\\CL.exe /c /I"C:\\Program Files\\MySQL\\MySQL Server 8.0\\include" /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_1ae5e.dir\\Debug\\\\" /Fd"cmTC_1ae5e.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\type_vector.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.33.31630 for x64
+          type_vector.c
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /I"C:\\Program Files\\MySQL\\MySQL Server 8.0\\include" /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_1ae5e.dir\\Debug\\\\" /Fd"cmTC_1ae5e.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\type_vector.c"
+        C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\type_vector.c(33,32): error C2065: 'MYSQL_TYPE_VECTOR': undeclared identifier [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_1ae5e.vcxproj]
+        Done Building Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_1ae5e.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_1ae5e.vcxproj" (default target) (1) ->
+        (ClCompile target) -> 
+          C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\type_vector.c(33,32): error C2065: 'MYSQL_TYPE_VECTOR': undeclared identifier [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_1ae5e.vcxproj]
+        
+            0 Warning(s)
+            1 Error(s)
+        
+        Time Elapsed 00:00:02.14
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "CMakeLists.txt:343 (TRY_COMPILE)"
+    directories:
+      source: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+      binary: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+    buildResult:
+      variable: "COMPILE_RESULT"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_6f8d0.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.3.1+2badb37d1 for .NET Framework
+        Build started 02/08/2024 22:41:11.
+        Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_6f8d0.dir\\Debug\\".
+          Creating directory "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\Debug\\".
+          Creating directory "cmTC_6f8d0.dir\\Debug\\cmTC_6f8d0.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_6f8d0.dir\\Debug\\cmTC_6f8d0.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_6f8d0.dir\\Debug\\\\" /Fd"cmTC_6f8d0.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\sqlcolattrib1.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.33.31630 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          sqlcolattrib1.c
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_6f8d0.dir\\Debug\\\\" /Fd"cmTC_6f8d0.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\sqlcolattrib1.c"
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2061: syntax error: identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2061: syntax error: identifier 'SQLULEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2061: syntax error: identifier 'SQLSETPOSIROW' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2061: syntax error: identifier 'SQLROWCOUNT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2061: syntax error: identifier 'SQLROWSETSIZE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2061: syntax error: identifier 'SQLTRANSID' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2061: syntax error: identifier 'SQLROWOFFSET' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2061: syntax error: identifier 'SQLHWND' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(289,5): error C2061: syntax error: identifier 'DWORD' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2061: syntax error: identifier 'Data2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2061: syntax error: identifier 'Data3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2061: syntax error: identifier 'Data4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,15): error C2059: syntax error: '[' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(293,1): error C2059: syntax error: '}' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2061: syntax error: identifier 'BOOKMARK' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2146: syntax error: missing ')' before identifier 'SQLHDBC' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,44): error C2085: 'ConnectionHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ')' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2085: 'SQLAllocEnv': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ',' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,46): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2146: syntax error: missing ')' before identifier 'SQLHANDLE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,65): error C2085: 'OutputHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ')' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2085: 'SQLAllocStmt': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ',' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,27): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2081: '_Inout_updates_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,60): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,61): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,85): error C2085: 'TargetValue': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2085: 'SQLLEN': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2085: '_Inout_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2146: syntax error: missing ',' before identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,52): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,66): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2146: syntax error: missing ')' before identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2081: 'SQLULEN': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2061: syntax error: identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,62): error C2059: syntax error: ',' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(629,33): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2081: '_Out_writes_bytes_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,47): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,78): error C2085: 'CharacterAttribute': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2085: '_Out_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2146: syntax error: missing ',' before identifier 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,34): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,83): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2081: '_In_reads_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,38): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2146: syntax error: missing ')' before identifier 'SQLCHAR' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,60): error C2085: 'CatalogName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2146: syntax error: missing ',' before identifier 'NameLength1' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,59): error C2085: 'SchemaName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2146: syntax error: missing ',' before identifier 'NameLength2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,58): error C2085: 'TableName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2146: syntax error: missing ',' before identifier 'NameLength3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,59): error C2085: 'ColumnName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2146: syntax error: missing ',' before identifier 'NameLength4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,84): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): error C2146: syntax error: missing ')' before identifier 'RETCODE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): fatal  error C1003: error count exceeds 100; stopping compilation [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        Done Building Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj" (default target) (1) ->
+        (ClCompile target) -> 
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2061: syntax error: identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2061: syntax error: identifier 'SQLULEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2061: syntax error: identifier 'SQLSETPOSIROW' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2061: syntax error: identifier 'SQLROWCOUNT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2061: syntax error: identifier 'SQLROWSETSIZE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2061: syntax error: identifier 'SQLTRANSID' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2061: syntax error: identifier 'SQLROWOFFSET' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2061: syntax error: identifier 'SQLHWND' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(289,5): error C2061: syntax error: identifier 'DWORD' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2061: syntax error: identifier 'Data2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2061: syntax error: identifier 'Data3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2061: syntax error: identifier 'Data4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,15): error C2059: syntax error: '[' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(293,1): error C2059: syntax error: '}' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2061: syntax error: identifier 'BOOKMARK' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2146: syntax error: missing ')' before identifier 'SQLHDBC' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,44): error C2085: 'ConnectionHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ')' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2085: 'SQLAllocEnv': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ',' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,46): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2146: syntax error: missing ')' before identifier 'SQLHANDLE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,65): error C2085: 'OutputHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ')' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2085: 'SQLAllocStmt': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ',' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,27): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2081: '_Inout_updates_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,60): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,61): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,85): error C2085: 'TargetValue': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2085: 'SQLLEN': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2085: '_Inout_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2146: syntax error: missing ',' before identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,52): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,66): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2146: syntax error: missing ')' before identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2081: 'SQLULEN': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2061: syntax error: identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,62): error C2059: syntax error: ',' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(629,33): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2081: '_Out_writes_bytes_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,47): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,78): error C2085: 'CharacterAttribute': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2085: '_Out_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2146: syntax error: missing ',' before identifier 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,34): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,83): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2081: '_In_reads_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,38): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2146: syntax error: missing ')' before identifier 'SQLCHAR' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,60): error C2085: 'CatalogName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2146: syntax error: missing ',' before identifier 'NameLength1' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,59): error C2085: 'SchemaName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2146: syntax error: missing ',' before identifier 'NameLength2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,58): error C2085: 'TableName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2146: syntax error: missing ',' before identifier 'NameLength3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,59): error C2085: 'ColumnName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2146: syntax error: missing ',' before identifier 'NameLength4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,84): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): error C2146: syntax error: missing ')' before identifier 'RETCODE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): fatal  error C1003: error count exceeds 100; stopping compilation [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_6f8d0.vcxproj]
+        
+            0 Warning(s)
+            102 Error(s)
+        
+        Time Elapsed 00:00:00.47
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "CMakeLists.txt:349 (TRY_COMPILE)"
+    directories:
+      source: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+      binary: "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp"
+    cmakeVariables:
+      CMAKE_C_FLAGS: "/DWIN32 /D_WINDOWS /W3"
+    buildResult:
+      variable: "COMPILE_RESULT1"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/CMakeTmp'
+        
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe" cmTC_e9f05.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:VisualStudioVersion=17.0 /v:n
+        MSBuild version 17.3.1+2badb37d1 for .NET Framework
+        Build started 02/08/2024 22:41:11.
+        Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj" on node 1 (default targets).
+        PrepareForBuild:
+          Creating directory "cmTC_e9f05.dir\\Debug\\".
+          Creating directory "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\Debug\\".
+          Creating directory "cmTC_e9f05.dir\\Debug\\cmTC_e9f05.tlog\\".
+        InitializeBuildStatus:
+          Creating "cmTC_e9f05.dir\\Debug\\cmTC_e9f05.tlog\\unsuccessfulbuild" because "AlwaysCreate" was specified.
+        ClCompile:
+          C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\bin\\HostX64\\x64\\CL.exe /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_e9f05.dir\\Debug\\\\" /Fd"cmTC_e9f05.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\sqlcolattrib2.c"
+          Microsoft (R) C/C++ Optimizing Compiler Version 19.33.31630 for x64
+          Copyright (C) Microsoft Corporation.  All rights reserved.
+          cl /c /Zi /W3 /WX- /diagnostics:column /Od /Ob0 /D _MBCS /D WIN32 /D _WINDOWS /D "CMAKE_INTDIR=\\"Debug\\"" /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"cmTC_e9f05.dir\\Debug\\\\" /Fd"cmTC_e9f05.dir\\Debug\\vc143.pdb" /external:W3 /Gd /TC /errorReport:queue "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\cmake\\sqlcolattrib2.c"
+          sqlcolattrib2.c
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2061: syntax error: identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2061: syntax error: identifier 'SQLULEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2061: syntax error: identifier 'SQLSETPOSIROW' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2061: syntax error: identifier 'SQLROWCOUNT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2061: syntax error: identifier 'SQLROWSETSIZE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2061: syntax error: identifier 'SQLTRANSID' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2061: syntax error: identifier 'SQLROWOFFSET' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2061: syntax error: identifier 'SQLHWND' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(289,5): error C2061: syntax error: identifier 'DWORD' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2061: syntax error: identifier 'Data2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2061: syntax error: identifier 'Data3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2061: syntax error: identifier 'Data4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,15): error C2059: syntax error: '[' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(293,1): error C2059: syntax error: '}' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2061: syntax error: identifier 'BOOKMARK' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2146: syntax error: missing ')' before identifier 'SQLHDBC' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,44): error C2085: 'ConnectionHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ')' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2085: 'SQLAllocEnv': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ',' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,46): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2146: syntax error: missing ')' before identifier 'SQLHANDLE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,65): error C2085: 'OutputHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ')' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2085: 'SQLAllocStmt': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ',' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,27): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2081: '_Inout_updates_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,60): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,61): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,85): error C2085: 'TargetValue': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2085: 'SQLLEN': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2085: '_Inout_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2146: syntax error: missing ',' before identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,52): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,66): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2146: syntax error: missing ')' before identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2081: 'SQLULEN': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2061: syntax error: identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,62): error C2059: syntax error: ',' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(629,33): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2081: '_Out_writes_bytes_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,47): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,78): error C2085: 'CharacterAttribute': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2085: '_Out_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2146: syntax error: missing ',' before identifier 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,34): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,83): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2081: '_In_reads_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,38): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2146: syntax error: missing ')' before identifier 'SQLCHAR' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,60): error C2085: 'CatalogName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2146: syntax error: missing ',' before identifier 'NameLength1' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,59): error C2085: 'SchemaName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2146: syntax error: missing ',' before identifier 'NameLength2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,58): error C2085: 'TableName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2146: syntax error: missing ',' before identifier 'NameLength3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,59): error C2085: 'ColumnName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2146: syntax error: missing ',' before identifier 'NameLength4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,84): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): error C2146: syntax error: missing ')' before identifier 'RETCODE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): fatal  error C1003: error count exceeds 100; stopping compilation [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        Done Building Project "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj" (default targets) -- FAILED.
+        
+        Build FAILED.
+        
+        "C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj" (default target) (1) ->
+        (ClCompile target) -> 
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2061: syntax error: identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(64,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2061: syntax error: identifier 'SQLULEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(65,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2061: syntax error: identifier 'SQLSETPOSIROW' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(66,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2061: syntax error: identifier 'SQLROWCOUNT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(75,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2061: syntax error: identifier 'SQLROWSETSIZE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(76,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2061: syntax error: identifier 'SQLTRANSID' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(77,19): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2061: syntax error: identifier 'SQLROWOFFSET' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(78,18): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2061: syntax error: identifier 'SQLHWND' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(151,33): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(289,5): error C2061: syntax error: identifier 'DWORD' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2061: syntax error: identifier 'Data2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(290,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2061: syntax error: identifier 'Data3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(291,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2061: syntax error: identifier 'Data4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,10): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(292,15): error C2059: syntax error: '[' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(293,1): error C2059: syntax error: '}' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2061: syntax error: identifier 'BOOKMARK' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sqltypes.h(297,25): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2146: syntax error: missing ')' before identifier 'SQLHDBC' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(606,44): error C2085: 'ConnectionHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ')' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2085: 'SQLAllocEnv': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,38): error C2146: syntax error: missing ',' before identifier 'SQLHENV' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,46): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(608,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2146: syntax error: missing ')' before identifier 'SQLHANDLE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,41): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,64): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(612,65): error C2085: 'OutputHandle': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ')' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2081: '_Out_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2085: 'SQLAllocStmt': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,18): error C2146: syntax error: missing ',' before identifier 'SQLHSTMT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,27): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(616,43): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,31): error C2081: '_Inout_updates_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,47): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,60): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,61): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,63): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(620,85): error C2085: 'TargetValue': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2085: 'SQLLEN': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,19): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2085: '_Inout_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,45): error C2146: syntax error: missing ',' before identifier 'SQLLEN' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,52): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(621,66): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2146: syntax error: missing ')' before identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2081: 'SQLULEN': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2061: syntax error: identifier 'LengthPrecision' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,47): error C2059: syntax error: ';' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(627,62): error C2059: syntax error: ',' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(629,33): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,34): error C2081: '_Out_writes_bytes_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,47): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2146: syntax error: missing ')' before identifier 'SQLPOINTER' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,49): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,78): error C2085: 'CharacterAttribute': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(644,92): error C2146: syntax error: missing ',' before identifier 'BufferLength' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2085: '_Out_opt_': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,22): error C2146: syntax error: missing ',' before identifier 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,34): error C2143: syntax error: missing ';' before '*' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(645,83): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2143: syntax error: missing ')' before '(' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,26): error C2081: '_In_reads_opt_': name in formal parameter list illegal [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,38): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2146: syntax error: missing ')' before identifier 'SQLCHAR' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,40): error C2091: function returns function [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,60): error C2085: 'CatalogName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(656,74): error C2146: syntax error: missing ',' before identifier 'NameLength1' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,59): error C2085: 'SchemaName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(657,73): error C2146: syntax error: missing ',' before identifier 'NameLength2' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,58): error C2085: 'TableName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(658,72): error C2146: syntax error: missing ',' before identifier 'NameLength3' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,48): error C2143: syntax error: missing ';' before 'type' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,59): error C2085: 'ColumnName': not in formal parameter list [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2082: redefinition of formal parameter 'SQLSMALLINT' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,73): error C2146: syntax error: missing ',' before identifier 'NameLength4' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(659,84): error C2059: syntax error: ')' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): error C2146: syntax error: missing ')' before identifier 'RETCODE' [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+          C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\um\\sql.h(664,42): fatal  error C1003: error count exceeds 100; stopping compilation [C:\\Users\\sergi\\Desktop\\mysql-connector-odbc-9.0.0\\CMakeFiles\\CMakeTmp\\cmTC_e9f05.vcxproj]
+        
+            0 Warning(s)
+            102 Error(s)
+        
+        Time Elapsed 00:00:01.28
+        
+      exitCode: 1
+...

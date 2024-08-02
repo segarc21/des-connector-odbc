@@ -32,7 +32,7 @@
 
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #ifdef WITH_PERFSCHEMA_STORAGE_ENGINE
 #define HAVE_PSI_INTERFACE

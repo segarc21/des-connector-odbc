@@ -37,11 +37,11 @@
 #include <algorithm>
 
 #include "m_ctype.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #define isbig5head(c) (0xa1 <= (uchar)(c) && (uchar)(c) <= 0xf9)

@@ -36,10 +36,10 @@
 #include "stringutil.h"
 #include <limits>
 
-using namespace myodbc;
+using namespace desodbc;
 
-myodbc::CHARSET_INFO *utf8_charset_info = NULL;
-myodbc::CHARSET_INFO *utf16_charset_info = NULL;
+desodbc::CHARSET_INFO *utf8_charset_info = NULL;
+desodbc::CHARSET_INFO *utf16_charset_info = NULL;
 
 // The default charset for ANSI driver if CHARSET option is not specified
 const char *ansi_default_charset = "latin1";
@@ -111,7 +111,7 @@ void delocalize_radix(char* buffer)
 
   @return  Pointer to a newly allocated SQLWCHAR, or @c NULL
 */
-SQLWCHAR *sqlchar_as_sqlwchar(myodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
+SQLWCHAR *sqlchar_as_sqlwchar(desodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
                               SQLINTEGER *len, uint *errors)
 {
   SQLCHAR *pos, *str_end;
@@ -216,7 +216,7 @@ SQLWCHAR *sqlchar_as_sqlwchar(myodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
 
   @return  Pointer to a newly allocated SQLCHAR, or @c NULL
 */
-SQLCHAR *sqlwchar_as_sqlchar(myodbc::CHARSET_INFO *charset_info, SQLWCHAR *str,
+SQLCHAR *sqlwchar_as_sqlchar(desodbc::CHARSET_INFO *charset_info, SQLWCHAR *str,
                              SQLINTEGER *len, uint *errors)
 {
   SQLWCHAR *str_end;
@@ -479,8 +479,8 @@ SQLSMALLINT utf8_as_sqlwchar(SQLWCHAR *out, SQLINTEGER out_max, SQLCHAR *in,
 
   @return  Pointer to a newly allocated SQLCHAR, or @c NULL
 */
-SQLCHAR *sqlchar_as_sqlchar(myodbc::CHARSET_INFO *from_charset,
-                            myodbc::CHARSET_INFO *to_charset,
+SQLCHAR *sqlchar_as_sqlchar(desodbc::CHARSET_INFO *from_charset,
+                            desodbc::CHARSET_INFO *to_charset,
                             SQLCHAR *str, SQLINTEGER *len, uint *errors)
 {
   uint32 used_bytes, used_chars, bytes;
@@ -521,7 +521,7 @@ SQLCHAR *sqlchar_as_sqlchar(myodbc::CHARSET_INFO *from_charset,
 
   @return  Number of characters stored in the @c out buffer
 */
-SQLINTEGER sqlwchar_as_sqlchar_buf(myodbc::CHARSET_INFO *charset_info,
+SQLINTEGER sqlwchar_as_sqlchar_buf(desodbc::CHARSET_INFO *charset_info,
                                    SQLCHAR *out, SQLINTEGER out_bytes,
                                    SQLWCHAR *str, SQLINTEGER len, uint *errors)
 {
@@ -593,12 +593,12 @@ SQLINTEGER sqlwchar_as_sqlchar_buf(myodbc::CHARSET_INFO *charset_info,
   @retval Length of bytes copied to @c to
 */
 uint32
-copy_and_convert(char *to, uint32 to_length, myodbc::CHARSET_INFO *to_cs,
-                 const char *from, uint32 from_length, myodbc::CHARSET_INFO *from_cs,
+copy_and_convert(char *to, uint32 to_length, desodbc::CHARSET_INFO *to_cs,
+                 const char *from, uint32 from_length, desodbc::CHARSET_INFO *from_cs,
                  uint32 *used_bytes, uint32 *used_chars, uint *errors)
 {
   int         from_cnvres, to_cnvres;
-  myodbc::my_wc_t     wc;
+  desodbc::my_wc_t     wc;
   const uchar *from_end= (const uchar*) from+from_length;
   char *to_start= to;
   uchar *to_end= (uchar*) to+to_length;
@@ -1398,7 +1398,7 @@ SQLWCHAR *wchar_t_as_sqlwchar(wchar_t *from, SQLWCHAR *to, size_t len)
   }
 }
 
-char *myodbc_stpmov(char *dst, const char *src)
+char *desodbc_stpmov(char *dst, const char *src)
 {
   while ((*dst++ = *src++));
   return dst - 1;
@@ -1653,7 +1653,7 @@ void myodbc_qsort(void *base_ptr, size_t count, size_t size, qsort_cmp cmp)
     Pointer to ending NUL character.
 */
 
-char *myodbc_int10_to_str(long int val, char *dst, int radix) {
+char *desodbc_int10_to_str(long int val, char *dst, int radix) {
   char buffer[65];
   char *p;
   long int new_val;
@@ -1709,7 +1709,7 @@ bool myodbc_append_os_quoted_std(std::string &str, const char *append, ...) {
     const char *next_pos = cur_pos;
 
     /* Search for quote in each string and replace with escaped quote */
-    while (*(next_pos = myodbc::strcend(cur_pos, quote_str[0])) != '\0') {
+    while (*(next_pos = desodbc::strcend(cur_pos, quote_str[0])) != '\0') {
       str.append(cur_pos, (uint)(next_pos - cur_pos)).
           append("\\", 1).append(quote_str, quote_len);
       cur_pos = next_pos + 1;

@@ -28,7 +28,7 @@
 #ifndef _list_h_
 #define _list_h_
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

@@ -33,7 +33,7 @@
 
 #include "m_string.h"  // IWYU pragma: keep
 
-namespace myodbc
+namespace desodbc
 {
 
 char *strcont(char *str, const char *set) {

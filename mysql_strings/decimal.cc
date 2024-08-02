@@ -122,12 +122,12 @@
 #include "integer_digits.h"
 #include "m_ctype.h"
 #include "m_string.h"
-#include "my_compiler.h"
-#include "my_dbug.h"
+#include "des_compiler.h"
+#include "des_dbug.h"
 #include "my_sys.h" /* for my_alloca */
 #include "myisampack.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

@@ -28,7 +28,7 @@
 
 // UTF-8, as defined in RFC 2279.
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -39,14 +39,14 @@
 
 #include "m_ctype.h"
 #include "my_byteorder.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include "my_inttypes.h"
 #include "my_macros.h"
 #include "my_uctype.h"  // IWYU pragma: keep
 #include "mb_wc.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef EILSEQ

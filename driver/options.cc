@@ -276,7 +276,7 @@ MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
           return SQL_SUCCESS;
         }
         if (!(trans_supported(dbc)) || dbc->ds.opt_NO_TRANSACTIONS)
-          return ((DBC*)hdbc)->set_error(MYERR_S1C00,
+          return ((DBC*)hdbc)->set_error(DESERR_S1C00,
             "Transactions are not enabled", 4000);
 
         if (autocommit_on(dbc))
@@ -342,7 +342,7 @@ MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
         {
           if (mysql_select_db(dbc->mysql,(char*) db))
           {
-            dbc->set_error(MYERR_S1000, mysql_error(dbc->mysql),
+            dbc->set_error(DESERR_S1000, mysql_error(dbc->mysql),
               mysql_errno(dbc->mysql));
             return SQL_ERROR;
           }
@@ -513,7 +513,7 @@ MySQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
   case SQL_ATTR_CURRENT_CATALOG:
     if (is_connected(dbc) && reget_current_catalog(dbc))
     {
-      return set_handle_error(SQL_HANDLE_DBC, hdbc, MYERR_S1000,
+      return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1000,
                               "Unable to get current catalog", 0);
     }
     else if (is_connected(dbc))
@@ -522,7 +522,7 @@ MySQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     }
     else
     {
-      return set_handle_error(SQL_HANDLE_DBC, hdbc, MYERR_S1C00,
+      return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1C00,
                               "Getting catalog name is not supported "\
                               "before connection is established", 0);
     }
@@ -567,7 +567,7 @@ MySQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
 
       if (result != SQL_SUCCESS)
       {
-        return set_handle_error(SQL_HANDLE_DBC, hdbc, MYERR_S1000,
+        return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1000,
                                 "Failed to get isolation level", 0);
       }
       else
@@ -694,7 +694,7 @@ MySQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
         case SQL_ATTR_AUTO_IPD:
         case SQL_ATTR_ENABLE_AUTO_IPD:
             if (ValuePtr != (SQLPOINTER)SQL_FALSE)
-                return ((STMT*)hstmt)->set_error(MYERR_S1C00,
+                return ((STMT*)hstmt)->set_error(DESERR_S1C00,
                                  "Optional feature not implemented",0);
             break;
 
@@ -751,7 +751,7 @@ MySQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
                                         ValuePtr, SQL_IS_INTEGER);
 
         case SQL_ATTR_ROW_NUMBER:
-            return ((STMT*)hstmt)->set_error(MYERR_S1000,
+            return ((STMT*)hstmt)->set_error(DESERR_S1000,
                              "Trying to set read-only attribute",0);
 
         case SQL_ATTR_ROW_OPERATION_PTR:
@@ -952,7 +952,7 @@ SQLSetEnvAttr(SQLHENV    henv,
               break;
 
       default:
-          return set_env_error((ENV*)henv,MYERR_S1C00,NULL,0);
+          return set_env_error((ENV*)henv,DESERR_S1C00,NULL,0);
   }
   return SQL_SUCCESS;
 }
@@ -988,7 +988,7 @@ SQLGetEnvAttr(SQLHENV    henv,
             break;
 
         default:
-            return set_env_error((ENV*)henv,MYERR_S1C00,NULL,0);
+            return set_env_error((ENV*)henv,DESERR_S1C00,NULL,0);
     }
     return SQL_SUCCESS;
 }

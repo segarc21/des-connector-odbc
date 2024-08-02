@@ -1125,7 +1125,7 @@ MySQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
     }
     else
     {
-      myodbc::strxmov(tmp, (char *)irrec->table_name, ".", (char *)irrec->name, NullS);
+      desodbc::strxmov(tmp, (char *)irrec->table_name, ".", (char *)irrec->name, NullS);
       *name= (SQLCHAR *)tmp;
       *need_free= 1;
     }
@@ -2042,7 +2042,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
           case SQL_NO_DATA:
             stmt->set_error("01S07", "One or more row has error.", 0);
             return SQL_SUCCESS_WITH_INFO; //SQL_NO_DATA_FOUND
-          case SQL_ERROR:   return stmt->set_error(MYERR_S1000,
+          case SQL_ERROR:   return stmt->set_error(DESERR_S1000,
                                             mysql_error(stmt->dbc->mysql), 0);
         }
       }
@@ -2312,7 +2312,7 @@ SQLRETURN SQL_API my_SQLExtendedFetch( SQLHSTMT             hstmt,
 
     if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
     {
-      res = stmt->set_error(MYERR_S1000,
+      res = stmt->set_error(DESERR_S1000,
             "Driver Failed to set the internal dynamic result", 0);
       throw stmt->error;
     }

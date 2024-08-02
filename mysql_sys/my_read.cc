@@ -29,7 +29,7 @@
   @file mysys/my_read.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <errno.h>
 #include <stddef.h>
@@ -39,7 +39,7 @@
 #endif
 
 #include "my_base.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_sys.h"
@@ -49,7 +49,7 @@
 #include "mysys_priv.h"
 #endif
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef _WIN32

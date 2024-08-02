@@ -29,7 +29,7 @@
   @file mysys/my_thread.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #ifdef HAVE_PTHREAD_SETNAME_NP_LINUX
 #include <cstring>
@@ -59,7 +59,7 @@
 #include <signal.h>
 #include "my_sys.h" /* my_osmaperr */
 
-namespace myodbc
+namespace desodbc
 {
 
 struct thread_start_parameter {
@@ -80,7 +80,7 @@ static unsigned int __stdcall win_thread_start(void *p) {
 
 #endif
 
-namespace myodbc
+namespace desodbc
 {
 
 int my_thread_create(my_thread_handle *thread, const my_thread_attr_t *attr,

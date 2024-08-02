@@ -44,12 +44,12 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 static const uchar ctype_bin[] = {

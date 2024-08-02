@@ -65,11 +65,11 @@
 #include <set>
 
 #include "m_string.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "mb_wc.h"
 #include "uca900_data.h"  // uca900_weights[]
 
-namespace myodbc
+namespace desodbc
 {
 
 typedef unsigned char uchar;
@@ -788,7 +788,7 @@ int dump_ducet(MY_UCA *uca, int *pageloaded, FILE *infile, FILE *outfile) {
 
 } /* namespace myodbc */
 
-using namespace myodbc;
+using namespace desodbc;
 
 int main(int ac, char **av) {
   char *infilename = nullptr;

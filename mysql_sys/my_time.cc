@@ -59,7 +59,7 @@
 #include "myisampack.h"      // mi_int2store
 #include "template_utils.h"  // pointer_cast
 
-namespace myodbc
+namespace desodbc
 {
 
 const ulonglong log_10_int[20] = {1,
@@ -2905,7 +2905,7 @@ double double_from_datetime_packed(enum enum_field_types type,
    @} (end of defgroup MY_TIME)
 */
 
-using namespace myodbc;
+using namespace desodbc;
 
 // Non-static driver functions for unit tests
 namespace mysys_my_time {

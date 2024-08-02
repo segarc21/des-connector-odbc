@@ -41,7 +41,7 @@
 #include "pfs_cond_provider.h"  // IWYU pragma: keep
 #endif
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef PSI_COND_CALL

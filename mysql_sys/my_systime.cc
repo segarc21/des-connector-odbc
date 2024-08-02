@@ -32,7 +32,7 @@
 */
 
 #include "my_systime.h"
-#include "my_config.h"
+#include "des_config.h"
 
 #include <assert.h>
 #include <algorithm>  // std::min
@@ -44,7 +44,7 @@
 // be in ctime until C++17
 #include <time.h>  // time_t, timespec
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

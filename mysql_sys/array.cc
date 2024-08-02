@@ -36,14 +36,14 @@
 #include <algorithm>
 
 #include "my_alloc.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 #include "my_sys.h"
 #include "mysql/psi/psi_memory.h"
 #include "mysql/service_mysql_alloc.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

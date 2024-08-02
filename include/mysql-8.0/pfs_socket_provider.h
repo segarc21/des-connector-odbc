@@ -28,7 +28,7 @@
   Performance schema instrumentation (declarations).
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 /* HAVE_PSI_*_INTERFACE */
 #include "my_psi_config.h"  // IWYU pragma: keep

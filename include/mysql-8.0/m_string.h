@@ -40,11 +40,11 @@
 
 #include "decimal.h"
 #include "lex_string.h"
-#include "my_config.h"
+#include "des_config.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

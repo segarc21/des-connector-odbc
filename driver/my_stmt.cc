@@ -456,7 +456,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
         MYLOG_QUERY(stmt, mysql_error(stmt->dbc->mysql));
 
         stmt->set_error("HY000");
-        translate_error((char*)stmt->error.sqlstate.c_str(), MYERR_S1000,
+        translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_S1000,
                         mysql_errno(stmt->dbc->mysql));
 
         return SQL_ERROR;

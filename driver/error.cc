@@ -44,7 +44,7 @@
   - return code
 */
 
-static MYODBC3_ERR_STR myodbc3_errors[]=
+static MYODBC3_ERR_STR desodbc3_errors[]=
 {
   {"01000","General warning", SQL_SUCCESS_WITH_INFO},
   {"01004","String data, right truncated", SQL_SUCCESS_WITH_INFO},
@@ -107,7 +107,7 @@ static MYODBC3_ERR_STR myodbc3_errors[]=
   @purpose : If ODBC version is SQL_OV_ODBC2, initialize old SQLSTATEs
 */
 
-void myodbc_sqlstate2_init(void)
+void desodbc_sqlstate2_init(void)
 {
     /*
       As accessing the SQLSTATE2 is very rare, set this to
@@ -115,18 +115,18 @@ void myodbc_sqlstate2_init(void)
       in set_error/set_conn_error
     */
     uint  i;
-    for ( i= MYERR_S1000; i <= MYERR_S1C00; ++i )
+    for ( i= DESERR_S1000; i <= DESERR_S1C00; ++i )
     {
-        myodbc3_errors[i].sqlstate[0]= 'S';
-        myodbc3_errors[i].sqlstate[1]= '1';
+        desodbc3_errors[i].sqlstate[0]= 'S';
+        desodbc3_errors[i].sqlstate[1]= '1';
     }
-    myodbc_stpmov(myodbc3_errors[MYERR_07005].sqlstate,"24000");
-    myodbc_stpmov(myodbc3_errors[MYERR_42000].sqlstate,"37000");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S01].sqlstate,"S0001");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S02].sqlstate,"S0002");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S12].sqlstate,"S0012");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S21].sqlstate,"S0021");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S22].sqlstate,"S0022");
+    desodbc_stpmov(desodbc3_errors[DESERR_07005].sqlstate,"24000");
+    desodbc_stpmov(desodbc3_errors[DESERR_42000].sqlstate,"37000");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S01].sqlstate,"S0001");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S02].sqlstate,"S0002");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S12].sqlstate,"S0012");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S21].sqlstate,"S0021");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S22].sqlstate,"S0022");
 }
 
 
@@ -139,18 +139,18 @@ void myodbc_sqlstate3_init(void)
 {
     uint i;
 
-    for ( i= MYERR_S1000; i <= MYERR_S1C00; ++i )
+    for ( i= DESERR_S1000; i <= DESERR_S1C00; ++i )
     {
-        myodbc3_errors[i].sqlstate[0]= 'H';
-        myodbc3_errors[i].sqlstate[1]= 'Y';
+        desodbc3_errors[i].sqlstate[0]= 'H';
+        desodbc3_errors[i].sqlstate[1]= 'Y';
     }
-    myodbc_stpmov(myodbc3_errors[MYERR_07005].sqlstate,"07005");
-    myodbc_stpmov(myodbc3_errors[MYERR_42000].sqlstate,"42000");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S01].sqlstate,"42S01");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S02].sqlstate,"42S02");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S12].sqlstate,"42S12");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S21].sqlstate,"42S21");
-    myodbc_stpmov(myodbc3_errors[MYERR_42S22].sqlstate,"42S22");
+    desodbc_stpmov(desodbc3_errors[DESERR_07005].sqlstate,"07005");
+    desodbc_stpmov(desodbc3_errors[DESERR_42000].sqlstate,"42000");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S01].sqlstate,"42S01");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S02].sqlstate,"42S02");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S12].sqlstate,"42S12");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S21].sqlstate,"42S21");
+    desodbc_stpmov(desodbc3_errors[DESERR_42S22].sqlstate,"42S22");
 }
 
 MYERROR::MYERROR(myodbc_errid errid, const char* errtext, SQLINTEGER errcode,
@@ -158,11 +158,11 @@ MYERROR::MYERROR(myodbc_errid errid, const char* errtext, SQLINTEGER errcode,
 {
   std::string errmsg;
 
-  errmsg = (errtext ? errtext : myodbc3_errors[errid].message);
+  errmsg = (errtext ? errtext : desodbc3_errors[errid].message);
   native_error = errcode ? (myodbc_errid)errcode : errid + MYODBC_ERROR_CODE_START;
 
-  retcode = myodbc3_errors[errid].retcode;
-  sqlstate = myodbc3_errors[errid].sqlstate;
+  retcode = desodbc3_errors[errid].retcode;
+  sqlstate = desodbc3_errors[errid].sqlstate;
   message = prefix + errmsg;
 }
 
@@ -198,7 +198,7 @@ SQLRETURN set_desc_error(DESC *        desc,
 
 void translate_error(char *save_state, myodbc_errid errid, uint mysql_err)
 {
-    const char *state= myodbc3_errors[errid].sqlstate;
+    const char *state= desodbc3_errors[errid].sqlstate;
 
     switch (mysql_err)
     {
@@ -216,26 +216,26 @@ void translate_error(char *save_state, myodbc_errid errid, uint mysql_err)
 #ifdef ER_SP_DOES_NOT_EXIST
         case ER_SP_DOES_NOT_EXIST:
 #endif
-            state= myodbc3_errors[MYERR_42000].sqlstate;
+            state= desodbc3_errors[DESERR_42000].sqlstate;
             break;
         case ER_TABLE_EXISTS_ERROR:
-            state= myodbc3_errors[MYERR_42S01].sqlstate;
+            state= desodbc3_errors[DESERR_42S01].sqlstate;
             break;
         case ER_FILE_NOT_FOUND:
         case ER_NO_SUCH_TABLE:
         case ER_CANT_OPEN_FILE:
         case ER_BAD_TABLE_ERROR:
-            state= myodbc3_errors[MYERR_42S02].sqlstate;
+            state= desodbc3_errors[DESERR_42S02].sqlstate;
             break;
         case ER_NO_SUCH_INDEX:
         case ER_CANT_DROP_FIELD_OR_KEY:
-            state= myodbc3_errors[MYERR_42S12].sqlstate;
+            state= desodbc3_errors[DESERR_42S12].sqlstate;
             break;
         case ER_DUP_FIELDNAME:
-            state= myodbc3_errors[MYERR_42S21].sqlstate;
+            state= desodbc3_errors[DESERR_42S21].sqlstate;
             break;
         case ER_BAD_FIELD_ERROR:
-            state= myodbc3_errors[MYERR_42S22].sqlstate;
+            state= desodbc3_errors[DESERR_42S22].sqlstate;
             break;
         case CR_SERVER_HANDSHAKE_ERR:
         case CR_CONNECTION_ERROR:
@@ -254,7 +254,7 @@ void translate_error(char *save_state, myodbc_errid errid, uint mysql_err)
             break;
         default: break;
     }
-    myodbc_stpmov(save_state, state);
+    desodbc_stpmov(save_state, state);
 }
 
 
@@ -278,8 +278,8 @@ SQLRETURN set_env_error(ENV *env, myodbc_errid errid, const char *errtext,
 void set_mem_error(MYSQL *mysql)
 {
   mysql->net.last_errno= CR_OUT_OF_MEMORY;
-  myodbc_stpmov(mysql->net.last_error, "Memory allocation failed");
-  myodbc_stpmov(mysql->net.sqlstate, "HY001");
+  desodbc_stpmov(mysql->net.last_error, "Memory allocation failed");
+  desodbc_stpmov(mysql->net.sqlstate, "HY001");
 }
 
 

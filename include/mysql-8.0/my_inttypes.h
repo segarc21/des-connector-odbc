@@ -31,7 +31,7 @@
   @deprecated Use <stdint.h> instead. Prefer int to sized types.
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #ifndef MYSQL_ABI_CHECK
 #include <stddef.h>

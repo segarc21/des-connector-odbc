@@ -94,14 +94,12 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="Debug";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -121,7 +119,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Debug\myodbc-util.lib;..\lib\Debug\mysql_sys.lib;..\lib\Debug\mysql_strings.lib;C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Debug\myodbc-util.lib;..\lib\Debug\mysql_sys.lib;..\lib\Debug\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -144,14 +142,12 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="Release";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -173,7 +169,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Release\myodbc-util.lib;..\lib\Release\mysql_sys.lib;..\lib\Release\mysql_strings.lib;C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Release\myodbc-util.lib;..\lib\Release\mysql_sys.lib;..\lib\Release\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -196,14 +192,12 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MinSpace</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="MinSizeRel";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -225,7 +219,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\MinSizeRel\myodbc-util.lib;..\lib\MinSizeRel\mysql_sys.lib;..\lib\MinSizeRel\mysql_strings.lib;C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\MinSizeRel\myodbc-util.lib;..\lib\MinSizeRel\mysql_sys.lib;..\lib\MinSizeRel\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -249,14 +243,12 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="RelWithDebInfo";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -276,7 +268,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\RelWithDebInfo\myodbc-util.lib;..\lib\RelWithDebInfo\mysql_sys.lib;..\lib\RelWithDebInfo\mysql_strings.lib;C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\RelWithDebInfo\myodbc-util.lib;..\lib\RelWithDebInfo\mysql_sys.lib;..\lib\RelWithDebInfo\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>

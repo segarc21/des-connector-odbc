@@ -146,7 +146,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
       MYLOG_QUERY(stmt, stmt->error.message.c_str());
 
       /* For some errors - translating to more appropriate status */
-      translate_error((char*)stmt->error.sqlstate.c_str(), MYERR_S1000,
+      translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_S1000,
                       stmt->error.native_error);
       goto exit;
     }
@@ -156,7 +156,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
       /* Query was supposed to return result, but result is NULL*/
       if (returned_result(stmt))
       {
-        error = stmt->set_error(MYERR_S1000);
+        error = stmt->set_error(DESERR_S1000);
         goto exit;
       }
       else /* Query was not supposed to return a result */
@@ -172,7 +172,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
 
     if (bind_result(stmt) || get_result(stmt))
     {
-        error = stmt->set_error(MYERR_S1000);
+        error = stmt->set_error(DESERR_S1000);
         goto exit;
     }
     /* Caching row counts for queries returning resultset as well */
@@ -505,30 +505,30 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
     case SQL_C_BIT:
     case SQL_C_TINYINT:
     case SQL_C_STINYINT:
-        *length = (long)(my_int2str((long)*((signed char *)*res), buff, -10, 0) - buff);
+        *length = (long)(des_int2str((long)*((signed char *)*res), buff, -10, 0) - buff);
         *res= buff;
         break;
     case SQL_C_UTINYINT:
-        *length = (long)(my_int2str((long)*((unsigned char *)*res), buff, -10, 0) - buff);
+        *length = (long)(des_int2str((long)*((unsigned char *)*res), buff, -10, 0) - buff);
         *res= buff;
         break;
     case SQL_C_SHORT:
     case SQL_C_SSHORT:
-        *length = (long)(my_int2str((long)*((short int *)*res), buff, -10, 0) - buff);
+        *length = (long)(des_int2str((long)*((short int *)*res), buff, -10, 0) - buff);
         *res= buff;
         break;
     case SQL_C_USHORT:
-        *length = (long)(my_int2str((long)*((unsigned short int *)*res), buff, -10, 0) -
+        *length = (long)(des_int2str((long)*((unsigned short int *)*res), buff, -10, 0) -
                   buff);
         *res= buff;
         break;
     case SQL_C_LONG:
     case SQL_C_SLONG:
-        *length = (long)(my_int2str(*((SQLINTEGER*) *res), buff, -10, 0) - buff);
+        *length = (long)(des_int2str(*((SQLINTEGER*) *res), buff, -10, 0) - buff);
         *res= buff;
         break;
     case SQL_C_ULONG:
-        *length = (long)(my_int2str(*((SQLUINTEGER*) *res), buff, 10, 0) - buff);
+        *length = (long)(des_int2str(*((SQLUINTEGER*) *res), buff, 10, 0) - buff);
         *res= buff;
         break;
     case SQL_C_SBIGINT:
@@ -1128,11 +1128,11 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
 
           while ( *from && from < end )
           {
-            if ( from[0] == local_thousands_sep[0] && myodbc::is_prefix(from,local_thousands_sep) )
+            if ( from[0] == local_thousands_sep[0] && desodbc::is_prefix(from,local_thousands_sep) )
             {
               from+= local_thousands_sep_length;
             }
-            else if ( from[0] == local_decimal_point[0] && myodbc::is_prefix(from,local_decimal_point) )
+            else if ( from[0] == local_decimal_point[0] && desodbc::is_prefix(from,local_decimal_point) )
             {
               from+= local_decimal_point_length;
               *to++='.';
@@ -1247,7 +1247,7 @@ SQLRETURN do_my_pos_cursor_std( STMT *pStmt, STMT *pStmtCursor )
   }
   else
   {
-      nReturn = pStmt->set_error(MYERR_S1000, "Specified SQL syntax is not supported", 0 );
+      nReturn = pStmt->set_error(DESERR_S1000, "Specified SQL syntax is not supported", 0 );
   }
 
   if ( SQL_SUCCEEDED( nReturn ) )
@@ -1355,7 +1355,7 @@ SQLRETURN my_SQLExecute( STMT *pStmt )
 
     if (is_set_names_statement(GET_QUERY(&pStmt->query)))
     {
-      rc = pStmt->set_error( MYERR_42000,
+      rc = pStmt->set_error( DESERR_42000,
                       "SET NAMES not allowed by driver", 0);
       throw pStmt->error;
     }

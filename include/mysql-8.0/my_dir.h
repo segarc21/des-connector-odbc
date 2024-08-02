@@ -33,7 +33,7 @@
 
 #include "my_inttypes.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /* Defines for my_dir and my_stat */

@@ -29,7 +29,7 @@
 #ifndef vio_violite_h_
 #define vio_violite_h_
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <stddef.h>
 #ifdef HAVE_SYS_SOCKET_H

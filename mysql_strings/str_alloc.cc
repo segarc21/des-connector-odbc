@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 
-namespace myodbc
+namespace desodbc
 {
 
 static void *my_str_malloc_default(size_t size) {

@@ -35,8 +35,8 @@
 #include <locale.h>
 
 std::string thousands_sep, decimal_point, default_locale;
-static int myodbc_inited=0;
-static int mysys_inited=0;
+static int desodbc_inited=0;
+static int dessys_inited=0;
 
 std::string current_dll_location;
 std::string default_plugin_location;
@@ -51,7 +51,7 @@ std::string default_plugin_location;
 #include <signal.h>
 
 static void
-myodbc_pipe_sig_handler(int sig __attribute__((unused)))
+desodbc_pipe_sig_handler(int sig __attribute__((unused)))
 {
   /* Do nothing */
 }
@@ -63,7 +63,7 @@ myodbc_pipe_sig_handler(int sig __attribute__((unused)))
   @purpose : initializations
 */
 
-void myodbc_init(void)
+void desodbc_init(void)
 {
 #if !defined(__WIN__) && !defined(SKIP_SIGPIPE_HANDLER)
    /*
@@ -76,15 +76,15 @@ void myodbc_init(void)
    sigaction(SIGPIPE, &action, NULL);
 #endif
 
-  ++myodbc_inited;
+  ++desodbc_inited;
 
-  if (myodbc_inited > 1)
+  if (desodbc_inited > 1)
     return;
 
-  if(!mysys_inited)
+  if(!dessys_inited)
   {
-    my_sys_init();
-    mysys_inited = 1;
+    des_sys_init();
+    dessys_inited = 1;
   }
 
   {
@@ -102,14 +102,14 @@ void myodbc_init(void)
 
     __LOCALE_RESTORE()
 
-    utf8_charset_info= myodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
+    utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
                                              MYF(0));
 
 #ifdef IS_BIG_ENDIAN
     utf16_charset_info = myodbc::get_charset_by_csname("utf16", MYF(MY_CS_PRIMARY),
                                              MYF(0));
 #else
-    utf16_charset_info = myodbc::get_charset_by_csname("utf16le", MYF(MY_CS_PRIMARY),
+    utf16_charset_info = desodbc::get_charset_by_csname("utf16le", MYF(MY_CS_PRIMARY),
                                              MYF(0));
 #endif
   }
@@ -122,12 +122,12 @@ void myodbc_init(void)
 */
 void myodbc_end()
 {
-  if (!myodbc_inited)
+  if (!desodbc_inited)
     return;
 
-  --myodbc_inited;
+  --desodbc_inited;
 
-  if (!myodbc_inited)
+  if (!desodbc_inited)
   {
 
     /* my_thread_end_wait_time was added in 5.1.14 and 5.0.32 */
@@ -184,7 +184,7 @@ int APIENTRY LibMain(HANDLE inst, DWORD ul_reason_being_called,
     if (!inited++)
     {
       dll_location_init((HMODULE)inst);
-      myodbc_init();
+      desodbc_init();
     }
     break;
   case DLL_PROCESS_DETACH:  /* case of wep call in win 3.x */
@@ -192,7 +192,7 @@ int APIENTRY LibMain(HANDLE inst, DWORD ul_reason_being_called,
     {
       // Process is about to detach. All has to be deinited to avoid
       // memory leaks even if initialized multiple times (myodbc_inited > 1).
-      myodbc_inited = 1;
+      desodbc_inited = 1;
       myodbc_end();
     }
     break;

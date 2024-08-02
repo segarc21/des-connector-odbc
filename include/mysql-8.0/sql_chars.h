@@ -28,11 +28,11 @@
 #ifndef SQL_LEX_CHARS_INCLUDED
 #define SQL_LEX_CHARS_INCLUDED
 
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 struct CHARSET_INFO;

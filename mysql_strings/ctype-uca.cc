@@ -49,7 +49,7 @@
 #include "m_ctype.h"
 #include "m_string.h"
 #include "my_byteorder.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include "my_inttypes.h"
 #include "my_loglevel.h"
@@ -63,7 +63,7 @@
 #include "uca_data.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #define MY_UTF8MB3 "utf8"

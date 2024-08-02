@@ -31,7 +31,7 @@
 
 /* my_setwd() and my_getwd() works with intern_filenames !! */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <errno.h>
 #include <string.h>
@@ -41,7 +41,7 @@
 #endif
 
 #include "m_string.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_macros.h"
@@ -56,7 +56,7 @@
 #include "m_ctype.h"
 #endif
 
-namespace myodbc
+namespace desodbc
 {
 
 /* Gets current working directory in buff.

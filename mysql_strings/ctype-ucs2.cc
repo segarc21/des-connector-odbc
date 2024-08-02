@@ -40,13 +40,13 @@
 #include "m_ctype.h"
 #include "m_string.h"
 #include "my_byteorder.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include "my_inttypes.h"
 #include "my_sys.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef EILSEQ

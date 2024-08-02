@@ -42,7 +42,7 @@
 #include "my_xml.h"
 #include "mysys_err.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

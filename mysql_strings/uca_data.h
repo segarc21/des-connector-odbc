@@ -29,7 +29,7 @@
 #ifndef UCA_DATA_H
 #define UCA_DATA_H
 
-namespace myodbc
+namespace desodbc
 {
 
 uint16 page000data[]= { /* 0000 (4 weights per char) */

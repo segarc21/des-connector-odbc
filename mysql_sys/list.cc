@@ -32,14 +32,14 @@
 
 #include <sys/types.h>
 
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_list.h"
 #include "my_sys.h"
 #include "mysql/service_mysql_alloc.h"
 #include "mysys_priv.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /* Add a element to start of list */

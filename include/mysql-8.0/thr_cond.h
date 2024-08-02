@@ -52,7 +52,7 @@
 #include "mysql/components/services/thr_cond_bits.h"
 #include "thr_mutex.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifdef _WIN32

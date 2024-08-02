@@ -27,7 +27,7 @@
   @file mysys/my_handler_errors.h
 */
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

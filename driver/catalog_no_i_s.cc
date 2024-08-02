@@ -701,7 +701,7 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
       (SQLCHAR*)db.c_str(), (SQLSMALLINT)db.length(), proc, proc_len,
       column, column_len)))
   {
-    nReturn= stmt->set_error(MYERR_S1000);
+    nReturn= stmt->set_error(DESERR_S1000);
     throw ODBCEXCEPTION();
   }
 

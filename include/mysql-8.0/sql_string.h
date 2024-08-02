@@ -41,7 +41,7 @@
 #include "m_string.h"  // LEX_CSTRING
 #include "memory_debugging.h"
 #include "my_alloc.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include "my_inttypes.h"
 #include "mysql/components/services/bits/psi_bits.h"

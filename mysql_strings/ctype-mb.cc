@@ -33,14 +33,14 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include "my_inttypes.h"
 #include "my_macros.h"
 #include "str_uca_type.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 size_t my_caseup_str_mb(const CHARSET_INFO *cs, char *str) {

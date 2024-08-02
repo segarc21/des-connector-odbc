@@ -30,7 +30,7 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-namespace myodbc
+namespace desodbc
 {
 
 #define MY_XML_OK 0

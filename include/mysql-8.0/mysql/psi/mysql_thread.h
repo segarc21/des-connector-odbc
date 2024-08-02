@@ -52,7 +52,7 @@
 #include "pfs_thread_provider.h"  // IWYU pragma: keep
 #endif
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef PSI_THREAD_CALL

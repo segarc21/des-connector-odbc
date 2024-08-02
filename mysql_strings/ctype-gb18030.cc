@@ -33,12 +33,12 @@
 #include <sys/types.h>
 
 #include "m_ctype.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include "my_inttypes.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #define is_mb_1(c) ((uchar)(c) <= 0x7F)

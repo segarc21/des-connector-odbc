@@ -37,7 +37,7 @@
 #include <sys/types.h>
 
 #include "my_alloc.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_pointer_arithmetic.h"
 #include "my_sys.h"
@@ -45,7 +45,7 @@
 #include "my_static.h"
 #include "mysys_err.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

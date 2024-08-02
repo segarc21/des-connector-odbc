@@ -29,7 +29,7 @@
   @file mysys/my_open.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -41,7 +41,7 @@
 #include <unistd.h>
 #endif
 
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_sys.h"
@@ -51,7 +51,7 @@
 #include "mysys_priv.h"
 #include "mysys_err.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

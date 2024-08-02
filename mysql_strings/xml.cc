@@ -33,7 +33,7 @@
 #include "my_inttypes.h"
 #include "my_xml.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #define MY_XML_UNKNOWN 'U'

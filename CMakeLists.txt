@@ -257,11 +257,11 @@ IF(MYSQLCLIENT_STATIC_LINKING)
 ENDIF(MYSQLCLIENT_STATIC_LINKING)
 
 IF(MYSQL8)
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config8.h.cmake ${CMAKE_SOURCE_DIR}/include/mysql-8.0/my_config.h)
+  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config8.h.cmake ${CMAKE_SOURCE_DIR}/include/mysql-8.0/des_config.h)
   INCLUDE_DIRECTORIES(include/mysql-8.0)
 ELSE()
   # Run platform tests
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_SOURCE_DIR}/include/sys/my_config.h)
+  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_SOURCE_DIR}/include/sys/des_config.h)
 ENDIF(MYSQL8)
 
 

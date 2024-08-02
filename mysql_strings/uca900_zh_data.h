@@ -23,7 +23,7 @@
 #ifndef UCA900_ZH_DATA_H
 #define UCA900_ZH_DATA_H
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

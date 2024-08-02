@@ -30,10 +30,10 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 static const uchar ctype_latin1[] = {

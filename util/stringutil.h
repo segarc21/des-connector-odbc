@@ -57,8 +57,8 @@ extern "C" {
 
 #define MAX_BYTES_PER_UTF8_CP 4 /* max 4 bytes per utf8 codepoint */
 
-extern myodbc::CHARSET_INFO *utf8_charset_info;
-extern myodbc::CHARSET_INFO *utf16_charset_info;
+extern desodbc::CHARSET_INFO *utf8_charset_info;
+extern desodbc::CHARSET_INFO *utf16_charset_info;
 extern const char* ansi_default_charset;
 extern const char* transport_charset;
 
@@ -89,9 +89,9 @@ int utf32toutf8(UTF32 i, UTF8 *c);
 
 
 /* Conversions */
-SQLWCHAR *sqlchar_as_sqlwchar(myodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
+SQLWCHAR *sqlchar_as_sqlwchar(desodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
                               SQLINTEGER *len, uint *errors);
-SQLCHAR *sqlwchar_as_sqlchar(myodbc::CHARSET_INFO *charset_info, SQLWCHAR *str,
+SQLCHAR *sqlwchar_as_sqlchar(desodbc::CHARSET_INFO *charset_info, SQLWCHAR *str,
                              SQLINTEGER *len, uint *errors);
 SQLCHAR *sqlwchar_as_utf8_ext(const SQLWCHAR *str, SQLINTEGER *len,
                               SQLCHAR *buff, uint buff_max, int *utf8mb4_used);
@@ -99,15 +99,15 @@ SQLCHAR *sqlwchar_as_utf8(const SQLWCHAR *str, SQLINTEGER *len);
 SQLSMALLINT utf8_as_sqlwchar(SQLWCHAR *out, SQLINTEGER out_max, SQLCHAR *in,
                              SQLINTEGER in_len);
 
-SQLCHAR *sqlchar_as_sqlchar(myodbc::CHARSET_INFO *from_charset,
-                            myodbc::CHARSET_INFO *to_charset,
+SQLCHAR *sqlchar_as_sqlchar(desodbc::CHARSET_INFO *from_charset,
+                            desodbc::CHARSET_INFO *to_charset,
                             SQLCHAR *str, SQLINTEGER *len, uint *errors);
-SQLINTEGER sqlwchar_as_sqlchar_buf(myodbc::CHARSET_INFO *charset_info,
+SQLINTEGER sqlwchar_as_sqlchar_buf(desodbc::CHARSET_INFO *charset_info,
                                    SQLCHAR *out, SQLINTEGER out_bytes,
                                    SQLWCHAR *str, SQLINTEGER len, uint *errors);
 uint32
-copy_and_convert(char *to, uint32 to_length, myodbc::CHARSET_INFO *to_cs,
-                 const char *from, uint32 from_length, myodbc::CHARSET_INFO *from_cs,
+copy_and_convert(char *to, uint32 to_length, desodbc::CHARSET_INFO *to_cs,
+                 const char *from, uint32 from_length, desodbc::CHARSET_INFO *from_cs,
                  uint32 *used_bytes, uint32 *used_chars, uint *errors);
 
 
@@ -124,14 +124,14 @@ SQLWCHAR *wchar_t_as_sqlwchar(wchar_t *from, SQLWCHAR *to, size_t len);
 
 char * myodbc_strlwr(char *target, size_t len);
 SQLCHAR* sqlwchar_as_utf8_simple(SQLWCHAR *s);
-char *myodbc_stpmov(char *dst, const char *src);
+char *desodbc_stpmov(char *dst, const char *src);
 char *myodbc_ll2str(longlong val, char *dst, int radix);
 char *myodbc_d2str(double val, char *buf, size_t buf_size,
                    bool max_precision = true);
 typedef int(*qsort_cmp)(const void *, const void *);
 
 void myodbc_qsort(void *base_ptr, size_t count, size_t size, qsort_cmp cmp);
-char *myodbc_int10_to_str(long int val, char *dst, int radix);
+char *desodbc_int10_to_str(long int val, char *dst, int radix);
 bool myodbc_append_mem_std(std::string &str, const char *append, size_t length);
 
 bool myodbc_append_os_quoted_std(std::string &str, const char *append, ...);

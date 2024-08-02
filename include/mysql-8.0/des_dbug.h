@@ -20,11 +20,11 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
-#ifndef MY_DBUG_INCLUDED
-#define MY_DBUG_INCLUDED
+#ifndef DES_DBUG_INCLUDED
+#define DES_DBUG_INCLUDED
 
 /**
-  @file include/my_dbug.h
+  @file include/des_dbug.h
 */
 
 #ifdef MY_MSCRT_DEBUG
@@ -32,7 +32,7 @@
 #endif
 #include <stdlib.h>
 
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include <string.h>
 

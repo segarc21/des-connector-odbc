@@ -38,13 +38,13 @@
 #include <utility>
 
 #include "memory_debugging.h"
-#include "my_compiler.h"
-#include "my_dbug.h"
+#include "des_compiler.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_pointer_arithmetic.h"
 #include "mysql/psi/psi_memory.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**
@@ -413,29 +413,29 @@ struct MEM_ROOT {
  * a MEM_ROOT using regular placement new. We should make a less ambiguous
  * syntax, e.g. new (On(mem_root)) Foo().
  */
-inline void *operator new(size_t size, myodbc::MEM_ROOT *mem_root,
+inline void *operator new(size_t size, desodbc::MEM_ROOT *mem_root,
                           const std::nothrow_t &arg
                           [[maybe_unused]] = std::nothrow) noexcept {
   return mem_root->Alloc(size);
 }
 
-inline void *operator new[](size_t size, myodbc::MEM_ROOT *mem_root,
+inline void *operator new[](size_t size, desodbc::MEM_ROOT *mem_root,
                             const std::nothrow_t &arg
                             [[maybe_unused]] = std::nothrow) noexcept {
   return mem_root->Alloc(size);
 }
 
-inline void operator delete(void *, myodbc::MEM_ROOT *,
+inline void operator delete(void *, desodbc::MEM_ROOT *,
                             const std::nothrow_t &) noexcept {
   /* never called */
 }
 
-inline void operator delete[](void *, myodbc::MEM_ROOT *,
+inline void operator delete[](void *, desodbc::MEM_ROOT *,
                               const std::nothrow_t &) noexcept {
   /* never called */
 }
 
-namespace myodbc
+namespace desodbc
 {
 
 template <class T>

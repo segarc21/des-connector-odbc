@@ -39,7 +39,7 @@
 #include <stddef.h>
 #include "m_string.h"  // IWYU pragma: keep
 
-namespace myodbc
+namespace desodbc
 {
 
 char *strmake(char *dst, const char *src, size_t length) {

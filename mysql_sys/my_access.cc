@@ -33,7 +33,7 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_sys.h"  // IWYU pragma: keep
 
@@ -42,7 +42,7 @@
 #include "my_io.h"
 #include "my_thread_local.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /*
@@ -81,7 +81,7 @@ int my_access(const char *path, int amode) {
 
 #endif /* _WIN32 */
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

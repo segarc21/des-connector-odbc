@@ -30,7 +30,7 @@
 
 #include "m_ctype.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

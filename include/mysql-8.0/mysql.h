@@ -65,8 +65,8 @@ typedef int my_socket;
 #endif /* _WIN32 */
 #endif /* my_socket_defined */
 
-// Small extra definition to avoid pulling in my_compiler.h in client code.
-// IWYU pragma: no_include "my_compiler.h"
+// Small extra definition to avoid pulling in des_compiler.h in client code.
+// IWYU pragma: no_include "des_compiler.h"
 #ifndef MY_COMPILER_INCLUDED
 #if !defined(_WIN32)
 #define STDCALL

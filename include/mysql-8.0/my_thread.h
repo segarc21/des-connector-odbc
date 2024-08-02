@@ -34,12 +34,12 @@
 
 #include <mysql/components/services/my_thread_bits.h>
 
-#include "my_compiler.h"
-#include "my_config.h"
+#include "des_compiler.h"
+#include "des_config.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef ETIME
@@ -161,7 +161,7 @@ void my_thread_exit(void *value_ptr) MY_ATTRIBUTE((noreturn));
 character. */
 void my_thread_self_setname(const char *name);
 
-extern bool my_thread_global_init();
+extern bool des_thread_global_init();
 extern void my_thread_global_reinit();
 extern void my_thread_global_end();
 

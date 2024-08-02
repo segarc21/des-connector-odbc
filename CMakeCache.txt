@@ -201,7 +201,7 @@ CRYPTO_LIBRARY:FILEPATH=CRYPTO_LIBRARY-NOTFOUND
 MAINTAINER_MODE:BOOL=OFF
 
 //No help, variable specified on the command line.
-MYSQLCLIENT_LIB_NAME:UNINITIALIZED=C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib
+MYSQLCLIENT_LIB_NAME:UNINITIALIZED=C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib
 
 //No help, variable specified on the command line.
 MYSQLCLIENT_STATIC_LINKING:BOOL=TRUE
@@ -213,7 +213,7 @@ MYSQL_DATADIR:PATH='C:/Program Files/MySQL/MySQL Server '
 MYSQL_KEYRINGDIR:PATH='C:/Program Files/MySQL/MySQL Server '
 
 //Path to a library.
-MYSQL_LIB:FILEPATH=C:/Program Files/MySQL/MySQL Server 8.0/lib/mysqlclient.lib
+MYSQL_LIB:FILEPATH=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/mysqlclient.lib
 
 //Value Computed by CMake
 MySQL_Connector_ODBC_BINARY_DIR:STATIC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0
@@ -245,16 +245,16 @@ WITH_NODEFAULTLIB:UNINITIALIZED=mysqlclient
 WITH_NUMA:BOOL=OFF
 
 //Dependencies for the target
-myodbc-a_LIB_DEPENDS:STATIC=general;myodbc-util;general;mysql_sys;general;mysql_strings;general;C:/Program Files/MySQL/MySQL Server 8.0/lib/mysqlclient.lib;general;ws2_32;general;odbccp32;general;Secur32;general;legacy_stdio_definitions.lib;general;Dnsapi;
+myodbc-a_LIB_DEPENDS:STATIC=general;myodbc-util;general;mysql_sys;general;mysql_strings;general;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/mysqlclient.lib;general;ws2_32;general;odbccp32;general;Secur32;general;legacy_stdio_definitions.lib;general;Dnsapi;
 
 //Dependencies for the target
-myodbc-setup_LIB_DEPENDS:STATIC=general;odbc32;general;odbccp32;general;myodbc-util;general;mysql_sys;general;mysql_strings;general;C:/Program Files/MySQL/MySQL Server 8.0/lib/mysqlclient.lib;general;comctl32;general;legacy_stdio_definitions.lib;
+myodbc-setup_LIB_DEPENDS:STATIC=general;odbc32;general;odbccp32;general;myodbc-util;general;mysql_sys;general;mysql_strings;general;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/mysqlclient.lib;general;comctl32;general;legacy_stdio_definitions.lib;
 
 //Dependencies for the target
 myodbc-util_LIB_DEPENDS:STATIC=general;odbccp32;
 
 //Dependencies for the target
-myodbc-w_LIB_DEPENDS:STATIC=general;myodbc-util;general;mysql_sys;general;mysql_strings;general;C:/Program Files/MySQL/MySQL Server 8.0/lib/mysqlclient.lib;general;ws2_32;general;odbccp32;general;Secur32;general;legacy_stdio_definitions.lib;general;Dnsapi;
+myodbc-w_LIB_DEPENDS:STATIC=general;myodbc-util;general;mysql_sys;general;mysql_strings;general;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/mysqlclient.lib;general;ws2_32;general;odbccp32;general;Secur32;general;legacy_stdio_definitions.lib;general;Dnsapi;
 
 
 ########################

@@ -35,7 +35,7 @@
 #include <limits>   // std::numeric_limits
 #include <thread>   // std::this_thread::wait_for
 
-#include "my_config.h"
+#include "des_config.h"
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>  // clock_gettime()
@@ -79,7 +79,7 @@ inline void sleep(unsigned long seconds) {
 
 #endif /* _WIN32 */
 
-namespace myodbc
+namespace desodbc
 {
 
 /* Bits for get_date timeflag */

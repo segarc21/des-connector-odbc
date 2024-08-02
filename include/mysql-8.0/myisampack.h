@@ -31,7 +31,7 @@
   better compression.
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <sys/types.h>
 

@@ -37,7 +37,7 @@
 #include "my_macros.h"
 #include "my_sys.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 extern char curr_dir[FN_REFLEN], home_dir_buff[FN_REFLEN];

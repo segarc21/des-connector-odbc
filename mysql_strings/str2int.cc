@@ -55,7 +55,7 @@
 #include "m_ctype.h"
 #include "m_string.h"  // IWYU pragma: keep
 
-namespace myodbc
+namespace desodbc
 {
 
 #define char_val(X)                          \

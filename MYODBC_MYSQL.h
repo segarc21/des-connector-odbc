@@ -38,7 +38,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #if (MYSQLCLIENT_STATIC_LINKING)
-#include <my_config.h>
+#include <des_config.h>
 #include <my_sys.h>
 #include <mysql.h>
 #include <mysqld_error.h>
@@ -49,7 +49,7 @@
 
 #else
 
-#include "include/mysql-8.0/my_config.h"
+#include "include/mysql-8.0/des_config.h"
 #include "include/mysql-8.0/my_sys.h"
 #include <mysql.h>
 #include <mysqld_error.h>
@@ -92,15 +92,15 @@ extern "C"
 #endif
 
 
-#define my_sys_init myodbc::my_init
-#define mysys_end myodbc::my_end
+#define des_sys_init desodbc::des_init
+#define mysys_end desodbc::my_end
 #define x_free(A) { void *tmp= (A); if (tmp) free((char *) tmp); }
 #define myodbc_malloc(A, B) (B == MY_ZEROFILL ? calloc(A, 1) : malloc(A))
 #define myodbc_realloc(A, B) realloc(A, B)
 #define myodbc_snprintf snprintf
 
 
-/* Get rid of defines from my_config.h that conflict with our myconf.h */
+/* Get rid of defines from des_config.h that conflict with our myconf.h */
 #ifdef VERSION
 # undef VERSION
 #endif

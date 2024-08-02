@@ -26,11 +26,11 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
 #include "m_ctype.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "my_sys.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

@@ -31,7 +31,7 @@
 
 #include <sys/types.h>
 
-#include "my_config.h"
+#include "des_config.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 

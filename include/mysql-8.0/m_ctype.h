@@ -34,14 +34,14 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "my_loglevel.h"
 #include "my_macros.h"
 #include "my_sharedlib.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 #define MY_CS_NAME_SIZE 32

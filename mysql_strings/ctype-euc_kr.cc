@@ -41,10 +41,10 @@
 #include <sys/types.h>
 
 #include "m_ctype.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 static const uchar ctype_euc_kr[257] = {

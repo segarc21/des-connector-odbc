@@ -56,18 +56,18 @@
 */
 #include "mysql/components/services/thr_mutex_bits.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /* Define mutex types, see my_thr_init.c */
-#define MY_MUTEX_INIT_SLOW NULL
+#define DES_MUTEX_INIT_SLOW NULL
 
 /* Can be set in /usr/include/pthread.h */
 #ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
 extern native_mutexattr_t my_fast_mutexattr;
 #define MY_MUTEX_INIT_FAST &my_fast_mutexattr
 #else
-#define MY_MUTEX_INIT_FAST NULL
+#define DES_MUTEX_INIT_FAST NULL
 #endif
 
 /* Can be set in /usr/include/pthread.h */
@@ -164,7 +164,7 @@ static inline void safe_mutex_assert_not_owner(safe_mutex_t *mp) {
 }
 #endif /* SAFE_MUTEX */
 
-static inline int my_mutex_init(my_mutex_t *mp, const native_mutexattr_t *attr
+static inline int des_mutex_init(my_mutex_t *mp, const native_mutexattr_t *attr
 #ifdef SAFE_MUTEX
                                 ,
                                 const char *file, uint line

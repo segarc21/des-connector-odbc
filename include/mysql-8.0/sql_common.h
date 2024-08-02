@@ -35,7 +35,7 @@
 
 #include "errmsg.h"
 #include "my_command.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "my_list.h"
 #include "mysql_com.h"

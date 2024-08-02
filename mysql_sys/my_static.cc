@@ -33,12 +33,12 @@
 
 #include "my_static.h"
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <stdarg.h>
 #include <stddef.h>
 
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_loglevel.h"
 #include "mysql/components/services/bits/psi_bits.h"
 #include "mysql/psi/mysql_cond.h"
@@ -47,7 +47,7 @@
 #include "mysql/psi/psi_stage.h"
 #include "mysys_priv.h"  // IWYU pragma: keep
 
-namespace myodbc
+namespace desodbc
 {
 
 /* get memory in hunks */
@@ -159,7 +159,7 @@ void CountFileClose(OpenType ft) {
 }
 }  // namespace file_info
 
-int my_umask = 0664, my_umask_dir = 0777;
+int des_umask = 0664, des_umask_dir = 0777;
 
 /* from mf_reccache.c */
 ulong my_default_record_cache_size = RECORD_CACHE_SIZE;

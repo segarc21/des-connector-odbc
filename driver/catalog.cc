@@ -1488,7 +1488,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
 
   if (fColType != SQL_ROWVER && fColType != SQL_BEST_ROWID)
   {
-      return stmt->set_error( MYERR_S1000,
+      return stmt->set_error( DESERR_S1000,
                         "Unsupported argument to SQLSpecialColumns", 4000);
   }
 

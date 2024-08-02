@@ -32,7 +32,7 @@
 #include <my_sys.h>
 #include "my_thread_local.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 struct errentry {

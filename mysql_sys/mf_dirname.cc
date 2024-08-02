@@ -31,7 +31,7 @@
 #include "m_ctype.h"
 #endif
 #include "m_string.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_io.h"
 #include "my_sys.h"  // IWYU pragma: keep
 
@@ -39,7 +39,7 @@
   @file mysys/mf_dirname.cc
 */
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

@@ -43,11 +43,11 @@
 #include <algorithm>
 
 #include "m_ctype.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /* Support for Chinese(GBK) characters, by hewei@mail.ied.ac.cn */

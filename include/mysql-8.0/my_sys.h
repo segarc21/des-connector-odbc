@@ -31,7 +31,7 @@
   @note Many mysys implementation files now have their own header file.
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #ifdef HAVE_ALLOCA_H
 #include <alloca.h>
@@ -54,7 +54,7 @@
 #include <atomic>  // error_handler_hook
 
 #include "m_string.h" /* IWYU pragma: keep */
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_compress.h"
 #include "my_inttypes.h"
 #include "my_loglevel.h"
@@ -72,7 +72,7 @@
 #include "mysql/components/services/psi_stage_bits.h"
 //#include "sql/stream_cipher.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 class Stream_cipher;
@@ -102,7 +102,7 @@ struct MEM_ROOT;
 #define MY_INIT(name)   \
   {                     \
     my_progname = name; \
-    my_init();          \
+    des_init();          \
   }
 
 /**
@@ -273,10 +273,10 @@ extern ulong my_tmp_file_created;
 extern ulong my_file_opened;
 extern ulong my_stream_opened;
 extern ulong my_file_total_opened;
-extern bool my_init_done;
+extern bool des_init_done;
 
-extern MYSQL_PLUGIN_IMPORT int my_umask; /* Default creation mask  */
-extern int my_umask_dir;
+extern MYSQL_PLUGIN_IMPORT int des_umask; /* Default creation mask  */
+extern int des_umask_dir;
 
 extern ulong my_default_record_cache_size;
 extern bool my_disable_locking, my_enable_symlinks;
@@ -695,7 +695,7 @@ inline void MyOsError(int errno_val, Ts... ppck) {
   my_error(ppck..., errno_val, my_strerror(errbuf, sizeof(errbuf), errno_val));
 }
 
-extern bool my_init(void);
+extern bool des_init(void);
 extern void my_end(int infoflag);
 extern const char *my_filename(File fd);
 extern MY_MODE get_file_perm(ulong perm_flags);

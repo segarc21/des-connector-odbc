@@ -36,8 +36,8 @@
 #include <sys/types.h>
 
 #include "my_alloc.h"
-#include "my_compiler.h"
-#include "my_dbug.h"
+#include "des_compiler.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_pointer_arithmetic.h"
 #include "my_sys.h"
@@ -45,7 +45,7 @@
 #include "mysys_err.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 // For instrumented code: Always use malloc(); never reuse a chunk.

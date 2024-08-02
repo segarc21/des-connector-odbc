@@ -23,7 +23,7 @@
 #ifndef UCA900_JA_DATA_H
 #define UCA900_JA_DATA_H
 
-namespace myodbc
+namespace desodbc
 {
 
 // Quaternary weight of katakana.

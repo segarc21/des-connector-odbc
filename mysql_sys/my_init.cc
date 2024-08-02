@@ -29,9 +29,9 @@
   @file mysys/my_init.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
-#ifdef MY_MSCRT_DEBUG
+#ifdef DES_MSCRT_DEBUG
 #include <crtdbg.h>
 #endif
 #include <limits.h>
@@ -45,8 +45,8 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "my_compiler.h"
-#include "my_dbug.h"
+#include "des_compiler.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 #include "my_psi_config.h"
@@ -79,7 +79,7 @@
 #include <crtdbg.h>
 #include <locale.h>
 
-namespace myodbc
+namespace desodbc
 {
 
 /* WSAStartup needs winsock library*/
@@ -94,10 +94,10 @@ static void my_win_init();
 #define SCALE_SEC 100
 #define SCALE_USEC 10000
 
-namespace myodbc
+namespace desodbc
 {
 
-bool my_init_done = false;
+bool des_init_done = false;
 ulong my_thread_stack_size = 65536;
 
 static ulong atoi_octal(const char *str) {
@@ -108,7 +108,7 @@ static ulong atoi_octal(const char *str) {
   return (ulong)tmp;
 }
 
-#if defined(MY_MSCRT_DEBUG)
+#if defined(DES_MSCRT_DEBUG)
 int set_crt_report_leaks() {
   HANDLE hLogFile;
 
@@ -136,28 +136,28 @@ int set_crt_report_leaks() {
     @retval false Success
     @retval true  Error. Couldn't initialize environment
 */
-bool my_init() {
+bool des_init() {
   char *str;
 
-  if (my_init_done) return false;
+  if (des_init_done) return false;
 
-  my_init_done = true;
+  des_init_done = true;
 
-#if defined(MY_MSCRT_DEBUG)
+#if defined(DES_MSCRT_DEBUG)
   set_crt_report_leaks();
 #endif
 
-  my_umask = 0640;     /* Default umask for new files */
-  my_umask_dir = 0750; /* Default umask for new directories */
+  des_umask = 0640;     /* Default umask for new files */
+  des_umask_dir = 0750; /* Default umask for new directories */
 
   /* Default creation of new files */
   if ((str = getenv("UMASK")) != nullptr)
-    my_umask = (int)(atoi_octal(str) | 0600);
+    des_umask = (int)(atoi_octal(str) | 0600);
   /* Default creation of new dir's */
   if ((str = getenv("UMASK_DIR")) != nullptr)
-    my_umask_dir = (int)(atoi_octal(str) | 0700);
+    des_umask_dir = (int)(atoi_octal(str) | 0700);
 
-  if (myodbc::my_thread_global_init()) return true;
+  if (desodbc::des_thread_global_init()) return true;
 
   if (my_thread_init()) return true;
 
@@ -187,7 +187,7 @@ void my_end(int infoflag) {
 
   FILE *info_file = (DBUG_FILE ? DBUG_FILE : stderr);
 
-  if (!my_init_done) return;
+  if (!des_init_done) return;
 
   MyFileEnd();
 #ifdef _WIN32
@@ -237,10 +237,10 @@ Voluntary context switches %ld, Involuntary context switches %ld\n",
     _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
     _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
     _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-#ifdef MY_MSCRT_DEBUG
+#ifdef DES_MSCRT_DEBUG
     _CrtCheckMemory();
     _CrtDumpMemoryLeaks();
-#endif /* MY_MSCRT_DEBUG */
+#endif /* DES_MSCRT_DEBUG */
 #endif /* _WIN32 */
   }
 
@@ -255,7 +255,7 @@ Voluntary context switches %ld, Involuntary context switches %ld\n",
   if (have_tcpip) WSACleanup();
 #endif /* _WIN32 */
 
-  my_init_done = false;
+  des_init_done = false;
 } /* my_end */
 
 #ifdef _WIN32

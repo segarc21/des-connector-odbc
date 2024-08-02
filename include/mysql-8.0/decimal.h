@@ -30,7 +30,7 @@
 #include "my_inttypes.h"
 #include "my_macros.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 typedef enum {

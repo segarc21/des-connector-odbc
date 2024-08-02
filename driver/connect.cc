@@ -137,7 +137,7 @@ try
   set_charset(charset);
   MY_CHARSET_INFO my_charset;
   mysql_get_character_set_info(mysql, &my_charset);
-  cxn_charset_info = myodbc::get_charset(my_charset.number, MYF(0));
+  cxn_charset_info = desodbc::get_charset(my_charset.number, MYF(0));
 
   return rc;
 }
@@ -814,7 +814,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 #endif
       set_error("HY000", mysql_error(mysql), native_error);
 
-      translate_error((char*)error.sqlstate.c_str(), MYERR_S1000, native_error);
+      translate_error((char*)error.sqlstate.c_str(), DESERR_S1000, native_error);
 
       return SQL_ERROR;
     }
@@ -938,7 +938,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     query_log = init_query_log();
 
   /* Set the statement error prefix based on the server version. */
-  myodbc::strxmov(st_error_prefix, MYODBC_ERROR_PREFIX, "[mysqld-",
+  desodbc::strxmov(st_error_prefix, MYODBC_ERROR_PREFIX, "[mysqld-",
           mysql->server_version, "]", NullS);
 
   /*
@@ -1094,7 +1094,7 @@ SQLRETURN SQL_API MySQLConnect(SQLHDBC   hdbc,
 
   if (szDSN && !szDSN[0])
   {
-    return ((DBC*)hdbc)->set_error(MYERR_S1000,
+    return ((DBC*)hdbc)->set_error(DESERR_S1000,
       "Invalid connection parameters", 0);
   }
 
@@ -1524,7 +1524,7 @@ SQLRETURN DBC::execute_query(const char* query,
   if (check_if_server_is_alive(this) ||
     mysql_real_query(mysql, query, (unsigned long)query_length))
   {
-    result = set_error(MYERR_S1000, mysql_error(mysql),
+    result = set_error(DESERR_S1000, mysql_error(mysql),
       mysql_errno(mysql));
   }
 

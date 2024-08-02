@@ -118,9 +118,9 @@ BOOL INSTAPI ConfigDSNW(HWND hWnd, WORD nRequest, LPCWSTR pszDriver,
   SQLWSTRING origdsn;
 
   if (!utf8_charset_info) {
-    my_sys_init();
+    des_sys_init();
     utf8_charset_info =
-      myodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY), MYF(0));
+      desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY), MYF(0));
   }
 
   if (pszAttributes && *pszAttributes)

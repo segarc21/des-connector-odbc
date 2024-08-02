@@ -57,13 +57,13 @@ SQLWSTRING mytest(HWND hwnd, DataSource *params)
     In case of file data source we do not want it to be created
     when clicking the Test button
   */
-  myodbc::HENV henv;
+  desodbc::HENV henv;
   auto preservedSavefile = params->opt_SAVEFILE;
   params->opt_SAVEFILE.set_default(nullptr);
 
   try
   {
-    myodbc::HDBC hdbc(henv, params);
+    desodbc::HDBC hdbc(henv, params);
     msg = _W(L"Connection successful");
   }
   catch(MYERROR &e)
@@ -115,14 +115,14 @@ std::vector<SQLWSTRING> mygetdatabases(HWND hwnd, DataSource* params)
   params->opt_NO_CATALOG.set_default(false);
 
 try {
-    myodbc::HENV henv;
-    myodbc::HDBC hdbc(henv, params);
+    desodbc::HENV henv;
+    desodbc::HDBC hdbc(henv, params);
 
     params->opt_SAVEFILE = preserved_savefile;
     params->opt_DATABASE = preserved_database;
     params->opt_NO_CATALOG = preserved_no_catalog;
 
-    myodbc::HSTMT hstmt(hdbc);
+    desodbc::HSTMT hstmt(hdbc);
 
     SQLWCHAR tmpbuf[1024];
     SQLWCHAR empty = 0;
@@ -175,14 +175,14 @@ std::vector<SQLWSTRING> mygetcharsets(HWND hwnd, DataSource* params)
   params->opt_NO_CATALOG.set_default(false);
 
 try {
-    myodbc::HENV henv;
-    myodbc::HDBC hdbc(henv, params);
+    desodbc::HENV henv;
+    desodbc::HDBC hdbc(henv, params);
 
     params->opt_SAVEFILE = preserved_savefile;
     params->opt_DATABASE = preserved_database;
     params->opt_NO_CATALOG = preserved_no_catalog;
 
-    myodbc::HSTMT hstmt(hdbc);
+    desodbc::HSTMT hstmt(hdbc);
 
 #ifdef DRIVER_ANSI
     /* Skip undesired charsets */

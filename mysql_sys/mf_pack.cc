@@ -30,7 +30,7 @@
   @file mysys/mf_pack.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <string>
 
@@ -40,14 +40,14 @@
 #include "m_ctype.h"
 #endif
 #include "m_string.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_getpwnam.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_sys.h"
 #include "my_static.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 static std::string expand_tilde(char **path);

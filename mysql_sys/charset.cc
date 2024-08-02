@@ -29,7 +29,7 @@
   @file mysys/charset.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -42,8 +42,8 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "my_compiler.h"
-#include "my_dbug.h"
+#include "des_compiler.h"
+#include "des_dbug.h"
 #include "my_dir.h"
 #include "my_inttypes.h"
 #include "my_io.h"
@@ -59,7 +59,7 @@
 #include "mysys_err.h"
 #include "sql_chars.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

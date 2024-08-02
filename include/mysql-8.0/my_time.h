@@ -32,7 +32,7 @@
   Interface for low level time utilities.
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <assert.h>  // assert
 #include <cstddef>   // std::size_t
@@ -48,7 +48,7 @@
 
 #include "mysql_time.h"  // struct MYSQL_TIME, shared with client code
 
-namespace myodbc
+namespace desodbc
 {
 
 enum enum_field_types : int;

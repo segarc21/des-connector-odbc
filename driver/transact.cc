@@ -59,7 +59,7 @@ static SQLRETURN my_transact(SQLHDBC hdbc, SQLSMALLINT CompletionType)
     case SQL_ROLLBACK:
       if (!trans_supported(dbc))
       {
-	      return ((DBC*)hdbc)->set_error(MYERR_S1C00,
+	      return ((DBC*)hdbc)->set_error(DESERR_S1C00,
 			    "Underlying server does not support transactions, "
           "upgrade to version >= 3.23.38", 0);
       }
@@ -77,7 +77,7 @@ static SQLRETURN my_transact(SQLHDBC hdbc, SQLSMALLINT CompletionType)
     if (check_if_server_is_alive(dbc) ||
 	mysql_real_query(dbc->mysql,query,length))
     {
-      result = ((DBC*)hdbc)->set_error(MYERR_S1000,
+      result = ((DBC*)hdbc)->set_error(DESERR_S1000,
 			     mysql_error(dbc->mysql),
 			     mysql_errno(dbc->mysql));
     }

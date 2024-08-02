@@ -874,7 +874,7 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow)
       case SQL_NO_DATA:
         throw MYERROR(SQL_NO_DATA_FOUND);
       case SQL_ERROR:
-        set_error(MYERR_S1000, mysql_error(dbc->mysql), 0);
+        set_error(DESERR_S1000, mysql_error(dbc->mysql), 0);
         throw error;
       }
     }
@@ -1080,7 +1080,7 @@ SQLRETURN STMT::bind_query_attrs(bool use_ssps)
                 mysql_stmt_errno(ssps));
 
       /* For some errors - translating to more appropriate status */
-      translate_error((char *)error.sqlstate.c_str(), MYERR_S1000,
+      translate_error((char *)error.sqlstate.c_str(), DESERR_S1000,
                       error.native_error);
       return SQL_ERROR;
     }

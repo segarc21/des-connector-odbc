@@ -32,7 +32,7 @@
 #include <sys/types.h>
 
 #include "m_ctype.h"
-#include "my_compiler.h"
+#include "des_compiler.h"
 #include "my_inttypes.h"
 #include "template_utils.h"
 
@@ -44,7 +44,7 @@
  * .configure. mbmaxlen_sjis=2
  */
 
-namespace myodbc
+namespace desodbc
 {
 
 static const uchar ctype_sjis[257] = {

@@ -43,7 +43,7 @@
 #include "mysql/components/services/psi_thread_bits.h"  // for PSI_thread_key
 #include "mysql/psi/mysql_mutex.h"                      // for mysql_mutex_lock
 
-namespace myodbc
+namespace desodbc
 {
 
 extern PSI_mutex_key key_IO_CACHE_append_buffer_lock, key_IO_CACHE_SHARE_mutex,

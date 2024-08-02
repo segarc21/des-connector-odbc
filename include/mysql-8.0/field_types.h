@@ -38,7 +38,7 @@
 #ifndef FIELD_TYPES_INCLUDED
 #define FIELD_TYPES_INCLUDED
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "my_dbug.h"
+#include "des_dbug.h"
 
 #ifndef MYSQL_ABI_CHECK
 #include <stdlib.h>

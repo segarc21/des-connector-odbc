@@ -1,5 +1,5 @@
-#ifndef MY_COMPILER_INCLUDED
-#define MY_COMPILER_INCLUDED
+#ifndef DES_COMPILER_INCLUDED
+#define DES_COMPILER_INCLUDED
 
 /* Copyright (c) 2010, 2021, Oracle and/or its affiliates.
 
@@ -24,7 +24,7 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
 /**
-  @file include/my_compiler.h
+  @file include/des_compiler.h
   Header for compiler-dependent features.
 
   Intended to contain a set of reusable wrappers for preprocessor
@@ -37,7 +37,7 @@
 #include <stddef.h> /* size_t */
 #endif
 
-#include "my_config.h"
+#include "des_config.h"
 
 /*
   The macros below are borrowed from include/linux/compiler.h in the

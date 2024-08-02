@@ -1,6 +1,6 @@
 #include "my_inttypes.h"
 
-namespace myodbc {
+namespace desodbc {
 
 extern const int MIN_JA_HAN_PAGE = 0x4E;
 extern const int MAX_JA_HAN_PAGE = 0x9F;

@@ -53,7 +53,7 @@ do { \
   return SQL_SUCCESS; \
 } while(0)
 
-static my_bool myodbc_ov2_inited = 0;
+static my_bool desodbc_ov2_inited = 0;
 
 
 /**
@@ -916,7 +916,7 @@ MySQLGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     myodbc_snprintf(buff, sizeof(buff),
                     "Unsupported option: %d to SQLGetInfo",
                     fInfoType);
-    return ((DBC*)hdbc)->set_error(MYERR_S1C00, buff, 4000);
+    return ((DBC*)hdbc)->set_error(DESERR_S1C00, buff, 4000);
   }
   }
 
@@ -1157,36 +1157,36 @@ Create strings from some integers for easy initialization of string arrays.
 */
 void init_getfunctions(void)
 {
-  my_int2str(SQL_SEARCHABLE, sql_searchable, -10, 0);
-  my_int2str(SQL_UNSEARCHABLE, sql_unsearchable, -10, 0);
-  my_int2str(SQL_NULLABLE, sql_nullable, -10, 0);
-  my_int2str(SQL_NO_NULLS, sql_no_nulls, -10, 0);
-  my_int2str(SQL_BIT, sql_bit, -10, 0);
-  my_int2str(SQL_TINYINT, sql_tinyint, -10, 0);
-  my_int2str(SQL_SMALLINT, sql_smallint, -10, 0);
-  my_int2str(SQL_INTEGER, sql_integer, -10, 0);
-  my_int2str(SQL_BIGINT, sql_bigint, -10, 0);
-  my_int2str(SQL_FLOAT, sql_float, -10, 0);
-  my_int2str(SQL_REAL, sql_real, -10, 0);
-  my_int2str(SQL_DOUBLE, sql_double, -10, 0);
-  my_int2str(SQL_CHAR, sql_char, -10, 0);
-  my_int2str(SQL_VARCHAR, sql_varchar, -10, 0);
-  my_int2str(SQL_LONGVARCHAR, sql_longvarchar, -10, 0);
-  my_int2str(SQL_TYPE_TIMESTAMP, sql_timestamp, -10, 0);
-  my_int2str(SQL_DECIMAL, sql_decimal, -10, 0);
-  my_int2str(SQL_NUMERIC, sql_numeric, -10, 0);
-  my_int2str(SQL_VARBINARY, sql_varbinary, -10, 0);
-  my_int2str(SQL_TYPE_TIME, sql_time, -10, 0);
-  my_int2str(SQL_TYPE_DATE, sql_date, -10, 0);
-  my_int2str(SQL_LONGVARBINARY, sql_longvarbinary, -10, 0);
-  my_int2str(SQL_BINARY, sql_binary, -10, 0);
-  my_int2str(SQL_DATETIME, sql_datetime, -10, 0);
-  my_int2str(SQL_WCHAR, sql_wchar, -10, 0);
-  my_int2str(SQL_WVARCHAR, sql_wvarchar, -10, 0);
-  my_int2str(SQL_WLONGVARCHAR, sql_wlongvarchar, -10, 0);
+  des_int2str(SQL_SEARCHABLE, sql_searchable, -10, 0);
+  des_int2str(SQL_UNSEARCHABLE, sql_unsearchable, -10, 0);
+  des_int2str(SQL_NULLABLE, sql_nullable, -10, 0);
+  des_int2str(SQL_NO_NULLS, sql_no_nulls, -10, 0);
+  des_int2str(SQL_BIT, sql_bit, -10, 0);
+  des_int2str(SQL_TINYINT, sql_tinyint, -10, 0);
+  des_int2str(SQL_SMALLINT, sql_smallint, -10, 0);
+  des_int2str(SQL_INTEGER, sql_integer, -10, 0);
+  des_int2str(SQL_BIGINT, sql_bigint, -10, 0);
+  des_int2str(SQL_FLOAT, sql_float, -10, 0);
+  des_int2str(SQL_REAL, sql_real, -10, 0);
+  des_int2str(SQL_DOUBLE, sql_double, -10, 0);
+  des_int2str(SQL_CHAR, sql_char, -10, 0);
+  des_int2str(SQL_VARCHAR, sql_varchar, -10, 0);
+  des_int2str(SQL_LONGVARCHAR, sql_longvarchar, -10, 0);
+  des_int2str(SQL_TYPE_TIMESTAMP, sql_timestamp, -10, 0);
+  des_int2str(SQL_DECIMAL, sql_decimal, -10, 0);
+  des_int2str(SQL_NUMERIC, sql_numeric, -10, 0);
+  des_int2str(SQL_VARBINARY, sql_varbinary, -10, 0);
+  des_int2str(SQL_TYPE_TIME, sql_time, -10, 0);
+  des_int2str(SQL_TYPE_DATE, sql_date, -10, 0);
+  des_int2str(SQL_LONGVARBINARY, sql_longvarbinary, -10, 0);
+  des_int2str(SQL_BINARY, sql_binary, -10, 0);
+  des_int2str(SQL_DATETIME, sql_datetime, -10, 0);
+  des_int2str(SQL_WCHAR, sql_wchar, -10, 0);
+  des_int2str(SQL_WVARCHAR, sql_wvarchar, -10, 0);
+  des_int2str(SQL_WLONGVARCHAR, sql_wlongvarchar, -10, 0);
 # if (ODBCVER < 0x0300)
-  myodbc_sqlstate2_init();
-  myodbc_ov2_inited = 1;
+  desodbc_sqlstate2_init();
+  desodbc_ov2_inited = 1;
 # endif
 }
 
@@ -1197,21 +1197,21 @@ void myodbc_ov_init(SQLINTEGER odbc_version)
 {
   if (odbc_version == SQL_OV_ODBC2)
   {
-    my_int2str(SQL_TIMESTAMP, sql_timestamp, -10, 0);
-    my_int2str(SQL_DATE, sql_date, -10, 0);
-    my_int2str(SQL_TIME, sql_time, -10, 0);
-    myodbc_sqlstate2_init();
-    myodbc_ov2_inited = 1;
+    des_int2str(SQL_TIMESTAMP, sql_timestamp, -10, 0);
+    des_int2str(SQL_DATE, sql_date, -10, 0);
+    des_int2str(SQL_TIME, sql_time, -10, 0);
+    desodbc_sqlstate2_init();
+    desodbc_ov2_inited = 1;
   }
   else
   {
-    if (!myodbc_ov2_inited)
+    if (!desodbc_ov2_inited)
       return;
-    myodbc_ov2_inited = 0;
+    desodbc_ov2_inited = 0;
 
-    my_int2str(SQL_TYPE_TIMESTAMP, sql_timestamp, -10, 0);
-    my_int2str(SQL_TYPE_DATE, sql_date, -10, 0);
-    my_int2str(SQL_TYPE_TIME, sql_time, -10, 0);
+    des_int2str(SQL_TYPE_TIMESTAMP, sql_timestamp, -10, 0);
+    des_int2str(SQL_TYPE_DATE, sql_date, -10, 0);
+    des_int2str(SQL_TYPE_TIME, sql_time, -10, 0);
     myodbc_sqlstate3_init();
   }
 }

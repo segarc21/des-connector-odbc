@@ -50,10 +50,10 @@
 */
 
 #include "m_ctype.h"
-#include "my_compiler.h"
-#include "my_config.h"
+#include "des_compiler.h"
+#include "des_config.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 template <bool RANGE_CHECK, bool SUPPORT_MB4>

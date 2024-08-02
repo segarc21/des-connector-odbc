@@ -40,7 +40,7 @@
 
 #include "m_string.h"
 #include "my_alloc.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_dir.h" /* Structs used by my_dir,includes sys/types */
 #include "my_inttypes.h"
 #include "my_io.h"
@@ -56,7 +56,7 @@
 #include <dirent.h>
 #endif
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

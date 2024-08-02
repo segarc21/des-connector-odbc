@@ -29,7 +29,7 @@
   @file mysys/my_file.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <string.h>
 #include <sys/types.h>
@@ -43,7 +43,7 @@
 #include "mysql/malloc_allocator.h"
 
 #include "mutex_lock.h"  // MUTEX_LOCK
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_macros.h"
@@ -131,13 +131,13 @@ uint SetOsLimitMaxOpenFiles(uint max_file_limit) {
 */
 class FileInfo {
   const char *m_name = nullptr;
-  myodbc::file_info::OpenType m_type = myodbc::file_info::OpenType::UNOPEN;
+  desodbc::file_info::OpenType m_type = desodbc::file_info::OpenType::UNOPEN;
 
  public:
   FileInfo() = default;
 
-  FileInfo(const char *n, myodbc::file_info::OpenType t)
-      : m_name{myodbc::my_strdup(myodbc::key_memory_my_file_info, n,
+  FileInfo(const char *n, desodbc::file_info::OpenType t)
+      : m_name{desodbc::my_strdup(desodbc::key_memory_my_file_info, n,
                          MYF(MY_WME | ME_FATALERROR))},
         m_type{t} {}
 
@@ -147,10 +147,10 @@ class FileInfo {
   // Rule of 5 (4)
   FileInfo(FileInfo &&src) noexcept
       : m_name{std::exchange(src.m_name, nullptr)},
-        m_type{std::exchange(src.m_type, myodbc::file_info::OpenType::UNOPEN)} {}
+        m_type{std::exchange(src.m_type, desodbc::file_info::OpenType::UNOPEN)} {}
 
   // Rule of 5 (1)
-  ~FileInfo() { myodbc::my_free(const_cast<char *>(m_name)); }
+  ~FileInfo() { desodbc::my_free(const_cast<char *>(m_name)); }
 
   // Rule of 5 (3)
   FileInfo &operator=(const FileInfo &) = delete;
@@ -169,15 +169,15 @@ class FileInfo {
   }
 
   const char *name() const { return m_name; }
-  myodbc::file_info::OpenType type() const { return m_type; }
+  desodbc::file_info::OpenType type() const { return m_type; }
 };
 
-using FileInfoAllocator = myodbc::Malloc_allocator<FileInfo>;
+using FileInfoAllocator = desodbc::Malloc_allocator<FileInfo>;
 using FileInfoVector = std::vector<FileInfo, FileInfoAllocator>;
 FileInfoVector *fivp = nullptr;
 }  // namespace
 
-namespace myodbc
+namespace desodbc
 {
 
 namespace file_info {

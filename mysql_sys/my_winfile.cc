@@ -63,7 +63,7 @@
 #include <sys/stat.h>
 
 #include "mutex_lock.h"  // MUTEX_LOCK
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_io.h"
 #include "my_sys.h"
 #include "my_thread_local.h"
@@ -74,7 +74,7 @@
 
 namespace {
 
-using namespace myodbc;
+using namespace desodbc;
 
 /**
   RAII guard which ensures that:
@@ -100,7 +100,7 @@ class WindowsErrorGuard {
     // function and check that errno does not change.
     if (errno != 0 && le != ERROR_SUCCESS) {
       auto orig_errno = errno;
-      myodbc::my_osmaperr(le);
+      desodbc::my_osmaperr(le);
 
       if (orig_errno != errno) {
         dbug("handleinfo", [&]() {
@@ -124,7 +124,7 @@ class WindowsErrorGuard {
     // success.
     if (errno == 0) {
       assert(le != ERROR_SUCCESS);
-      myodbc::my_osmaperr(le);
+      desodbc::my_osmaperr(le);
     }
 
     assert(errno != 0);
@@ -158,7 +158,7 @@ bool IsValidDescr(File fd) { return IsValidIndex(ToIndex(fd)); }
 HandleInfo GetHandleInfo(File fd) {
   HandleInfoVector &hiv = *hivp;
   size_t hi = ToIndex(fd);
-  MUTEX_LOCK(g, &myodbc::THR_LOCK_open);
+  MUTEX_LOCK(g, &desodbc::THR_LOCK_open);
   if (!IsValidIndex(hi) || hiv[hi].handle == INVALID_HANDLE_VALUE) {
     SetLastError(ERROR_INVALID_HANDLE);
     return {};
@@ -170,7 +170,7 @@ File RegisterHandle(HANDLE handle, int oflag) {
   assert(handle != 0);
   HandleInfoVector &hiv = *hivp;
 
-  MUTEX_LOCK(g, &myodbc::THR_LOCK_open);
+  MUTEX_LOCK(g, &desodbc::THR_LOCK_open);
   HandleInfo hi{handle, oflag};
   auto it = std::find_if(hiv.begin(), hiv.end(), [](const HandleInfo &hi) {
     return (hi.handle == INVALID_HANDLE_VALUE);
@@ -187,7 +187,7 @@ File RegisterHandle(HANDLE handle, int oflag) {
 HandleInfo UnregisterHandle(File fd) {
   HandleInfoVector &hiv = *hivp;
   size_t hi = ToIndex(fd);
-  MUTEX_LOCK(g, &myodbc::THR_LOCK_open);
+  MUTEX_LOCK(g, &desodbc::THR_LOCK_open);
   assert(IsValidIndex(hi));
   HandleInfo unreg = hiv[hi];
   hiv[hi] = {};
@@ -196,7 +196,7 @@ HandleInfo UnregisterHandle(File fd) {
 
 File FileIndex(HANDLE handle) {
   const HandleInfoVector &hiv = *hivp;
-  MUTEX_LOCK(g, &myodbc::THR_LOCK_open);
+  MUTEX_LOCK(g, &desodbc::THR_LOCK_open);
   auto it = std::find_if(hiv.begin(), hiv.end(), [&](const HandleInfo &hi) {
     return (hi.handle == handle);
   });
@@ -232,7 +232,7 @@ OVERLAPPED MakeOverlapped(int64_t src) {
 File my_win_sopen(const char *path, int oflag, int shflag, int pmode) {
   DBUG_TRACE;
   WindowsErrorGuard weg;
-  if (myodbc::check_if_legal_filename(path)) {
+  if (desodbc::check_if_legal_filename(path)) {
     assert(GetLastError() == ERROR_SUCCESS);
     errno = EACCES;
     return -1;
@@ -396,7 +396,7 @@ File my_get_stdfile_descriptor(FILE *stream) {
 }
 }  // namespace
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

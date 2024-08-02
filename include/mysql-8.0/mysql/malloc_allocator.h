@@ -32,7 +32,7 @@
 #include "mysql/service_mysql_alloc.h"
 //#include "sql/psi_memory_key.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

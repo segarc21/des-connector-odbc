@@ -27,7 +27,7 @@
   @file include/mysys_err.h
 */
 
-namespace myodbc
+namespace desodbc
 {
 
 #define GLOBERRS                                              \

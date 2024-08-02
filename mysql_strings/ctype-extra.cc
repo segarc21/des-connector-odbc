@@ -37,7 +37,7 @@
 #include "m_ctype.h"
 #include "my_inttypes.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 static const uchar ctype_dec8_swedish_ci[] = {

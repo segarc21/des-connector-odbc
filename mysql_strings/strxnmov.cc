@@ -51,7 +51,7 @@
 
 #include "m_string.h"  // IWYU pragma: keep
 
-namespace myodbc
+namespace desodbc
 {
 
 char *strxnmov(char *dst, size_t len, const char *src, ...) {

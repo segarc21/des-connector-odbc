@@ -593,7 +593,7 @@ struct DBC
   // Whether SQL*ConnectW was used
   bool          unicode = false;
   // Connection charset ('ANSI' or utf-8)
-  myodbc::CHARSET_INFO *cxn_charset_info = nullptr;
+  desodbc::CHARSET_INFO *cxn_charset_info = nullptr;
   // data source used to connect (parsed or stored)
   DataSource    ds;
   // value of the sql_select_limit currently set for a session
@@ -1159,7 +1159,7 @@ struct STMT
 };
 
 
-namespace myodbc {
+namespace desodbc {
   struct HENV
   {
     SQLHENV henv = nullptr;
@@ -1279,7 +1279,7 @@ extern std::string default_plugin_location;
 # define MYSQL_TYPE_BIT 16
 #endif
 
-MY_LIMIT_CLAUSE find_position4limit(myodbc::CHARSET_INFO* cs, const char *query, const char * query_end);
+MY_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end);
 
 #include "myutil.h"
 #include "stringutil.h"

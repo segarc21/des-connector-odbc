@@ -33,7 +33,7 @@
 #include "integer_digits.h"
 #include "m_string.h"  // IWYU pragma: keep
 
-namespace myodbc
+namespace desodbc
 {
 
 /*

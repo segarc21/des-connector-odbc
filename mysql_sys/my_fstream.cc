@@ -29,13 +29,13 @@
   @file mysys/my_fstream.cc
 */
 
-#include "my_config.h"
+#include "des_config.h"
 
 #include <errno.h>
 #include <stdio.h>
 #include <sys/types.h>
 
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_sys.h"
 #include "my_thread_local.h"  // set_my_errno
@@ -58,7 +58,7 @@ int64_t fseek_(FILE *stream, int64_t offset, int whence) {
 }
 }  // namespace
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

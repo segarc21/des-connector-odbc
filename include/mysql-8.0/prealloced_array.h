@@ -34,14 +34,14 @@
 #include <type_traits>
 #include <utility>
 
-#include "my_compiler.h"
+#include "des_compiler.h"
 
 #include "my_inttypes.h"
 #include "my_sys.h"
 #include "mysql/psi/psi_memory.h"
 #include "mysql/service_mysql_alloc.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /**

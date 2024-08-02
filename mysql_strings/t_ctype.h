@@ -39,7 +39,7 @@
 #ifndef _t_ctype_h
 #define _t_ctype_h
 
-namespace myodbc
+namespace desodbc
 {
 
 typedef unsigned char tchar;

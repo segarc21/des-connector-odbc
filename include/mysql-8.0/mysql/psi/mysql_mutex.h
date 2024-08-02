@@ -68,7 +68,7 @@
 #include "pfs_mutex_provider.h"  // IWYU pragma: keep
 #endif
 
-namespace myodbc
+namespace desodbc
 {
 
 #ifndef PSI_MUTEX_CALL
@@ -144,11 +144,11 @@ namespace myodbc
   @param A Mutex attributes
 */
 
-#define mysql_mutex_init(K, M, A) \
-  mysql_mutex_init_with_src(K, M, A, __FILE__, __LINE__)
+#define def_des_mutex_init(K, M, A) \
+  des_mutex_init_with_src(K, M, A, __FILE__, __LINE__)
 
-#define mysql_mutex_init_with_src(K, M, A, F, L) \
-  inline_mysql_mutex_init(K, M, A, F, L)
+#define des_mutex_init_with_src(K, M, A, F, L) \
+  inline_des_mutex_init(K, M, A, F, L)
 
 /**
   @def mysql_mutex_destroy(M)
@@ -205,7 +205,7 @@ static inline void inline_mysql_mutex_register(const char *category
 #endif
 }
 
-static inline int inline_mysql_mutex_init(PSI_mutex_key key [[maybe_unused]],
+static inline int inline_des_mutex_init(PSI_mutex_key key [[maybe_unused]],
                                           mysql_mutex_t *that,
                                           const native_mutexattr_t *attr,
                                           const char *src_file [[maybe_unused]],
@@ -215,7 +215,7 @@ static inline int inline_mysql_mutex_init(PSI_mutex_key key [[maybe_unused]],
 #else
   that->m_psi = nullptr;
 #endif
-  return my_mutex_init(&that->m_mutex, attr
+  return des_mutex_init(&that->m_mutex, attr
 #ifdef SAFE_MUTEX
                        ,
                        src_file, src_line

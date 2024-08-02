@@ -75,8 +75,8 @@
 #define MAX32_BUFF_SIZE 11
 #define MAX64_BUFF_SIZE 21
 
-#define my_int2str(val, dst, radix, upcase) \
-    myodbc_int10_to_str((val), (dst), (radix))
+#define des_int2str(val, dst, radix, upcase) \
+    desodbc_int10_to_str((val), (dst), (radix))
 
 #if LIBMYSQL_VERSION_ID >= 50100
 typedef unsigned char * DYNAMIC_ELEMENT;
@@ -260,9 +260,9 @@ int       str_to_ts             (SQL_TIMESTAMP_STRUCT *ts, const char *str, int 
 my_bool str_to_time_st          (SQL_TIME_STRUCT *ts, const char *str);
 ulong str_to_time_as_long       (const char *str,uint length);
 void  init_getfunctions         (void);
-void  myodbc_init               (void);
+void  desodbc_init               (void);
 void  myodbc_ov_init            (SQLINTEGER odbc_version);
-void  myodbc_sqlstate2_init     (void);
+void  desodbc_sqlstate2_init     (void);
 void  myodbc_sqlstate3_init     (void);
 int   check_if_server_is_alive  (DBC *dbc);
 
@@ -346,8 +346,8 @@ const char *get_fractional_part   (const char * str, int len,
                                   SQLUINTEGER * fraction);
 /* Convert MySQL timestamp to full ANSI timestamp format. */
 char *          complete_timestamp  (const char * value, ulong length, char buff[21]);
-BOOL            myodbc_isspace      (myodbc::CHARSET_INFO* cs, const char * begin, const char *end);
-BOOL            myodbc_isnum        (myodbc::CHARSET_INFO* cs, const char * begin, const char *end);
+BOOL            myodbc_isspace      (desodbc::CHARSET_INFO* cs, const char * begin, const char *end);
+BOOL            myodbc_isnum        (desodbc::CHARSET_INFO* cs, const char * begin, const char *end);
 
 #define NO_OUT_PARAMETERS         0
 #define GOT_OUT_PARAMETERS        1
@@ -537,7 +537,7 @@ void free_connection_stmts(DBC *dbc);
 
 #define CHECK_DESC_OUTPUT(d, s) CHECK_STMT_OUTPUT(d, s)
 
-#define CHECK_DATA_OUTPUT(s, d) if(d == NULL) return ((STMT *)s)->set_error(MYERR_S1000, "Invalid output buffer", 0)
+#define CHECK_DATA_OUTPUT(s, d) if(d == NULL) return ((STMT *)s)->set_error(DESERR_S1000, "Invalid output buffer", 0)
 
 #define IF_NOT_NULL(v, x) if (v != NULL) x
 

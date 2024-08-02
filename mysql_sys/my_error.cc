@@ -41,7 +41,7 @@
 #include "m_ctype.h"
 #include "m_string.h"
 #include "my_base.h"
-#include "my_dbug.h"
+#include "des_dbug.h"
 #include "my_inttypes.h"
 #include "my_loglevel.h"
 #include "my_sys.h"
@@ -53,7 +53,7 @@
 #include "mysql_strings/mb_wc.h"
 #include "template_utils.h"
 
-namespace myodbc
+namespace desodbc
 {
 
 /* Max length of a error message. Should be kept in sync with MYSQL_ERRMSG_SIZE.

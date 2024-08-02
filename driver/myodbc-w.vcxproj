@@ -107,7 +107,6 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;MYODBC_UNICODEDRIVER;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR="Debug";myodbc_w_EXPORTS</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <OmitDefaultLibName>false</OmitDefaultLibName>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;MYODBC_UNICODEDRIVER;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"Debug\";myodbc_w_EXPORTS</PreprocessorDefinitions>
@@ -122,16 +121,15 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>..\lib\Debug\myodbc-util.lib;..\lib\Debug\mysql_sys.lib;..\lib\Debug\mysql_strings.lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/mysqlclient.lib;C:/Program Files/OpenSSL/lib/libcrypto.lib;C:/Program Files/OpenSSL/lib/libssl.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>..\lib\Debug\myodbc-util.lib;..\lib\Debug\mysql_sys.lib;..\lib\Debug\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9w.lib</ImportLibrary>
       <ModuleDefinitionFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/driverw.def</ModuleDefinitionFile>
       <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9w.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -175,7 +173,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>..\lib\Release\myodbc-util.lib;..\lib\Release\mysql_sys.lib;..\lib\Release\mysql_strings.lib;C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\lib\Release\myodbc-util.lib;..\lib\Release\mysql_sys.lib;..\lib\Release\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -227,7 +225,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>..\lib\MinSizeRel\myodbc-util.lib;..\lib\MinSizeRel\mysql_sys.lib;..\lib\MinSizeRel\mysql_strings.lib;C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\lib\MinSizeRel\myodbc-util.lib;..\lib\MinSizeRel\mysql_sys.lib;..\lib\MinSizeRel\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -278,7 +276,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>..\lib\RelWithDebInfo\myodbc-util.lib;..\lib\RelWithDebInfo\mysql_sys.lib;..\lib\RelWithDebInfo\mysql_strings.lib;C:\Program Files\MySQL\MySQL Server 8.0\lib\mysqlclient.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>..\lib\RelWithDebInfo\myodbc-util.lib;..\lib\RelWithDebInfo\mysql_sys.lib;..\lib\RelWithDebInfo\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;ws2_32.lib;odbccp32.lib;Secur32.lib;legacy_stdio_definitions.lib;Dnsapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>

@@ -83,7 +83,7 @@ static const char *find_used_table(STMT *stmt)
             table_name= field->org_table;
         if ( strcmp(field->org_table, table_name) )
         {
-            stmt->set_error(MYERR_S1000,
+            stmt->set_error(DESERR_S1000,
                       "Can't modify a row from a statement that uses more than one table",0);
             return NULL;
         }
@@ -155,7 +155,7 @@ char *check_if_positioned_cursor_exists(STMT *pStmt, STMT **pStmtCursor)
     /* Did we run out of statements without finding a viable cursor? */
     {
       char buff[200];
-      myodbc::strxmov(buff,"Cursor '", cursorName,
+      desodbc::strxmov(buff,"Cursor '", cursorName,
               "' does not exist or does not have a result set.", NullS);
       pStmt->set_error("34000", buff, ER_INVALID_CURSOR_NAME);
     }
@@ -223,10 +223,10 @@ static my_bool check_if_usable_unique_key_exists(STMT *stmt)
     table= stmt->result->fields->table;
 
   /* Use SHOW KEYS FROM table to check for keys. */
-  pos= myodbc_stpmov(buff, "SHOW KEYS FROM `");
+  pos= desodbc_stpmov(buff, "SHOW KEYS FROM `");
   pos+= mysql_real_escape_string(stmt->dbc->mysql, pos, table,
     (unsigned long)strlen(table));
-  pos= myodbc_stpmov(pos, "`");
+  pos= desodbc_stpmov(pos, "`");
 
   MYLOG_QUERY(stmt, buff);
 
@@ -235,7 +235,7 @@ static my_bool check_if_usable_unique_key_exists(STMT *stmt)
   if (exec_stmt_query(stmt, buff, strlen(buff), FALSE) ||
       !(res= mysql_store_result(stmt->dbc->mysql)))
   {
-    stmt->set_error(MYERR_S1000);
+    stmt->set_error(DESERR_S1000);
     return FALSE;
   }
 
@@ -260,7 +260,7 @@ static my_bool check_if_usable_unique_key_exists(STMT *stmt)
     if (have_field_in_result(row[4], stmt->result))
     {
       /* We have a unique key field -- copy it, and increment our count. */
-      myodbc_stpmov(stmt->cursor.pkcol[stmt->cursor.pk_count++].name, row[4]);
+      desodbc_stpmov(stmt->cursor.pkcol[stmt->cursor.pk_count++].name, row[4]);
       seq_in_index= seq;
     }
     else
@@ -578,7 +578,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
   if (exec_stmt_query_std(stmt, select, false) ||
       !(presultAllColumns= mysql_store_result(stmt->dbc->mysql)))
   {
-    stmt->set_error(MYERR_S1000);
+    stmt->set_error(DESERR_S1000);
     return SQL_ERROR;
   }
 
@@ -609,7 +609,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
         table_field->type == MYSQL_TYPE_DOUBLE ||
         table_field->type == MYSQL_TYPE_DECIMAL)
     {
-      stmt->set_error(MYERR_S1000,
+      stmt->set_error(DESERR_S1000,
                 "Invalid use of floating point comparision in positioned operations",0);
       mysql_free_result(presultAllColumns);
       return SQL_ERROR;
@@ -1661,7 +1661,7 @@ SQLRETURN SQL_API my_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
 
     /* Not a valid lock type ..*/
     if ( fLock != SQL_LOCK_NO_CHANGE )
-        return stmt->set_error(MYERR_S1C00,NULL,0);
+        return stmt->set_error(DESERR_S1C00,NULL,0);
 
     switch ( fOption )
     {
@@ -1676,7 +1676,7 @@ SQLRETURN SQL_API my_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                 /* If Dynamic cursor, fetch the latest resultset */
                 if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
                 {
-                    return stmt->set_error(MYERR_S1000, alloc_error, 0);
+                    return stmt->set_error(DESERR_S1000, alloc_error, 0);
                 }
 
                 LOCK_DBC(stmt->dbc);
@@ -1710,7 +1710,7 @@ SQLRETURN SQL_API my_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
 
                 /* IF dynamic cursor THEN rerun query to refresh resultset */
                 if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
-                    return stmt->set_error(MYERR_S1000, alloc_error, 0);
+                    return stmt->set_error(DESERR_S1000, alloc_error, 0);
 
                 /* start building our DELETE statement */
                 std::string del_query("DELETE FROM ");
@@ -1728,7 +1728,7 @@ SQLRETURN SQL_API my_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                 /* IF dynamic cursor THEN rerun query to refresh resultset */
                 if (!stmt->dae_type && stmt->is_dynamic_cursor() &&
                     set_dynamic_result(stmt))
-                  return stmt->set_error(MYERR_S1000, alloc_error, 0);
+                  return stmt->set_error(DESERR_S1000, alloc_error, 0);
 
                 if (ret = setpos_dae_check_and_init(stmt, irow, fLock,
                                                   DAE_SETPOS_UPDATE))
@@ -1748,7 +1748,7 @@ SQLRETURN SQL_API my_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
 
                 if (!stmt->dae_type && stmt->is_dynamic_cursor() &&
                     set_dynamic_result(stmt))
-                  return stmt->set_error(MYERR_S1000, alloc_error, 0);
+                  return stmt->set_error(DESERR_S1000, alloc_error, 0);
                 result= stmt->result;
 
                 if ( !(table_name= find_used_table(stmt)) )
@@ -1923,7 +1923,7 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
       if (!stmt->dae_type && stmt->is_dynamic_cursor() &&
           set_dynamic_result(stmt))
       {
-        return stmt->set_error(MYERR_S1000, alloc_error, 0);
+        return stmt->set_error(DESERR_S1000, alloc_error, 0);
       }
 
       if (rc= setpos_dae_check_and_init(stmt, irow, SQL_LOCK_NO_CHANGE,
@@ -1943,7 +1943,7 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
 
       /* IF dynamic cursor THEN rerun query to refresh resultset */
       if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
-          return stmt->set_error(MYERR_S1000, alloc_error, 0);
+          return stmt->set_error(DESERR_S1000, alloc_error, 0);
 
       /* start building our DELETE statement */
       std::string del_query("DELETE FROM ");
@@ -1958,7 +1958,7 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
       break;
     }
   default:
-    return ((STMT*)(Handle))->set_error(MYERR_S1C00,NULL,0);
+    return ((STMT*)(Handle))->set_error(DESERR_S1C00,NULL,0);
   }
 
   return sqlRet;
