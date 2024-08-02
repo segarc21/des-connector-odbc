@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\CMakeFiles\68dce6f8e689f99f5bcb78d13b64ae7e\odbcinst.ini.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\CMakeFiles\9b368b8abd2edb8d1598f4cb1aa8d838\generate_test_config_files.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test\CMakeFiles\generate_test_config_files" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{3F49118A-6AED-3374-A143-AF488A7BF43D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

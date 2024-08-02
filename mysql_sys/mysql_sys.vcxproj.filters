@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\array.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\charset-def.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\charset.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\errors.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\list.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\mf_dirname.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\mf_pack.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_access.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_alloc.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_file.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_error.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_fstream.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_getwd.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_init.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_lib.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_malloc.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_mess.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_once.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_open.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_read.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_static.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_thread.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_thr_init.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\sql_chars.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_string.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\thr_cond.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\thr_mutex.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_time.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_systime.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_winerr.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\my_winfile.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_sys\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{BC75A55F-6009-34DB-B874-49393A3EF652}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,406 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CF984EF1-14B8-30F0-AE82-666A96A882D9}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>mysql_strings</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">mysql_strings.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">mysql_strings</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mysql_strings.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mysql_strings</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">mysql_strings.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">mysql_strings</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">mysql_strings.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">mysql_strings</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level1</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level1</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level1</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level1</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;WIN32_LEAN_AND_MEAN;NOMINMAX;DISABLE_MYSQL_THREAD_H;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\CMakeFiles\2d63d91dae723f655cd6f023a17649f6\uca900_zh_tbls.cc.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating uca900_zh_tbls.cc, uca900_ja_tbls.cc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+..\bin\Debug\uca9dump.exe zh --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/zh_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_zh_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+..\bin\Debug\uca9dump.exe ja --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/ja_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_ja_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\bin\Debug\uca9dump.exe;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\zh_hans.txt;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\ja_hans.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_zh_tbls.cc;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_ja_tbls.cc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating uca900_zh_tbls.cc, uca900_ja_tbls.cc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+..\bin\Release\uca9dump.exe zh --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/zh_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_zh_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+..\bin\Release\uca9dump.exe ja --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/ja_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_ja_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\bin\Release\uca9dump.exe;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\zh_hans.txt;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\ja_hans.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_zh_tbls.cc;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_ja_tbls.cc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating uca900_zh_tbls.cc, uca900_ja_tbls.cc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+..\bin\MinSizeRel\uca9dump.exe zh --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/zh_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_zh_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+..\bin\MinSizeRel\uca9dump.exe ja --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/ja_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_ja_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\bin\MinSizeRel\uca9dump.exe;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\zh_hans.txt;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\ja_hans.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_zh_tbls.cc;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_ja_tbls.cc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating uca900_zh_tbls.cc, uca900_ja_tbls.cc</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+..\bin\RelWithDebInfo\uca9dump.exe zh --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/zh_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_zh_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+..\bin\RelWithDebInfo\uca9dump.exe ja --in_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/lang_data/ja_hans.txt --out_file=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/uca900_ja_tbls.cc
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\bin\RelWithDebInfo\uca9dump.exe;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\zh_hans.txt;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\lang_data\ja_hans.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_zh_tbls.cc;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_ja_tbls.cc</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 -BC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 --check-stamp-file C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 -BC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 --check-stamp-file C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 -BC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 --check-stamp-file C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 -BC:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0 --check-stamp-file C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/mysql_strings/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-big5.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-bin.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-cp932.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-czech.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-eucjpms.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-euc_kr.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-extra.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-gb18030.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-gb2312.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-gbk.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-latin1.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-mb.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-simple.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-sjis.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-tis620.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-uca.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-ucs2.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-ujis.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-utf8.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\ctype-win1250ch.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\decimal.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\dtoa.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\int2str.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\my_strchr.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\my_strtoll10.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\str2int.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\str_alloc.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\strcont.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\strmake.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\strxmov.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\strxnmov.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\xml.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_ja_tbls.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca900_zh_tbls.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\ZERO_CHECK.vcxproj">
+      <Project>{62598458-75DA-35AC-89CB-BA1845420AE0}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\mysql_strings\uca9dump.vcxproj">
+      <Project>{00D0DF4D-BC89-3AFE-998B-0105AD143660}</Project>
+      <Name>uca9dump</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

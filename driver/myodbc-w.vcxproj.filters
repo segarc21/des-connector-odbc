@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\catalog.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\catalog_no_i_s.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\connect.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\cursor.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\desc.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\dll.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\error.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\execute.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\handle.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\info.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\driver.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\options.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\parse.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\prepare.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\results.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\transact.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\my_prepared_stmt.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\my_stmt.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\utility.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\unicode.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\catalog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\error.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\myutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\parse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\MYODBC_MYSQL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\MYODBC_CONF.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\MYODBC_ODBC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\CMakeFiles\bd3e59b7cf59796801c0b221245a3eb3\myodbc-w_version_info.rc.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\driverw.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\driverw.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\myodbc-w_version_info.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{3F49118A-6AED-3374-A143-AF488A7BF43D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{AA480B47-DB4E-38E2-97EB-247E905A167F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{BC75A55F-6009-34DB-B874-49393A3EF652}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
