@@ -10045,7 +10045,7 @@ CHARSET_INFO my_charset_gbk_chinese_ci = {
     28,
     0,
     0,                                               /* number */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM, /* state      */
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM, /* state      */
     "gbk",                                           /* cs name    */
     "gbk_chinese_ci",                                /* name */
     "GBK Simplified Chinese",                        /* comment    */

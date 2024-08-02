@@ -6557,7 +6557,7 @@ CHARSET_INFO my_charset_gb2312_chinese_ci = {
     24,
     0,
     0,                              /* number */
-    MY_CS_COMPILED | MY_CS_PRIMARY, /* state      */
+    MY_CS_COMPILED | DES_CS_PRIMARY, /* state      */
     "gb2312",                       /* cs name    */
     "gb2312_chinese_ci",            /* name */
     "GB2312 Simplified Chinese",    /* comment    */

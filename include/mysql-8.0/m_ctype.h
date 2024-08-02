@@ -114,7 +114,7 @@ extern MY_UNI_CTYPE my_uni_ctype[256];
 #define MY_CS_INDEX 4    /* sets listed in the Index file  */
 #define MY_CS_LOADED 8   /* sets that are currently loaded */
 #define MY_CS_BINSORT 16 /* if binary sort order           */
-#define MY_CS_PRIMARY 32 /* if primary collation           */
+#define DES_CS_PRIMARY 32 /* if primary collation           */
 #define MY_CS_STRNXFRM                                                         \
   64                                   /*                                      \
                                          if _not_ set, sort_order will         \

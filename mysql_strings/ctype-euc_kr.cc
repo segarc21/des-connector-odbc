@@ -9462,7 +9462,7 @@ CHARSET_INFO my_charset_euckr_korean_ci = {
     19,
     0,
     0,                              /* number */
-    MY_CS_COMPILED | MY_CS_PRIMARY, /* state      */
+    MY_CS_COMPILED | DES_CS_PRIMARY, /* state      */
     "euckr",                        /* cs name    */
     "euckr_korean_ci",              /* name */
     "EUC-KR Korean",                /* comment    */

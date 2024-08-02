@@ -165,7 +165,7 @@ static inline int inline_mysql_cond_destroy(mysql_cond_t *that,
 }
 
 static inline int inline_mysql_cond_wait(mysql_cond_t *that,
-                                         mysql_mutex_t *mutex,
+                                         repl_des_mutex_t *mutex,
                                          const char *src_file [[maybe_unused]],
                                          int src_line [[maybe_unused]]) {
   int result;
@@ -209,7 +209,7 @@ static inline int inline_mysql_cond_wait(mysql_cond_t *that,
 }
 
 static inline int inline_mysql_cond_timedwait(
-    mysql_cond_t *that, mysql_mutex_t *mutex, const struct timespec *abstime,
+    mysql_cond_t *that, repl_des_mutex_t *mutex, const struct timespec *abstime,
     const char *src_file [[maybe_unused]], int src_line [[maybe_unused]]) {
   int result;
 

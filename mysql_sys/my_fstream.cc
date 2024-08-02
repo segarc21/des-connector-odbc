@@ -78,9 +78,9 @@ size_t my_fread(FILE *stream, uchar *Buffer, size_t Count, myf MyFlags) {
   if ((readbytes = fread(Buffer, sizeof(char), Count, stream)) != Count) {
     if (MyFlags & (MY_WME | MY_FAE | MY_FNABP)) {
       if (ferror(stream)) {
-        MyOsError(my_errno(), EE_READ, MYF(0), my_filename(my_fileno(stream)));
+        MyOsError(my_errno(), EE_READ, DESF(0), my_filename(my_fileno(stream)));
       } else if (MyFlags & (MY_NABP | MY_FNABP)) {
-        MyOsError(errno, EE_EOFERR, MYF(0), my_filename(my_fileno(stream)));
+        MyOsError(errno, EE_EOFERR, DESF(0), my_filename(my_fileno(stream)));
       }
     }
     set_my_errno(errno ? errno : -1);
@@ -129,7 +129,7 @@ size_t my_fwrite(FILE *stream, const uchar *Buffer, size_t Count, myf MyFlags) {
       }
       if (ferror(stream) || (MyFlags & (MY_NABP | MY_FNABP))) {
         if (MyFlags & (MY_WME | MY_FAE | MY_FNABP)) {
-          MyOsError(errno, EE_WRITE, MYF(0), my_filename(my_fileno(stream)));
+          MyOsError(errno, EE_WRITE, DESF(0), my_filename(my_fileno(stream)));
         }
         writtenbytes = MY_FILE_ERROR; /* Return that we got error */
         break;

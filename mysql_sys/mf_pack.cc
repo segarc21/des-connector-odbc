@@ -132,7 +132,7 @@ size_t cleanup_dirname(char *to, const char *from) {
             if (*pos == FN_LIBCHAR) pos--;       /* home ended with '/' */
           }
           if (*pos == FN_CURLIB && (pos == start || pos[-1] == FN_LIBCHAR)) {
-            if (my_getwd(curr_dir, FN_REFLEN, MYF(0))) {
+            if (my_getwd(curr_dir, FN_REFLEN, DESF(0))) {
               pos += length + 1; /* Don't unpack ./.. */
               continue;
             }

@@ -70,7 +70,7 @@ void desodbc_init(void)
      sigaction will block other signals from coming when handler is working
    */
    struct sigaction action;
-   action.sa_handler = myodbc_pipe_sig_handler;
+   action.sa_handler = desodbc_pipe_sig_handler;
    sigemptyset(&action.sa_mask);
    action.sa_flags = 0;
    sigaction(SIGPIPE, &action, NULL);
@@ -102,15 +102,16 @@ void desodbc_init(void)
 
     __LOCALE_RESTORE()
 
-    utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
-                                             MYF(0));
+    utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY),
+                                             DESF(0));
 
 #ifdef IS_BIG_ENDIAN
-    utf16_charset_info = myodbc::get_charset_by_csname("utf16", MYF(MY_CS_PRIMARY),
-                                             MYF(0));
+    utf16_charset_info =
+        desodbc::get_charset_by_csname("utf16", DESF(DES_CS_PRIMARY),
+                                             DESF(0));
 #else
-    utf16_charset_info = desodbc::get_charset_by_csname("utf16le", MYF(MY_CS_PRIMARY),
-                                             MYF(0));
+    utf16_charset_info = desodbc::get_charset_by_csname("utf16le", DESF(DES_CS_PRIMARY),
+                                             DESF(0));
 #endif
   }
 }
@@ -198,8 +199,8 @@ int APIENTRY LibMain(HANDLE inst, DWORD ul_reason_being_called,
     break;
 
   /*
-     We don't explicitly call my_thread_init() to avoid initialization in
-     threads that may not even make ODBC calls. my_thread_init() will be
+     We don't explicitly call des_thread_init() to avoid initialization in
+     threads that may not even make ODBC calls. des_thread_init() will be
      called implicitly when mysys calls are made from the thread.
   */
   case DLL_THREAD_ATTACH:

@@ -144,7 +144,7 @@ struct MEM_ROOT;
 #define MY_DONT_OVERWRITE_FILE 1024 /* my_copy: Don't overwrite file */
 #define MY_SYNC 4096                /* my_copy(): sync dst file */
 
-#define MYF_RW MYF(MY_WME + MY_NABP) /* For my_read & my_write */
+#define MYF_RW DESF(MY_WME + MY_NABP) /* For my_read & my_write */
 
 #define MY_CHECK_ERROR 1    /* Params to my_end; Check open-close */
 #define MY_GIVE_INFO 2      /* Give time info about process*/
@@ -191,7 +191,7 @@ extern void *my_multi_malloc(PSI_memory_key key, myf flags, ...);
 extern PSI_memory_key key_memory_max_alloca;
 #define my_safe_alloca(size, max_alloca_sz)  \
   ((size <= max_alloca_sz) ? my_alloca(size) \
-                           : my_malloc(key_memory_max_alloca, size, MYF(0)))
+                           : my_malloc(key_memory_max_alloca, size, DESF(0)))
 #define my_safe_afree(ptr, size, max_alloca_sz) \
   if (size > max_alloca_sz) my_free(ptr)
 
@@ -237,7 +237,7 @@ extern MYSQL_PLUGIN_IMPORT ulong my_thread_stack_size;
   By having hooks, we avoid direct dependencies on server code.
 */
 extern void (*enter_cond_hook)(void *opaque_thd, mysql_cond_t *cond,
-                               mysql_mutex_t *mutex,
+                               repl_des_mutex_t *mutex,
                                const PSI_stage_info *stage,
                                PSI_stage_info *old_stage,
                                const char *src_function, const char *src_file,
@@ -315,7 +315,7 @@ struct DYNAMIC_ARRAY {
 struct MY_TMPDIR {
   char **list{nullptr};
   uint cur{0}, max{0};
-  mysql_mutex_t mutex;
+  repl_des_mutex_t mutex;
 };
 
 struct DYNAMIC_STRING {
@@ -327,7 +327,7 @@ struct IO_CACHE;
 typedef int (*IO_CACHE_CALLBACK)(IO_CACHE *);
 
 struct IO_CACHE_SHARE {
-  mysql_mutex_t mutex;      /* To sync on reads into buffer. */
+  repl_des_mutex_t mutex;      /* To sync on reads into buffer. */
   mysql_cond_t cond;        /* To wait for signals. */
   mysql_cond_t cond_writer; /* For a synchronized writer. */
   /* Offset in file corresponding to the first byte of buffer. */
@@ -385,7 +385,7 @@ struct IO_CACHE /* Used when cacheing files */
     The lock is for append buffer used in SEQ_READ_APPEND cache
     need mutex copying from append buffer to read buffer.
   */
-  mysql_mutex_t append_buffer_lock;
+  repl_des_mutex_t append_buffer_lock;
   /*
     The following is used when several threads are reading the
     same file in parallel. They are synchronized on disk

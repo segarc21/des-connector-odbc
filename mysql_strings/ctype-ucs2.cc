@@ -1410,7 +1410,7 @@ CHARSET_INFO my_charset_utf16_general_ci = {
     54,
     0,
     0, /* number       */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
         MY_CS_NONASCII,
     "utf16",             /* cs name    */
     "utf16_general_ci",  /* name         */
@@ -1566,7 +1566,7 @@ CHARSET_INFO my_charset_utf16le_general_ci = {
     56,
     0,
     0, /* number       */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
         MY_CS_NONASCII,
     "utf16le",            /* cs name    */
     "utf16le_general_ci", /* name         */
@@ -2340,7 +2340,7 @@ CHARSET_INFO my_charset_utf32_general_ci = {
     60,
     0,
     0, /* number       */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
         MY_CS_UNICODE_SUPPLEMENT | MY_CS_NONASCII,
     "utf32",             /* cs name    */
     "utf32_general_ci",  /* name         */
@@ -2875,7 +2875,7 @@ CHARSET_INFO my_charset_ucs2_general_ci = {
     35,
     0,
     0, /* number       */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
         MY_CS_NONASCII,
     "ucs2",              /* cs name    */
     "ucs2_general_ci",   /* name         */

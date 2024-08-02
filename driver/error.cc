@@ -153,7 +153,7 @@ void myodbc_sqlstate3_init(void)
     desodbc_stpmov(desodbc3_errors[DESERR_42S22].sqlstate,"42S22");
 }
 
-MYERROR::MYERROR(myodbc_errid errid, const char* errtext, SQLINTEGER errcode,
+DESERROR::DESERROR(myodbc_errid errid, const char* errtext, SQLINTEGER errcode,
   const char* prefix)
 {
   std::string errmsg;
@@ -166,7 +166,7 @@ MYERROR::MYERROR(myodbc_errid errid, const char* errtext, SQLINTEGER errcode,
   message = prefix + errmsg;
 }
 
-MYERROR::MYERROR(const char* state, const char* msg, SQLINTEGER errcode,
+DESERROR::DESERROR(const char* state, const char* msg, SQLINTEGER errcode,
   const char* prefix)
 {
   sqlstate = state ? state : "";
@@ -186,7 +186,7 @@ SQLRETURN set_desc_error(DESC *        desc,
                          const char *  message,
                          uint          errcode)
 {
-  desc->error = MYERROR(state, message, errcode, MYODBC_ERROR_PREFIX);
+  desc->error = DESERROR(state, message, errcode, MYODBC_ERROR_PREFIX);
   return SQL_ERROR;
 }
 
@@ -266,7 +266,7 @@ void translate_error(char *save_state, myodbc_errid errid, uint mysql_err)
 SQLRETURN set_env_error(ENV *env, myodbc_errid errid, const char *errtext,
                         SQLINTEGER errcode)
 {
-  env->error = MYERROR(errid, errtext, errcode, MYODBC_ERROR_PREFIX);
+  env->error = DESERROR(errid, errtext, errcode, MYODBC_ERROR_PREFIX);
   return env->error.retcode;
 }
 
@@ -347,13 +347,13 @@ SQLRETURN set_handle_error(SQLSMALLINT HandleType, SQLHANDLE handle,
     case SQL_HANDLE_STMT:
     {
       STMT *stmt = (STMT*)handle;
-      stmt->error = MYERROR(errid, errtext, errcode, stmt->dbc->st_error_prefix);
+      stmt->error = DESERROR(errid, errtext, errcode, stmt->dbc->st_error_prefix);
       return stmt->error.retcode;
     }
     case SQL_HANDLE_DESC:
     {
       DESC* desc = (DESC*)handle;
-      desc->error = MYERROR(errid, errtext, errcode, desc->stmt->dbc->st_error_prefix);
+      desc->error = DESERROR(errid, errtext, errcode, desc->stmt->dbc->st_error_prefix);
       return desc->error.retcode;
     }
     default:
@@ -368,7 +368,7 @@ SQLRETURN SQL_API
 MySQLGetDiagRec(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
                 SQLCHAR **sqlstate, SQLINTEGER *native, SQLCHAR **message)
 {
-  MYERROR *error;
+  DESERROR *error;
   SQLINTEGER tmp_native;
 
   if (!native)
@@ -449,7 +449,7 @@ MySQLGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
   STMT *stmt= (STMT *)handle;
   DBC *dbc= (DBC *)handle;
   DESC *desc= (DESC *)handle;
-  MYERROR *error;
+  DESERROR *error;
 
   if (!num_value)
     num_value= &num;

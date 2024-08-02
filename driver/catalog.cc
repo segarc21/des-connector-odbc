@@ -214,7 +214,7 @@ create_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
   // Free if result data was not in row storage.
   stmt->reset_result_array();
 
-  stmt->result= (MYSQL_RES*) myodbc_malloc(sizeof(MYSQL_RES), MYF(MY_ZEROFILL));
+  stmt->result= (MYSQL_RES*) myodbc_malloc(sizeof(MYSQL_RES), DESF(MY_ZEROFILL));
   if (!stmt->result) {
     set_mem_error(stmt->dbc->mysql);
     return handle_connection_error(stmt);
@@ -891,7 +891,7 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
   {
     ocat.execute();
   }
-  catch (const MYERROR &e)
+  catch (const DESERROR &e)
   {
     return e.retcode;
   }
@@ -1350,7 +1350,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
   {
     ocat.execute();
   }
-  catch (const MYERROR &e)
+  catch (const DESERROR &e)
   {
     return e.retcode;
   }

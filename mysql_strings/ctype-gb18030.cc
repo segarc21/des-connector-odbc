@@ -20428,7 +20428,7 @@ CHARSET_INFO my_charset_gb18030_chinese_ci = {
     248,
     0,
     0,                                               /* number        */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM, /* state         */
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM, /* state         */
     "gb18030",                                       /* cs name       */
     "gb18030_chinese_ci",                            /* name          */
     "China National Standard GB18030",               /* comment       */

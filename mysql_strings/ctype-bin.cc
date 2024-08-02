@@ -514,7 +514,7 @@ CHARSET_INFO my_charset_bin = {
     63,
     0,
     0,                                              /* number        */
-    MY_CS_COMPILED | MY_CS_BINSORT | MY_CS_PRIMARY, /* state */
+    MY_CS_COMPILED | MY_CS_BINSORT | DES_CS_PRIMARY, /* state */
     "binary",                                       /* cs name    */
     "binary",                                       /* name          */
     "Binary pseudo charset",                        /* comment       */

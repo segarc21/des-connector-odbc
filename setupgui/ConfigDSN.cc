@@ -120,7 +120,7 @@ BOOL INSTAPI ConfigDSNW(HWND hWnd, WORD nRequest, LPCWSTR pszDriver,
   if (!utf8_charset_info) {
     des_sys_init();
     utf8_charset_info =
-      desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY), MYF(0));
+      desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY), DESF(0));
   }
 
   if (pszAttributes && *pszAttributes)
@@ -234,9 +234,9 @@ BOOL INSTAPI ConfigDSN(HWND hWnd, WORD nRequest, LPCSTR pszDriverA,
 
   /* We will assume using one-byte Latin string as a subset of UTF-8 */
   SQLWCHAR *pszDriverW= (SQLWCHAR *) myodbc_malloc((lenDriver + 1) *
-                                                sizeof(SQLWCHAR), MYF(0));
+                                                sizeof(SQLWCHAR), DESF(0));
   SQLWCHAR *pszAttributesW= (SQLWCHAR *)myodbc_malloc((lenAttrib + 1) *
-                                                  sizeof(SQLWCHAR), MYF(0));
+                                                  sizeof(SQLWCHAR), DESF(0));
 
   utf8_as_sqlwchar(pszDriverW, lenDriver, (SQLCHAR* )pszDriverA, lenDriver);
   utf8_as_sqlwchar(pszAttributesW, lenAttrib, (SQLCHAR* )pszAttributesA,

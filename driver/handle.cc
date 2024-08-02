@@ -130,7 +130,7 @@ SQLRETURN DBC::set_error(char * state)
 SQLRETURN DBC::set_error(myodbc_errid errid, const char* errtext,
   SQLINTEGER errcode)
 {
-  error = MYERROR(errid, errtext, errcode, MYODBC_ERROR_PREFIX);
+  error = DESERROR(errid, errtext, errcode, MYODBC_ERROR_PREFIX);
   return error.retcode;
 }
 
@@ -146,7 +146,7 @@ SQLRETURN SQL_API DES_SQLAllocEnv(SQLHENV *phenv)
   ENV *env;
 
   std::lock_guard<std::mutex> env_guard(g_lock);
-  desodbc_init(); // This will call mysql_library_init()
+  desodbc_init();
 
 #ifndef USE_IODBC
     env = new ENV(SQL_OV_ODBC3_80);

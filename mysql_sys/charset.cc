@@ -107,7 +107,7 @@ static void map_cs_name_to_number(const char *name, int num, int state) {
   my_casedn_str(&my_charset_latin1, lower_case_name);
 
   assert(cs_name_pri_num_map != nullptr && cs_name_bin_num_map != nullptr);
-  if ((state & MY_CS_PRIMARY)) (*cs_name_pri_num_map)[lower_case_name] = num;
+  if ((state & DES_CS_PRIMARY)) (*cs_name_pri_num_map)[lower_case_name] = num;
   if ((state & MY_CS_BINSORT)) (*cs_name_bin_num_map)[lower_case_name] = num;
 }
 
@@ -138,54 +138,54 @@ static bool cs_copy_data(CHARSET_INFO *to, CHARSET_INFO *from) {
   to->number = from->number ? from->number : to->number;
 
   if (from->csname) {
-    to->csname = my_once_strdup(from->csname, MYF(MY_WME));
+    to->csname = my_once_strdup(from->csname, DESF(MY_WME));
     if (to->csname == nullptr) return true;
   }
 
   if (from->name) {
-    to->name = my_once_strdup(from->name, MYF(MY_WME));
+    to->name = my_once_strdup(from->name, DESF(MY_WME));
     if (to->name == nullptr) return true;
   }
 
   if (from->comment) {
-    to->comment = my_once_strdup(from->comment, MYF(MY_WME));
+    to->comment = my_once_strdup(from->comment, DESF(MY_WME));
     if (to->comment == nullptr) return true;
   }
 
   if (from->ctype) {
     to->ctype = static_cast<uchar *>(
-        my_once_memdup(from->ctype, MY_CS_CTYPE_TABLE_SIZE, MYF(MY_WME)));
+        my_once_memdup(from->ctype, MY_CS_CTYPE_TABLE_SIZE, DESF(MY_WME)));
     if (to->ctype == nullptr) return true;
     if (init_state_maps(to)) return true;
   }
 
   if (from->to_lower) {
     to->to_lower = static_cast<uchar *>(
-        my_once_memdup(from->to_lower, MY_CS_TO_LOWER_TABLE_SIZE, MYF(MY_WME)));
+        my_once_memdup(from->to_lower, MY_CS_TO_LOWER_TABLE_SIZE, DESF(MY_WME)));
     if (to->to_lower == nullptr) return true;
   }
 
   if (from->to_upper) {
     to->to_upper = static_cast<uchar *>(
-        my_once_memdup(from->to_upper, MY_CS_TO_UPPER_TABLE_SIZE, MYF(MY_WME)));
+        my_once_memdup(from->to_upper, MY_CS_TO_UPPER_TABLE_SIZE, DESF(MY_WME)));
     if (to->to_upper == nullptr) return true;
   }
 
   if (from->sort_order) {
     to->sort_order = static_cast<uchar *>(my_once_memdup(
-        from->sort_order, MY_CS_SORT_ORDER_TABLE_SIZE, MYF(MY_WME)));
+        from->sort_order, MY_CS_SORT_ORDER_TABLE_SIZE, DESF(MY_WME)));
     if (to->sort_order == nullptr) return true;
   }
 
   if (from->tab_to_uni) {
     size_t sz = MY_CS_TO_UNI_TABLE_SIZE * sizeof(uint16);
     to->tab_to_uni = static_cast<uint16 *>(
-        my_once_memdup(from->tab_to_uni, sz, MYF(MY_WME)));
+        my_once_memdup(from->tab_to_uni, sz, DESF(MY_WME)));
     if (to->tab_to_uni == nullptr) return true;
   }
 
   if (from->tailoring) {
-    to->tailoring = my_once_strdup(from->tailoring, MYF(MY_WME));
+    to->tailoring = my_once_strdup(from->tailoring, DESF(MY_WME));
     if (to->tailoring == nullptr) return true;
   }
 
@@ -227,7 +227,7 @@ static int add_collation(CHARSET_INFO *cs) {
       cs->number < array_elements(all_charsets)) {
     if (!all_charsets[cs->number]) {
       if (!(all_charsets[cs->number] =
-                (CHARSET_INFO *)my_once_alloc(sizeof(CHARSET_INFO), MYF(0))))
+                (CHARSET_INFO *)my_once_alloc(sizeof(CHARSET_INFO), DESF(0))))
         return MY_XML_ERROR;
       memset(all_charsets[cs->number], 0, sizeof(CHARSET_INFO));
     } else if (all_charsets[cs->number]->state & MY_CS_COMPILED) {
@@ -236,7 +236,7 @@ static int add_collation(CHARSET_INFO *cs) {
       return MY_XML_OK;  // Just ignore it.
     }
 
-    if (cs->primary_number == cs->number) cs->state |= MY_CS_PRIMARY;
+    if (cs->primary_number == cs->number) cs->state |= DES_CS_PRIMARY;
 
     if (cs->binary_number == cs->number) cs->state |= MY_CS_BINSORT;
 
@@ -310,13 +310,13 @@ static int add_collation(CHARSET_INFO *cs) {
       CHARSET_INFO *dst = all_charsets[cs->number];
       dst->number = cs->number;
       if (cs->comment)
-        if (!(dst->comment = my_once_strdup(cs->comment, MYF(MY_WME))))
+        if (!(dst->comment = my_once_strdup(cs->comment, DESF(MY_WME))))
           return MY_XML_ERROR;
       if (cs->csname)
-        if (!(dst->csname = my_once_strdup(cs->csname, MYF(MY_WME))))
+        if (!(dst->csname = my_once_strdup(cs->csname, DESF(MY_WME))))
           return MY_XML_ERROR;
       if (cs->name)
-        if (!(dst->name = my_once_strdup(cs->name, MYF(MY_WME))))
+        if (!(dst->name = my_once_strdup(cs->name, DESF(MY_WME))))
           return MY_XML_ERROR;
     }
     clear_cs_info(cs);
@@ -337,15 +337,15 @@ my_error_reporter my_charset_error_reporter = default_reporter;
   with C-compatbile API without extra "myf" argument.
 */
 static void *my_once_alloc_c(size_t size) {
-  return my_once_alloc(size, MYF(MY_WME));
+  return my_once_alloc(size, DESF(MY_WME));
 }
 
 static void *my_malloc_c(size_t size) {
-  return my_malloc(key_memory_charset_loader, size, MYF(MY_WME));
+  return my_malloc(key_memory_charset_loader, size, DESF(MY_WME));
 }
 
 static void *my_realloc_c(void *old, size_t size) {
-  return my_realloc(key_memory_charset_loader, old, size, MYF(MY_WME));
+  return my_realloc(key_memory_charset_loader, old, size, DESF(MY_WME));
 }
 
 static void my_free_c(void *ptr) { my_free(ptr); }
@@ -377,7 +377,7 @@ static bool my_read_charset_file(MY_CHARSET_LOADER *loader,
   size_t len, tmp_len;
   MY_STAT stat_info;
 
-  if (!my_stat(filename, &stat_info, MYF(myflags)) ||
+  if (!my_stat(filename, &stat_info, DESF(myflags)) ||
       ((len = (uint)stat_info.st_size) > MY_MAX_ALLOWED_BUF) ||
       !(buf = (uchar *)my_malloc(key_memory_charset_file, len, myflags)))
     return true;
@@ -390,7 +390,7 @@ static bool my_read_charset_file(MY_CHARSET_LOADER *loader,
 
   if (my_parse_charset_xml(loader, (char *)buf, len)) {
     my_printf_error(EE_UNKNOWN_CHARSET, "Error while parsing '%s': %s\n",
-                    MYF(0), filename, loader->errarg);
+                    DESF(0), filename, loader->errarg);
     goto error;
   }
 
@@ -446,13 +446,13 @@ static void init_available_charsets(void) {
   coll_name_num_map = new std::unordered_map<std::string, int>(0);
   cs_name_pri_num_map = new std::unordered_map<std::string, int>(0);
   cs_name_bin_num_map = new std::unordered_map<std::string, int>(0);
-  init_compiled_charsets(MYF(0));
+  init_compiled_charsets(DESF(0));
 
   /* Copy compiled charsets */
 
   my_charset_loader_init_mysys(&loader);
   my_stpcpy(get_charsets_dir(fname), MY_CHARSET_INDEX);
-  my_read_charset_file(&loader, fname, MYF(0));
+  my_read_charset_file(&loader, fname, DESF(0));
 }
 
 static const char *get_collation_name_alias(const char *name, char *buf,
@@ -494,7 +494,7 @@ static uint get_charset_number_internal(const char *charset_name,
     access to STL container is thread-safe.
   */
   assert(cs_name_pri_num_map != nullptr && cs_name_bin_num_map != nullptr);
-  if ((cs_flags & MY_CS_PRIMARY)) {
+  if ((cs_flags & DES_CS_PRIMARY)) {
     auto name_num_map_it = cs_name_pri_num_map->find(lower_case_name);
     if (name_num_map_it != cs_name_pri_num_map->end()) {
       return name_num_map_it->second;
@@ -556,7 +556,7 @@ static CHARSET_INFO *get_internal_charset(MY_CHARSET_LOADER *loader_arg,
       To make things thread safe we are not allowing other threads to interfere
       while we may changing the cs_info_table
     */
-    mysql_mutex_lock(&THR_LOCK_charset);
+    def_des_mutex_lock(&THR_LOCK_charset);
 
     if (!(cs->state &
           (MY_CS_COMPILED | MY_CS_LOADED))) /* if CS is not in memory */
@@ -578,7 +578,7 @@ static CHARSET_INFO *get_internal_charset(MY_CHARSET_LOADER *loader_arg,
     } else
       cs = nullptr;
 
-    mysql_mutex_unlock(&THR_LOCK_charset);
+    def_des_mutex_unlock(&THR_LOCK_charset);
   }
   return cs;
 }
@@ -601,7 +601,7 @@ CHARSET_INFO *get_charset(uint cs_number, myf flags) {
     my_stpcpy(get_charsets_dir(index_file), MY_CHARSET_INDEX);
     cs_string[0] = '#';
     longlong10_to_str(cs_number, cs_string + 1, 10);
-    my_error(EE_UNKNOWN_CHARSET, MYF(0), cs_string, index_file);
+    my_error(EE_UNKNOWN_CHARSET, DESF(0), cs_string, index_file);
   }
   return cs;
 }
@@ -628,7 +628,7 @@ CHARSET_INFO *my_collation_get_by_name(MY_CHARSET_LOADER *loader,
   if (!cs && (flags & MY_WME)) {
     char index_file[FN_REFLEN + sizeof(MY_CHARSET_INDEX)];
     my_stpcpy(get_charsets_dir(index_file), MY_CHARSET_INDEX);
-    my_error(EE_UNKNOWN_COLLATION, MYF(0), name, index_file);
+    my_error(EE_UNKNOWN_COLLATION, DESF(0), name, index_file);
   }
   return cs;
 }
@@ -664,7 +664,7 @@ CHARSET_INFO *my_charset_get_by_name(MY_CHARSET_LOADER *loader,
   if (!cs && (flags & MY_WME)) {
     char index_file[FN_REFLEN + sizeof(MY_CHARSET_INDEX)];
     my_stpcpy(get_charsets_dir(index_file), MY_CHARSET_INDEX);
-    my_error(EE_UNKNOWN_CHARSET, MYF(0), cs_name, index_file);
+    my_error(EE_UNKNOWN_CHARSET, DESF(0), cs_name, index_file);
   }
 
   return cs;
@@ -695,7 +695,7 @@ CHARSET_INFO *get_charset_by_csname(const char *cs_name, uint cs_flags,
 
 bool resolve_charset(const char *cs_name, const CHARSET_INFO *default_cs,
                      const CHARSET_INFO **cs) {
-  *cs = get_charset_by_csname(cs_name, MY_CS_PRIMARY, MYF(0));
+  *cs = get_charset_by_csname(cs_name, DES_CS_PRIMARY, DESF(0));
 
   if (*cs == nullptr) {
     *cs = default_cs;
@@ -723,7 +723,7 @@ bool resolve_charset(const char *cs_name, const CHARSET_INFO *default_cs,
 
 bool resolve_collation(const char *cl_name, const CHARSET_INFO *default_cl,
                        const CHARSET_INFO **cl) {
-  *cl = get_charset_by_name(cl_name, MYF(0));
+  *cl = get_charset_by_name(cl_name, DESF(0));
 
   if (*cl == nullptr) {
     *cl = default_cl;

@@ -930,7 +930,7 @@ CHARSET_INFO my_charset_tis620_thai_ci = {
     18,
     0,
     0,                                               /* number    */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM, /* state     */
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM, /* state     */
     "tis620",                                        /* cs name    */
     "tis620_thai_ci",                                /* name      */
     "TIS620 Thai",                                   /* comment   */

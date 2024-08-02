@@ -358,7 +358,7 @@ BOOL allocate_param_buffer(MYSQL_BIND *bind, unsigned long length)
        a separate data structure. and free right after use */
   if (bind->buffer == NULL)
   {
-    bind->buffer= myodbc_malloc(length, MYF(0));
+    bind->buffer= myodbc_malloc(length, DESF(0));
     bind->buffer_length= length;
   }
   else if(bind->buffer_length < length)
@@ -1599,7 +1599,7 @@ SQLRETURN my_SQLExecute( STMT *pStmt )
       }
     }
   }
-  catch(const MYERROR& e)
+  catch(const DESERROR& e)
   {
     pStmt->telemetry.set_error(pStmt, e.message);
   }

@@ -2462,8 +2462,8 @@ ulong myodbc_escape_string(STMT *stmt,
   const char *end, *to_end=to_start + (to_length ? to_length-1 : 2*length);
   my_bool overflow= FALSE;
   /*get_charset_by_csname(charset,
-                        MYF(MY_CS_PRIMARY),
-                        MYF(0));*/
+                        DESF(DES_CS_PRIMARY),
+                        DESF(0));*/
   desodbc::CHARSET_INFO *charset_info= stmt->dbc->cxn_charset_info;
   my_bool use_mb_flag= use_mb(charset_info);
   for (end= from + length; from < end; ++from)

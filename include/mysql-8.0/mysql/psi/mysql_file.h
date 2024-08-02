@@ -771,7 +771,7 @@ static inline MYSQL_FILE *inline_mysql_file_fopen(
     const char *filename, int flags, myf myFlags) {
   MYSQL_FILE *that;
   that = (MYSQL_FILE *)my_malloc(PSI_NOT_INSTRUMENTED, sizeof(MYSQL_FILE),
-                                 MYF(MY_WME));
+                                 DESF(MY_WME));
   if (likely(that != nullptr)) {
 #ifdef HAVE_PSI_FILE_INTERFACE
     struct PSI_file_locker *locker;

@@ -66,7 +66,7 @@ SQLWSTRING mytest(HWND hwnd, DataSource *params)
     desodbc::HDBC hdbc(henv, params);
     msg = _W(L"Connection successful");
   }
-  catch(MYERROR &e)
+  catch(DESERROR &e)
   {
     // Use the ability of optionStr to convert MBchar -> Wchar
     optionStr e_msg;

@@ -166,7 +166,7 @@ extern void my_thread_global_reinit();
 extern void my_thread_global_end();
 
 // Need to be extern "C" for the time being, due to memcached.
-extern bool my_thread_init();
+extern bool des_thread_init();
 extern void my_thread_end();
 
 } /* namespace myodbc */

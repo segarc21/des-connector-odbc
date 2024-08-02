@@ -326,7 +326,7 @@ SQLInstallDriverExW(const MyODBC_LPCWSTR lpszDriver, const MyODBC_LPCWSTR lpszPa
   pathin= (char *)sqlwchar_as_utf8(lpszPathIn, &len);
 
   if (cbPathOutMax > 0)
-    pathout= (char *)myodbc_malloc(cbPathOutMax * 4 + 1, MYF(0)); /* 4 = max utf8 charlen */
+    pathout= (char *)myodbc_malloc(cbPathOutMax * 4 + 1, DESF(0)); /* 4 = max utf8 charlen */
 
   rc= SQLInstallDriverEx(driver, pathin, pathout, cbPathOutMax * 4,
                          pcbPathOut, fRequest, lpdwUsageCount);
@@ -881,8 +881,8 @@ int main(int argc, char **argv)
 
   /* init libmysqlclient */
   des_sys_init();
-  utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
-                                           MYF(0));
+  utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY),
+                                           DESF(0));
 
   /* convert to SQLWCHAR for installer API */
   convlen= SQL_NTS;

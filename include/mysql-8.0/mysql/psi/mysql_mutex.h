@@ -163,15 +163,15 @@ namespace desodbc
   inline_mysql_mutex_destroy(M, F, L)
 
 /**
-  @def mysql_mutex_lock(M)
+  @def def_des_mutex_lock(M)
   Instrumented mutex_lock.
-  @c mysql_mutex_lock is a drop-in replacement for @c pthread_mutex_lock.
+  @c def_des_mutex_lock is a drop-in replacement for @c pthread_mutex_lock.
   @param M The mutex to lock
 */
 
-#define mysql_mutex_lock(M) mysql_mutex_lock_with_src(M, __FILE__, __LINE__)
+#define def_des_mutex_lock(M) des_mutex_lock_with_src(M, __FILE__, __LINE__)
 
-#define mysql_mutex_lock_with_src(M, F, L) inline_mysql_mutex_lock(M, F, L)
+#define des_mutex_lock_with_src(M, F, L) inline_des_mutex_lock(M, F, L)
 
 /**
   @def mysql_mutex_trylock(M)
@@ -187,13 +187,13 @@ namespace desodbc
   inline_mysql_mutex_trylock(M, F, L)
 
 /**
-  @def mysql_mutex_unlock(M)
+  @def def_des_mutex_unlock(M)
   Instrumented mutex_unlock.
-  @c mysql_mutex_unlock is a drop-in replacement for @c pthread_mutex_unlock.
+  @c def_des_mutex_unlock is a drop-in replacement for @c pthread_mutex_unlock.
 */
-#define mysql_mutex_unlock(M) mysql_mutex_unlock_with_src(M, __FILE__, __LINE__)
+#define def_des_mutex_unlock(M) des_mutex_unlock_with_src(M, __FILE__, __LINE__)
 
-#define mysql_mutex_unlock_with_src(M, F, L) inline_mysql_mutex_unlock(M, F, L)
+#define des_mutex_unlock_with_src(M, F, L) inline_des_mutex_unlock(M, F, L)
 
 static inline void inline_mysql_mutex_register(const char *category
                                                [[maybe_unused]],
@@ -206,7 +206,7 @@ static inline void inline_mysql_mutex_register(const char *category
 }
 
 static inline int inline_des_mutex_init(PSI_mutex_key key [[maybe_unused]],
-                                          mysql_mutex_t *that,
+                                          repl_des_mutex_t *that,
                                           const native_mutexattr_t *attr,
                                           const char *src_file [[maybe_unused]],
                                           uint src_line [[maybe_unused]]) {
@@ -223,7 +223,7 @@ static inline int inline_des_mutex_init(PSI_mutex_key key [[maybe_unused]],
   );
 }
 
-static inline int inline_mysql_mutex_destroy(mysql_mutex_t *that,
+static inline int inline_mysql_mutex_destroy(repl_des_mutex_t *that,
                                              const char *src_file
                                              [[maybe_unused]],
                                              uint src_line [[maybe_unused]]) {
@@ -241,7 +241,7 @@ static inline int inline_mysql_mutex_destroy(mysql_mutex_t *that,
   );
 }
 
-static inline int inline_mysql_mutex_lock(mysql_mutex_t *that,
+static inline int inline_des_mutex_lock(repl_des_mutex_t *that,
                                           const char *src_file [[maybe_unused]],
                                           uint src_line [[maybe_unused]]) {
   int result;
@@ -256,7 +256,7 @@ static inline int inline_mysql_mutex_lock(mysql_mutex_t *that,
           &state, that->m_psi, PSI_MUTEX_LOCK, src_file, src_line);
 
       /* Instrumented code */
-      result = my_mutex_lock(&that->m_mutex
+      result = des_mutex_lock(&that->m_mutex
 #ifdef SAFE_MUTEX
                              ,
                              src_file, src_line
@@ -274,7 +274,7 @@ static inline int inline_mysql_mutex_lock(mysql_mutex_t *that,
 #endif
 
   /* Non instrumented code */
-  result = my_mutex_lock(&that->m_mutex
+  result = des_mutex_lock(&that->m_mutex
 #ifdef SAFE_MUTEX
                          ,
                          src_file, src_line
@@ -284,7 +284,7 @@ static inline int inline_mysql_mutex_lock(mysql_mutex_t *that,
   return result;
 }
 
-static inline int inline_mysql_mutex_trylock(mysql_mutex_t *that,
+static inline int inline_mysql_mutex_trylock(repl_des_mutex_t *that,
                                              const char *src_file
                                              [[maybe_unused]],
                                              uint src_line [[maybe_unused]]) {
@@ -328,7 +328,7 @@ static inline int inline_mysql_mutex_trylock(mysql_mutex_t *that,
   return result;
 }
 
-static inline int inline_mysql_mutex_unlock(mysql_mutex_t *that,
+static inline int inline_des_mutex_unlock(repl_des_mutex_t *that,
                                             const char *src_file
                                             [[maybe_unused]],
                                             uint src_line [[maybe_unused]]) {
@@ -340,7 +340,7 @@ static inline int inline_mysql_mutex_unlock(mysql_mutex_t *that,
   }
 #endif
 
-  result = my_mutex_unlock(&that->m_mutex
+  result = des_mutex_unlock(&that->m_mutex
 #ifdef SAFE_MUTEX
                            ,
                            src_file, src_line

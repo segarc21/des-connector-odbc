@@ -7239,7 +7239,7 @@ CHARSET_INFO compiled_charsets[] = {
     {3,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "dec8",                     /* cset name     */
      "dec8_swedish_ci",          /* coll name     */
      "DEC West European",        /* comment       */
@@ -7272,7 +7272,7 @@ CHARSET_INFO compiled_charsets[] = {
     {4,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "cp850",                     /* cset name     */
      "cp850_general_ci",          /* coll name     */
      "DOS West European",         /* comment       */
@@ -7338,7 +7338,7 @@ CHARSET_INFO compiled_charsets[] = {
     {6,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "hp8",                     /* cset name     */
      "hp8_english_ci",          /* coll name     */
      "HP West European",        /* comment       */
@@ -7371,7 +7371,7 @@ CHARSET_INFO compiled_charsets[] = {
     {7,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "koi8r",                     /* cset name     */
      "koi8r_general_ci",          /* coll name     */
      "KOI8-R Relcom Russian",     /* comment       */
@@ -7404,7 +7404,7 @@ CHARSET_INFO compiled_charsets[] = {
     {9,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "latin2",                      /* cset name     */
      "latin2_general_ci",           /* coll name     */
      "ISO 8859-2 Central European", /* comment       */
@@ -7437,7 +7437,7 @@ CHARSET_INFO compiled_charsets[] = {
     {10,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_NONASCII,
+     MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_NONASCII,
      "swe7",                     /* cset name     */
      "swe7_swedish_ci",          /* coll name     */
      "7bit Swedish",             /* comment       */
@@ -7470,7 +7470,7 @@ CHARSET_INFO compiled_charsets[] = {
     {11,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_PUREASCII,
+     MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_PUREASCII,
      "ascii",                     /* cset name     */
      "ascii_general_ci",          /* coll name     */
      "US ASCII",                  /* comment       */
@@ -7569,7 +7569,7 @@ CHARSET_INFO compiled_charsets[] = {
     {16,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "hebrew",                     /* cset name     */
      "hebrew_general_ci",          /* coll name     */
      "ISO 8859-8 Hebrew",          /* comment       */
@@ -7668,7 +7668,7 @@ CHARSET_INFO compiled_charsets[] = {
     {22,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "koi8u",                     /* cset name     */
      "koi8u_general_ci",          /* coll name     */
      "KOI8-U Ukrainian",          /* comment       */
@@ -7734,7 +7734,7 @@ CHARSET_INFO compiled_charsets[] = {
     {25,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "greek",                     /* cset name     */
      "greek_general_ci",          /* coll name     */
      "ISO 8859-7 Greek",          /* comment       */
@@ -7767,7 +7767,7 @@ CHARSET_INFO compiled_charsets[] = {
     {26,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "cp1250",                     /* cset name     */
      "cp1250_general_ci",          /* coll name     */
      "Windows Central European",   /* comment       */
@@ -7866,7 +7866,7 @@ CHARSET_INFO compiled_charsets[] = {
     {30,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "latin5",                     /* cset name     */
      "latin5_turkish_ci",          /* coll name     */
      "ISO 8859-9 Turkish",         /* comment       */
@@ -7899,7 +7899,7 @@ CHARSET_INFO compiled_charsets[] = {
     {32,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "armscii8",                     /* cset name     */
      "armscii8_general_ci",          /* coll name     */
      "ARMSCII-8 Armenian",           /* comment       */
@@ -7932,7 +7932,7 @@ CHARSET_INFO compiled_charsets[] = {
     {36,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "cp866",                     /* cset name     */
      "cp866_general_ci",          /* coll name     */
      "DOS Russian",               /* comment       */
@@ -7965,7 +7965,7 @@ CHARSET_INFO compiled_charsets[] = {
     {37,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "keybcs2",                     /* cset name     */
      "keybcs2_general_ci",          /* coll name     */
      "DOS Kamenicky Czech-Slovak",  /* comment       */
@@ -7998,7 +7998,7 @@ CHARSET_INFO compiled_charsets[] = {
     {38,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "macce",                     /* cset name     */
      "macce_general_ci",          /* coll name     */
      "Mac Central European",      /* comment       */
@@ -8031,7 +8031,7 @@ CHARSET_INFO compiled_charsets[] = {
     {39,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "macroman",                     /* cset name     */
      "macroman_general_ci",          /* coll name     */
      "Mac West European",            /* comment       */
@@ -8064,7 +8064,7 @@ CHARSET_INFO compiled_charsets[] = {
     {40,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "cp852",                     /* cset name     */
      "cp852_general_ci",          /* coll name     */
      "DOS Central European",      /* comment       */
@@ -8097,7 +8097,7 @@ CHARSET_INFO compiled_charsets[] = {
     {41,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "latin7",                     /* cset name     */
      "latin7_general_ci",          /* coll name     */
      "ISO 8859-13 Baltic",         /* comment       */
@@ -8328,7 +8328,7 @@ CHARSET_INFO compiled_charsets[] = {
     {51,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "cp1251",                     /* cset name     */
      "cp1251_general_ci",          /* coll name     */
      "Windows Cyrillic",           /* comment       */
@@ -8427,7 +8427,7 @@ CHARSET_INFO compiled_charsets[] = {
     {57,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "cp1256",                     /* cset name     */
      "cp1256_general_ci",          /* coll name     */
      "Windows Arabic",             /* comment       */
@@ -8493,7 +8493,7 @@ CHARSET_INFO compiled_charsets[] = {
     {59,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "cp1257",                     /* cset name     */
      "cp1257_general_ci",          /* coll name     */
      "Windows Baltic",             /* comment       */
@@ -9120,7 +9120,7 @@ CHARSET_INFO compiled_charsets[] = {
     {92,
      0,
      0,
-     MY_CS_COMPILED | MY_CS_PRIMARY,
+     MY_CS_COMPILED | DES_CS_PRIMARY,
      "geostd8",                     /* cset name     */
      "geostd8_general_ci",          /* coll name     */
      "GEOSTD8 Georgian",            /* comment       */

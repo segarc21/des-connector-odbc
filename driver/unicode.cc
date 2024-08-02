@@ -434,8 +434,8 @@ SQLGetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
     */
     if(!dbc->cxn_charset_info)
     {
-      result_charset_info= desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
-                                                 MYF(0));
+      result_charset_info= desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY),
+                                                 DESF(0));
     }
 
     wvalue= sqlchar_as_sqlwchar(result_charset_info, char_value,

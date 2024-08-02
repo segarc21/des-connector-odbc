@@ -93,7 +93,7 @@ typedef ulonglong my_off_t;
 typedef int myf; /* Type of MyFlags in my_funcs */
 
 /* Macros for converting *constants* to the right type */
-#define MYF(v) (myf)(v)
+#define DESF(v) (myf)(v)
 
 /* Length of decimal number represented by INT32. */
 #define MY_INT32_NUM_DECIMAL_DIGITS 11U

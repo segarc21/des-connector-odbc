@@ -83,7 +83,7 @@ void *my_once_alloc(size_t Size, myf MyFlags) {
     if ((next = (USED_MEM *)malloc(get_size)) == nullptr) {
       set_my_errno(errno);
       if (MyFlags & (MY_FAE + MY_WME))
-        my_error(EE_OUTOFMEMORY, MYF(ME_FATALERROR), get_size);
+        my_error(EE_OUTOFMEMORY, DESF(ME_FATALERROR), get_size);
       return ((uchar *)nullptr);
     }
     DBUG_PRINT("test", ("my_once_malloc %lu byte malloced", (ulong)get_size));

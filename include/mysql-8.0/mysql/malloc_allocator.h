@@ -97,7 +97,7 @@ class Malloc_allocator {
     if (n > max_size()) throw std::bad_alloc();
 
     pointer p = static_cast<pointer>(
-        my_malloc(m_key, n * sizeof(T), MYF(MY_WME | ME_FATALERROR)));
+        my_malloc(m_key, n * sizeof(T), DESF(MY_WME | ME_FATALERROR)));
     if (p == nullptr) throw std::bad_alloc();
     return p;
   }

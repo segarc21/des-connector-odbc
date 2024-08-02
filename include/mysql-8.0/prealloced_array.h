@@ -133,7 +133,7 @@ class Prealloced_array {
     if (initial_size > Prealloc) {
       // We avoid using reserve() since it requires Element_type to be copyable.
       void *mem =
-          my_malloc(m_psi_key, initial_size * element_size(), MYF(MY_WME));
+          my_malloc(m_psi_key, initial_size * element_size(), DESF(MY_WME));
       if (!mem) return;
       m_inline_size = -1;
       m_ext.m_alloced_size = initial_size;
@@ -288,7 +288,7 @@ class Prealloced_array {
   bool reserve(size_t n) {
     if (n <= capacity()) return false;
 
-    void *mem = my_malloc(m_psi_key, n * element_size(), MYF(MY_WME));
+    void *mem = my_malloc(m_psi_key, n * element_size(), DESF(MY_WME));
     if (!mem) return true;
     Element_type *new_array = static_cast<Element_type *>(mem);
 

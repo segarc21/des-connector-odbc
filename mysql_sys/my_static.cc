@@ -65,7 +65,7 @@ PSI_memory_key key_memory_SAFE_HASH_ENTRY;
 PSI_memory_key key_memory_MY_BITMAP_bitmap;
 PSI_memory_key key_memory_my_compress_alloc;
 PSI_memory_key key_memory_my_err_head;
-PSI_memory_key key_memory_my_file_info;
+PSI_memory_key key_memory_des_file_info;
 PSI_memory_key key_memory_max_alloca;
 PSI_memory_key key_memory_MY_DIR;
 PSI_memory_key key_memory_MY_TMPDIR_full_list;
@@ -175,7 +175,7 @@ void (*local_message_hook)(enum loglevel ll, uint ecode,
 
 static void enter_cond_dummy(
     void *a [[maybe_unused]], mysql_cond_t *b [[maybe_unused]],
-    mysql_mutex_t *c [[maybe_unused]], const PSI_stage_info *d [[maybe_unused]],
+    repl_des_mutex_t *c [[maybe_unused]], const PSI_stage_info *d [[maybe_unused]],
     PSI_stage_info *e [[maybe_unused]], const char *f [[maybe_unused]],
     const char *g [[maybe_unused]], int h [[maybe_unused]]) {}
 
@@ -202,7 +202,7 @@ static int is_killed_dummy(const void *a [[maybe_unused]]) { return 0; }
   implementations will be set during server startup by
   init_server_components().
 */
-void (*enter_cond_hook)(void *, mysql_cond_t *, mysql_mutex_t *,
+void (*enter_cond_hook)(void *, mysql_cond_t *, repl_des_mutex_t *,
                         const PSI_stage_info *, PSI_stage_info *, const char *,
                         const char *, int) = enter_cond_dummy;
 

@@ -137,8 +137,8 @@ class FileInfo {
   FileInfo() = default;
 
   FileInfo(const char *n, desodbc::file_info::OpenType t)
-      : m_name{desodbc::my_strdup(desodbc::key_memory_my_file_info, n,
-                         MYF(MY_WME | ME_FATALERROR))},
+      : m_name{desodbc::my_strdup(desodbc::key_memory_des_file_info, n,
+                         DESF(MY_WME | ME_FATALERROR))},
         m_type{t} {}
 
   // Rule of 5 (2)
@@ -276,9 +276,9 @@ uint my_set_max_open_files(uint files) {
 /**
   Constructs static objects.
 */
-void MyFileInit() {
+void DESFileInit() {
   fivp =
-      new FileInfoVector(Malloc_allocator<FileInfo>{key_memory_my_file_info});
+      new FileInfoVector(Malloc_allocator<FileInfo>{key_memory_des_file_info});
 }
 
 /**

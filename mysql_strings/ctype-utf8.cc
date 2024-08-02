@@ -5786,7 +5786,7 @@ CHARSET_INFO my_charset_utf8_general_ci = {
     33,
     0,
     0, /* number       */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE, /* state */
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE, /* state */
     "utf8",              /* cs name      */
     "utf8_general_ci",   /* name         */
     "UTF-8 Unicode",     /* comment      */
@@ -7048,7 +7048,7 @@ CHARSET_INFO my_charset_filename = {
     17,
     0,
     0, /* number       */
-    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
+    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM | MY_CS_UNICODE |
         MY_CS_HIDDEN | MY_CS_NONASCII,
     "filename",          /* cs name      */
     "filename",          /* name         */

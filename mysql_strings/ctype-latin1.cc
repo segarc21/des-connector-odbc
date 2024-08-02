@@ -371,7 +371,7 @@ CHARSET_INFO my_charset_latin1 = {
     8,
     0,
     0,                              /* number    */
-    MY_CS_COMPILED | MY_CS_PRIMARY, /* state */
+    MY_CS_COMPILED | DES_CS_PRIMARY, /* state */
     "latin1",                       /* cs name    */
     "latin1_swedish_ci",            /* name      */
     "cp1252 West European",         /* comment   */

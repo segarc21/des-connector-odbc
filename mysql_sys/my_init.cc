@@ -85,7 +85,7 @@ namespace desodbc
 /* WSAStartup needs winsock library*/
 #pragma comment(lib, "ws2_32")
 bool have_tcpip = 0;
-static void my_win_init();
+static void des_win_init();
 
 } /* namespace myodbc */
 
@@ -159,7 +159,7 @@ bool des_init() {
 
   if (desodbc::des_thread_global_init()) return true;
 
-  if (my_thread_init()) return true;
+  if (des_thread_init()) return true;
 
   /* $HOME is needed early to parse configuration files located in ~/ */
   if ((home_dir = getenv("HOME")) != nullptr)
@@ -169,9 +169,9 @@ bool des_init() {
     DBUG_TRACE;
     DBUG_PROCESS(my_progname ? my_progname : "unknown");
 #ifdef _WIN32
-    my_win_init();
+    des_win_init();
 #endif
-    MyFileInit();
+    DESFileInit();
 
     DBUG_PRINT("exit", ("home: '%s'", home_dir));
     return false;
@@ -201,7 +201,7 @@ void my_end(int infoflag) {
       char ebuff[512];
       snprintf(ebuff, sizeof(ebuff), EE(EE_OPEN_WARNING), my_file_opened,
                my_stream_opened);
-      my_message_stderr(EE_OPEN_WARNING, ebuff, MYF(0));
+      my_message_stderr(EE_OPEN_WARNING, ebuff, DESF(0));
       DBUG_PRINT("error", ("%s", ebuff));
     }
   }
@@ -260,7 +260,7 @@ Voluntary context switches %ld, Involuntary context switches %ld\n",
 
 #ifdef _WIN32
 /*
-  my_parameter_handler
+  des_parameter_handler
 
   Invalid parameter handler we will use instead of the one "baked"
   into the CRT for Visual Studio.
@@ -268,12 +268,12 @@ Voluntary context switches %ld, Involuntary context switches %ld\n",
   e.g. iterator out-of-range, but pointing to valid memory.
 */
 
-void my_parameter_handler(const wchar_t *expression, const wchar_t *function,
+void des_parameter_handler(const wchar_t *expression, const wchar_t *function,
                           const wchar_t *file, unsigned int line,
                           uintptr_t pReserved) {
 #ifndef NDEBUG
   fprintf(stderr,
-          "my_parameter_handler errno %d "
+          "des_parameter_handler errno %d "
           "expression: %ws  function: %ws  file: %ws, line: %d\n",
           errno, expression, function, file, line);
   fflush(stderr);
@@ -413,11 +413,11 @@ static bool win32_init_tcp_ip() {
 /**
 Windows specific initialization of my_sys functions, resources and variables
 */
-static void my_win_init() {
+static void des_win_init() {
   DBUG_TRACE;
 
   /* this is required to make crt functions return -1 appropriately */
-  _set_invalid_parameter_handler(my_parameter_handler);
+  _set_invalid_parameter_handler(des_parameter_handler);
 
 #ifdef __MSVC_RUNTIME_CHECKS
   /*
@@ -549,7 +549,7 @@ static PSI_memory_info all_mysys_memory[] = {
     {&key_memory_my_compress_alloc, "my_compress_alloc", 0, 0, PSI_DOCUMENT_ME},
     {&key_memory_my_err_head, "my_err_head", PSI_FLAG_ONLY_GLOBAL_STAT, 0,
      PSI_DOCUMENT_ME},
-    {&key_memory_my_file_info, "my_file_info", PSI_FLAG_ONLY_GLOBAL_STAT, 0,
+    {&key_memory_des_file_info, "my_file_info", PSI_FLAG_ONLY_GLOBAL_STAT, 0,
      PSI_DOCUMENT_ME},
     {&key_memory_MY_DIR, "MY_DIR", 0, 0, PSI_DOCUMENT_ME},
     {&key_memory_DYNAMIC_STRING, "DYNAMIC_STRING", 0, 0, PSI_DOCUMENT_ME},

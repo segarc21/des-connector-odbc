@@ -467,7 +467,7 @@ struct DESC {
   std::vector<DESCREC> bookmark2;
   std::vector<DESCREC> records2;
 
-  MYERROR error;
+  DESERROR error;
   STMT *stmt;
   DBC *dbc;
 
@@ -553,7 +553,7 @@ struct	ENV
 {
   SQLINTEGER   odbc_ver;
   std::list<DBC*> conn_list;
-  MYERROR      error;
+  DESERROR      error;
   std::mutex lock;
 
   ENV(SQLINTEGER ver) : odbc_ver(ver)
@@ -576,7 +576,7 @@ struct DBC
   std::list<STMT*> stmt_list;
   std::list<DESC*> desc_list; // Explicit descriptors
   STMT_OPTIONS  stmt_options;
-  MYERROR       error;
+  DESERROR       error;
   FILE          *query_log = nullptr;
   char          st_error_prefix[255] = { 0 };
   std::string   database;
@@ -998,7 +998,7 @@ struct STMT
   ROW_STORAGE       m_row_storage;
 
   MYCURSOR          cursor;
-  MYERROR           error;
+  DESERROR           error;
   STMT_OPTIONS      stmt_options;
   std::string       table_name;
   std::string       catalog_name;
@@ -1171,7 +1171,7 @@ namespace desodbc {
 
       if (SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)ver, 0) != SQL_SUCCESS)
       {
-        throw MYERROR(SQL_HANDLE_ENV, henv, SQL_ERROR);
+        throw DESERROR(SQL_HANDLE_ENV, henv, SQL_ERROR);
       }
     }
 
@@ -1205,13 +1205,13 @@ namespace desodbc {
       string_connect_in = params->to_kvpair(';');
       if (SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc) != SQL_SUCCESS)
       {
-        throw MYERROR(SQL_HANDLE_ENV, henv, SQL_ERROR);
+        throw DESERROR(SQL_HANDLE_ENV, henv, SQL_ERROR);
       }
 
       if (SQLDriverConnectW(hdbc, NULL, (SQLWCHAR*)string_connect_in.c_str(),
         SQL_NTS, NULL, 0, NULL, SQL_DRIVER_NOPROMPT) != SQL_SUCCESS)
       {
-        throw MYERROR(SQL_HANDLE_DBC, hdbc, SQL_ERROR);
+        throw DESERROR(SQL_HANDLE_DBC, hdbc, SQL_ERROR);
       }
 
     }
@@ -1237,7 +1237,7 @@ namespace desodbc {
     {
       if (SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt) != SQL_SUCCESS)
       {
-        throw MYERROR(SQL_HANDLE_STMT, hstmt, SQL_ERROR);
+        throw DESERROR(SQL_HANDLE_STMT, hstmt, SQL_ERROR);
       }
     }
 

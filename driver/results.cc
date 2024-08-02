@@ -1117,7 +1117,7 @@ MySQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
   {
     char *tmp= (char*)myodbc_malloc(strlen((char *)irrec->name) +
                          strlen((char *)irrec->table_name) + 2,
-                         MYF(0));
+                         DESF(0));
     if (!tmp)
     {
       *need_free= -1;
@@ -2230,7 +2230,7 @@ exitSQLSingleFetch:
       }
     }
   }
-  catch(MYERROR &e)
+  catch(DESERROR &e)
   {
     res = e.retcode;
   }
@@ -2539,7 +2539,7 @@ SQLRETURN SQL_API my_SQLExtendedFetch( SQLHSTMT             hstmt,
       }
     }
   }
-  catch(const MYERROR &e)
+  catch(const DESERROR &e)
   {
     res = e.retcode;
     stmt->telemetry.set_error(stmt, e.message);

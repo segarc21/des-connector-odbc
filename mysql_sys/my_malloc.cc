@@ -214,7 +214,7 @@ static void *my_raw_malloc(size_t size, myf my_flags) {
     set_my_errno(errno);
     if (my_flags & MY_FAE) error_handler_hook = my_message_stderr;
     if (my_flags & (MY_FAE + MY_WME))
-      my_error(EE_OUTOFMEMORY, MYF(ME_ERRORLOG + ME_FATALERROR), size);
+      my_error(EE_OUTOFMEMORY, DESF(ME_ERRORLOG + ME_FATALERROR), size);
     DBUG_EXECUTE_IF("simulate_out_of_memory",
                     DBUG_SET("-d,simulate_out_of_memory"););
     if (my_flags & MY_FAE) exit(1);
@@ -259,7 +259,7 @@ end:
     if (my_flags & MY_FREE_ON_ERROR) my_free(oldpoint);
     set_my_errno(errno);
     if (my_flags & (MY_FAE + MY_WME))
-      my_error(EE_OUTOFMEMORY, MYF(ME_FATALERROR), size);
+      my_error(EE_OUTOFMEMORY, DESF(ME_FATALERROR), size);
     DBUG_EXECUTE_IF("simulate_out_of_memory",
                     DBUG_SET("-d,simulate_out_of_memory"););
   }

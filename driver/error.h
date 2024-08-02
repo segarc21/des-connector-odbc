@@ -130,7 +130,7 @@ typedef enum myodbc_errid
 /*
   error handler structure
 */
-struct MYERROR
+struct DESERROR
 {
   SQLRETURN   retcode = 0;
   char        current = 0;
@@ -138,21 +138,21 @@ struct MYERROR
   SQLINTEGER  native_error = 0;
   std::string sqlstate;
 
-  MYERROR()
+  DESERROR()
   {}
 
-  MYERROR(SQLRETURN rc) : MYERROR()
+  DESERROR(SQLRETURN rc) : DESERROR()
   {
     retcode = rc;
   }
 
-  MYERROR(myodbc_errid errid, const char *errtext, SQLINTEGER errcode,
+  DESERROR(myodbc_errid errid, const char *errtext, SQLINTEGER errcode,
     const char *prefix);
 
-  MYERROR(const char *state, const char *msg, SQLINTEGER errcode,
+  DESERROR(const char *state, const char *msg, SQLINTEGER errcode,
     const char *prefix);
 
-  MYERROR(SQLSMALLINT htype, SQLHANDLE handle, SQLRETURN rc)
+  DESERROR(SQLSMALLINT htype, SQLHANDLE handle, SQLRETURN rc)
   {
     SQLCHAR     state[6], msg[SQL_MAX_MESSAGE_LENGTH];
     SQLSMALLINT length;
@@ -195,13 +195,13 @@ struct MYERROR
     sqlstate.clear();
   }
 
-  MYERROR(const char* state, MYSQL* mysql) :
-    MYERROR(state, mysql_error(mysql),
+  DESERROR(const char* state, MYSQL* mysql) :
+    DESERROR(state, mysql_error(mysql),
       mysql_errno(mysql), MYODBC_ERROR_PREFIX)
   {}
 
-  MYERROR(const char* state, std::string errmsg) :
-    MYERROR(state, errmsg.c_str(), 0, MYODBC_ERROR_PREFIX)
+  DESERROR(const char* state, std::string errmsg) :
+    DESERROR(state, errmsg.c_str(), 0, MYODBC_ERROR_PREFIX)
   {}
 };
 

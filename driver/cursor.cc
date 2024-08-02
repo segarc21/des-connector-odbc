@@ -1807,7 +1807,7 @@ SQLRETURN SQL_API my_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
             return stmt->set_error(MYERR_S1009,NULL,0);
     }
   }
-  catch(MYERROR &e)
+  catch(DESERROR &e)
   {
     ret = e.retcode;
   }

@@ -70,7 +70,7 @@ std::pair<MEM_ROOT::Block *, size_t> MEM_ROOT::AllocBlock(
     }
     if (wanted_length > bytes_left) {
       if (m_error_for_capacity_exceeded) {
-        my_error(EE_CAPACITY_EXCEEDED, MYF(0),
+        my_error(EE_CAPACITY_EXCEEDED, DESF(0),
                  static_cast<ulonglong>(m_max_capacity));
         // NOTE: No early return; we will abort the query at the next safe
         // point. We also don't go down to minimum_length, as this will give a
@@ -88,7 +88,7 @@ std::pair<MEM_ROOT::Block *, size_t> MEM_ROOT::AllocBlock(
 
   Block *new_block = static_cast<Block *>(
       my_malloc(m_psi_key, length + ALIGN_SIZE(sizeof(Block)),
-                MYF(MY_WME | ME_FATALERROR)));
+                DESF(MY_WME | ME_FATALERROR)));
   if (new_block == nullptr) {
     if (m_error_handler) (m_error_handler)();
     return {nullptr, 0};

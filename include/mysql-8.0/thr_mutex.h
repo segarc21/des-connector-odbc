@@ -52,7 +52,7 @@
 /*
   The following are part of the services ABI:
   - native_mutex_t
-  - my_mutex_t
+  - des_mutex_t
 */
 #include "mysql/components/services/thr_mutex_bits.h"
 
@@ -164,7 +164,7 @@ static inline void safe_mutex_assert_not_owner(safe_mutex_t *mp) {
 }
 #endif /* SAFE_MUTEX */
 
-static inline int des_mutex_init(my_mutex_t *mp, const native_mutexattr_t *attr
+static inline int des_mutex_init(des_mutex_t *mp, const native_mutexattr_t *attr
 #ifdef SAFE_MUTEX
                                 ,
                                 const char *file, uint line
@@ -179,7 +179,7 @@ static inline int des_mutex_init(my_mutex_t *mp, const native_mutexattr_t *attr
 #endif
 }
 
-static inline int my_mutex_lock(my_mutex_t *mp
+static inline int des_mutex_lock(des_mutex_t *mp
 #ifdef SAFE_MUTEX
                                 ,
                                 const char *file, uint line
@@ -194,7 +194,7 @@ static inline int my_mutex_lock(my_mutex_t *mp
 #endif
 }
 
-static inline int my_mutex_trylock(my_mutex_t *mp
+static inline int my_mutex_trylock(des_mutex_t *mp
 #ifdef SAFE_MUTEX
                                    ,
                                    const char *file, uint line
@@ -209,7 +209,7 @@ static inline int my_mutex_trylock(my_mutex_t *mp
 #endif
 }
 
-static inline int my_mutex_unlock(my_mutex_t *mp
+static inline int des_mutex_unlock(des_mutex_t *mp
 #ifdef SAFE_MUTEX
                                   ,
                                   const char *file, uint line
@@ -224,7 +224,7 @@ static inline int my_mutex_unlock(my_mutex_t *mp
 #endif
 }
 
-static inline int my_mutex_destroy(my_mutex_t *mp
+static inline int my_mutex_destroy(des_mutex_t *mp
 #ifdef SAFE_MUTEX
                                    ,
                                    const char *file, uint line

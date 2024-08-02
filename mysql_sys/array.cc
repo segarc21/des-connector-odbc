@@ -93,7 +93,7 @@ bool my_init_dynamic_array(DYNAMIC_ARRAY *array, PSI_memory_key psi_key,
     should not throw an error
   */
   if (!(array->buffer =
-            (uchar *)my_malloc(psi_key, element_size * init_alloc, MYF(0))))
+            (uchar *)my_malloc(psi_key, element_size * init_alloc, DESF(0))))
     array->max_element = 0;
   return false;
 }
@@ -152,14 +152,14 @@ void *alloc_dynamic(DYNAMIC_ARRAY *array) {
                 array->m_psi_key,
                 (array->max_element + array->alloc_increment) *
                     array->size_of_element,
-                MYF(MY_WME))))
+                DESF(MY_WME))))
         return nullptr;
       memcpy(new_ptr, array->buffer, array->elements * array->size_of_element);
     } else if (!(new_ptr = (char *)my_realloc(
                      array->m_psi_key, array->buffer,
                      (array->max_element + array->alloc_increment) *
                          array->size_of_element,
-                     MYF(MY_WME | MY_ALLOW_ZERO_PTR))))
+                     DESF(MY_WME | MY_ALLOW_ZERO_PTR))))
       return nullptr;
     array->buffer = (uchar *)new_ptr;
     array->max_element += array->alloc_increment;

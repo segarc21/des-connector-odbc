@@ -39,20 +39,20 @@ namespace desodbc
 */
 class Mutex_lock {
  public:
-  explicit Mutex_lock(mysql_mutex_t *mutex, const char *src_file, int src_line)
+  explicit Mutex_lock(repl_des_mutex_t *mutex, const char *src_file, int src_line)
       : m_mutex(mutex), m_src_file(src_file), m_src_line(src_line) {
     if (m_mutex) {
-      mysql_mutex_lock_with_src(m_mutex, m_src_file, m_src_line);
+      des_mutex_lock_with_src(m_mutex, m_src_file, m_src_line);
     }
   }
   ~Mutex_lock() {
     if (m_mutex) {
-      mysql_mutex_unlock_with_src(m_mutex, m_src_file, m_src_line);
+      des_mutex_unlock_with_src(m_mutex, m_src_file, m_src_line);
     }
   }
 
  private:
-  mysql_mutex_t *m_mutex;
+  repl_des_mutex_t *m_mutex;
   const char *m_src_file;
   int m_src_line;
 

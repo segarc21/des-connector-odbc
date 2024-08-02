@@ -52,7 +52,7 @@ bool init_dynamic_string(DYNAMIC_STRING *str, const char *init_str,
   init_alloc = std::max(init_alloc, length + 1);
 
   if (!(str->str = (char *)my_malloc(key_memory_DYNAMIC_STRING, init_alloc,
-                                     MYF(MY_WME))))
+                                     DESF(MY_WME))))
     return true;
   str->length = length;
   if (init_str) memcpy(str->str, init_str, length + 1);
@@ -68,7 +68,7 @@ bool dynstr_set(DYNAMIC_STRING *str, const char *init_str) {
     str->max_length =
         std::max(str->max_length * 3 / 2, str->length + length + 1);
     if (!(str->str = (char *)my_realloc(key_memory_DYNAMIC_STRING, str->str,
-                                        str->max_length, MYF(MY_WME))))
+                                        str->max_length, DESF(MY_WME))))
       return true;
   }
   if (init_str) {
@@ -87,7 +87,7 @@ bool dynstr_realloc(DYNAMIC_STRING *str, size_t additional_size) {
     str->max_length =
         std::max(str->max_length * 3 / 2, str->length + additional_size + 1);
     if (!(str->str = (char *)my_realloc(key_memory_DYNAMIC_STRING, str->str,
-                                        str->max_length, MYF(MY_WME))))
+                                        str->max_length, DESF(MY_WME))))
       return true;
   }
   return false;
@@ -103,7 +103,7 @@ bool dynstr_append_mem(DYNAMIC_STRING *str, const char *append, size_t length) {
     size_t new_length =
         std::max(str->max_length * 3 / 2, str->length + length + 1);
     if (!(new_ptr = (char *)my_realloc(key_memory_DYNAMIC_STRING, str->str,
-                                       new_length, MYF(MY_WME))))
+                                       new_length, DESF(MY_WME))))
       return true;
     str->str = new_ptr;
     str->max_length = new_length;

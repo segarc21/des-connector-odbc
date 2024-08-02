@@ -38,21 +38,21 @@
 
 /**
   An instrumented mutex structure.
-  @c mysql_mutex_t is a drop-in replacement for @c my_mutex_t.
+  @c repl_des_mutex_t is a drop-in replacement for @c my_mutex_t.
   @sa mysql_mutex_assert_owner
   @sa mysql_mutex_assert_not_owner
   @sa mysql_mutex_init
-  @sa mysql_mutex_lock
-  @sa mysql_mutex_unlock
+  @sa def_des_mutex_lock
+  @sa def_des_mutex_unlock
   @sa mysql_mutex_destroy
 */
-struct mysql_mutex_t {
+struct repl_des_mutex_t {
   /** The real mutex. */
-  my_mutex_t m_mutex;
+  des_mutex_t m_mutex;
   /**
     The instrumentation hook.
     Note that this hook is not conditionally defined,
-    for binary compatibility of the @c mysql_mutex_t interface.
+    for binary compatibility of the @c repl_des_mutex_t interface.
   */
   struct PSI_mutex *m_psi{nullptr};
 };

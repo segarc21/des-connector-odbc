@@ -79,7 +79,7 @@ void list_free(LIST *root, uint free_data) {
 
 LIST *list_cons(void *data, LIST *list) {
   LIST *new_charset =
-      (LIST *)my_malloc(key_memory_LIST, sizeof(LIST), MYF(MY_FAE));
+      (LIST *)my_malloc(key_memory_LIST, sizeof(LIST), DESF(MY_FAE));
   if (!new_charset) return nullptr;
   new_charset->data = data;
   return list_add(list, new_charset);

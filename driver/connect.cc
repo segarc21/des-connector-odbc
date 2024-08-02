@@ -98,7 +98,7 @@ void DBC::set_charset(std::string charset)
   std::string query = "SET NAMES " + charset;
   if (execute_query(query.c_str(), query.length(), true))
   {
-    throw MYERROR("HY000", mysql);
+    throw DESERROR("HY000", mysql);
   }
 }
 
@@ -137,11 +137,11 @@ try
   set_charset(charset);
   MY_CHARSET_INFO my_charset;
   mysql_get_character_set_info(mysql, &my_charset);
-  cxn_charset_info = desodbc::get_charset(my_charset.number, MYF(0));
+  cxn_charset_info = desodbc::get_charset(my_charset.number, DESF(0));
 
   return rc;
 }
-catch(const MYERROR &e)
+catch(const DESERROR &e)
 {
   error = e;
   return e.retcode;
@@ -156,7 +156,7 @@ try
     /* Check for SET NAMES */
     if (is_set_names_statement(dsrc->opt_INITSTMT))
     {
-      throw MYERROR("HY000", "SET NAMES not allowed by driver");
+      throw DESERROR("HY000", "SET NAMES not allowed by driver");
     }
 
     if (dbc->execute_query(dsrc->opt_INITSTMT, SQL_NTS, true) != SQL_SUCCESS)
@@ -166,7 +166,7 @@ try
   }
   return SQL_SUCCESS;
 }
-catch (const MYERROR& e)
+catch (const DESERROR& e)
 {
   dbc->error = e;
   return e.retcode;

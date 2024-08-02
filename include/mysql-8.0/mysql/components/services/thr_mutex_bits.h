@@ -57,12 +57,12 @@ typedef pthread_mutexattr_t native_mutexattr_t;
 
 struct safe_mutex_t;
 
-struct my_mutex_t {
+struct des_mutex_t {
   union u {
     native_mutex_t m_native;
     safe_mutex_t *m_safe_ptr;
   } m_u;
 };
-typedef struct my_mutex_t my_mutex_t;
+typedef struct des_mutex_t des_mutex_t;
 
 #endif /* COMPONENTS_SERVICES_THR_MUTEX_BITS_H */

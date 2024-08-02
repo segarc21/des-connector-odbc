@@ -104,7 +104,7 @@ BOOL ssps_get_out_params(STMT *stmt)
       {
         values = stmt->fetch_row();
       }
-      catch(MYERROR&)
+      catch(DESERROR&)
       {
         return FALSE;
       }
@@ -286,7 +286,7 @@ int ssps_get_result(STMT *stmt)
       }
     }
   }
-  catch(MYERROR &e)
+  catch(DESERROR &e)
   {
     return e.retcode;
   }
@@ -534,7 +534,7 @@ allocate_buffer_for_field(const MYSQL_FIELD * const field, BOOL outparams)
 
   if (result.size > 0)
   {
-    result.buffer= (char*)myodbc_malloc(result.size, MYF(0));
+    result.buffer= (char*)myodbc_malloc(result.size, DESF(0));
   }
 
   return result;
@@ -765,7 +765,7 @@ void STMT::reset_getdata_position()
 SQLRETURN STMT::set_error(myodbc_errid errid, const char *errtext,
                          SQLINTEGER errcode)
 {
-  error = MYERROR(errid, errtext, errcode, dbc->st_error_prefix);
+  error = DESERROR(errid, errtext, errcode, dbc->st_error_prefix);
   return error.retcode;
 }
 
@@ -780,7 +780,7 @@ SQLRETURN STMT::set_error(myodbc_errid errid)
 SQLRETURN STMT::set_error(const char *state, const char *msg,
                           SQLINTEGER errcode)
 {
-    error = MYERROR(state, msg, errcode, dbc->st_error_prefix);
+    error = DESERROR(state, msg, errcode, dbc->st_error_prefix);
     return error.retcode;
 }
 
@@ -861,7 +861,7 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow)
     current_row = -1;  /* Before first row */
     rows_found_in_set = 0;
     data_seek(this, 0L);
-    throw MYERROR(SQL_NO_DATA_FOUND);
+    throw DESERROR(SQL_NO_DATA_FOUND);
   }
   if (cur_row > max_row)
   {
@@ -872,7 +872,7 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow)
       switch (scroller_prefetch(this))
       {
       case SQL_NO_DATA:
-        throw MYERROR(SQL_NO_DATA_FOUND);
+        throw DESERROR(SQL_NO_DATA_FOUND);
       case SQL_ERROR:
         set_error(DESERR_S1000, mysql_error(dbc->mysql), 0);
         throw error;
@@ -923,7 +923,7 @@ int STMT::ssps_bind_result()
 
     /*TODO care about memory allocation errors */
     result_bind=  (MYSQL_BIND*)myodbc_malloc(sizeof(MYSQL_BIND)*num_fields,
-                                             MYF(MY_ZEROFILL));
+                                             DESF(MY_ZEROFILL));
     array.set_size(sizeof(char*)*num_fields);
 
     for (i= 0; i < num_fields; ++i)
@@ -1127,7 +1127,7 @@ BOOL ssps_buffers_need_extending(STMT *stmt)
 
 /* --------------- Type conversion functions -------------- */
 
-#define ALLOC_IFNULL(buff,size) ((buff)==NULL?(char*)myodbc_malloc(size,MYF(0)):buff)
+#define ALLOC_IFNULL(buff,size) ((buff)==NULL?(char*)myodbc_malloc(size,DESF(0)):buff)
 
 /* {{{ ssps_get_string() -I- */
 /* caller should care to make buffer long enough,

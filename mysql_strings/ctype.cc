@@ -566,7 +566,7 @@ static int cs_value(MY_XML_PARSER *st, const char *attr, size_t len) {
       break;
     case _CS_FLAG:
       if (!strncmp("primary", attr, len))
-        i->cs.state |= MY_CS_PRIMARY;
+        i->cs.state |= DES_CS_PRIMARY;
       else if (!strncmp("binary", attr, len))
         i->cs.state |= MY_CS_BINSORT;
       else if (!strncmp("compiled", attr, len))

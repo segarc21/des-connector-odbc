@@ -63,24 +63,24 @@ static bool des_thread_global_init_done = false;
 static uint THR_thread_count = 0;
 static Timeout_type my_thread_end_wait_time = 5;
 static my_thread_id thread_id = 0;
-struct st_my_thread_var;
-static thread_local st_my_thread_var *THR_mysys = nullptr;
+struct st_des_thread_var;
+static thread_local st_des_thread_var *THR_dessys = nullptr;
 #endif
 static thread_local int THR_myerrno = 0;
 #ifdef _WIN32
 static thread_local int THR_winerrno = 0;
 #endif
 
-mysql_mutex_t THR_LOCK_myisam_mmap;
-mysql_mutex_t THR_LOCK_myisam;
-mysql_mutex_t THR_LOCK_heap;
-mysql_mutex_t THR_LOCK_malloc;
-mysql_mutex_t THR_LOCK_open;
-mysql_mutex_t THR_LOCK_lock;
-mysql_mutex_t THR_LOCK_net;
-mysql_mutex_t THR_LOCK_charset;
+repl_des_mutex_t THR_LOCK_myisam_mmap;
+repl_des_mutex_t THR_LOCK_myisam;
+repl_des_mutex_t THR_LOCK_heap;
+repl_des_mutex_t THR_LOCK_malloc;
+repl_des_mutex_t THR_LOCK_open;
+repl_des_mutex_t THR_LOCK_lock;
+repl_des_mutex_t THR_LOCK_net;
+repl_des_mutex_t THR_LOCK_charset;
 #ifndef NDEBUG
-mysql_mutex_t THR_LOCK_threads;
+repl_des_mutex_t THR_LOCK_threads;
 mysql_cond_t THR_COND_threads;
 #endif
 
@@ -95,15 +95,15 @@ static void install_sigabrt_handler();
 #endif
 
 #ifndef NDEBUG
-struct st_my_thread_var {
+struct st_des_thread_var {
   my_thread_id id;
   struct CODE_STATE *dbug;
 };
 
-static struct st_my_thread_var *mysys_thread_var() { return THR_mysys; }
+static struct st_des_thread_var *dessys_thread_var() { return THR_dessys; }
 
-static int set_mysys_thread_var(struct st_my_thread_var *mysys_var) {
-  THR_mysys = mysys_var;
+static int set_dessys_thread_var(struct st_des_thread_var *dessys_var) {
+  THR_dessys = dessys_var;
   return 0;
 }
 #endif
@@ -211,7 +211,7 @@ void my_thread_global_end() {
   bool all_threads_killed = true;
 
   set_timespec(&abstime, my_thread_end_wait_time);
-  mysql_mutex_lock(&THR_LOCK_threads);
+  def_des_mutex_lock(&THR_LOCK_threads);
   while (THR_thread_count > 0) {
     int error =
         mysql_cond_timedwait(&THR_COND_threads, &THR_LOCK_threads, &abstime);
@@ -231,7 +231,7 @@ void my_thread_global_end() {
       break;
     }
   }
-  mysql_mutex_unlock(&THR_LOCK_threads);
+  def_des_mutex_unlock(&THR_LOCK_threads);
 #endif
 
 #ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
@@ -268,9 +268,9 @@ void my_thread_global_end() {
   @retval true   Fatal error; mysys/dbug functions can't be used
 */
 
-bool my_thread_init() {
+bool des_thread_init() {
 #ifndef NDEBUG
-  struct st_my_thread_var *tmp;
+  struct st_des_thread_var *tmp;
 #endif
 
   if (!des_thread_global_init_done)
@@ -281,15 +281,15 @@ bool my_thread_init() {
 #endif
 
 #ifndef NDEBUG
-  if (mysys_thread_var()) return false;
+  if (dessys_thread_var()) return false;
 
-  if (!(tmp = (struct st_my_thread_var *)calloc(1, sizeof(*tmp)))) return true;
+  if (!(tmp = (struct st_des_thread_var *)calloc(1, sizeof(*tmp)))) return true;
 
-  mysql_mutex_lock(&THR_LOCK_threads);
+  def_des_mutex_lock(&THR_LOCK_threads);
   tmp->id = ++thread_id;
   ++THR_thread_count;
-  mysql_mutex_unlock(&THR_LOCK_threads);
-  set_mysys_thread_var(tmp);
+  def_des_mutex_unlock(&THR_LOCK_threads);
+  set_dessys_thread_var(tmp);
 #endif
 
   return false;
@@ -305,13 +305,13 @@ bool my_thread_init() {
 
 void my_thread_end() {
 #ifndef NDEBUG
-  struct st_my_thread_var *tmp = mysys_thread_var();
+  struct st_des_thread_var *tmp = dessys_thread_var();
 #endif
 
 #ifdef HAVE_PSI_THREAD_INTERFACE
   /*
     Remove the instrumentation for this thread.
-    This must be done before trashing st_my_thread_var,
+    This must be done before trashing st_des_thread_var,
     because the LF_HASH depends on it.
   */
   PSI_THREAD_CALL(delete_current_thread)();
@@ -331,14 +331,14 @@ void my_thread_end() {
       Decrement counter for number of running threads. We are using this
       in my_thread_global_end() to wait until all threads have called
       my_thread_end and thus freed all memory they have allocated in
-      my_thread_init() and DBUG_xxxx
+      des_thread_init() and DBUG_xxxx
     */
-    mysql_mutex_lock(&THR_LOCK_threads);
+    def_des_mutex_lock(&THR_LOCK_threads);
     assert(THR_thread_count != 0);
     if (--THR_thread_count == 0) mysql_cond_signal(&THR_COND_threads);
-    mysql_mutex_unlock(&THR_LOCK_threads);
+    def_des_mutex_unlock(&THR_LOCK_threads);
   }
-  set_mysys_thread_var(nullptr);
+  set_dessys_thread_var(nullptr);
 #endif
 }
 
@@ -353,12 +353,12 @@ void set_thr_winerr(int winerr) { THR_winerrno = winerr; }
 #endif
 
 #ifndef NDEBUG
-my_thread_id my_thread_var_id() { return mysys_thread_var()->id; }
+my_thread_id my_thread_var_id() { return dessys_thread_var()->id; }
 
-void set_my_thread_var_id(my_thread_id id) { mysys_thread_var()->id = id; }
+void set_my_thread_var_id(my_thread_id id) { dessys_thread_var()->id = id; }
 
 CODE_STATE **my_thread_var_dbug() {
-  struct st_my_thread_var *tmp = THR_mysys;
+  struct st_des_thread_var *tmp = THR_dessys;
   return tmp ? &tmp->dbug : nullptr;
 }
 #endif /* NDEBUG */
@@ -372,12 +372,12 @@ CODE_STATE **my_thread_var_dbug() {
   EXCEPTION_BREAKPOINT and then handle_segfault will do its magic.
 */
 
-static void my_sigabrt_handler(int sig) { __debugbreak(); }
+static void des_sigabrt_handler(int sig) { __debugbreak(); }
 
 static void install_sigabrt_handler() {
   /*abort() should not override our exception filter*/
   _set_abort_behavior(0, _CALL_REPORTFAULT);
-  signal(SIGABRT, my_sigabrt_handler);
+  signal(SIGABRT, des_sigabrt_handler);
 }
 #endif
 

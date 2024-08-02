@@ -138,7 +138,7 @@ int safe_cond_timedwait(native_cond_t *cond, safe_mutex_t *mp,
                         uint line);
 #endif
 
-static inline int my_cond_timedwait(native_cond_t *cond, my_mutex_t *mp,
+static inline int my_cond_timedwait(native_cond_t *cond, des_mutex_t *mp,
                                     const struct timespec *abstime
 #ifdef SAFE_MUTEX
                                     ,
@@ -152,7 +152,7 @@ static inline int my_cond_timedwait(native_cond_t *cond, my_mutex_t *mp,
 #endif
 }
 
-static inline int my_cond_wait(native_cond_t *cond, my_mutex_t *mp
+static inline int my_cond_wait(native_cond_t *cond, des_mutex_t *mp
 #ifdef SAFE_MUTEX
                                ,
                                const char *file, uint line

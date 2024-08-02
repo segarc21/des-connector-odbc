@@ -33,7 +33,7 @@
 #include "my_macros.h"
 
 #include "my_psi_config.h"
-#include "mysql/components/services/mysql_mutex_bits.h"  // for mysql_mutex_t
+#include "mysql/components/services/mysql_mutex_bits.h"  // for repl_des_mutex_t
 #include "mysql/components/services/psi_cond_bits.h"
 #include "mysql/components/services/psi_file_bits.h"    // for PSI_file_key
 #include "mysql/components/services/psi_memory_bits.h"  // for PSI_memory_key
@@ -41,7 +41,7 @@
 #include "mysql/components/services/psi_rwlock_bits.h"  // for PSI_rwlock_key
 #include "mysql/components/services/psi_stage_bits.h"   // for PSI_stage_info
 #include "mysql/components/services/psi_thread_bits.h"  // for PSI_thread_key
-#include "mysql/psi/mysql_mutex.h"                      // for mysql_mutex_lock
+#include "mysql/psi/mysql_mutex.h"                      // for def_des_mutex_lock
 
 namespace desodbc
 {
@@ -59,9 +59,9 @@ extern PSI_cond_key key_IO_CACHE_SHARE_cond, key_IO_CACHE_SHARE_cond_writer,
 
 extern PSI_stage_info stage_waiting_for_table_level_lock;
 
-extern mysql_mutex_t THR_LOCK_malloc, THR_LOCK_open;
-extern mysql_mutex_t THR_LOCK_net;
-extern mysql_mutex_t THR_LOCK_charset;
+extern repl_des_mutex_t THR_LOCK_malloc, THR_LOCK_open;
+extern repl_des_mutex_t THR_LOCK_net;
+extern repl_des_mutex_t THR_LOCK_charset;
 
 #ifdef HAVE_LINUX_LARGE_PAGES
 extern PSI_file_key key_file_proc_meminfo;
@@ -83,7 +83,7 @@ extern PSI_memory_key key_memory_MY_TMPDIR_full_list;
 extern PSI_memory_key key_memory_MY_BITMAP_bitmap;
 extern PSI_memory_key key_memory_my_compress_alloc;
 extern PSI_memory_key key_memory_my_err_head;
-extern PSI_memory_key key_memory_my_file_info;
+extern PSI_memory_key key_memory_des_file_info;
 extern PSI_memory_key key_memory_MY_DIR;
 extern PSI_memory_key key_memory_DYNAMIC_STRING;
 extern PSI_memory_key key_memory_TREE;
@@ -168,7 +168,7 @@ void RegisterFilename(File fd, const char *FileName, OpenType type_of_file);
 void UnregisterFilename(File fd);
 }  // namespace file_info
 
-void MyFileInit();
+void DESFileInit();
 void MyFileEnd();
 
 } /* namespace myodbc */
