@@ -38,9 +38,6 @@
 #ifndef FIELD_TYPES_INCLUDED
 #define FIELD_TYPES_INCLUDED
 
-namespace desodbc
-{
-
 /*
  * Constants exported from this package.
  */
@@ -87,7 +84,5 @@ enum enum_field_types
   MYSQL_TYPE_VAR_STRING = 253,
   MYSQL_TYPE_STRING = 254,
   MYSQL_TYPE_GEOMETRY = 255 };
-
-} /* namespace myodbc */
 
 #endif /* FIELD_TYPES_INCLUDED */

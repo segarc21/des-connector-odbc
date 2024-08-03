@@ -78,7 +78,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -100,10 +100,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -116,7 +116,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
@@ -139,10 +139,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -155,7 +155,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
@@ -178,10 +178,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -194,7 +194,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -216,10 +216,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 8.0\include;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>

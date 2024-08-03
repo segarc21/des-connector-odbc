@@ -37,6 +37,9 @@
    magic numbers
 */
 
+#include "field_types.h"
+#include "mysql.h"
+
 /* SQLColumns */
 enum desodbcColumns {des_cTABLE_CAT= 0,      des_cTABLE_SCHEM,      des_cTABLE_NAME,
               /*3*/ des_cCOLUMN_NAME,       des_cDATA_TYPE,        des_cTYPE_NAME,

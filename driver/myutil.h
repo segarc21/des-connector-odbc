@@ -36,8 +36,12 @@
  * @product    : myodbc3						   *
  *									   *
  ****************************************************************************/
+
+
 #ifndef __MYUTIL_H__
 #define __MYUTIL_H__
+
+#include <field_types.h>
 
 /*
   Utility macros
@@ -95,6 +99,8 @@ typedef char * DYNAMIC_ELEMENT;
 #define DES_FIELD_DEF NullS,
 #define DES_FIELD_DEF_LENGTH 0,
 #endif
+
+#include "field_types.h"
 
 /* Same us DESODBC_FIELD_STRING(name, NAME_LEN, flags) */
 # define DESODBC_FIELD_NAME(name, flags) \

@@ -98,6 +98,8 @@ typedef int my_socket;
 extern "C" {
 #endif
 
+#include "../../../../../../Program Files/MySQL/MySQL Server 8.0/include/my_list.h" //TODO ARREGLAR
+
 extern unsigned int mysql_port;
 extern char *mysql_unix_port;
 
@@ -279,6 +281,7 @@ enum mysql_ssl_fips_mode {
   SSL_FIPS_MODE_ON = 1,
   SSL_FIPS_MODE_STRICT
 };
+
 
 typedef struct character_set {
   unsigned int number;   /* character set number              */
