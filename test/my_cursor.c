@@ -2250,15 +2250,15 @@ DECLARE_TEST(tmy_cursor1)
   SQLCHAR getCurName[20];
   SQLSMALLINT getLen;
 
-  ok_stmt(hstmt, SQLSetCursorName(hstmt, (SQLCHAR *)"MYSQL", 5));
+  ok_stmt(hstmt, SQLSetCursorName(hstmt, (SQLCHAR *)"DES", 5));
   ok_stmt(hstmt, SQLGetCursorName(hstmt, getCurName, 20, &getLen));
-  is_str(getCurName, "MYSQL", 5);
+  is_str(getCurName, "DES", 5);
 
-  ok_stmt(hstmt, SQLSetCursorName(hstmt, (SQLCHAR *)"MYSQL", 10));
+  ok_stmt(hstmt, SQLSetCursorName(hstmt, (SQLCHAR *)"DES", 10));
   ok_stmt(hstmt, SQLGetCursorName(hstmt, getCurName, 20, &getLen));
-  is_str(getCurName, "MYSQL", 5);
+  is_str(getCurName, "DES", 5);
 
-  ok_stmt(hstmt, SQLSetCursorName(hstmt, (SQLCHAR *)"MYSQL", 2));
+  ok_stmt(hstmt, SQLSetCursorName(hstmt, (SQLCHAR *)"DES", 2));
   ok_stmt(hstmt, SQLGetCursorName(hstmt, getCurName, 20, &getLen));
   is_str(getCurName, "MY", 2);
 

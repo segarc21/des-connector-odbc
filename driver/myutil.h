@@ -49,10 +49,10 @@
 
 #define if_forward_cache(st) ((st)->stmt_options.cursor_type == SQL_CURSOR_FORWARD_ONLY && \
            (st)->dbc->ds.opt_NO_CACHE)
-#define is_connected(dbc)    ((dbc)->mysql && (dbc)->mysql->net.vio)
-#define trans_supported(db) ((db)->mysql->server_capabilities & CLIENT_TRANSACTIONS)
-#define autocommit_on(db) ((db)->mysql->server_status & SERVER_STATUS_AUTOCOMMIT)
-#define is_no_backslashes_escape_mode(db) ((db)->mysql->server_status & SERVER_STATUS_NO_BACKSLASH_ESCAPES)
+#define is_connected(dbc)    ((dbc)->des && (dbc)->des->net.vio)
+#define trans_supported(db) ((db)->des->server_capabilities & CLIENT_TRANSACTIONS)
+#define autocommit_on(db) ((db)->des->server_status & SERVER_STATUS_AUTOCOMMIT)
+#define is_no_backslashes_escape_mode(db) ((db)->des->server_status & SERVER_STATUS_NO_BACKSLASH_ESCAPES)
 #define reset_ptr(x) {if (x) x= 0;}
 #define digit(A) ((int) (A - '0'))
 
@@ -89,7 +89,7 @@ typedef char * DYNAMIC_ELEMENT;
 #endif
 
 // Handle the removal of `def` and `def_length`
-// from MYSQL_FIELD struct in MySQL 8.3.0
+// from DES_FIELD struct in MySQL 8.3.0
 // (see WL#16221 and WL#16383)
 
 #if LIBMYSQL_VERSION_ID == 80300
@@ -106,27 +106,27 @@ typedef char * DYNAMIC_ELEMENT;
 # define DESODBC_FIELD_NAME(name, flags) \
   {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
     NAME_LEN, 0, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, UTF8_CHARSET_NUMBER, MYSQL_TYPE_VAR_STRING, NULL}
+    (flags), 0, UTF8_CHARSET_NUMBER, DES_TYPE_VAR_STRING, NULL}
 
 # define DESODBC_FIELD_STRING(name, len, flags) \
   {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
     (len*SYSTEM_CHARSET_MBMAXLEN), 0, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, UTF8_CHARSET_NUMBER, MYSQL_TYPE_VAR_STRING, NULL}
+    (flags), 0, UTF8_CHARSET_NUMBER, DES_TYPE_VAR_STRING, NULL}
 
 # define DESODBC_FIELD_SHORT(name, flags) \
   {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
     5, 5, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, 0, MYSQL_TYPE_SHORT, NULL}
+    (flags), 0, 0, DES_TYPE_SHORT, NULL}
 
 # define DESODBC_FIELD_LONG(name, flags) \
   {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
     11, 11, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, 0, MYSQL_TYPE_LONG, NULL}
+    (flags), 0, 0, DES_TYPE_LONG, NULL}
 
 # define DESODBC_FIELD_LONGLONG(name, flags) \
   {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
     20, 20, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, 0, MYSQL_TYPE_LONGLONG, NULL}
+    (flags), 0, 0, DES_TYPE_LONGLONG, NULL}
 
 /*
   Utility function prototypes that share among files
@@ -143,7 +143,7 @@ SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT fOption,
 SQLRETURN SQL_API DES_SQLAllocStmt       (SQLHDBC hdbc,SQLHSTMT *phstmt);
 SQLRETURN         do_query              (STMT *stmt, std::string query);
 SQLRETURN         insert_params         (STMT *stmt, SQLULEN row, std::string &finalquery);
-void      desodbc_link_fields (STMT *stmt,MYSQL_FIELD *fields,uint field_count);
+void      desodbc_link_fields (STMT *stmt,DES_FIELD *fields,uint field_count);
 void      fix_row_lengths   (STMT *stmt, const long* fix_rules, uint row, uint field_count);
 void      fix_result_types  (STMT *stmt);
 char *    fix_str           (char *to,const char *from,int length);
@@ -154,7 +154,7 @@ SQLRETURN des_pos_update_std (STMT *stmt,STMT *stmtParam,
                         SQLUSMALLINT irow, std::string &str);
 
 char *    check_if_positioned_cursor_exists (STMT *stmt, STMT **stmtNew);
-SQLRETURN insert_param  (STMT *stmt, MYSQL_BIND *bind, DESC *apd,
+SQLRETURN insert_param  (STMT *stmt, DES_BIND *bind, DESC *apd,
                         DESCREC *aprec, DESCREC *iprec, SQLULEN row);
 
 SQLRETURN set_sql_select_limit(DBC *dbc, SQLULEN new_value, des_bool reqLock);
@@ -167,11 +167,11 @@ SQLRETURN exec_stmt_query_std(STMT *stmt, const std::string &str,
 SQLRETURN
 copy_ansi_result(STMT *stmt,
                  SQLCHAR *result, SQLLEN result_bytes, SQLLEN *used_bytes,
-                 MYSQL_FIELD *field, char *src, unsigned long src_bytes);
+                 DES_FIELD *field, char *src, unsigned long src_bytes);
 SQLRETURN
 copy_binary_result(STMT *stmt,
                    SQLCHAR *result, SQLLEN result_bytes, SQLLEN *used_bytes,
-                   MYSQL_FIELD *field, char *src, unsigned long src_bytes);
+                   DES_FIELD *field, char *src, unsigned long src_bytes);
 template <typename T>
 SQLRETURN copy_binhex_result(STMT *stmt,
            T *rgbValue, SQLINTEGER cbValueMax,
@@ -179,34 +179,34 @@ SQLRETURN copy_binhex_result(STMT *stmt,
            ulong src_length);
 SQLRETURN copy_bit_result(STMT *stmt,
                           SQLCHAR *result, SQLLEN result_bytes, SQLLEN *used_bytes,
-                          MYSQL_FIELD *field, char *src, unsigned long src_bytes);
+                          DES_FIELD *field, char *src, unsigned long src_bytes);
 SQLRETURN wcopy_bit_result(STMT *stmt,
                           SQLWCHAR *result, SQLLEN result_bytes, SQLLEN *used_bytes,
-                          MYSQL_FIELD *field, char *src, unsigned long src_bytes);
+                          DES_FIELD *field, char *src, unsigned long src_bytes);
 SQLRETURN copy_wchar_result(STMT *stmt,
                             SQLWCHAR *rgbValue, SQLINTEGER cbValueMax,
-                            SQLLEN *pcbValue, MYSQL_FIELD *field, char *src,
+                            SQLLEN *pcbValue, DES_FIELD *field, char *src,
                             long src_length);
 
 SQLRETURN set_desc_error  (DESC *desc, char *state,
                           const char *message, uint errcode);
 SQLRETURN handle_connection_error (STMT *stmt);
 des_bool   is_connection_lost      (uint errcode);
-void      set_mem_error           (MYSQL *mysql);
+void      set_mem_error           (DES *des);
 void      translate_error         (char *save_state, desodbc_errid errid, uint mysql_err);
 
 SQLSMALLINT get_sql_data_type_from_str(const char *mysql_type_name);
 SQLSMALLINT compute_sql_data_type(STMT *stmt, SQLSMALLINT sql_type,
   char octet_length, size_t col_size);
-SQLSMALLINT get_sql_data_type           (STMT *stmt, MYSQL_FIELD *field, char *buff);
-SQLULEN     get_column_size             (STMT *stmt, MYSQL_FIELD *field);
+SQLSMALLINT get_sql_data_type           (STMT *stmt, DES_FIELD *field, char *buff);
+SQLULEN     get_column_size             (STMT *stmt, DES_FIELD *field);
 SQLULEN     get_column_size_from_str    (STMT *stmt, const char *size_str);
-SQLULEN     fill_column_size_buff       (char *buff, STMT *stmt, MYSQL_FIELD *field);
-SQLSMALLINT get_decimal_digits          (STMT *stmt, MYSQL_FIELD *field);
-SQLLEN      get_transfer_octet_length   (STMT *stmt, MYSQL_FIELD *field);
-SQLLEN      fill_transfer_oct_len_buff  (char *buff, STMT *stmt, MYSQL_FIELD *field);
-SQLLEN      get_display_size            (STMT *stmt, MYSQL_FIELD *field);
-SQLLEN      fill_display_size_buff      (char *buff, STMT *stmt, MYSQL_FIELD *field);
+SQLULEN     fill_column_size_buff       (char *buff, STMT *stmt, DES_FIELD *field);
+SQLSMALLINT get_decimal_digits          (STMT *stmt, DES_FIELD *field);
+SQLLEN      get_transfer_octet_length   (STMT *stmt, DES_FIELD *field);
+SQLLEN      fill_transfer_oct_len_buff  (char *buff, STMT *stmt, DES_FIELD *field);
+SQLLEN      get_display_size            (STMT *stmt, DES_FIELD *field);
+SQLLEN      fill_display_size_buff      (char *buff, STMT *stmt, DES_FIELD *field);
 SQLSMALLINT get_dticode_from_concise_type       (SQLSMALLINT concise_type);
 SQLSMALLINT get_concise_type_from_datetime_code (SQLSMALLINT dticode);
 SQLSMALLINT get_concise_type_from_interval_code (SQLSMALLINT dticode);
@@ -222,8 +222,8 @@ SQLLEN      get_bookmark_value                  (SQLSMALLINT fCType, SQLPOINTER 
    (type) == SQL_LONGVARBINARY)
 
 #define is_numeric_mysql_type(field) \
-  ((field)->type <= MYSQL_TYPE_NULL || (field)->type == MYSQL_TYPE_LONGLONG || \
-   (field)->type == MYSQL_TYPE_INT24 || \
+  ((field)->type <= DES_TYPE_NULL || (field)->type == DES_TYPE_LONGLONG || \
+   (field)->type == DES_TYPE_INT24 || \
    ((field)->type == DES_TYPE_BIT && (field)->length == 1) || \
    (field)->type == DES_TYPE_NEWDECIMAL)
 
@@ -256,7 +256,7 @@ void fix_padded_length(STMT *stmt, SQLSMALLINT fCType,
 
 SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                                SQLUSMALLINT fOption, SQLUSMALLINT fLock);
-int       unireg_to_c_datatype  (MYSQL_FIELD *field);
+int       unireg_to_c_datatype  (DES_FIELD *field);
 int       default_c_type        (int sql_data_type);
 ulong     bind_length           (int sql_data_type,ulong length);
 des_bool   str_to_date           (SQL_DATE_STRUCT *rgbValue, const char *str,
@@ -346,7 +346,7 @@ int         proc_get_param_sql_type_index (const char*ptype, int len);
 SQLTypeMap *proc_get_param_map_by_index   (int index);
 char *      proc_param_next_token         (char *str, char *str_end);
 
-void        set_row_count         (STMT * stmt, my_ulonglong rows);
+void        set_row_count         (STMT * stmt, des_ulonglong rows);
 const char *get_fractional_part   (const char * str, int len,
                                   BOOL dont_use_set_locale,
                                   SQLUINTEGER * fraction);
@@ -380,21 +380,21 @@ unsigned long long binary2ull(char* src, uint64 srcLen);
 void fill_ird_data_lengths (DESC *ird, ulong *lengths, uint fields);
 
 /* Functions to work with prepared and regular statements  */
-#define IS_PS_OUT_PARAMS(_stmt) ((_stmt)->dbc->mysql->server_status & SERVER_PS_OUT_PARAMS)
+#define IS_PS_OUT_PARAMS(_stmt) ((_stmt)->dbc->des->server_status & SERVER_PS_OUT_PARAMS)
 /* my_stmt.c */
 BOOL              ssps_used           (STMT *stmt);
 BOOL              returned_result     (STMT *stmt);
 des_bool           free_current_result (STMT *stmt);
-MYSQL_RES *       get_result_metadata (STMT *stmt, BOOL force_use);
+DES_RES *       get_result_metadata (STMT *stmt, BOOL force_use);
 int               bind_result         (STMT *stmt);
 int               get_result          (STMT *stmt);
-my_ulonglong      affected_rows       (STMT *stmt);
-my_ulonglong      update_affected_rows(STMT *stmt);
-my_ulonglong      num_rows            (STMT *stmt);
+des_ulonglong      affected_rows       (STMT *stmt);
+des_ulonglong      update_affected_rows(STMT *stmt);
+des_ulonglong      num_rows            (STMT *stmt);
 unsigned long*    fetch_lengths       (STMT *stmt);
-MYSQL_ROW_OFFSET  row_seek            (STMT *stmt, MYSQL_ROW_OFFSET offset);
-void              data_seek           (STMT *stmt, my_ulonglong offset);
-MYSQL_ROW_OFFSET  row_tell            (STMT *stmt);
+DES_ROW_OFFSET  row_seek            (STMT *stmt, DES_ROW_OFFSET offset);
+void              data_seek           (STMT *stmt, des_ulonglong offset);
+DES_ROW_OFFSET  row_tell            (STMT *stmt);
 int               next_result         (STMT *stmt);
 SQLRETURN         send_long_data      (STMT *stmt, unsigned int param_num, DESCREC * aprec,
                                       const char *chunk, unsigned long length);
@@ -465,7 +465,7 @@ char *      ssps_get_string       (STMT *stmt, ulong column_number, char *value,
                                   ulong *length, char * buffer);
 SQLRETURN   ssps_send_long_data   (STMT *stmt, unsigned int param_num, const char *chunk,
                                   unsigned long length);
-MYSQL_BIND * get_param_bind       (STMT *stmt, unsigned int param_number, int reset);
+DES_BIND * get_param_bind       (STMT *stmt, unsigned int param_number, int reset);
 
 bool is_varlen_type(enum enum_field_types type);
 

@@ -449,7 +449,7 @@ DECLARE_TEST(t_bug17966018)
 
 
 /**
-  Bug #17841121 Valgrind reported invalid read/write error in my_SQLFreeDesc
+  Bug #17841121 Valgrind reported invalid read/write error in DES_SQLFreeDesc
 */
 DECLARE_TEST(t_bug17841121)
 {

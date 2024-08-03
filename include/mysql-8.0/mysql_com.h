@@ -42,7 +42,7 @@
 #include "my_compress.h"
 
 /*
-  We need a definition for my_socket. On the client, <mysql.h> already provides
+  We need a definition for des_socket. On the client, <mysql.h> already provides
   it, but on the server side, we need to get it from a header.
 */
 #ifndef my_socket_defined
@@ -625,7 +625,7 @@
 
   @todo Reference expired password
 
-  @sa MYSQL_OPT_CAN_HANDLE_EXPIRED_PASSWORDS, disconnect_on_expired_password
+  @sa DES_OPT_CAN_HANDLE_EXPIRED_PASSWORDS, disconnect_on_expired_password
   ACL_USER::password_expired, check_password_lifetime(), acl_authenticate()
 */
 #define CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS (1UL << 22)
@@ -877,7 +877,7 @@ enum SERVER_STATUS_flags_enum {
    SERVER_SESSION_STATE_CHANGED)
 
 /** Max length of a error message. Should be kept in sync with ::ERRMSGSIZE. */
-#define MYSQL_ERRMSG_SIZE 512
+#define DES_ERRMSG_SIZE 512
 #define NET_READ_TIMEOUT 30          /**< Timeout on read */
 #define NET_WRITE_TIMEOUT 60         /**< Timeout on write */
 #define NET_WAIT_TIMEOUT 8 * 60 * 60 /**< Wait for new query */
@@ -913,7 +913,7 @@ struct Vio;
 typedef struct NET {
   MYSQL_VIO vio;
   unsigned char *buff, *buff_end, *write_pos, *read_pos;
-  my_socket fd; /* For Perl DBI/dbd */
+  des_socket fd; /* For Perl DBI/dbd */
   /**
     Set if we are doing several queries in one
     command ( as in LOAD TABLE ... FROM MASTER ),
@@ -930,8 +930,8 @@ typedef struct NET {
   bool compress;
   unsigned int last_errno;
   unsigned char error;
-  /** Client library error message buffer. Actually belongs to struct MYSQL. */
-  char last_error[MYSQL_ERRMSG_SIZE];
+  /** Client library error message buffer. Actually belongs to struct DES. */
+  char last_error[DES_ERRMSG_SIZE];
   /** Client library sqlstate buffer. Set along with the error message. */
   char sqlstate[SQLSTATE_LENGTH + 1];
   /**
@@ -953,33 +953,33 @@ typedef struct NET {
   @{
 */
 #define CLIENT_MULTI_QUERIES CLIENT_MULTI_STATEMENTS
-#define FIELD_TYPE_DECIMAL MYSQL_TYPE_DECIMAL
+#define FIELD_TYPE_DECIMAL DES_TYPE_DECIMAL
 #define FIELD_TYPE_NEWDECIMAL MYSQL_TYPE_NEWDECIMAL
-#define FIELD_TYPE_TINY MYSQL_TYPE_TINY
-#define FIELD_TYPE_SHORT MYSQL_TYPE_SHORT
-#define FIELD_TYPE_LONG MYSQL_TYPE_LONG
-#define FIELD_TYPE_FLOAT MYSQL_TYPE_FLOAT
-#define FIELD_TYPE_DOUBLE MYSQL_TYPE_DOUBLE
-#define FIELD_TYPE_NULL MYSQL_TYPE_NULL
-#define FIELD_TYPE_TIMESTAMP MYSQL_TYPE_TIMESTAMP
-#define FIELD_TYPE_LONGLONG MYSQL_TYPE_LONGLONG
-#define FIELD_TYPE_INT24 MYSQL_TYPE_INT24
-#define FIELD_TYPE_DATE MYSQL_TYPE_DATE
-#define FIELD_TYPE_TIME MYSQL_TYPE_TIME
-#define FIELD_TYPE_DATETIME MYSQL_TYPE_DATETIME
-#define FIELD_TYPE_YEAR MYSQL_TYPE_YEAR
-#define FIELD_TYPE_NEWDATE MYSQL_TYPE_NEWDATE
-#define FIELD_TYPE_ENUM MYSQL_TYPE_ENUM
-#define FIELD_TYPE_SET MYSQL_TYPE_SET
-#define FIELD_TYPE_TINY_BLOB MYSQL_TYPE_TINY_BLOB
-#define FIELD_TYPE_MEDIUM_BLOB MYSQL_TYPE_MEDIUM_BLOB
-#define FIELD_TYPE_LONG_BLOB MYSQL_TYPE_LONG_BLOB
-#define FIELD_TYPE_BLOB MYSQL_TYPE_BLOB
-#define FIELD_TYPE_VAR_STRING MYSQL_TYPE_VAR_STRING
-#define FIELD_TYPE_STRING MYSQL_TYPE_STRING
-#define FIELD_TYPE_CHAR MYSQL_TYPE_TINY
-#define FIELD_TYPE_INTERVAL MYSQL_TYPE_ENUM
-#define FIELD_TYPE_GEOMETRY MYSQL_TYPE_GEOMETRY
+#define FIELD_TYPE_TINY DES_TYPE_TINY
+#define FIELD_TYPE_SHORT DES_TYPE_SHORT
+#define FIELD_TYPE_LONG DES_TYPE_LONG
+#define FIELD_TYPE_FLOAT DES_TYPE_FLOAT
+#define FIELD_TYPE_DOUBLE DES_TYPE_DOUBLE
+#define FIELD_TYPE_NULL DES_TYPE_NULL
+#define FIELD_TYPE_TIMESTAMP DES_TYPE_TIMESTAMP
+#define FIELD_TYPE_LONGLONG DES_TYPE_LONGLONG
+#define FIELD_TYPE_INT24 DES_TYPE_INT24
+#define FIELD_TYPE_DATE DES_TYPE_DATE
+#define FIELD_TYPE_TIME DES_TYPE_TIME
+#define FIELD_TYPE_DATETIME DES_TYPE_DATETIME
+#define FIELD_TYPE_YEAR DES_TYPE_YEAR
+#define FIELD_TYPE_NEWDATE DES_TYPE_NEWDATE
+#define FIELD_TYPE_ENUM DES_TYPE_ENUM
+#define FIELD_TYPE_SET DES_TYPE_SET
+#define FIELD_TYPE_TINY_BLOB DES_TYPE_TINY_BLOB
+#define FIELD_TYPE_MEDIUM_BLOB DES_TYPE_MEDIUM_BLOB
+#define FIELD_TYPE_LONG_BLOB DES_TYPE_LONG_BLOB
+#define FIELD_TYPE_BLOB DES_TYPE_BLOB
+#define FIELD_TYPE_VAR_STRING DES_TYPE_VAR_STRING
+#define FIELD_TYPE_STRING DES_TYPE_STRING
+#define FIELD_TYPE_CHAR DES_TYPE_TINY
+#define FIELD_TYPE_INTERVAL DES_TYPE_ENUM
+#define FIELD_TYPE_GEOMETRY DES_TYPE_GEOMETRY
 #define FIELD_TYPE_BIT MYSQL_TYPE_BIT
 /** @}*/
 

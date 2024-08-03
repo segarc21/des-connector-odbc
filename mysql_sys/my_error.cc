@@ -56,7 +56,7 @@
 namespace desodbc
 {
 
-/* Max length of a error message. Should be kept in sync with MYSQL_ERRMSG_SIZE.
+/* Max length of a error message. Should be kept in sync with DES_ERRMSG_SIZE.
  */
 #define ERRMSGSIZE (512)
 

@@ -47,9 +47,9 @@
 
 
 /* Sets affected rows everewhere where SQLRowCOunt could look for */
-void global_set_affected_rows(STMT * stmt, my_ulonglong rows)
+void global_set_affected_rows(STMT * stmt, des_ulonglong rows)
 {
-  stmt->affected_rows= stmt->dbc->mysql->affected_rows= rows;
+  stmt->affected_rows= stmt->dbc->des->affected_rows= rows;
 
   /* Dirty hack. But not dirtier than the one above */
   if (ssps_used(stmt))
@@ -66,9 +66,9 @@ void global_set_affected_rows(STMT * stmt, my_ulonglong rows)
 */
 static const char *find_used_table(STMT *stmt)
 {
-    MYSQL_FIELD  *field, *end;
+    DES_FIELD  *field, *end;
     char *table_name = nullptr;
-    MYSQL_RES *result= stmt->result;
+    DES_RES *result= stmt->result;
 
     if ( stmt->table_name.size() )
         return stmt->table_name.c_str();
@@ -173,16 +173,16 @@ char *check_if_positioned_cursor_exists(STMT *pStmt, STMT **pStmtCursor)
   @param[in]  name    Name of the field
   @param[in]  result  Result set to check
 */
-static des_bool have_field_in_result(const char *name, MYSQL_RES *result)
+static des_bool have_field_in_result(const char *name, DES_RES *result)
 {
-  MYSQL_FIELD  *field;
+  DES_FIELD  *field;
   unsigned int ncol;
 
   for (ncol= 0; ncol < result->field_count; ++ncol)
   {
     field= result->fields + ncol;
     if (desodbc_strcasecmp(name,
-#if MYSQL_VERSION_ID >= 40100
+#if DES_VERSION_ID >= 40100
                           field->org_name
 #else
                           field->name
@@ -208,14 +208,14 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
 {
   char buff[NAME_LEN * 2 + 18], /* Possibly escaped name, plus text for query */
        *pos, *table;
-  MYSQL_RES *res;
-  MYSQL_ROW row;
+  DES_RES *res;
+  DES_ROW row;
   int seq_in_index= 0;
 
   if (stmt->cursor.pk_validated)
     return stmt->cursor.pk_count;
 
-#if MYSQL_VERSION_ID >= 40100
+#if DES_VERSION_ID >= 40100
   if (stmt->result->fields->org_table)
     table= stmt->result->fields->org_table;
   else
@@ -224,7 +224,7 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
 
   /* Use SHOW KEYS FROM table to check for keys. */
   pos= desodbc_stpmov(buff, "SHOW KEYS FROM `");
-  pos+= mysql_real_escape_string(stmt->dbc->mysql, pos, table,
+  pos+= mysql_real_escape_string(stmt->dbc->des, pos, table,
     (unsigned long)strlen(table));
   pos= desodbc_stpmov(pos, "`");
 
@@ -233,7 +233,7 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
   assert(stmt);
   LOCK_DBC(stmt->dbc);
   if (exec_stmt_query(stmt, buff, strlen(buff), FALSE) ||
-      !(res= mysql_store_result(stmt->dbc->mysql)))
+      !(res= mysql_store_result(stmt->dbc->des)))
   {
     stmt->set_error(DESERR_S1000);
     return FALSE;
@@ -284,7 +284,7 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
 void set_current_cursor_data(STMT *stmt, SQLUINTEGER irow)
 {
   long       nrow, row_pos;
-  MYSQL_RES  *result= stmt->result;
+  DES_RES  *result= stmt->result;
 
 
   /*
@@ -303,7 +303,7 @@ void set_current_cursor_data(STMT *stmt, SQLUINTEGER irow)
     }
     else
     {
-      MYSQL_ROWS *dcursor;
+      DES_ROWS *dcursor;
       dcursor= result->data->data;
 
       if (dcursor)
@@ -370,7 +370,7 @@ static SQLRETURN update_status(STMT *stmt, SQLUSMALLINT status)
 */
 
 static SQLRETURN update_setpos_status(STMT *stmt, SQLINTEGER irow,
-                                      my_ulonglong rows, SQLUSMALLINT status)
+                                      des_ulonglong rows, SQLUSMALLINT status)
 {
   global_set_affected_rows(stmt, rows);
 
@@ -440,7 +440,7 @@ static SQLRETURN copy_rowdata(STMT *stmt, DESCREC *aprec,
   @purpose : copies field data to statement
 */
 
-static bool insert_field_std(STMT *stmt, MYSQL_RES *result,
+static bool insert_field_std(STMT *stmt, DES_RES *result,
                              std::string &str,
                              SQLUSMALLINT nSrcCol)
 {
@@ -448,8 +448,8 @@ static bool insert_field_std(STMT *stmt, MYSQL_RES *result,
           iprec_(DESC_PARAM, DESC_IMP);
   DESCREC *aprec= &aprec_, *iprec= &iprec_;
 
-  MYSQL_FIELD *field= mysql_fetch_field_direct(result,nSrcCol);
-  MYSQL_ROW   row_data;
+  DES_FIELD *field= mysql_fetch_field_direct(result,nSrcCol);
+  DES_ROW   row_data;
   SQLLEN      length;
   char as_string[50], *dummy;
 
@@ -504,8 +504,8 @@ static bool insert_field_std(STMT *stmt, MYSQL_RES *result,
 
 static SQLRETURN insert_pk_fields_std(STMT *stmt, std::string &str)
 {
-    MYSQL_RES    *result= stmt->result;
-    MYSQL_FIELD  *field;
+    DES_RES    *result= stmt->result;
+    DES_FIELD  *field;
     SQLUSMALLINT ncol;
     uint      index;
     DESCURSOR     *cursor= &stmt->cursor;
@@ -552,8 +552,8 @@ static SQLRETURN insert_pk_fields_std(STMT *stmt, std::string &str)
 
 static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
 {
-  MYSQL_RES    *result= stmt->result;
-  MYSQL_RES    *presultAllColumns;
+  DES_RES    *result= stmt->result;
+  DES_RES    *presultAllColumns;
   std::string  select;
   unsigned int  i,j;
   BOOL          found_field;
@@ -576,7 +576,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
   DESLOG_QUERY(stmt, select.c_str());
   LOCK_DBC(stmt->dbc);
   if (exec_stmt_query_std(stmt, select, false) ||
-      !(presultAllColumns= mysql_store_result(stmt->dbc->mysql)))
+      !(presultAllColumns= mysql_store_result(stmt->dbc->des)))
   {
     stmt->set_error(DESERR_S1000);
     return SQL_ERROR;
@@ -599,15 +599,15 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
   */
   for (i= 0; i < presultAllColumns->field_count; ++i)
   {
-    MYSQL_FIELD *table_field= presultAllColumns->fields + i;
+    DES_FIELD *table_field= presultAllColumns->fields + i;
 
     /*
       We also can't handle floating-point fields because their comparison
       is inexact.
     */
-    if (table_field->type == MYSQL_TYPE_FLOAT ||
-        table_field->type == MYSQL_TYPE_DOUBLE ||
-        table_field->type == MYSQL_TYPE_DECIMAL)
+    if (table_field->type == DES_TYPE_FLOAT ||
+        table_field->type == DES_TYPE_DOUBLE ||
+        table_field->type == DES_TYPE_DECIMAL)
     {
       stmt->set_error(DESERR_S1000,
                 "Invalid use of floating point comparision in positioned operations",0);
@@ -618,7 +618,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     found_field= FALSE;
     for (j= 0; j < result->field_count; ++j)
     {
-      MYSQL_FIELD *cursor_field= result->fields + j;
+      DES_FIELD *cursor_field= result->fields + j;
       if (cursor_field->org_name &&
           !strcmp(cursor_field->org_name, table_field->name))
       {
@@ -714,8 +714,8 @@ static SQLRETURN build_set_clause_std(STMT *stmt, SQLULEN irow,
     DESCREC *aprec = &aprec_, *iprec = &iprec_;
     SQLLEN        length= 0;
     uint          ncol, ignore_count= 0;
-    MYSQL_FIELD *field;
-    MYSQL_RES   *result= stmt->result;
+    DES_FIELD *field;
+    DES_RES   *result= stmt->result;
     DESCREC *arrec, *irrec;
 
     query.append(" SET ");
@@ -838,7 +838,7 @@ SQLRETURN des_pos_delete_std(STMT *stmt, STMT *stmtParam,
     nReturn= exec_stmt_query_std(stmt, str, false);
     if ( nReturn == SQL_SUCCESS || nReturn == SQL_SUCCESS_WITH_INFO )
     {
-        stmtParam->affected_rows= mysql_affected_rows(stmt->dbc->mysql);
+        stmtParam->affected_rows= mysql_affected_rows(stmt->dbc->des);
         nReturn= update_status(stmtParam,SQL_ROW_DELETED);
     }
     return nReturn;
@@ -896,7 +896,7 @@ SQLRETURN des_pos_update_std( STMT *             pStmtCursor,
     rc = DES_SQLExecute( pStmtTemp );
     if ( SQL_SUCCEEDED( rc ) )
     {
-        pStmt->affected_rows = mysql_affected_rows( pStmtTemp->dbc->mysql );
+        pStmt->affected_rows = mysql_affected_rows( pStmtTemp->dbc->des );
         rc = update_status( pStmt, SQL_ROW_UPDATED );
     }
     else if (rc == SQL_NEED_DATA)
@@ -951,7 +951,7 @@ static SQLRETURN fetch_bookmark(STMT *stmt)
   stmt->ard->array_size= 1;
   do
   {
-    data_seek(stmt, (my_ulonglong)rowset_pos);
+    data_seek(stmt, (des_ulonglong)rowset_pos);
     if (arrec->data_ptr)
     {
       TargetValuePtr= ptr_offset_adjust(arrec->data_ptr,
@@ -988,7 +988,7 @@ static SQLRETURN fetch_bookmark(STMT *stmt)
 static SQLRETURN setpos_delete_bookmark_std(STMT *stmt, std::string &query)
 {
   size_t rowset_pos,rowset_end;
-  my_ulonglong affected_rows= 0;
+  des_ulonglong affected_rows= 0;
   SQLRETURN    nReturn= SQL_SUCCESS;
   size_t        query_length;
   const char   *table_name;
@@ -1048,7 +1048,7 @@ static SQLRETURN setpos_delete_bookmark_std(STMT *stmt, std::string &query)
     /* execute our DELETE statement */
     if (!(nReturn= exec_stmt_query_std(stmt, query, false)))
     {
-      affected_rows+= stmt->dbc->mysql->affected_rows;
+      affected_rows+= stmt->dbc->des->affected_rows;
     }
     if (stmt->stmt_options.rowStatusPtr_ex)
     {
@@ -1081,7 +1081,7 @@ static SQLRETURN setpos_delete_std(STMT *stmt, SQLUSMALLINT irow,
                                    std::string &query)
 {
   SQLUINTEGER  rowset_pos,rowset_end;
-  my_ulonglong affected_rows= 0;
+  des_ulonglong affected_rows= 0;
   SQLRETURN    nReturn= SQL_SUCCESS;
   size_t       query_length;
   const char   *table_name;
@@ -1122,7 +1122,7 @@ static SQLRETURN setpos_delete_std(STMT *stmt, SQLUSMALLINT irow,
     /* execute our DELETE statement */
     if (!(nReturn= exec_stmt_query_std(stmt, query, false)))
     {
-      affected_rows+= stmt->dbc->mysql->affected_rows;
+      affected_rows+= stmt->dbc->des->affected_rows;
     }
 
   } while ( ++rowset_pos <= rowset_end );
@@ -1150,7 +1150,7 @@ static SQLRETURN setpos_delete_std(STMT *stmt, SQLUSMALLINT irow,
 static SQLRETURN setpos_update_bookmark_std(STMT *stmt, std::string &query)
 {
   size_t rowset_pos,rowset_end;
-  my_ulonglong affected= 0;
+  des_ulonglong affected= 0;
   SQLRETURN    nReturn= SQL_SUCCESS;
   size_t        query_length;
   const char   *table_name;
@@ -1214,7 +1214,7 @@ static SQLRETURN setpos_update_bookmark_std(STMT *stmt, std::string &query)
 
     if (!(nReturn= exec_stmt_query_std(stmt, query, false)))
     {
-      affected+= mysql_affected_rows(stmt->dbc->mysql);
+      affected+= mysql_affected_rows(stmt->dbc->des);
     }
     if (stmt->stmt_options.rowStatusPtr_ex)
     {
@@ -1242,7 +1242,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
                                    std::string &query)
 {
   SQLUINTEGER  rowset_pos,rowset_end;
-  my_ulonglong affected= 0;
+  des_ulonglong affected= 0;
   SQLRETURN    nReturn= SQL_SUCCESS;
   size_t       query_length;
   const char   *table_name;
@@ -1297,7 +1297,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
 
       if (!(nReturn= exec_stmt_query_std(stmt, query, false)))
       {
-        affected+= mysql_affected_rows(stmt->dbc->mysql);
+        affected+= mysql_affected_rows(stmt->dbc->des);
       }
       else if (!SQL_SUCCEEDED(nReturn))
       {
@@ -1338,7 +1338,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
 
 static SQLRETURN batch_insert_std( STMT *stmt, SQLULEN irow, std::string &query )
 {
-    MYSQL_RES    *result= stmt->result;     /* result set we are working with */
+    DES_RES    *result= stmt->result;     /* result set we are working with */
     SQLULEN      insert_count= 1;           /* num rows to insert - will be real value when row is 0 (all)  */
     SQLULEN      count= 0;                  /* current row */
     SQLLEN       length;
@@ -1378,7 +1378,7 @@ static SQLRETURN batch_insert_std( STMT *stmt, SQLULEN irow, std::string &query 
             query.append("(");
             for ( ncol= 0; ncol < result->field_count; ++ncol )
             {
-                MYSQL_FIELD *field= mysql_fetch_field_direct(result, ncol);
+                DES_FIELD *field= mysql_fetch_field_direct(result, ncol);
                 DESCREC     *arrec;
                 SQLLEN       ind_or_len= 0;
 
@@ -1622,7 +1622,7 @@ SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
   assert(stmt);
 
   SQLRETURN ret = SQL_SUCCESS;
-  MYSQL_RES *result = stmt->result;
+  DES_RES *result = stmt->result;
 
   try
   {
@@ -1683,7 +1683,7 @@ SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                 --irow;
                 ret= SQL_SUCCESS;
                 stmt->cursor_row= (long)(stmt->current_row+irow);
-                data_seek(stmt, (my_ulonglong)stmt->cursor_row);
+                data_seek(stmt, (des_ulonglong)stmt->cursor_row);
                 stmt->current_values = stmt->fetch_row();
 
                 // After moving through the resultset the lengths
@@ -1697,9 +1697,9 @@ SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                 /*
                  The call to mysql_fetch_row() moved stmt->result's internal
                  cursor, but we don't want that. We seek back to this row
-                 so the MYSQL_RES is in the state we expect.
+                 so the DES_RES is in the state we expect.
                 */
-                data_seek(stmt, (my_ulonglong)stmt->cursor_row);
+                data_seek(stmt, (des_ulonglong)stmt->cursor_row);
                 break;
             }
 
@@ -1774,7 +1774,7 @@ SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                 /* build list of column names */
                 for (nCol= 0; nCol < result->field_count; ++nCol)
                 {
-                    MYSQL_FIELD *field= mysql_fetch_field_direct(result, nCol);
+                    DES_FIELD *field= mysql_fetch_field_direct(result, nCol);
                     desodbc_append_quoted_name_std(ins_query, field->org_name);
                     if (nCol + 1 < result->field_count)
                       ins_query.append(",");
@@ -1894,7 +1894,7 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
 {
   STMT *stmt= (STMT *) Handle;
   SQLRETURN sqlRet= SQL_SUCCESS;
-  MYSQL_RES *result= stmt->result;
+  DES_RES *result= stmt->result;
   SQLRETURN rc;
   SQLSETPOSIROW irow= 0;
   LOCK_STMT(stmt);

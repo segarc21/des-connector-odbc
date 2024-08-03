@@ -57,7 +57,7 @@ enum desodbcProcColumns {des_pcPROCEDURE_CAT= 0, des_pcPROCEDURE_SCHEM,  des_pcP
                   /*15*/des_pcSQL_DATETIME_SUB, des_pcCHAR_OCTET_LENGTH,des_pcORDINAL_POSITION,
                   /*18*/des_pcIS_NULLABLE };
 
-typedef std::vector<MYSQL_BIND> vec_bind;
+typedef std::vector<DES_BIND> vec_bind;
 
 /*
  * Helper class to be used with Catalog functions in order to obtain
@@ -73,9 +73,9 @@ struct ODBC_CATALOG {
   std::string order_by;
   size_t col_count;
   std::vector<std::string> columns;
-  MYSQL_ROW current_row = nullptr;
+  DES_ROW current_row = nullptr;
   unsigned long *current_lengths = nullptr;
-  MYSQL_RES *mysql_res = nullptr;
+  DES_RES *des_res = nullptr;
 
   SQLCHAR *m_catalog;
   unsigned long m_catalog_len;
@@ -108,31 +108,31 @@ struct ODBC_CATALOG {
   void set_order_by(std::string s) { order_by = s; }
   void execute();
   size_t num_rows();
-  MYSQL_ROW fetch_row();
+  DES_ROW fetch_row();
   bool is_null_value(int column);
   unsigned long *get_lengths();
   void data_seek(unsigned int rownum);
 };
 
 /* Some common(for i_s/no_i_s) helper functions */
-const char *my_next_token(const char *prev_token,
+const char *des_next_token(const char *prev_token,
                           const char **token,
                                 char *data,
                           const char chr);
 
 SQLRETURN
-create_empty_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
-                            MYSQL_FIELD *fields, uint fldcnt);
+create_empty_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
+                            DES_FIELD *fields, uint fldcnt);
 
 SQLRETURN
-create_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
-                      my_ulonglong rowcnt, MYSQL_FIELD *fields, uint fldcnt,
+create_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
+                      des_ulonglong rowcnt, DES_FIELD *fields, uint fldcnt,
                       bool copy_rowval);
 
 
 /* no_i_s functions */
 
-MYSQL_RES *db_status(STMT *stmt, std::string &db);
+DES_RES *db_status(STMT *stmt, std::string &db);
 
 std::string get_database_name(STMT *stmt,
                               SQLCHAR *catalog, SQLINTEGER catalog_len,
@@ -140,7 +140,7 @@ std::string get_database_name(STMT *stmt,
                               bool try_reget = true);
 
 
-MYSQL_RES *table_status(STMT        *stmt,
+DES_RES *table_status(STMT        *stmt,
                         SQLCHAR     *db,
                         SQLSMALLINT  db_length,
                         SQLCHAR     *table,

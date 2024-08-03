@@ -231,7 +231,7 @@ BOOL              case_compare(DES_PARSED_QUERY *parser, const char *pos,
 BOOL              parse(DES_PARSED_QUERY *pq);
 
 
-const char *mystr_get_prev_token(desodbc::CHARSET_INFO *charset,
+const char *desstr_get_prev_token(desodbc::CHARSET_INFO *charset,
                                         const char **query, const char *start);
 const char *mystr_get_next_token(desodbc::CHARSET_INFO *charset,
                                         const char **query, const char *end);

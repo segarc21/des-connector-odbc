@@ -131,7 +131,7 @@ SQLWCHAR *sqlchar_as_sqlwchar(desodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
       return NULL;
 
     // An empty string should also be duplicated
-    SQLWCHAR *empty = (SQLWCHAR*)myodbc_malloc(sizeof(SQLWCHAR), DESF(0));
+    SQLWCHAR *empty = (SQLWCHAR*)desodbc_malloc(sizeof(SQLWCHAR), DESF(0));
     *empty = (SQLWCHAR)0;
     return empty;
   }
@@ -141,7 +141,7 @@ SQLWCHAR *sqlchar_as_sqlwchar(desodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
     uint32 used_bytes, used_chars;
     size_t u8_max= (*len / charset_info->mbminlen *
                     utf8_charset_info->mbmaxlen + 1);
-    SQLCHAR *u8= (SQLCHAR *)myodbc_malloc(u8_max, DESF(0));
+    SQLCHAR *u8= (SQLCHAR *)desodbc_malloc(u8_max, DESF(0));
 
     if (!u8)
     {
@@ -160,7 +160,7 @@ SQLWCHAR *sqlchar_as_sqlwchar(desodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
 
   out_bytes= (*len + 1) * sizeof(SQLWCHAR);
 
-  out= (SQLWCHAR *)myodbc_malloc(out_bytes, DESF(0));
+  out= (SQLWCHAR *)desodbc_malloc(out_bytes, DESF(0));
   if (!out)
   {
     *len= -1;
@@ -239,7 +239,7 @@ SQLCHAR *sqlwchar_as_sqlchar(desodbc::CHARSET_INFO *charset_info, SQLWCHAR *str,
   }
 
   out_bytes= *len * charset_info->mbmaxlen * sizeof(SQLCHAR) + 1;
-  out= (SQLCHAR *)myodbc_malloc(out_bytes, DESF(0));
+  out= (SQLCHAR *)desodbc_malloc(out_bytes, DESF(0));
   if (!out)
   {
     *len= -1;
@@ -318,7 +318,7 @@ SQLCHAR *sqlwchar_as_utf8_ext(const SQLWCHAR *str, SQLINTEGER *len,
 
   if (buff == NULL || buff_max < (uint)(*len * MAX_BYTES_PER_UTF8_CP))
   {
-    u8= (UTF8 *)myodbc_malloc(sizeof(UTF8) * MAX_BYTES_PER_UTF8_CP * *len + 1,
+    u8= (UTF8 *)desodbc_malloc(sizeof(UTF8) * MAX_BYTES_PER_UTF8_CP * *len + 1,
                         DESF(0));
   }
   else
@@ -490,7 +490,7 @@ SQLCHAR *sqlchar_as_sqlchar(desodbc::CHARSET_INFO *from_charset,
     *len = (SQLINTEGER)strlen((char *)str);
 
   bytes= (*len / from_charset->mbminlen * to_charset->mbmaxlen);
-  conv= (SQLCHAR *)myodbc_malloc(bytes + 1, DESF(0));
+  conv= (SQLCHAR *)desodbc_malloc(bytes + 1, DESF(0));
   if (!conv)
   {
     *len= -1;
@@ -720,7 +720,7 @@ size_t sqlwcharlen(const SQLWCHAR *wstr)
 
 
 /*
- * Duplicate a SQLWCHAR string. Memory is allocated with myodbc_malloc()
+ * Duplicate a SQLWCHAR string. Memory is allocated with desodbc_malloc()
  * and should be freed with my_free() or the x_free() macro.
  *
  * @return A pointer to a new string.
@@ -728,7 +728,7 @@ size_t sqlwcharlen(const SQLWCHAR *wstr)
 SQLWCHAR *sqlwchardup(const SQLWCHAR *wstr, SQLINTEGER charlen)
 {
   size_t chars = (charlen == SQL_NTS ? sqlwcharlen(wstr) : charlen);
-  SQLWCHAR *res= (SQLWCHAR *)myodbc_malloc((chars + 1) * sizeof(SQLWCHAR), DESF(0));
+  SQLWCHAR *res= (SQLWCHAR *)desodbc_malloc((chars + 1) * sizeof(SQLWCHAR), DESF(0));
   if (!res)
     return NULL;
   memcpy(res, wstr, chars * sizeof(SQLWCHAR));

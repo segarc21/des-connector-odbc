@@ -108,9 +108,9 @@ using std::nullptr_t;
 # define FreeLibrary(module) dlclose((module))
 #endif
 
-#define ODBC_DRIVER	  "DES " MYODBC_STRSERIES " Driver"
-#define DRIVER_NAME	  "DES ODBC " MYODBC_STRSERIES " Driver"
-#define DRIVER_NONDSN_TAG "DRIVER={DES ODBC " MYODBC_STRSERIES " Driver}"
+#define ODBC_DRIVER	  "DES " DESODBC_STRSERIES " Driver"
+#define DRIVER_NAME	  "DES ODBC " DESODBC_STRSERIES " Driver"
+#define DRIVER_NONDSN_TAG "DRIVER={DES ODBC " DESODBC_STRSERIES " Driver}"
 
 #if defined(__APPLE__)
 
@@ -397,7 +397,7 @@ struct DESCREC{
 
   /* row-specific */
   struct row_struct{
-    MYSQL_FIELD * field; /* Used *only* by IRD */
+    DES_FIELD * field; /* Used *only* by IRD */
     ulong datalen; /* actual length, maintained for *each* row */
     /* TODO ugly, but easiest way to handle memory */
     SQLCHAR type_name[40];
@@ -572,7 +572,7 @@ struct	ENV
 struct DBC
 {
   ENV           *env;
-  MYSQL         *mysql;
+  DES         *des;
   std::list<STMT*> stmt_list;
   std::list<DESC*> desc_list; // Explicit descriptors
   STMT_OPTIONS  stmt_options;
@@ -613,14 +613,14 @@ struct DBC
   SQLRETURN set_error(char *state, const char *message, uint errcode);
   SQLRETURN set_error(char *state);
   SQLRETURN connect(DataSource *ds);
-  void execute_prep_stmt(MYSQL_STMT *pstmt, std::string &query,
-    std::vector<MYSQL_BIND> &param_bind, MYSQL_BIND *result_bind);
+  void execute_prep_stmt(DES_STMT *pstmt, std::string &query,
+    std::vector<DES_BIND> &param_bind, DES_BIND *result_bind);
 
   inline bool transactions_supported()
-  { return mysql->server_capabilities & CLIENT_TRANSACTIONS; }
+  { return des->server_capabilities & CLIENT_TRANSACTIONS; }
 
   inline bool autocommit_is_on()
-  { return mysql->server_status & SERVER_STATUS_AUTOCOMMIT; }
+  { return des->server_status & SERVER_STATUS_AUTOCOMMIT; }
 
   void close();
   ~DBC();
@@ -741,24 +741,24 @@ struct GETDATA{
 
 struct ODBC_RESULTSET
 {
-  MYSQL_RES *res = nullptr;
-  ODBC_RESULTSET(MYSQL_RES *r = nullptr) : res(r)
+  DES_RES *res = nullptr;
+  ODBC_RESULTSET(DES_RES *r = nullptr) : res(r)
   {}
 
-  void reset(MYSQL_RES *r = nullptr)
+  void reset(DES_RES *r = nullptr)
   { if (res) mysql_free_result(res); res = r; }
 
-  MYSQL_RES *release()
+  DES_RES *release()
   {
-    MYSQL_RES *tmp = res;
+    DES_RES *tmp = res;
     res = nullptr;
     return tmp;
   }
 
-  MYSQL_RES * operator=(MYSQL_RES *r)
+  DES_RES * operator=(DES_RES *r)
   { reset(r); return res; }
 
-  operator MYSQL_RES*() const
+  operator DES_RES*() const
   { return res; }
 
   operator bool() const
@@ -867,7 +867,7 @@ struct ROW_STORAGE
   }
 
   /* Copy row data from bind buffer into the storage one row at a time */
-  void set_data(MYSQL_BIND *bind)
+  void set_data(DES_BIND *bind)
   {
     for(size_t i = 0; i < m_cnum; ++i)
     {
@@ -879,7 +879,7 @@ struct ROW_STORAGE
   }
 
   /* Copy data from the storage into the bind buffer one row at a time */
-  void fill_data(MYSQL_BIND *bind)
+  void fill_data(DES_BIND *bind)
   {
     if (m_cur_row >= m_rnum || m_eof)
       return;
@@ -931,13 +931,13 @@ struct ODBCEXCEPTION
 
 struct ODBC_STMT
 {
-  MYSQL_STMT *m_stmt = nullptr;
+  DES_STMT *m_stmt = nullptr;
 
-  ODBC_STMT(MYSQL *mysql) {
-    if (mysql)
-    m_stmt = mysql_stmt_init(mysql);
+  ODBC_STMT(DES *des) {
+    if (des)
+    m_stmt = mysql_stmt_init(des);
   }
-  operator MYSQL_STMT*() { return m_stmt; }
+  operator DES_STMT*() { return m_stmt; }
   ~ODBC_STMT() {
     if (m_stmt)
     mysql_stmt_close(m_stmt);
@@ -949,7 +949,7 @@ class charPtrBuf {
   private:
 
   std::vector<char*> m_buf;
-  MYSQL_ROW m_external_val = nullptr;
+  DES_ROW m_external_val = nullptr;
 
   public:
 
@@ -970,13 +970,13 @@ class charPtrBuf {
     m_buf = tmpVec;
   }
 
-  operator MYSQL_ROW() const {
+  operator DES_ROW() const {
     if (m_external_val || m_buf.size())
-      return (MYSQL_ROW)(m_external_val ? m_external_val : m_buf.data());
+      return (DES_ROW)(m_external_val ? m_external_val : m_buf.data());
     return nullptr;
   }
 
-  charPtrBuf &operator=(const MYSQL_ROW external_val) {
+  charPtrBuf &operator=(const DES_ROW external_val) {
     reset();
     m_external_val = external_val;
     return *this;
@@ -986,14 +986,14 @@ class charPtrBuf {
 struct STMT
 {
   DBC               *dbc;
-  MYSQL_RES         *result;
+  DES_RES         *result;
   des_bool           fake_result;
   charPtrBuf        array;
   charPtrBuf        result_array;
-  MYSQL_ROW         current_values;
-  MYSQL_ROW         (*fix_fields)(STMT *stmt, MYSQL_ROW row);
-  MYSQL_FIELD	      *fields;
-  MYSQL_ROW_OFFSET  end_of_set;
+  DES_ROW         current_values;
+  DES_ROW         (*fix_fields)(STMT *stmt, DES_ROW row);
+  DES_FIELD	      *fields;
+  DES_ROW_OFFSET  end_of_set;
   tempBuf           tempbuf;
   ROW_STORAGE       m_row_storage;
 
@@ -1004,7 +1004,7 @@ struct STMT
   std::string       catalog_name;
 
   DES_PARSED_QUERY	query, orig_query;
-  std::vector<MYSQL_BIND> param_bind;
+  std::vector<DES_BIND> param_bind;
   std::vector<const char*> query_attr_names;
 
   std::unique_ptr<des_bool[]> rb_is_null;
@@ -1012,7 +1012,7 @@ struct STMT
   std::unique_ptr<unsigned long[]> rb_len;
   std::unique_ptr<unsigned long[]> lengths;
 
-  my_ulonglong      affected_rows;
+  des_ulonglong      affected_rows;
   long              current_row;
   long              cursor_row;
   char              dae_type; /* data-at-exec type */
@@ -1031,8 +1031,8 @@ struct STMT
   SQLUSMALLINT setpos_lock;
   SQLUSMALLINT setpos_op;
 
-  MYSQL_STMT *ssps;
-  MYSQL_BIND *result_bind;
+  DES_STMT *ssps;
+  DES_BIND *result_bind;
 
   DES_LIMIT_SCROLLER scroller;
 
@@ -1067,7 +1067,7 @@ struct STMT
   size_t buf_pos() { return tempbuf.cur_pos; }
   size_t buf_len() { return tempbuf.buf_len; }
   size_t field_count();
-  MYSQL_ROW fetch_row(bool read_unbuffered = false);
+  DES_ROW fetch_row(bool read_unbuffered = false);
   void buf_set_pos(size_t pos) { tempbuf.cur_pos = pos; }
   void buf_add_pos(size_t pos) { tempbuf.cur_pos += pos; }
   void buf_remove_trail_zeroes() { tempbuf.remove_trail_zeroes(); }

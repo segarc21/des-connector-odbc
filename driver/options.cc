@@ -340,10 +340,10 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
 
         if (is_connected(dbc))
         {
-          if (mysql_select_db(dbc->mysql,(char*) db))
+          if (mysql_select_db(dbc->des,(char*) db))
           {
-            dbc->set_error(DESERR_S1000, mysql_error(dbc->mysql),
-              mysql_errno(dbc->mysql));
+            dbc->set_error(DESERR_S1000, mysql_error(dbc->des),
+              mysql_errno(dbc->des));
             return SQL_ERROR;
           }
         }
@@ -498,8 +498,8 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
   case SQL_ATTR_CONNECTION_DEAD:
     /* If waking up fails - we return "connection is dead", no matter what really the reason is */
     if (dbc->need_to_wakeup != 0 && wakeup_connection(dbc)
-      || dbc->need_to_wakeup == 0 && mysql_ping(dbc->mysql) &&
-        is_connection_lost(mysql_errno(dbc->mysql)))
+      || dbc->need_to_wakeup == 0 && mysql_ping(dbc->des) &&
+        is_connection_lost(mysql_errno(dbc->des)))
       *((SQLUINTEGER *)num_attr)= SQL_CD_TRUE;
     else
       *((SQLUINTEGER *)num_attr)= SQL_CD_FALSE;
@@ -540,7 +540,7 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_PACKET_SIZE:
-    *((SQLUINTEGER *)num_attr)= dbc->mysql->net.max_packet;
+    *((SQLUINTEGER *)num_attr)= dbc->des->net.max_packet;
     break;
 
   case SQL_ATTR_TXN_ISOLATION:
@@ -560,7 +560,7 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
         break;
       }
 
-      if (is_minimum_version(dbc->mysql->server_version, "8.0"))
+      if (is_minimum_version(dbc->des->server_version, "8.0"))
         result = dbc->execute_query("SELECT @@transaction_isolation", SQL_NTS, true);
       else
         result = dbc->execute_query("SELECT @@tx_isolation", SQL_NTS, true);
@@ -572,10 +572,10 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
       }
       else
       {
-        MYSQL_RES *res;
-        MYSQL_ROW  row;
+        DES_RES *res;
+        DES_ROW  row;
 
-        if ((res= mysql_store_result(dbc->mysql)) &&
+        if ((res= mysql_store_result(dbc->des)) &&
             (row= mysql_fetch_row(res)))
         {
           if (strncmp(row[0], "READ-UNCOMMITTED", 16) == 0) {

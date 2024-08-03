@@ -41,7 +41,7 @@
   @param[in] CompletionType  How to complete the transactions,
                              @c SQL_COMMIT or @c SQL_ROLLBACK
 */
-static SQLRETURN my_transact(SQLHDBC hdbc, SQLSMALLINT CompletionType)
+static SQLRETURN des_transact(SQLHDBC hdbc, SQLSMALLINT CompletionType)
 {
   SQLRETURN result= SQL_SUCCESS;
   DBC *dbc= (DBC *)hdbc;
@@ -75,11 +75,11 @@ static SQLRETURN my_transact(SQLHDBC hdbc, SQLSMALLINT CompletionType)
 
     LOCK_DBC(dbc);
     if (check_if_server_is_alive(dbc) ||
-	mysql_real_query(dbc->mysql,query,length))
+	mysql_real_query(dbc->des,query,length))
     {
       result = ((DBC*)hdbc)->set_error(DESERR_S1000,
-			     mysql_error(dbc->mysql),
-			     mysql_errno(dbc->mysql));
+			     mysql_error(dbc->des),
+			     mysql_errno(dbc->des));
     }
   }
   return(result);
@@ -112,7 +112,7 @@ end_transaction(SQLSMALLINT HandleType,
     LOCK_ENV(henv);
     for (DBC *dbc : henv->conn_list)
     {
-        my_transact(dbc, CompletionType);
+        des_transact(dbc, CompletionType);
     }
     break;
   }
@@ -123,7 +123,7 @@ end_transaction(SQLSMALLINT HandleType,
 #ifndef _WIN32
     LOCK_DBC(hdbc);
 #endif
-    result= my_transact(hdbc, CompletionType);
+    result= des_transact(hdbc, CompletionType);
     break;
   }
   default:

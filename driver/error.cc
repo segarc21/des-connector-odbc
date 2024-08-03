@@ -241,7 +241,7 @@ void translate_error(char *save_state, desodbc_errid errid, uint mysql_err)
         case CR_CONNECTION_ERROR:
         case CR_SERVER_GONE_ERROR:
         case CR_SERVER_LOST:
-#if MYSQL_VERSION_ID > 80023
+#if DES_VERSION_ID > 80023
         case ER_CLIENT_INTERACTION_TIMEOUT:
 #endif
             state= "08S01";
@@ -273,13 +273,13 @@ SQLRETURN set_env_error(ENV *env, desodbc_errid errid, const char *errtext,
 
 /*
   @type    : myodbc3 internal
-  @purpose : sets a myodbc_malloc() failure on a MYSQL* connection
+  @purpose : sets a desodbc_malloc() failure on a DES* connection
 */
-void set_mem_error(MYSQL *mysql)
+void set_mem_error(DES *des)
 {
-  mysql->net.last_errno= CR_OUT_OF_MEMORY;
-  desodbc_stpmov(mysql->net.last_error, "Memory allocation failed");
-  desodbc_stpmov(mysql->net.sqlstate, "HY001");
+  des->net.last_errno= CR_OUT_OF_MEMORY;
+  desodbc_stpmov(des->net.last_error, "Memory allocation failed");
+  desodbc_stpmov(des->net.sqlstate, "HY001");
 }
 
 
@@ -290,22 +290,22 @@ void set_mem_error(MYSQL *mysql)
 */
 SQLRETURN handle_connection_error(STMT *stmt)
 {
-  unsigned int err= mysql_errno(stmt->dbc->mysql);
+  unsigned int err= mysql_errno(stmt->dbc->des);
   switch (err) {
   case 0:  /* no error */
     return SQL_SUCCESS;
   case CR_SERVER_GONE_ERROR:
   case CR_SERVER_LOST:
-#if MYSQL_VERSION_ID > 80023
+#if DES_VERSION_ID > 80023
   case ER_CLIENT_INTERACTION_TIMEOUT:
 #endif
-    return stmt->set_error("08S01", mysql_error(stmt->dbc->mysql), err);
+    return stmt->set_error("08S01", mysql_error(stmt->dbc->des), err);
   case CR_OUT_OF_MEMORY:
-    return stmt->set_error("HY001", mysql_error(stmt->dbc->mysql), err);
+    return stmt->set_error("HY001", mysql_error(stmt->dbc->des), err);
   case CR_COMMANDS_OUT_OF_SYNC:
   case CR_UNKNOWN_ERROR:
   default:
-    return stmt->set_error("HY000", mysql_error(stmt->dbc->mysql), err);
+    return stmt->set_error("HY000", mysql_error(stmt->dbc->des), err);
   }
 }
 
@@ -317,7 +317,7 @@ SQLRETURN handle_connection_error(STMT *stmt)
 des_bool is_connection_lost(uint errcode)
 {
   if (errcode==CR_SERVER_GONE_ERROR || errcode==CR_SERVER_LOST
-#if MYSQL_VERSION_ID > 80023
+#if DES_VERSION_ID > 80023
     || errcode==ER_CLIENT_INTERACTION_TIMEOUT
 #endif
   )

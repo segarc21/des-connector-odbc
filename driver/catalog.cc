@@ -41,11 +41,11 @@ SC_isnull[10];
 static char *SQLCOLUMNS_values[]= {
     (char*)"", (char*)"", NullS, NullS, SC_type, SC_typename,
     SC_precision,
-    SC_length, SC_scale, (char*)"10", SC_nullable, (char*)"MySQL column",
+    SC_length, SC_scale, (char*)"10", SC_nullable, (char*)"DES column",
     SC_coldef, SC_sqltype, NullS, SC_octlen, NullS, SC_isnull
 };
 
-static MYSQL_FIELD SQLCOLUMNS_fields[] = {
+static DES_FIELD SQLCOLUMNS_fields[] = {
     DESODBC_FIELD_NAME("TABLE_CAT", 0),
     DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
     DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
@@ -68,7 +68,7 @@ static MYSQL_FIELD SQLCOLUMNS_fields[] = {
 
 const uint SQLCOLUMNS_FIELDS= (uint)array_elements(SQLCOLUMNS_values);
 
-static MYSQL_FIELD SQLSPECIALCOLUMNS_fields[] = {
+static DES_FIELD SQLSPECIALCOLUMNS_fields[] = {
     DESODBC_FIELD_SHORT("SCOPE", 0),
     DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
     DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
@@ -160,7 +160,7 @@ const char** ROW_STORAGE::data()
   @purpose : returns the next token
 */
 
-const char *my_next_token(const char *prev_token,
+const char *des_next_token(const char *prev_token,
                           const char **token,
                                 char *data,
                           const char chr)
@@ -196,8 +196,8 @@ const char *my_next_token(const char *prev_token,
   @return SQL_SUCCESS or SQL_ERROR (and diag is set)
 */
 SQLRETURN
-create_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
-                      my_ulonglong rowcnt, MYSQL_FIELD *fields, uint fldcnt,
+create_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
+                      des_ulonglong rowcnt, DES_FIELD *fields, uint fldcnt,
                       bool copy_rowval = true)
 {
   if (stmt->fake_result)
@@ -213,9 +213,9 @@ create_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
   // Free if result data was not in row storage.
   stmt->reset_result_array();
 
-  stmt->result= (MYSQL_RES*) myodbc_malloc(sizeof(MYSQL_RES), DESF(MY_ZEROFILL));
+  stmt->result= (DES_RES*) desodbc_malloc(sizeof(DES_RES), DESF(DES_ZEROFILL));
   if (!stmt->result) {
-    set_mem_error(stmt->dbc->mysql);
+    set_mem_error(stmt->dbc->des);
     return handle_connection_error(stmt);
   }
   stmt->fake_result = 1;
@@ -245,8 +245,8 @@ create_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
   @return SQL_SUCCESS or SQL_ERROR (and diag is set)
 */
 SQLRETURN
-create_empty_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
-                            MYSQL_FIELD *fields, uint fldcnt)
+create_empty_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
+                            DES_FIELD *fields, uint fldcnt)
 {
   return create_fake_resultset(stmt, rowval, rowsize, 0 /* rowcnt */,
                                fields, fldcnt);
@@ -262,12 +262,12 @@ create_empty_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
   @param[in] wildcard       Whether the table name is a wildcard
 
   @return Result of SELECT ... FROM I_S.SCHEMATA or NULL if there is an error
-          or empty result (check mysql_errno(stmt->dbc->mysql) != 0)
+          or empty result (check mysql_errno(stmt->dbc->des) != 0)
           It contains the same set of result columns as table_status_i_s()
 */
-MYSQL_RES *db_status(STMT *stmt, std::string &db)
+DES_RES *db_status(STMT *stmt, std::string &db)
 {
-  MYSQL *mysql= stmt->dbc->mysql;
+  DES *des= stmt->dbc->des;
   /** the buffer size should count possible escapes */
   std::string query;
   char tmpbuff[1024];
@@ -298,7 +298,7 @@ MYSQL_RES *db_status(STMT *stmt, std::string &db)
     return NULL;
   }
 
-  return mysql_store_result(mysql);
+  return mysql_store_result(des);
 }
 
 
@@ -315,9 +315,9 @@ MYSQL_RES *db_status(STMT *stmt, std::string &db)
   @param[in] wildcard       Whether the table name is a wildcard
 
   @return Result of SELECT ... FROM I_S.TABLES, or NULL if there is an error
-          or empty result (check mysql_errno(stmt->dbc->mysql) != 0)
+          or empty result (check mysql_errno(stmt->dbc->des) != 0)
 */
-static MYSQL_RES *table_status_i_s(STMT    *stmt,
+static DES_RES *table_status_i_s(STMT    *stmt,
                                    SQLCHAR     *db_name,
                                    SQLSMALLINT  db_len,
                                    SQLCHAR     *table_name,
@@ -326,7 +326,7 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
                                    des_bool      show_tables,
                                    des_bool      show_views)
 {
-  MYSQL *mysql= stmt->dbc->mysql;
+  DES *des= stmt->dbc->des;
   /** the buffer size should count possible escapes */
   std::string query;
   char tmpbuff[1024];
@@ -383,7 +383,7 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
     query.append("AND TABLE_NAME LIKE '");
     if (wildcard)
     {
-      cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)table_name, table_len);
+      cnt = mysql_real_escape_string(des, tmpbuff, (char *)table_name, table_len);
       query.append(tmpbuff, cnt);
     }
     else
@@ -404,7 +404,7 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
     return NULL;
   }
 
-  return mysql_store_result(mysql);
+  return mysql_store_result(des);
 }
 
 
@@ -419,9 +419,9 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
   @param[in] wildcard       Whether the table name is a wildcard
 
   @return Result of SHOW TABLE STATUS, or NULL if there is an error
-          or empty result (check mysql_errno(stmt->dbc->mysql) != 0)
+          or empty result (check mysql_errno(stmt->dbc->des) != 0)
 */
-MYSQL_RES *table_status(STMT        *stmt,
+DES_RES *table_status(STMT        *stmt,
                         SQLCHAR     *db_name,
                         SQLSMALLINT  db_len,
                         SQLCHAR     *table_name,
@@ -465,14 +465,14 @@ int add_name_condition_oa_id(HSTMT hstmt, std::string &query, SQLCHAR * name,
 
     query.append("'");
     char tmpbuff[1024];
-    size_t cnt = mysql_real_escape_string(stmt->dbc->mysql, tmpbuff, (char *)name, name_len);
+    size_t cnt = mysql_real_escape_string(stmt->dbc->des, tmpbuff, (char *)name, name_len);
     query.append(tmpbuff, cnt);
     query.append("' ");
   }
   else
   {
     /* According to http://msdn.microsoft.com/en-us/library/ms714579%28VS.85%29.aspx
-    identifier argument cannot be NULL with one exception not actual for mysql) */
+    identifier argument cannot be NULL with one exception not actual for des) */
     if (!metadata_id && _default)
       query.append(_default);
     else
@@ -511,7 +511,7 @@ int add_name_condition_pv_id(HSTMT hstmt, std::string &query, SQLCHAR * name,
 
     query.append("'");
     char tmpbuff[1024];
-    size_t cnt = mysql_real_escape_string(stmt->dbc->mysql, tmpbuff,
+    size_t cnt = mysql_real_escape_string(stmt->dbc->des, tmpbuff,
                                           (char *)name, name_len);
     query.append(tmpbuff, cnt);
     query.append("' ");
@@ -519,7 +519,7 @@ int add_name_condition_pv_id(HSTMT hstmt, std::string &query, SQLCHAR * name,
   else
   {
     /* According to http://msdn.microsoft.com/en-us/library/ms714579%28VS.85%29.aspx
-       identifier argument cannot be NULL with one exception not actual for mysql) */
+       identifier argument cannot be NULL with one exception not actual for des) */
     if (!metadata_id && _default)
       query.append(_default);
     else
@@ -682,8 +682,8 @@ ODBC_CATALOG::ODBC_CATALOG(STMT *s, size_t ccnt,
 
 ODBC_CATALOG::~ODBC_CATALOG()
 {
-  if (mysql_res)
-    mysql_free_result(mysql_res);
+  if (des_res)
+    mysql_free_result(des_res);
 }
 
 /*
@@ -694,7 +694,7 @@ void ODBC_CATALOG::add_param(const char *qstr, SQLCHAR *data,
 {
   query.append(qstr);
   query.append("'");
-  auto cnt = mysql_real_escape_string(stmt->dbc->mysql,
+  auto cnt = mysql_real_escape_string(stmt->dbc->des,
     temp.buf, (char*)data, len);
   query.append(temp.buf, cnt);
   query.append("'");
@@ -762,7 +762,7 @@ void ODBC_CATALOG::execute()
     // Throwing the error for NO_SSPS case.
     throw stmt->dbc->error;
   }
-  mysql_res = mysql_store_result(stmt->dbc->mysql);
+  des_res = mysql_store_result(stmt->dbc->des);
 
   // Free if result data was not in row storage.
   stmt->reset_result_array();
@@ -772,14 +772,14 @@ void ODBC_CATALOG::execute()
   Get the number of rows in the resultset.
 */
 size_t ODBC_CATALOG::num_rows() {
-  return mysql_num_rows(mysql_res);
+  return mysql_num_rows(des_res);
 }
 
 /*
   Fetch one result row.
 */
-MYSQL_ROW ODBC_CATALOG::fetch_row() {
-  current_row = mysql_fetch_row(mysql_res);
+DES_ROW ODBC_CATALOG::fetch_row() {
+  current_row = mysql_fetch_row(des_res);
   return current_row;
 }
 
@@ -788,14 +788,14 @@ MYSQL_ROW ODBC_CATALOG::fetch_row() {
   a particular row number.
 */
 void ODBC_CATALOG::data_seek(unsigned int rownum) {
-  mysql_data_seek(mysql_res, rownum);
+  mysql_data_seek(des_res, rownum);
 }
 
 /*
   Get lenghts.
 */
 unsigned long * ODBC_CATALOG::get_lengths() {
-  current_lengths = mysql_fetch_lengths(mysql_res);
+  current_lengths = mysql_fetch_lengths(des_res);
   return current_lengths;
 }
 
@@ -828,7 +828,7 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
 {
   STMT *stmt = (STMT*)hstmt;
   tempBuf temp(1024);
-  MYSQL_ROW mysql_row = nullptr;
+  DES_ROW des_row = nullptr;
   size_t rnum = 1;
   unsigned long* result_lengths = nullptr;
 
@@ -913,30 +913,30 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
   auto &data = stmt->m_row_storage;
   data.first_row();
 
-  while((mysql_row = ocat.fetch_row()))
+  while((des_row = ocat.fetch_row()))
   {
     result_lengths = ocat.get_lengths();
 
-    CAT_SCHEMA_SET(data[0], data[1], mysql_row[0]);
+    CAT_SCHEMA_SET(data[0], data[1], des_row[0]);
     /* TABLE_NAME */
-    data[2] = mysql_row[2];
+    data[2] = des_row[2];
     /* COLUMN_NAME */
-    data[3] = mysql_row[3];
+    data[3] = des_row[3];
     /* DATA_TYPE */
     size_t col_size = ocat.is_null_value(6) ? 0 :
-      get_column_size_from_str(stmt, mysql_row[6]);
+      get_column_size_from_str(stmt, des_row[6]);
 
     SQLSMALLINT odbc_sql_type =
-      get_sql_data_type_from_str(mysql_row[4]);
+      get_sql_data_type_from_str(des_row[4]);
 
-    const char *char_size = mysql_row[18];
+    const char *char_size = des_row[18];
     SQLSMALLINT sqltype =
       compute_sql_data_type(stmt, odbc_sql_type,
       (char_size ? *char_size : '1'), col_size);
 
     data[4] = sqltype;
     /* TYPE_NAME */
-    data[5] = mysql_row[4];
+    data[5] = des_row[4];
     /* COLUMN_SIZE */
 #if _WIN32 && !_WIN64
 #define COL_SIZE_VAL (int)col_size
@@ -948,15 +948,15 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
     else
       data[6] = COL_SIZE_VAL;
     /* BUFFER_LENGTH */
-    data[7] = get_buffer_length(mysql_row[5], mysql_row[6],
-      mysql_row[7], odbc_sql_type, col_size,
+    data[7] = get_buffer_length(des_row[5], des_row[6],
+      des_row[7], odbc_sql_type, col_size,
       ocat.is_null_value(7));
     /* DECIMAL_DIGITS */
-    data[8] = (char *)(ocat.is_null_value(8) ? nullptr : mysql_row[8]);
+    data[8] = (char *)(ocat.is_null_value(8) ? nullptr : des_row[8]);
     /* NUM_PREC_RADIX */
-    data[9] = (char *)(ocat.is_null_value(9) ? nullptr : mysql_row[9]);
+    data[9] = (char *)(ocat.is_null_value(9) ? nullptr : des_row[9]);
     /* NULLABLE */
-    SQLSMALLINT nullable = (SQLSMALLINT)((*mysql_row[10] == 'Y') ||
+    SQLSMALLINT nullable = (SQLSMALLINT)((*des_row[10] == 'Y') ||
       (sqltype == SQL_TIMESTAMP) || (sqltype == SQL_TYPE_TIMESTAMP) ? SQL_NULLABLE : SQL_NO_NULLS);
 
     if (is_access && nullable == SQL_NO_NULLS)
@@ -967,9 +967,9 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
       data[11] = nullptr;
     else
       data[11] = (result_lengths && result_lengths[11]) ?
-        mysql_row[11] : "";
+        des_row[11] : "";
     /* COLUMN_DEF */
-    data[12] = mysql_row[12];
+    data[12] = des_row[12];
 
     if (sqltype == SQL_TYPE_DATE || sqltype == SQL_TYPE_TIME ||
         sqltype == SQL_TYPE_TIMESTAMP)
@@ -998,13 +998,13 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
     }
     else
     {
-      data[15] = mysql_row[15];
+      data[15] = des_row[15];
     }
 
     /* ORDINAL_POSITION */
     data[16] = (long long)rnum;
     /* IS_NULLABLE */
-    data[17] = nullable ? "YES" : mysql_row[17];
+    data[17] = nullable ? "YES" : des_row[17];
     if(rnum < rows)
       data.next_row();
     ++rnum;
@@ -1015,7 +1015,7 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
     /*
       With the non-empty result the function should return from this block
     */
-    stmt->result_array = (MYSQL_ROW)data.data();
+    stmt->result_array = (DES_ROW)data.data();
     create_fake_resultset(stmt, stmt->result_array, SQLCOLUMNS_FIELDS, rows,
       SQLCOLUMNS_fields, SQLCOLUMNS_FIELDS, false);
     desodbc_link_fields(stmt, SQLCOLUMNS_fields, SQLCOLUMNS_FIELDS);
@@ -1165,7 +1165,7 @@ SQLRETURN list_table_priv_i_s(SQLHSTMT    hstmt,
   query.append(" AND TABLE_SCHEMA");
   add_name_condition_oa_id(hstmt, query, catalog_name, catalog_len, "=DATABASE()");
 
-  /* TABLE_CAT is always NULL in mysql I_S */
+  /* TABLE_CAT is always NULL in des I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, PRIVILEGE, GRANTEE");
 
   if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(),
@@ -1200,7 +1200,7 @@ DESTablePrivileges(SQLHSTMT hstmt,
     CHECK_CATALOG_SCHEMA(stmt, catalog_name, catalog_len,
                          schema_name, schema_len);
 
-      /* Since mysql is also the name of the system db, using here i_s prefix to
+      /* Since des is also the name of the system db, using here i_s prefix to
          distinct functions */
     return list_table_priv_i_s(hstmt, catalog_name, catalog_len, schema_name, schema_len,
                                table_name, table_len);
@@ -1247,7 +1247,7 @@ static SQLRETURN list_column_priv_i_s(HSTMT       hstmt,
   query.append(" AND COLUMN_NAME");
   add_name_condition_pv_id(hstmt, query, column_name, column_len, " LIKE '%'");
 
-  /* TABLE_CAT is always NULL in mysql I_S */
+  /* TABLE_CAT is always NULL in des I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, PRIVILEGE");
 
   if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(), SQL_NTS,
@@ -1278,7 +1278,7 @@ DESColumnPrivileges(SQLHSTMT hstmt,
   CHECK_CATALOG_SCHEMA(stmt, catalog_name, catalog_len,
                        schema_name, schema_len);
 
-  /* Since mysql is also the name of the system db, using here i_s prefix to
+  /* Since des is also the name of the system db, using here i_s prefix to
   distinct functions */
   return list_column_priv_i_s(hstmt, catalog_name, catalog_len, schema_name, schema_len,
     table_name, table_len, column_name, column_len);
@@ -1366,14 +1366,14 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
     data.first_row();
     size_t rnum = 1;
     bool pk_found = false;
-    MYSQL_ROW mysql_row = nullptr;
+    DES_ROW des_row = nullptr;
 
     if(colType == SQL_BEST_ROWID)
     {
       // Determine if primary key info is present in the resultset.
-      while(mysql_row = ocat.fetch_row())
+      while(des_row = ocat.fetch_row())
       {
-        if (mysql_row[6][0] == '1')
+        if (des_row[6][0] == '1')
           pk_found = true;
       }
     }
@@ -1381,7 +1381,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
     // Reset the seek position to the beginning of resultset.
     ocat.data_seek(0);
 
-    while(mysql_row = ocat.fetch_row())
+    while(des_row = ocat.fetch_row())
     {
       // Lengths are stored internally as well, they will be needed
       // to check for NULL values.
@@ -1389,11 +1389,11 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
 
       if(colType == SQL_ROWVER)
       {
-        if (strcmp(mysql_row[1], "timestamp"))
+        if (strcmp(des_row[1], "timestamp"))
           continue;
 
         // Column 8: '1' if 'on update CURRENT_TIMESTAMP'
-        if (mysql_row[7][0] != '1')
+        if (des_row[7][0] != '1')
           continue;
 
         /* SCOPE */
@@ -1408,7 +1408,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
         */
 
         // Column 7: '1' for Primary Key
-        if (pk_found && mysql_row[6][0] != '1')
+        if (pk_found && des_row[6][0] != '1')
             continue;
 
 #ifndef SQLSPECIALCOLUMNS_RETURN_ALL_COLUMNS
@@ -1426,19 +1426,19 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
       }
 
       /* COLUMN_NAME */
-      data[1] = mysql_row[0];
+      data[1] = des_row[0];
 
       /* DATA_TYPE */
       SQLSMALLINT odbc_sql_type =
-        get_sql_data_type_from_str(mysql_row[1]);
+        get_sql_data_type_from_str(des_row[1]);
       data[2] = odbc_sql_type;
 
       /* TYPE_NAME */
-      const char *type_name = mysql_row[2];
+      const char *type_name = des_row[2];
       data[3] = type_name;
 
       size_t col_size = ocat.is_null_value(3) ? 0 :
-        get_column_size_from_str(stmt, mysql_row[3]);
+        get_column_size_from_str(stmt, des_row[3]);
 
       /* COLUMN_SIZE */
 #if _WIN32 && !_WIN64
@@ -1452,11 +1452,11 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
         data[4] = COL_SIZE_VAL;
 
       /* BUFFER_LENGTH */
-      data[5] = get_buffer_length(type_name, mysql_row[3],
-        mysql_row[4], odbc_sql_type, col_size, ocat.is_null_value(4));
+      data[5] = get_buffer_length(type_name, des_row[3],
+        des_row[4], odbc_sql_type, col_size, ocat.is_null_value(4));
 
       /* DECIMAL_DIGITS */
-      data[6] = (char *)(ocat.is_null_value(5) ? nullptr : mysql_row[5]);
+      data[6] = (char *)(ocat.is_null_value(5) ? nullptr : des_row[5]);
 
       data[7] = SQL_PC_NOT_PSEUDO;
 
@@ -1467,7 +1467,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
 
     if (rnum > 1)
     {
-      stmt->result_array = (MYSQL_ROW)data.data();
+      stmt->result_array = (DES_ROW)data.data();
       create_fake_resultset(stmt, stmt->result_array, SQLSPECIALCOLUMNS_FIELDS, rnum - 1,
         SQLSPECIALCOLUMNS_fields, SQLSPECIALCOLUMNS_FIELDS, false);
 
@@ -1599,7 +1599,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
                            SQLSMALLINT fk_table_len)
 {
   STMT *stmt=(STMT *) hstmt;
-  MYSQL *mysql= stmt->dbc->mysql;
+  DES *des= stmt->dbc->des;
   char tmpbuff[1024]; /* This should be big enough. */
   const char *update_rule, *delete_rule, *ref_constraints_join;
   SQLRETURN rc;
@@ -1615,7 +1615,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
   /*
      With 5.1, we can use REFERENTIAL_CONSTRAINTS to get even more info.
   */
-  if (is_minimum_version(stmt->dbc->mysql->server_version, "5.1"))
+  if (is_minimum_version(stmt->dbc->des->server_version, "5.1"))
   {
     update_rule= "CASE"
                  " WHEN R.UPDATE_RULE = 'CASCADE' THEN 0"
@@ -1684,7 +1684,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
     if (!pk_db.empty())
     {
       query.append("'");
-      cnt = mysql_real_escape_string(mysql, tmpbuff, pk_db.c_str(),
+      cnt = mysql_real_escape_string(des, tmpbuff, pk_db.c_str(),
                                      (unsigned long)pk_db.length());
       query.append(tmpbuff, cnt);
       query.append("' ");
@@ -1696,7 +1696,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
 
     query.append("AND A.REFERENCED_TABLE_NAME = '");
 
-    cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)pk_table,
+    cnt = mysql_real_escape_string(des, tmpbuff, (char *)pk_table,
                                     pk_table_len);
     query.append(tmpbuff, cnt);
     query.append("' ");
@@ -1711,7 +1711,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
     if (!fk_db.empty())
     {
       query.append("'");
-      cnt = mysql_real_escape_string(mysql, tmpbuff, fk_db.c_str(),
+      cnt = mysql_real_escape_string(des, tmpbuff, fk_db.c_str(),
                                      (unsigned long)fk_db.length());
       query.append(tmpbuff, cnt);
       query.append("' ");
@@ -1723,7 +1723,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
 
     query.append("AND A.TABLE_NAME = '");
 
-    cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)fk_table,
+    cnt = mysql_real_escape_string(des, tmpbuff, (char *)fk_table,
                                     fk_table_len);
     query.append(tmpbuff, cnt);
     query.append("' ");

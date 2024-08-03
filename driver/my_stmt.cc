@@ -48,7 +48,7 @@ BOOL returned_result(STMT *stmt)
   if (ssps_used(stmt))
   {
     /* Basically at this point we are supposed to get result already */
-    MYSQL_RES *temp_res= NULL;
+    DES_RES *temp_res= NULL;
 
     if ((stmt->result != NULL) ||
         (temp_res= mysql_stmt_result_metadata(stmt->ssps)) != NULL)
@@ -61,7 +61,7 @@ BOOL returned_result(STMT *stmt)
   }
   else
   {
-    return mysql_field_count(stmt->dbc->mysql) > 0 ;
+    return mysql_field_count(stmt->dbc->des) > 0 ;
   }
 }
 
@@ -88,23 +88,23 @@ des_bool free_current_result(STMT *stmt)
    i.e using mysql_* part of api, ssps - prepared on server, using mysql_stmt
  */
 static
-MYSQL_RES * stmt_get_result(STMT *stmt, BOOL force_use)
+DES_RES * stmt_get_result(STMT *stmt, BOOL force_use)
 {
   /* We can't use USE_RESULT because SQLRowCount will fail in this case! */
   if (if_forward_cache(stmt) || force_use)
   {
-    return mysql_use_result(stmt->dbc->mysql);
+    return mysql_use_result(stmt->dbc->des);
   }
   else
   {
-    return mysql_store_result(stmt->dbc->mysql);
+    return mysql_store_result(stmt->dbc->des);
   }
 }
 
 
 /* For text protocol this get result itself as well. Besides for text protocol
    we need to use/store each resultset of multiple resultsets */
-MYSQL_RES * get_result_metadata(STMT *stmt, BOOL force_use)
+DES_RES * get_result_metadata(STMT *stmt, BOOL force_use)
 {
   /* just a precaution, mysql_free_result checks for NULL anywat */
   mysql_free_result(stmt->result);
@@ -154,12 +154,12 @@ size_t STMT::field_count()
   {
     return result && result->field_count > 0 ?
       result->field_count :
-      mysql_field_count(dbc->mysql);
+      mysql_field_count(dbc->des);
   }
 }
 
 
-my_ulonglong affected_rows(STMT *stmt)
+des_ulonglong affected_rows(STMT *stmt)
 {
   if (ssps_used(stmt))
   {
@@ -168,13 +168,13 @@ my_ulonglong affected_rows(STMT *stmt)
   else
   {
     /* In some cases in c/odbc it cannot be used instead of mysql_num_rows */
-    return mysql_affected_rows(stmt->dbc->mysql);
+    return mysql_affected_rows(stmt->dbc->des);
   }
 }
 
-my_ulonglong update_affected_rows(STMT *stmt)
+des_ulonglong update_affected_rows(STMT *stmt)
 {
-  my_ulonglong last_affected;
+  des_ulonglong last_affected;
 
   last_affected= affected_rows(stmt);
 
@@ -184,9 +184,9 @@ my_ulonglong update_affected_rows(STMT *stmt)
 }
 
 
-my_ulonglong num_rows(STMT *stmt)
+des_ulonglong num_rows(STMT *stmt)
 {
-  my_ulonglong offset= scroller_exists(stmt) && stmt->scroller.next_offset > 0 ?
+  des_ulonglong offset= scroller_exists(stmt) && stmt->scroller.next_offset > 0 ?
     stmt->scroller.next_offset - stmt->scroller.row_count : 0;
 
   if (ssps_used(stmt))
@@ -200,7 +200,7 @@ my_ulonglong num_rows(STMT *stmt)
 }
 
 
-MYSQL_ROW STMT::fetch_row(bool read_unbuffered)
+DES_ROW STMT::fetch_row(bool read_unbuffered)
 {
   if (ssps)
   {
@@ -256,7 +256,7 @@ unsigned long* fetch_lengths(STMT *stmt)
 }
 
 
-MYSQL_ROW_OFFSET row_seek(STMT *stmt, MYSQL_ROW_OFFSET offset)
+DES_ROW_OFFSET row_seek(STMT *stmt, DES_ROW_OFFSET offset)
 {
   if (ssps_used(stmt))
   {
@@ -269,7 +269,7 @@ MYSQL_ROW_OFFSET row_seek(STMT *stmt, MYSQL_ROW_OFFSET offset)
 }
 
 
-void data_seek(STMT *stmt, my_ulonglong offset)
+void data_seek(STMT *stmt, des_ulonglong offset)
 {
   if (ssps_used(stmt))
   {
@@ -282,7 +282,7 @@ void data_seek(STMT *stmt, my_ulonglong offset)
 }
 
 
-MYSQL_ROW_OFFSET row_tell(STMT *stmt)
+DES_ROW_OFFSET row_tell(STMT *stmt)
 {
   if (ssps_used(stmt))
   {
@@ -305,7 +305,7 @@ int next_result(STMT *stmt)
   }
   else
   {
-    return mysql_next_result(stmt->dbc->mysql);
+    return mysql_next_result(stmt->dbc->des);
   }
 }
 
@@ -432,7 +432,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
      actually parameter markers in it */
   if (!stmt->dbc->ds.opt_NO_SSPS && (PARAM_COUNT(stmt->query) || force_prepare)
     && !IS_BATCH(&stmt->query) &&
-      stmt->query.preparable_on_server(stmt->dbc->mysql->server_version))
+      stmt->query.preparable_on_server(stmt->dbc->des->server_version))
   {
     DESLOG_QUERY(stmt, "Using prepared statement");
     ssps_init(stmt);
@@ -453,11 +453,11 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
 
      if (prep_res)
       {
-        DESLOG_QUERY(stmt, mysql_error(stmt->dbc->mysql));
+        DESLOG_QUERY(stmt, mysql_error(stmt->dbc->des));
 
         stmt->set_error("HY000");
         translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_S1000,
-                        mysql_errno(stmt->dbc->mysql));
+                        mysql_errno(stmt->dbc->des));
 
         return SQL_ERROR;
       }
@@ -689,10 +689,10 @@ bool scrollable(STMT * stmt, const char * query, const char * query_end)
   /* FOR UPDATE*/
   {
     const char *before_token= query_end;
-    const char *last= mystr_get_prev_token(stmt->dbc->cxn_charset_info,
+    const char *last= desstr_get_prev_token(stmt->dbc->cxn_charset_info,
                                                 &before_token,
                                                 query);
-    const char *prev= mystr_get_prev_token(stmt->dbc->cxn_charset_info,
+    const char *prev= desstr_get_prev_token(stmt->dbc->cxn_charset_info,
                                                 &before_token,
                                                 query);
 

@@ -129,14 +129,14 @@ static des_bool check_table_type(const SQLCHAR *TableType,
   @type    : internal
   @purpose : returns columns from a particular table, NULL on error
 */
-static MYSQL_RES *server_list_dbkeys(STMT *stmt,
+static DES_RES *server_list_dbkeys(STMT *stmt,
                                      SQLCHAR *catalog,
                                      SQLSMALLINT catalog_len,
                                      SQLCHAR *table,
                                      SQLSMALLINT table_len)
 {
     DBC   *dbc = stmt->dbc;
-    MYSQL *mysql= dbc->mysql;
+    DES *des= dbc->des;
     char  tmpbuff[1024];
     std::string query;
     query.reserve(1024);
@@ -160,21 +160,21 @@ static MYSQL_RES *server_list_dbkeys(STMT *stmt,
     DESLOG_DBC_QUERY(dbc, query.c_str());
     if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
         return NULL;
-    return mysql_store_result(mysql);
+    return mysql_store_result(des);
 }
 
 /*
 @type    : internal
 @purpose : returns a table privileges result, NULL on error. Uses mysql pk_db tables
 */
-static MYSQL_RES *table_privs_raw_data( STMT *      stmt,
+static DES_RES *table_privs_raw_data( STMT *      stmt,
                                         SQLCHAR *   catalog,
                                         SQLSMALLINT catalog_len,
                                         SQLCHAR *   table,
                                         SQLSMALLINT table_len)
 {
   DBC *dbc= stmt->dbc;
-  MYSQL *mysql= dbc->mysql;
+  DES *des= dbc->des;
   char   tmpbuff[1024];
   std::string query;
   size_t cnt = 0;
@@ -183,7 +183,7 @@ static MYSQL_RES *table_privs_raw_data( STMT *      stmt,
   query = "SELECT Db,User,Table_name,Grantor,Table_priv "
           "FROM mysql.tables_priv WHERE Table_name LIKE '";
 
-  cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)table, table_len);
+  cnt = mysql_real_escape_string(des, tmpbuff, (char *)table, table_len);
   query.append(tmpbuff, cnt);
 
   query.append("' AND Db = ");
@@ -191,7 +191,7 @@ static MYSQL_RES *table_privs_raw_data( STMT *      stmt,
   if (catalog_len)
   {
     query.append("'");
-    cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)catalog, catalog_len);
+    cnt = mysql_real_escape_string(des, tmpbuff, (char *)catalog, catalog_len);
     query.append(tmpbuff, cnt);
     query.append("'");
   }
@@ -204,7 +204,7 @@ static MYSQL_RES *table_privs_raw_data( STMT *      stmt,
   if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
     return NULL;
 
-  return mysql_store_result(mysql);
+  return mysql_store_result(des);
 }
 
 
@@ -216,7 +216,7 @@ const char *SQLTABLES_priv_values[]=
     NULL,"",NULL,NULL,NULL,NULL,NULL
 };
 
-MYSQL_FIELD SQLTABLES_priv_fields[]=
+DES_FIELD SQLTABLES_priv_fields[]=
 {
   DESODBC_FIELD_NAME("TABLE_CAT", 0),
   DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
@@ -239,7 +239,7 @@ SQLColumnPrivileges
 @type    : internal
 @purpose : returns a column privileges result, NULL on error
 */
-static MYSQL_RES *column_privs_raw_data(STMT *      stmt,
+static DES_RES *column_privs_raw_data(STMT *      stmt,
                                         SQLCHAR *   catalog,
                                         SQLSMALLINT catalog_len,
                                         SQLCHAR *   table,
@@ -248,7 +248,7 @@ static MYSQL_RES *column_privs_raw_data(STMT *      stmt,
                                         SQLSMALLINT column_len)
 {
   DBC   *dbc = stmt->dbc;
-  MYSQL *mysql = dbc->mysql;
+  DES *des = dbc->des;
 
   char tmpbuff[1024];
   std::string query;
@@ -261,14 +261,14 @@ static MYSQL_RES *column_privs_raw_data(STMT *      stmt,
           "FROM mysql.columns_priv AS c, mysql.tables_priv AS t "
           "WHERE c.Table_name = '";
 
-  cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)table, table_len);
+  cnt = mysql_real_escape_string(des, tmpbuff, (char *)table, table_len);
   query.append(tmpbuff, cnt);
 
   query.append("' AND c.Db = ");
   if (catalog_len)
   {
     query.append("'");
-    cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)catalog, catalog_len);
+    cnt = mysql_real_escape_string(des, tmpbuff, (char *)catalog, catalog_len);
     query.append(tmpbuff, cnt);
     query.append("'");
   }
@@ -276,7 +276,7 @@ static MYSQL_RES *column_privs_raw_data(STMT *      stmt,
     query.append("DATABASE()");
 
   query.append("AND c.Column_name LIKE '");
-  cnt = mysql_real_escape_string(mysql, tmpbuff, (char *)column, column_len);
+  cnt = mysql_real_escape_string(des, tmpbuff, (char *)column, column_len);
   query.append(tmpbuff, cnt);
 
   query.append("' AND c.Table_name = t.Table_name "
@@ -285,7 +285,7 @@ static MYSQL_RES *column_privs_raw_data(STMT *      stmt,
   if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
     return NULL;
 
-  return mysql_store_result(mysql);
+  return mysql_store_result(des);
 }
 
 
@@ -294,7 +294,7 @@ char *SQLCOLUMNS_priv_values[]=
   NULL,"",NULL,NULL,NULL,NULL,NULL,NULL
 };
 
-MYSQL_FIELD SQLCOLUMNS_priv_fields[]=
+DES_FIELD SQLCOLUMNS_priv_fields[]=
 {
   DESODBC_FIELD_NAME("TABLE_CAT", 0),
   DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
@@ -323,13 +323,13 @@ Lengths may not be SQL_NTS.
 @return Result of SHOW CREATE TABLE , or NULL if there is an error
 or empty result (check mysql_errno(stmt->dbc->mysql) != 0)
 */
-MYSQL_RES *server_show_create_table(STMT        *stmt,
+DES_RES *server_show_create_table(STMT        *stmt,
                                     SQLCHAR     *catalog,
                                     SQLSMALLINT  catalog_length,
                                     SQLCHAR     *table,
                                     SQLSMALLINT  table_length)
 {
-  MYSQL *mysql= stmt->dbc->mysql;
+  DES *des= stmt->dbc->des;
   std::string query;
   size_t cnt = 0;
 
@@ -353,12 +353,12 @@ MYSQL_RES *server_show_create_table(STMT        *stmt,
   DESLOG_QUERY(stmt, query.c_str());
 
 
-  if (mysql_real_query(mysql, query.c_str(),(unsigned long)query.length()))
+  if (mysql_real_query(des, query.c_str(),(unsigned long)query.length()))
   {
     return NULL;
   }
 
-  return mysql_store_result(mysql);
+  return mysql_store_result(des);
 }
 
 
@@ -367,7 +367,7 @@ MYSQL_RES *server_show_create_table(STMT        *stmt,
 SQLForeignKeys
 ****************************************************************************
 */
-MYSQL_FIELD SQLFORE_KEYS_fields[]=
+DES_FIELD SQLFORE_KEYS_fields[]=
 {
   DESODBC_FIELD_NAME("PKTABLE_CAT", 0),
   DESODBC_FIELD_NAME("PKTABLE_SCHEM", 0),
@@ -438,7 +438,7 @@ SQLPrimaryKeys
 ****************************************************************************
 */
 
-MYSQL_FIELD SQLPRIM_KEYS_fields[]=
+DES_FIELD SQLPRIM_KEYS_fields[]=
 {
   DESODBC_FIELD_NAME("TABLE_CAT", 0),
   DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
@@ -470,7 +470,7 @@ primary_keys_no_i_s(SQLHSTMT hstmt,
                     SQLCHAR *table, SQLSMALLINT table_len)
 {
     STMT *stmt= (STMT *) hstmt;
-    MYSQL_ROW row;
+    DES_ROW row;
     uint      row_count;
 
     assert(stmt);
@@ -498,7 +498,7 @@ primary_keys_no_i_s(SQLHSTMT hstmt,
 
     if (!stmt->lengths)
     {
-      set_mem_error(stmt->dbc->mysql);
+      set_mem_error(stmt->dbc->des);
       return handle_connection_error(stmt);
     }
 
@@ -531,7 +531,7 @@ primary_keys_no_i_s(SQLHSTMT hstmt,
         }
     }
 
-    stmt->result_array = (MYSQL_ROW)data.data();
+    stmt->result_array = (DES_ROW)data.data();
     set_row_count(stmt, row_count);
     desodbc_link_fields(stmt,SQLPRIM_KEYS_fields,SQLPRIM_KEYS_FIELDS);
 
@@ -553,7 +553,7 @@ char *SQLPROCEDURECOLUMNS_values[]= {
 };
 
 /* TODO make LONGLONG fields just LONG if SQLLEN is 4 bytes */
-MYSQL_FIELD SQLPROCEDURECOLUMNS_fields[]=
+DES_FIELD SQLPROCEDURECOLUMNS_fields[]=
 {
   DESODBC_FIELD_NAME("PROCEDURE_CAT",     0),
   DESODBC_FIELD_NAME("PROCEDURE_SCHEM",   0),
@@ -584,7 +584,7 @@ const uint SQLPROCEDURECOLUMNS_FIELDS =
   @type    : internal
   @purpose : returns procedure params as resultset
 */
-static MYSQL_RES *server_list_proc_params(STMT *stmt,
+static DES_RES *server_list_proc_params(STMT *stmt,
                                           SQLCHAR *catalog,
                                           SQLSMALLINT catalog_len,
                                           SQLCHAR *proc_name,
@@ -593,23 +593,23 @@ static MYSQL_RES *server_list_proc_params(STMT *stmt,
                                           SQLSMALLINT par_name_len)
 {
   DBC   *dbc = stmt->dbc;
-  MYSQL *mysql= dbc->mysql;
+  DES *des= dbc->des;
   char   tmpbuf[1024];
   std::string qbuff;
   qbuff.reserve(2048);
 
-  auto append_escaped_string = [&mysql, &tmpbuf](std::string &outstr,
+  auto append_escaped_string = [&des, &tmpbuf](std::string &outstr,
                                         SQLCHAR* str,
                                         SQLSMALLINT len)
   {
     tmpbuf[0] = '\0';
     outstr.append("'");
-    mysql_real_escape_string(mysql, tmpbuf, (char *)str, len);
+    mysql_real_escape_string(des, tmpbuf, (char *)str, len);
     outstr.append(tmpbuf).append("'");
   };
 
 
-  if((is_minimum_version(dbc->mysql->server_version, "5.7")))
+  if((is_minimum_version(dbc->des->server_version, "5.7")))
   {
     qbuff = "select SPECIFIC_NAME, (IF(ISNULL(PARAMETER_NAME), "
             "concat('OUT RETURN_VALUE ', DTD_IDENTIFIER), "
@@ -662,7 +662,7 @@ static MYSQL_RES *server_list_proc_params(STMT *stmt,
   if (exec_stmt_query(stmt, qbuff.c_str(), qbuff.length(), FALSE))
     return NULL;
 
-  return mysql_store_result(mysql);
+  return mysql_store_result(des);
 }
 
 
@@ -682,8 +682,8 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
 {
   STMT *stmt= (STMT *)hstmt;
   SQLRETURN nReturn= SQL_SUCCESS;
-  MYSQL_ROW row;
-  MYSQL_RES *proc_list_res;
+  DES_ROW row;
+  DES_RES *proc_list_res;
   int params_num= 0, return_params_num= 0;
   unsigned int total_params_num = 0;
   std::string db;
@@ -840,7 +840,7 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
     }
   }
 
-  stmt->result_array = data.is_valid() ? (MYSQL_ROW)data.data() : nullptr;
+  stmt->result_array = data.is_valid() ? (DES_ROW)data.data() : nullptr;
   return_params_num = total_params_num;
 
   stmt->result= proc_list_res;
@@ -880,7 +880,7 @@ SQLStatistics
 char SS_type[10];
 char *SQLSTAT_values[]={NullS,NullS,"","",NullS,"",SS_type,"","","","",NullS,NullS};
 
-MYSQL_FIELD SQLSTAT_fields[]=
+DES_FIELD SQLSTAT_fields[]=
 {
   DESODBC_FIELD_NAME("TABLE_CAT", 0),
   DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
@@ -916,11 +916,11 @@ statistics_no_i_s(SQLHSTMT hstmt,
   STMT *stmt= (STMT *)hstmt;
   assert(stmt);
 
-  MYSQL *mysql= stmt->dbc->mysql;
+  DES *des= stmt->dbc->des;
   DBC *dbc= stmt->dbc;
   char *db_val = nullptr;
   std::string db;
-  MYSQL_ROW mysql_row;
+  DES_ROW mysql_row;
 
   LOCK_DBC(stmt->dbc);
 
@@ -928,10 +928,10 @@ statistics_no_i_s(SQLHSTMT hstmt,
   {
     db = get_database_name(stmt, catalog, catalog_len, schema, schema_len, false);
 
-    auto mysql_res = server_list_dbkeys(stmt, (SQLCHAR*)db.c_str(),
+    auto des_res = server_list_dbkeys(stmt, (SQLCHAR*)db.c_str(),
                                      (SQLSMALLINT)db.length(),
                                      table, table_len);
-    if (!mysql_res)
+    if (!des_res)
     {
       SQLRETURN rc= handle_connection_error(stmt);
       return rc;
@@ -940,14 +940,14 @@ statistics_no_i_s(SQLHSTMT hstmt,
     // Free if result data was not in row storage.
     stmt->reset_result_array();
 
-    size_t rows = mysql_num_rows(mysql_res);
+    size_t rows = mysql_num_rows(des_res);
     stmt->m_row_storage.set_size(rows, SQLSTAT_FIELDS);
 
     auto &data = stmt->m_row_storage;
     data.first_row();
     size_t rnum = 0;
 
-    while ((mysql_row = mysql_fetch_row(mysql_res))) {
+    while ((mysql_row = mysql_fetch_row(des_res))) {
       SQLSMALLINT non_unique = (mysql_row[1][0] == '1' ? 1 : 0);
 
       // Skip non-unique indexes if only unique are requested
@@ -992,11 +992,11 @@ statistics_no_i_s(SQLHSTMT hstmt,
       ++rnum;
     }
 
-    if (mysql_res)
-      mysql_free_result(mysql_res);
+    if (des_res)
+      mysql_free_result(des_res);
 
     if (rnum) {
-      stmt->result_array = (MYSQL_ROW)data.data();
+      stmt->result_array = (DES_ROW)data.data();
       create_fake_resultset(stmt, stmt->result_array, SQLSTAT_FIELDS, rnum,
                             SQLSTAT_fields, SQLSTAT_FIELDS, false);
       desodbc_link_fields(stmt, SQLSTAT_fields, SQLSTAT_FIELDS);
@@ -1025,7 +1025,7 @@ const char *SQLTABLES_type_values[3][5] = {
     {NULL,NULL,NULL,"VIEW",NULL},
 };
 
-MYSQL_FIELD SQLTABLES_fields[]=
+DES_FIELD SQLTABLES_fields[]=
 {
   DESODBC_FIELD_NAME("TABLE_CAT",   0),
   DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
@@ -1050,8 +1050,8 @@ tables_no_i_s(SQLHSTMT hstmt,
     STMT *stmt= (STMT *)hstmt;
     des_bool user_tables, views;
 
-    my_ulonglong row_count= 0;
-    MYSQL_ROW db_row = nullptr;
+    des_ulonglong row_count= 0;
+    DES_ROW db_row = nullptr;
     unsigned long count= 0;
     SQLRETURN rc = SQL_SUCCESS;
 
@@ -1072,7 +1072,7 @@ tables_no_i_s(SQLHSTMT hstmt,
                    !table_len && table && type && !strncmp((char *)type, "%", 2))
       {
         /* Return set of TableType qualifiers */
-        rc = create_fake_resultset(stmt, (MYSQL_ROW)SQLTABLES_type_values,
+        rc = create_fake_resultset(stmt, (DES_ROW)SQLTABLES_type_values,
                                    sizeof(SQLTABLES_type_values[0]),
                                    array_elements(SQLTABLES_type_values),
                                    SQLTABLES_fields, SQLTABLES_FIELDS,
@@ -1101,7 +1101,7 @@ tables_no_i_s(SQLHSTMT hstmt,
                !table_len && table &&
                !type_len && type)
       {
-        rc = create_fake_resultset(stmt, (MYSQL_ROW)SQLTABLES_owner_values,
+        rc = create_fake_resultset(stmt, (DES_ROW)SQLTABLES_owner_values,
                                    sizeof(SQLTABLES_owner_values),
                                    1, SQLTABLES_fields, SQLTABLES_FIELDS,
                                    true);
@@ -1155,10 +1155,10 @@ tables_no_i_s(SQLHSTMT hstmt,
                                       user_tables, views);
         }
 
-        if (!stmt->result && mysql_errno(stmt->dbc->mysql))
+        if (!stmt->result && mysql_errno(stmt->dbc->des))
         {
           /* unknown DB will return empty set from SQLTables */
-          switch (mysql_errno(stmt->dbc->mysql))
+          switch (mysql_errno(stmt->dbc->des))
           {
           case ER_BAD_DB_ERROR:
             throw ODBCEXCEPTION(EXCEPTION_TYPE::EMPTY_SET);
@@ -1172,7 +1172,7 @@ tables_no_i_s(SQLHSTMT hstmt,
 
         /* assemble final result set */
         {
-          MYSQL_ROW row;
+          DES_ROW row;
           std::string db= "";
           row_count += stmt->result->row_count;
 
@@ -1234,7 +1234,7 @@ tables_no_i_s(SQLHSTMT hstmt,
         break;
       }
 
-      stmt->result_array = (MYSQL_ROW)data.data();
+      stmt->result_array = (DES_ROW)data.data();
 
       if (!row_count)
       {
@@ -1246,7 +1246,7 @@ tables_no_i_s(SQLHSTMT hstmt,
       switch(ex.m_type)
       {
         case EXCEPTION_TYPE::EMPTY_SET:
-          return create_empty_fake_resultset(stmt, (MYSQL_ROW)SQLTABLES_values,
+          return create_empty_fake_resultset(stmt, (DES_ROW)SQLTABLES_values,
                                              sizeof(SQLTABLES_values),
                                              SQLTABLES_fields,
                                              SQLTABLES_FIELDS);

@@ -52,11 +52,11 @@ typedef int File; /* File descriptor */
 typedef int MY_MODE;
 typedef int mode_t;
 typedef int socket_len_t;
-typedef SOCKET my_socket;
+typedef SOCKET des_socket;
 #else
 typedef mode_t MY_MODE;
 typedef socklen_t socket_len_t;
-typedef int my_socket; /* File descriptor for sockets */
+typedef int des_socket; /* File descriptor for sockets */
 #endif /* _WIN32 */
 
 #endif /* COMPONENTS_SERVICES_MY_IO_BITS_H */

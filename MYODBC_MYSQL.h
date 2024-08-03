@@ -68,11 +68,11 @@ extern "C"
 #define PSI_NOT_INSTRUMENTED 0
 
 #define MIN_MYSQL_VERSION 40100L
-#if MYSQL_VERSION_ID < MIN_MYSQL_VERSION
+#if DES_VERSION_ID < MIN_MYSQL_VERSION
 # error "Connector/ODBC requires v4.1 (or later) of the MySQL client library"
 #endif
 
-#if !MYSQLCLIENT_STATIC_LINKING || MYSQL_VERSION_ID >= 80018
+#if !MYSQLCLIENT_STATIC_LINKING || DES_VERSION_ID >= 80018
 
   /*
     Note: Things no longer defined in client library headers, but still used
@@ -95,7 +95,7 @@ extern "C"
 #define des_sys_init desodbc::des_init
 #define mysys_end desodbc::my_end
 #define x_free(A) { void *tmp= (A); if (tmp) free((char *) tmp); }
-#define myodbc_malloc(A, B) (B == MY_ZEROFILL ? calloc(A, 1) : malloc(A))
+#define desodbc_malloc(A, B) (B == DES_ZEROFILL ? calloc(A, 1) : malloc(A))
 #define myodbc_realloc(A, B) realloc(A, B)
 #define desodbc_snprintf snprintf
 

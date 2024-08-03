@@ -65,7 +65,7 @@ bool ENV::has_connections()
   return conn_list.size() > 0;
 }
 
-DBC::DBC(ENV *p_env)  : env(p_env), mysql(nullptr),
+DBC::DBC(ENV *p_env)  : env(p_env), des(nullptr),
                         txn_isolation(DEFAULT_TXN_ISOLATION),
                         last_query_time((time_t) time((time_t*) 0))
 {
@@ -99,9 +99,9 @@ void DBC::free_explicit_descriptors()
 
 void DBC::close()
 {
-  if (mysql)
-    mysql_close(mysql);
-  mysql = nullptr;
+  if (des)
+    mysql_close(des);
+  des = nullptr;
 }
 
 DBC::~DBC()
@@ -124,7 +124,7 @@ SQLRETURN DBC::set_error(char * state, const char * message, uint errcode)
 
 SQLRETURN DBC::set_error(char * state)
 {
-  return set_error(state, mysql_error(mysql), mysql_errno(mysql));
+  return set_error(state, mysql_error(des), mysql_errno(des));
 }
 
 
@@ -213,13 +213,13 @@ SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
 
     ++thread_count;
 
-    if (MYSQL_VERSION_ID < MIN_MYSQL_VERSION)
+    if (DES_VERSION_ID < MIN_MYSQL_VERSION)
     {
         char buff[255];
         desodbc_snprintf(buff, sizeof(buff),
           "Wrong libmysqlclient library version: %ld. "
           "MyODBC needs at least version: %ld",
-            MYSQL_VERSION_ID, MIN_MYSQL_VERSION);
+            DES_VERSION_ID, MIN_MYSQL_VERSION);
 
         return(set_env_error((ENV*)henv, DESERR_S1000, buff, 0));
     }
@@ -265,7 +265,7 @@ int wakeup_connection(DBC *dbc)
   if(ds.opt_PWD1)
   {
     int fator = 2;
-    mysql_options4(dbc->mysql, MYSQL_OPT_USER_PASSWORD,
+    mysql_options4(dbc->des, DES_OPT_USER_PASSWORD,
                    &fator, (const char*)ds.opt_PWD1);
   }
 
@@ -273,7 +273,7 @@ int wakeup_connection(DBC *dbc)
   {
     ds_get_utf8attr(ds->pwd2, &ds->pwd28);
     int fator = 2;
-    mysql_options4(dbc->mysql, MYSQL_OPT_USER_PASSWORD,
+    mysql_options4(dbc->des, DES_OPT_USER_PASSWORD,
                    &fator,
                    (const char *)ds.opt_PWD2);
   }
@@ -282,13 +282,13 @@ int wakeup_connection(DBC *dbc)
   {
     ds_get_utf8attr(ds->pwd3, &ds->pwd38);
     int fator = 3;
-    mysql_options4(dbc->mysql, MYSQL_OPT_USER_PASSWORD,
+    mysql_options4(dbc->des, DES_OPT_USER_PASSWORD,
                    &fator,
                    (const char *)ds.opt_PWD3);
   }
 #endif
 
-  if (mysql_change_user(dbc->mysql, ds.opt_UID,
+  if (mysql_change_user(dbc->des, ds.opt_UID,
       ds.opt_PWD, ds.opt_DATABASE))
   {
     return 1;
@@ -330,7 +330,7 @@ void STMT::allocate_param_bind(uint elements)
     query_attr_names.resize(elements);
     param_bind.reserve(elements);
     while(elements > param_bind.size())
-      param_bind.emplace_back(MYSQL_BIND{});
+      param_bind.emplace_back(DES_BIND{});
   }
 }
 
@@ -339,8 +339,8 @@ int adjust_param_bind_array(STMT *stmt)
 {
   stmt->allocate_param_bind(stmt->param_count);
   /* Need to init newly allocated area with 0s */
-  //  memset(stmt->param_bind->buffer + sizeof(MYSQL_BIND)*prev_max_elements, 0,
-  //    sizeof(MYSQL_BIND) * (stmt->param_bind->max_element - prev_max_elements));
+  //  memset(stmt->param_bind->buffer + sizeof(DES_BIND)*prev_max_elements, 0,
+  //    sizeof(DES_BIND) * (stmt->param_bind->max_element - prev_max_elements));
 
   return 0;
 }
@@ -527,7 +527,7 @@ SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
 /*
   Explicitly allocate a descriptor.
 */
-SQLRETURN my_SQLAllocDesc(SQLHDBC hdbc, SQLHANDLE *pdesc)
+SQLRETURN DES_SQLAllocDesc(SQLHDBC hdbc, SQLHANDLE *pdesc)
 {
   DBC *dbc= (DBC *) hdbc;
   std::unique_ptr<DESC> desc(new DESC(NULL, SQL_DESC_ALLOC_USER,
@@ -552,7 +552,7 @@ SQLRETURN my_SQLAllocDesc(SQLHDBC hdbc, SQLHANDLE *pdesc)
   Free an explicitly allocated descriptor. This resets all statements
   that it was associated with to their implicitly allocated descriptors.
 */
-SQLRETURN my_SQLFreeDesc(SQLHANDLE hdesc)
+SQLRETURN DES_SQLFreeDesc(SQLHANDLE hdesc)
 {
   DESC *desc= (DESC *) hdesc;
   DBC *dbc= desc->dbc;
@@ -615,7 +615,7 @@ SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT HandleType,
         case SQL_HANDLE_DESC:
             CHECK_HANDLE(InputHandle);
             CHECK_DESC_OUTPUT(InputHandle, OutputHandlePtr);
-            error= my_SQLAllocDesc(InputHandle, OutputHandlePtr);
+            error= DES_SQLAllocDesc(InputHandle, OutputHandlePtr);
             break;
 
         default:
@@ -679,7 +679,7 @@ SQLRETURN SQL_API SQLFreeHandle(SQLSMALLINT HandleType,
             break;
 
         case SQL_HANDLE_DESC:
-            error= my_SQLFreeDesc((DESC *) Handle);
+            error= DES_SQLFreeDesc((DESC *) Handle);
             break;
 
 

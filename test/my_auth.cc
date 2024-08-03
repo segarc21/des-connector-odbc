@@ -40,7 +40,7 @@
 */
 DECLARE_TEST(t_plugin_auth)
 {
-#if MYSQL_VERSION_ID >= 50507
+#if DES_VERSION_ID >= 50507
   SQLCHAR   conn[512], conn_out[512];
   SQLSMALLINT conn_out_len;
   SQLCHAR *tplugin_dir= (SQLCHAR *)"/tmp/test_new_directory/";
@@ -212,7 +212,7 @@ DECLARE_TEST(t_plugin_auth)
 */
 DECLARE_TEST(t_ldap_auth)
 {
-#if MYSQL_VERSION_ID >= 80021
+#if DES_VERSION_ID >= 80021
   SQLCHAR   conn[512], conn_out[512];
   SQLSMALLINT conn_out_len;
   HDBC hdbc1;
@@ -412,7 +412,7 @@ SQLCHAR * get_connection_string(SQLCHAR   *conn,struct MFA_TEST_DATA *data, BOOL
 
 DECLARE_TEST(t_mfa_auth)
 {
-#if MYSQL_VERSION_ID >= 80027
+#if DES_VERSION_ID >= 80027
   SQLCHAR   conn[1024], conn_out[1024];
   SQLCHAR   buf[512];
   SQLLEN buflen;

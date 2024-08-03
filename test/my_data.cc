@@ -576,10 +576,10 @@ DECLARE_TEST(t_conn_attr_data)
     odbc::sql(hstmt, query);
 
     std::string attr_list[][2] = {
-      {"_connector_license", MYODBC_LICENSE},
-      {"_connector_name", "mysql-connector-odbc"},
+      {"_connector_license", DESODBC_LICENSE},
+      {"_connector_name", "des-connector-odbc"},
       {"_connector_type", unicode_driver == 0 ? "ANSI" : "Unicode"},
-      {"_connector_version", MYODBC_CONN_ATTR_VER}
+      {"_connector_version", DESODBC_CONN_ATTR_VER}
     };
 
     int idx = 0;

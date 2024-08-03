@@ -98,7 +98,7 @@ void DBC::set_charset(std::string charset)
   std::string query = "SET NAMES " + charset;
   if (execute_query(query.c_str(), query.length(), true))
   {
-    throw DESERROR("HY000", mysql);
+    throw DESERROR("HY000", des);
   }
 }
 
@@ -135,8 +135,8 @@ try
   }
 
   set_charset(charset);
-  MY_CHARSET_INFO my_charset;
-  mysql_get_character_set_info(mysql, &my_charset);
+  DES_CHARSET_INFO my_charset;
+  mysql_get_character_set_info(des, &my_charset);
   cxn_charset_info = desodbc::get_charset(my_charset.number, DESF(0));
 
   return rc;
@@ -315,48 +315,48 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 
 #endif
 
-  mysql = mysql_init(nullptr);
+  des = mysql_init(nullptr);
 
   flags = get_client_flags(dsrc);
 
   /* Set other connection options */
 
   if (dsrc->opt_BIG_PACKETS || dsrc->opt_SAFE)
-#if MYSQL_VERSION_ID >= 50709
-    mysql_options(mysql, MYSQL_OPT_MAX_ALLOWED_PACKET, &max_long);
+#if DES_VERSION_ID >= 50709
+    mysql_options(des, DES_OPT_MAX_ALLOWED_PACKET, &max_long);
 #else
     /* max_allowed_packet is a magical mysql macro. */
     max_allowed_packet = ~0L;
 #endif
 
   if (dsrc->opt_NAMED_PIPE)
-    mysql_options(mysql, MYSQL_OPT_NAMED_PIPE, NullS);
+    mysql_options(des, DES_OPT_NAMED_PIPE, NullS);
 
   if (dsrc->opt_USE_MYCNF)
-    mysql_options(mysql, MYSQL_READ_DEFAULT_GROUP, "odbc");
+    mysql_options(des, DES_READ_DEFAULT_GROUP, "odbc");
 
   if (login_timeout)
-    mysql_options(mysql, MYSQL_OPT_CONNECT_TIMEOUT, (char *)&login_timeout);
+    mysql_options(des, DES_OPT_CONNECT_TIMEOUT, (char *)&login_timeout);
 
   if (dsrc->opt_READTIMEOUT) {
     int timeout = dsrc->opt_READTIMEOUT;
-    mysql_options(mysql, MYSQL_OPT_READ_TIMEOUT,
+    mysql_options(des, DES_OPT_READ_TIMEOUT,
                   &timeout);
   }
 
   if (dsrc->opt_WRITETIMEOUT) {
     int timeout = dsrc->opt_WRITETIMEOUT;
-    mysql_options(mysql, MYSQL_OPT_WRITE_TIMEOUT,
+    mysql_options(des, DES_OPT_WRITE_TIMEOUT,
                   &timeout);
   }
 
 /*
   Pluggable authentication was introduced in mysql 5.5.7
 */
-#if MYSQL_VERSION_ID >= 50507
+#if DES_VERSION_ID >= 50507
   if (dsrc->opt_PLUGIN_DIR)
   {
-    mysql_options(mysql, MYSQL_PLUGIN_DIR,
+    mysql_options(des, DES_PLUGIN_DIR,
                   (const char*)dsrc->opt_PLUGIN_DIR);
   }
 
@@ -367,13 +367,13 @@ SQLRETURN DBC::connect(DataSource *dsrc)
       If plugin directory is not set we can use the dll location
       for a better chance of finding plugins.
     */
-    mysql_options(mysql, MYSQL_PLUGIN_DIR, default_plugin_location.c_str());
+    mysql_options(des, DES_PLUGIN_DIR, default_plugin_location.c_str());
   }
 #endif
 
   if (dsrc->opt_DEFAULT_AUTH)
   {
-    mysql_options(mysql, MYSQL_DEFAULT_AUTH,
+    mysql_options(des, DES_DEFAULT_AUTH,
                   (const char*)dsrc->opt_DEFAULT_AUTH);
   }
 
@@ -395,7 +395,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   {
     std::string plugin_name = "authentication_webauthn_client";
     struct st_mysql_client_plugin* plugin =
-      mysql_client_find_plugin(mysql,
+      mysql_client_find_plugin(des,
         plugin_name.c_str(),
         MYSQL_CLIENT_AUTHENTICATION_PLUGIN);
 
@@ -434,7 +434,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   {
     /* load client authentication plugin if required */
     struct st_mysql_client_plugin *plugin =
-        mysql_client_find_plugin(mysql,
+        mysql_client_find_plugin(des,
                                  "authentication_oci_client",
                                  MYSQL_CLIENT_AUTHENTICATION_PLUGIN);
 
@@ -477,13 +477,13 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 #ifdef WIN32
     /* load client authentication plugin if required */
     struct st_mysql_client_plugin* plugin =
-      mysql_client_find_plugin(mysql,
+      mysql_client_find_plugin(des,
         "authentication_kerberos_client",
         MYSQL_CLIENT_AUTHENTICATION_PLUGIN);
 
     if (!plugin)
     {
-      return set_error("HY000", mysql_error(mysql), 0);
+      return set_error("HY000", mysql_error(des), 0);
     }
 
     if (mysql_plugin_options(plugin, "plugin_authentication_kerberos_client_mode",
@@ -506,7 +506,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 #endif
 
 #define SSL_SET(X, Y) \
-   if (dsrc->opt_##X && mysql_options(mysql, MYSQL_OPT_##X,         \
+   if (dsrc->opt_##X && mysql_options(des, DES_OPT_##X,         \
                                       (const char *)dsrc->opt_##X)) \
      return set_error("HY000", "Failed to set " Y, 0);
 
@@ -521,21 +521,21 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 
   SSL_OPTIONS_LIST(SSL_SET);
 
-#if MYSQL_VERSION_ID < 80003
+#if DES_VERSION_ID < 80003
   if (dsrc->SSLVERIFY)
-    mysql_options(mysql, MYSQL_OPT_SSL_VERIFY_SERVER_CERT,
+    mysql_options(des, MYSQL_OPT_SSL_VERIFY_SERVER_CERT,
                   (const char *)&opt_ssl_verify_server_cert);
 #endif
 
-#if MYSQL_VERSION_ID >= 50660
+#if DES_VERSION_ID >= 50660
   if (dsrc->opt_RSAKEY)
   {
     /* Read the public key on the client side */
-    mysql_options(mysql, MYSQL_SERVER_PUBLIC_KEY,
+    mysql_options(des, DES_SERVER_PUBLIC_KEY,
       (const char*)dsrc->opt_RSAKEY);
   }
 #endif
-#if MYSQL_VERSION_ID >= 50710
+#if DES_VERSION_ID >= 50710
   {
     std::string tls_options;
 
@@ -563,7 +563,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     }
 
     if (!tls_options.length() ||
-        mysql_options(mysql, MYSQL_OPT_TLS_VERSION, tls_options.c_str()))
+        mysql_options(des, DES_OPT_TLS_VERSION, tls_options.c_str()))
     {
       return set_error("HY000",
         "SSL connection error: No valid TLS version available", 0);
@@ -571,50 +571,50 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   }
 #endif
 
-#if MYSQL_VERSION_ID >= 80004
+#if DES_VERSION_ID >= 80004
   if (dsrc->opt_GET_SERVER_PUBLIC_KEY)
   {
     /* Get the server public key */
-    mysql_options(mysql, MYSQL_OPT_GET_SERVER_PUBLIC_KEY, (const void*)&on);
+    mysql_options(des, DES_OPT_GET_SERVER_PUBLIC_KEY, (const void*)&on);
   }
 #endif
 
-#if MYSQL_VERSION_ID >= 50610
+#if DES_VERSION_ID >= 50610
   if (dsrc->opt_CAN_HANDLE_EXP_PWD)
   {
-    mysql_options(mysql, MYSQL_OPT_CAN_HANDLE_EXPIRED_PASSWORDS, (char *)&on);
+    mysql_options(des, DES_OPT_CAN_HANDLE_EXPIRED_PASSWORDS, (char *)&on);
   }
 #endif
 
-#if (MYSQL_VERSION_ID >= 50527 && MYSQL_VERSION_ID < 50600) || MYSQL_VERSION_ID >= 50607
+#if (DES_VERSION_ID >= 50527 && DES_VERSION_ID < 50600) || DES_VERSION_ID >= 50607
   if (dsrc->opt_ENABLE_CLEARTEXT_PLUGIN)
   {
-    mysql_options(mysql, MYSQL_ENABLE_CLEARTEXT_PLUGIN, (char *)&on);
+    mysql_options(des, DES_ENABLE_CLEARTEXT_PLUGIN, (char *)&on);
   }
 #endif
 
   if (dsrc->opt_ENABLE_LOCAL_INFILE)
   {
-    mysql_options(mysql, MYSQL_OPT_LOCAL_INFILE, &on_int);
+    mysql_options(des, DES_OPT_LOCAL_INFILE, &on_int);
   }
 
   if (dsrc->opt_LOAD_DATA_LOCAL_DIR)
   {
-    mysql_options(mysql, MYSQL_OPT_LOAD_DATA_LOCAL_DIR,
+    mysql_options(des, DES_OPT_LOAD_DATA_LOCAL_DIR,
                   (const char*)dsrc->opt_LOAD_DATA_LOCAL_DIR);
   }
 
   // Set the connector identification attributes.
   std::string attr_list[][2] = {
-    {"_connector_license", MYODBC_LICENSE},
-    {"_connector_name", "mysql-connector-odbc"},
-    {"_connector_type", MYODBC_STRDRIVERTYPE},
-    {"_connector_version", MYODBC_CONN_ATTR_VER}
+    {"_connector_license", DESODBC_LICENSE},
+    {"_connector_name", "des-connector-odbc"},
+    {"_connector_type", DESODBC_STRDRIVERTYPE},
+    {"_connector_version", DESODBC_CONN_ATTR_VER}
   };
 
   for (auto &val : attr_list)
   {
-    mysql_options4(mysql, MYSQL_OPT_CONNECT_ATTR_ADD,
+    mysql_options4(des, DES_OPT_CONNECT_ATTR_ADD,
       val[0].c_str(), val[1].c_str());
   }
 
@@ -623,7 +623,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   {
     ds_get_utf8attr(dsrc->pwd1, &dsrc->pwd18);
     int fator = 1;
-    mysql_options4(mysql, MYSQL_OPT_USER_PASSWORD,
+    mysql_options4(des, DES_OPT_USER_PASSWORD,
                    &fator,
                    dsrc->pwd18);
   }
@@ -632,7 +632,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   {
     ds_get_utf8attr(dsrc->pwd2, &dsrc->pwd28);
     int fator = 2;
-    mysql_options4(mysql, MYSQL_OPT_USER_PASSWORD,
+    mysql_options4(des, DES_OPT_USER_PASSWORD,
                    &fator,
                    dsrc->pwd28);
   }
@@ -641,12 +641,12 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   {
     ds_get_utf8attr(dsrc->pwd3, &dsrc->pwd38);
     int fator = 3;
-    mysql_options4(mysql, MYSQL_OPT_USER_PASSWORD,
+    mysql_options4(des, DES_OPT_USER_PASSWORD,
                    &fator,
                    dsrc->pwd38);
   }
 #endif
-#if MYSQL_VERSION_ID >= 50711
+#if DES_VERSION_ID >= 50711
   if (dsrc->opt_SSL_MODE)
   {
     unsigned int mode = 0;
@@ -663,7 +663,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 
     // Don't do anything if there is no match with any of the available modes
     if (mode)
-      mysql_options(mysql, MYSQL_OPT_SSL_MODE, &mode);
+      mysql_options(des, DES_OPT_SSL_MODE, &mode);
   }
 #endif
 
@@ -756,29 +756,29 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     if(dsrc->opt_SOCKET)
     {
 #ifdef _WIN32
-      protocol = MYSQL_PROTOCOL_PIPE;
+      protocol = DES_PROTOCOL_PIPE;
 #else
-      protocol = MYSQL_PROTOCOL_SOCKET;
+      protocol = DES_PROTOCOL_SOCKET;
 #endif
     } else
     {
-      protocol = MYSQL_PROTOCOL_TCP;
+      protocol = DES_PROTOCOL_TCP;
     }
-    mysql_options(mysql, MYSQL_OPT_PROTOCOL, &protocol);
+    mysql_options(des, DES_OPT_PROTOCOL, &protocol);
 
     //Setting server and port
     dsrc->opt_SERVER = host;
     dsrc->opt_PORT = port;
 
-    MYSQL *connect_result = dsrc->opt_ENABLE_DNS_SRV ?
-                            mysql_real_connect_dns_srv(mysql,
+    DES *connect_result = dsrc->opt_ENABLE_DNS_SRV ?
+                            mysql_real_connect_dns_srv(des,
                               host,
                               dsrc->opt_UID,
                               dsrc->opt_PWD,
                               dsrc->opt_DATABASE,
                               flags)
                             :
-                            mysql_real_connect(mysql,
+                            mysql_real_connect(des,
                               host,
                               dsrc->opt_UID,
                               dsrc->opt_PWD,
@@ -788,7 +788,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
                               flags);
     if (!connect_result)
     {
-      unsigned int native_error= mysql_errno(mysql);
+      unsigned int native_error= mysql_errno(des);
 
       /* Before 5.6.11 error returned by server was ER_MUST_CHANGE_PASSWORD(1820).
        In 5.6.11 it changed to ER_MUST_CHANGE_PASSWORD_LOGIN(1862)
@@ -798,7 +798,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
         native_error= ER_MUST_CHANGE_PASSWORD_LOGIN;
       }
 
-#if MYSQL_VERSION_ID < 50610
+#if DES_VERSION_ID < 50610
       /* In that special case when the driver was linked against old version of libmysql*/
       if (native_error == ER_MUST_CHANGE_PASSWORD_LOGIN
           && dsrc->CAN_HANDLE_EXP_PWD)
@@ -812,7 +812,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
                               "this functionlaity", 0);
       }
 #endif
-      set_error("HY000", mysql_error(mysql), native_error);
+      set_error("HY000", mysql_error(des), native_error);
 
       translate_error((char*)error.sqlstate.c_str(), DESERR_S1000, native_error);
 
@@ -847,7 +847,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
       }
       else
       {
-        switch (mysql_errno(mysql))
+        switch (mysql_errno(des))
         {
         case ER_CON_COUNT_ERROR:
         case CR_SOCKET_CREATE_ERROR:
@@ -859,7 +859,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
           break;
         default:
           //If SQLSTATE not 08xxx, which is used for network errors
-          if(strncmp(mysql_sqlstate(mysql), "08", 2) != 0)
+          if(strncmp(mysql_sqlstate(des), "08", 2) != 0)
           {
             //Return error and do not try another host
             return SQL_ERROR;
@@ -886,9 +886,9 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     }
   }
 
-  has_query_attrs = mysql->server_capabilities & CLIENT_QUERY_ATTRIBUTES;
+  has_query_attrs = des->server_capabilities & CLIENT_QUERY_ATTRIBUTES;
 
-  if (!is_minimum_version(mysql->server_version, "4.1.1"))
+  if (!is_minimum_version(des->server_version, "4.1.1"))
   {
     close();
     return set_error("08001", "Driver does not support server versions under 4.1.1", 0);
@@ -938,24 +938,24 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     query_log = init_query_log();
 
   /* Set the statement error prefix based on the server version. */
-  desodbc::strxmov(st_error_prefix, DESODBC_ERROR_PREFIX, "[mysqld-",
-          mysql->server_version, "]", NullS);
+  desodbc::strxmov(st_error_prefix, DESODBC_ERROR_PREFIX, "[desd-",
+          des->server_version, "]", NullS);
 
   /*
     This variable will be needed later to process possible
-    errors when setting MYSQL_OPT_RECONNECT when client lib
+    errors when setting DES_OPT_RECONNECT when client lib
     used at runtime does not support it.
   */
   int set_reconnect_result = 0;
-#if MYSQL_VERSION_ID < 80300
+#if DES_VERSION_ID < 80300
   /* This needs to be set after connection, or it doesn't stick.  */
   if (ds.opt_AUTO_RECONNECT)
   {
-    set_reconnect_result = mysql_options(mysql,
-      MYSQL_OPT_RECONNECT, (char *)&on);
+    set_reconnect_result = mysql_options(des,
+      DES_OPT_RECONNECT, (char *)&on);
   }
 #else
-  /* MYSQL_OPT_RECONNECT doesn't exist at build time, report warning later. */
+  /* DES_OPT_RECONNECT doesn't exist at build time, report warning later. */
   set_reconnect_result = 1;
 #endif
 
@@ -970,7 +970,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
              "SQL_AUTOCOMMIT_OFF changed to SQL_AUTOCOMMIT_ON",
              SQL_SUCCESS_WITH_INFO);
     }
-    else if (autocommit_is_on() && mysql_autocommit(mysql, FALSE))
+    else if (autocommit_is_on() && mysql_autocommit(des, FALSE))
     {
       /** @todo set error */
       return SQL_ERROR;
@@ -979,7 +979,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   else if ((commit_flag == CHECK_AUTOCOMMIT_ON) &&
            transactions_supported() && !autocommit_is_on())
   {
-    if (mysql_autocommit(mysql, TRUE))
+    if (mysql_autocommit(des, TRUE))
     {
       /** @todo set error */
       return SQL_ERROR;
@@ -1048,7 +1048,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     rc = SQL_SUCCESS_WITH_INFO;
   }
 
-  mysql_get_option(mysql, MYSQL_OPT_NET_BUFFER_LENGTH, &net_buffer_len);
+  mysql_get_option(des, DES_OPT_NET_BUFFER_LENGTH, &net_buffer_len);
 
   guard.set_success(rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO);
   return rc;
@@ -1522,10 +1522,10 @@ SQLRETURN DBC::execute_query(const char* query,
   }
 
   if (check_if_server_is_alive(this) ||
-    mysql_real_query(mysql, query, (unsigned long)query_length))
+    mysql_real_query(des, query, (unsigned long)query_length))
   {
-    result = set_error(DESERR_S1000, mysql_error(mysql),
-      mysql_errno(mysql));
+    result = set_error(DESERR_S1000, mysql_error(des),
+      mysql_errno(des));
   }
 
   return result;

@@ -91,9 +91,9 @@ SQLRETURN exec_stmt_query_std(STMT *stmt, const std::string &query,
   @param[in] fields      The fields to attach to the statement
   @param[in] field_count The number of fields
 */
-void desodbc_link_fields(STMT *stmt, MYSQL_FIELD *fields, uint field_count)
+void desodbc_link_fields(STMT *stmt, DES_FIELD *fields, uint field_count)
 {
-    MYSQL_RES *result;
+    DES_RES *result;
     assert(stmt);
     LOCK_DBC(stmt->dbc);
     result= stmt->result;
@@ -145,9 +145,9 @@ void fix_row_lengths(STMT *stmt, const long* fix_rules, uint row, uint field_cou
 void fix_result_types(STMT *stmt)
 {
   uint i;
-  MYSQL_RES *result= stmt->result;
+  DES_RES *result= stmt->result;
   DESCREC *irrec;
-  MYSQL_FIELD *field;
+  DES_FIELD *field;
   int capint32= stmt->dbc->ds.opt_COLUMN_SIZE_S32 ? 1 : 0;
 
   stmt->state= ST_EXECUTED;  /* Mark set found */
@@ -209,7 +209,7 @@ void fix_result_types(STMT *stmt)
     }
     irrec->scale= myodbc_max(0, get_decimal_digits(stmt, field));
     if ((field->flags & NOT_NULL_FLAG) &&
-        !(field->type == MYSQL_TYPE_TIMESTAMP) &&
+        !(field->type == DES_TYPE_TIMESTAMP) &&
         !(field->flags & AUTO_INCREMENT_FLAG))
       irrec->nullable= SQL_NO_NULLS;
     else
@@ -241,30 +241,30 @@ void fix_result_types(STMT *stmt)
     irrec->fixed_prec_scale= SQL_FALSE;
     switch (field->type)
     {
-    case MYSQL_TYPE_LONG_BLOB:
-    case MYSQL_TYPE_TINY_BLOB:
-    case MYSQL_TYPE_MEDIUM_BLOB:
-    case MYSQL_TYPE_BLOB:
-    case MYSQL_TYPE_VAR_STRING:
-    case MYSQL_TYPE_STRING:
-    case MYSQL_TYPE_JSON:
+    case DES_TYPE_LONG_BLOB:
+    case DES_TYPE_TINY_BLOB:
+    case DES_TYPE_MEDIUM_BLOB:
+    case DES_TYPE_BLOB:
+    case DES_TYPE_VAR_STRING:
+    case DES_TYPE_STRING:
+    case DES_TYPE_JSON:
       if (field->charsetnr == BINARY_CHARSET_NUMBER)
       {
         irrec->literal_prefix= (SQLCHAR *) "0x";
         irrec->literal_suffix= (SQLCHAR *) "";
         // The charset number must be only changed for JSON
-        if (field->type == MYSQL_TYPE_JSON)
+        if (field->type == DES_TYPE_JSON)
           field->charsetnr = UTF8_CHARSET_NUMBER;
         break;
       }
       /* FALLTHROUGH */
 
-    case MYSQL_TYPE_DATE:
-    case MYSQL_TYPE_DATETIME:
-    case MYSQL_TYPE_NEWDATE:
-    case MYSQL_TYPE_TIMESTAMP:
-    case MYSQL_TYPE_TIME:
-    case MYSQL_TYPE_YEAR:
+    case DES_TYPE_DATE:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_NEWDATE:
+    case DES_TYPE_TIMESTAMP:
+    case DES_TYPE_TIME:
+    case DES_TYPE_YEAR:
       irrec->literal_prefix= (SQLCHAR *) "'";
       irrec->literal_suffix= (SQLCHAR *) "'";
       break;
@@ -279,22 +279,22 @@ void fix_result_types(STMT *stmt)
       irrec->literal_suffix= (SQLCHAR *) "";
     }
     switch (field->type) {
-    case MYSQL_TYPE_SHORT:
-    case MYSQL_TYPE_LONG:
-    case MYSQL_TYPE_LONGLONG:
-    case MYSQL_TYPE_INT24:
-    case MYSQL_TYPE_TINY:
-    case MYSQL_TYPE_DECIMAL:
+    case DES_TYPE_SHORT:
+    case DES_TYPE_LONG:
+    case DES_TYPE_LONGLONG:
+    case DES_TYPE_INT24:
+    case DES_TYPE_TINY:
+    case DES_TYPE_DECIMAL:
       irrec->num_prec_radix= 10;
       break;
 
     /* overwrite irrec->precision set above */
-    case MYSQL_TYPE_FLOAT:
+    case DES_TYPE_FLOAT:
       irrec->num_prec_radix= 2;
       irrec->precision= 23;
       break;
 
-    case MYSQL_TYPE_DOUBLE:
+    case DES_TYPE_DOUBLE:
       irrec->num_prec_radix= 2;
       irrec->precision= 53;
       break;
@@ -371,7 +371,7 @@ char *fix_str(char *to, const char *from, int length)
 SQLRETURN
 copy_binary_result(STMT *stmt,
                    SQLCHAR *result, SQLLEN result_bytes, SQLLEN *avail_bytes,
-                   MYSQL_FIELD *field __attribute__((unused)),
+                   DES_FIELD *field __attribute__((unused)),
                    char *src, unsigned long src_bytes)
 {
   SQLRETURN rc= SQL_SUCCESS;
@@ -436,7 +436,7 @@ copy_binary_result(STMT *stmt,
 SQLRETURN
 copy_ansi_result(STMT *stmt,
                  SQLCHAR *result, SQLLEN result_bytes, SQLLEN *avail_bytes,
-                 MYSQL_FIELD *field, char *src, unsigned long src_bytes)
+                 DES_FIELD *field, char *src, unsigned long src_bytes)
 {
   SQLRETURN rc= SQL_SUCCESS;
 
@@ -484,7 +484,7 @@ copy_ansi_result(STMT *stmt,
 SQLRETURN
 copy_wchar_result(STMT *stmt,
                   SQLWCHAR *result, SQLINTEGER result_len, SQLLEN *avail_bytes,
-                  MYSQL_FIELD *field, char *src, long src_bytes)
+                  DES_FIELD *field, char *src, long src_bytes)
 {
   SQLRETURN rc= SQL_SUCCESS;
   char *src_end;
@@ -766,7 +766,7 @@ template<typename T>
 SQLRETURN do_copy_bit_result(STMT *stmt,
                              T *result, SQLLEN result_bytes,
                              SQLLEN *avail_bytes,
-                             MYSQL_FIELD *field __attribute__((unused)),
+                             DES_FIELD *field __attribute__((unused)),
                              char *src, unsigned long src_bytes)
 {
   // We need 2 chars, otherwise Don't copy anything! */
@@ -814,7 +814,7 @@ SQLRETURN do_copy_bit_result(STMT *stmt,
 
 SQLRETURN copy_bit_result(STMT *stmt,
                           SQLCHAR *result, SQLLEN result_bytes, SQLLEN *avail_bytes,
-                          MYSQL_FIELD *field __attribute__((unused)),
+                          DES_FIELD *field __attribute__((unused)),
                           char *src, unsigned long src_bytes)
 {
   return do_copy_bit_result<SQLCHAR>(stmt, result, result_bytes, avail_bytes, field,
@@ -823,7 +823,7 @@ SQLRETURN copy_bit_result(STMT *stmt,
 
 SQLRETURN wcopy_bit_result(STMT *stmt,
                           SQLWCHAR *result, SQLLEN result_bytes, SQLLEN *avail_bytes,
-                          MYSQL_FIELD *field __attribute__((unused)),
+                          DES_FIELD *field __attribute__((unused)),
                           char *src, unsigned long src_bytes)
 {
   return do_copy_bit_result<SQLWCHAR>(stmt, result, result_bytes, avail_bytes, field,
@@ -918,7 +918,7 @@ SQLSMALLINT compute_sql_data_type(STMT *stmt, SQLSMALLINT sql_type,
 
 
 /**
-  Get the SQL data type and (optionally) type name for a MYSQL_FIELD.
+  Get the SQL data type and (optionally) type name for a DES_FIELD.
 
   @param[in]  stmt
   @param[in]  field
@@ -926,7 +926,7 @@ SQLSMALLINT compute_sql_data_type(STMT *stmt, SQLSMALLINT sql_type,
 
   @return  The SQL data type.
 */
-SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
+SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
 {
   des_bool field_is_binary= (field->charsetnr == BINARY_CHARSET_NUMBER ? 1 : 0) &&
                            ((field->org_table_length > 0 ? 1 : 0) ||
@@ -942,13 +942,13 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     */
     return (field->length > 1) ? SQL_BINARY : SQL_BIT;
 
-  case MYSQL_TYPE_DECIMAL:
+  case DES_TYPE_DECIMAL:
   case DES_TYPE_NEWDECIMAL:
     if (buff)
       (void)desodbc_stpmov(buff, "decimal");
     return SQL_DECIMAL;
 
-  case MYSQL_TYPE_TINY:
+  case DES_TYPE_TINY:
     /* MYSQL_TYPE_TINY could either be a TINYINT or a single CHAR. */
     if (buff)
     {
@@ -958,7 +958,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     }
     return (field->flags & NUM_FLAG) ? SQL_TINYINT : SQL_CHAR;
 
-  case MYSQL_TYPE_SHORT:
+  case DES_TYPE_SHORT:
     if (buff)
     {
       buff= desodbc_stpmov(buff, "smallint");
@@ -967,7 +967,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     }
     return SQL_SMALLINT;
 
-  case MYSQL_TYPE_INT24:
+  case DES_TYPE_INT24:
     if (buff)
     {
       buff= desodbc_stpmov(buff, "mediumint");
@@ -976,7 +976,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     }
     return SQL_INTEGER;
 
-  case MYSQL_TYPE_LONG:
+  case DES_TYPE_LONG:
     if (buff)
     {
       buff= desodbc_stpmov(buff, "integer");
@@ -985,7 +985,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     }
     return SQL_INTEGER;
 
-  case MYSQL_TYPE_LONGLONG:
+  case DES_TYPE_LONGLONG:
     if (buff)
     {
       if (stmt->dbc->ds.opt_NO_BIGINT)
@@ -1002,7 +1002,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
 
     return SQL_BIGINT;
 
-  case MYSQL_TYPE_FLOAT:
+  case DES_TYPE_FLOAT:
     if (buff)
     {
       buff= desodbc_stpmov(buff, "float");
@@ -1011,7 +1011,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     }
     return SQL_REAL;
 
-  case MYSQL_TYPE_DOUBLE:
+  case DES_TYPE_DOUBLE:
     if (buff)
     {
       buff= desodbc_stpmov(buff, "double");
@@ -1020,46 +1020,46 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     }
     return SQL_DOUBLE;
 
-  case MYSQL_TYPE_NULL:
+  case DES_TYPE_NULL:
     if (buff)
       (void)desodbc_stpmov(buff, "null");
     return SQL_VARCHAR;
 
-  case MYSQL_TYPE_YEAR:
+  case DES_TYPE_YEAR:
     if (buff)
       (void)desodbc_stpmov(buff, "year");
     return SQL_SMALLINT;
 
-  case MYSQL_TYPE_TIMESTAMP:
+  case DES_TYPE_TIMESTAMP:
     if (buff)
       (void)desodbc_stpmov(buff, "timestamp");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_TIMESTAMP;
     return SQL_TIMESTAMP;
 
-  case MYSQL_TYPE_DATETIME:
+  case DES_TYPE_DATETIME:
     if (buff)
       (void)desodbc_stpmov(buff, "datetime");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_TIMESTAMP;
     return SQL_TIMESTAMP;
 
-  case MYSQL_TYPE_NEWDATE:
-  case MYSQL_TYPE_DATE:
+  case DES_TYPE_NEWDATE:
+  case DES_TYPE_DATE:
     if (buff)
       (void)desodbc_stpmov(buff, "date");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_DATE;
     return SQL_DATE;
 
-  case MYSQL_TYPE_TIME:
+  case DES_TYPE_TIME:
     if (buff)
       (void)desodbc_stpmov(buff, "time");
     if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
       return SQL_TYPE_TIME;
     return SQL_TIME;
 
-  case MYSQL_TYPE_STRING:
+  case DES_TYPE_STRING:
     if (buff)
       (void)desodbc_stpmov(buff, field_is_binary ? "binary" : "char");
 
@@ -1069,11 +1069,11 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       (stmt->dbc->unicode ? SQL_WCHAR : SQL_CHAR);
 
   /*
-    MYSQL_TYPE_VARCHAR is never actually sent, this just silences
+    DES_TYPE_VARCHAR is never actually sent, this just silences
     a compiler warning.
   */
-  case MYSQL_TYPE_VARCHAR:
-  case MYSQL_TYPE_VAR_STRING:
+  case DES_TYPE_VARCHAR:
+  case DES_TYPE_VAR_STRING:
     if (buff)
       (void)desodbc_stpmov(buff, field_is_binary ? "varbinary" : "varchar");
 
@@ -1081,7 +1081,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
        SQL_WVARCHAR : SQL_VARCHAR);
 
-  case MYSQL_TYPE_TINY_BLOB:
+  case DES_TYPE_TINY_BLOB:
     if (buff)
       (void)desodbc_stpmov(buff, field_is_binary ? "tinyblob" : "tinytext");
 
@@ -1089,7 +1089,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
        SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
 
-  case MYSQL_TYPE_BLOB:
+  case DES_TYPE_BLOB:
     if (buff)
     {
       switch(field->length)
@@ -1111,7 +1111,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
        SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
 
-  case MYSQL_TYPE_MEDIUM_BLOB:
+  case DES_TYPE_MEDIUM_BLOB:
     if (buff)
       (void)desodbc_stpmov(buff, field_is_binary ? "mediumblob" : "mediumtext");
 
@@ -1119,7 +1119,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
        SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
 
-  case MYSQL_TYPE_LONG_BLOB:
+  case DES_TYPE_LONG_BLOB:
     if (buff)
       (void)desodbc_stpmov(buff, field_is_binary ? "longblob" : "longtext");
 
@@ -1127,22 +1127,22 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
        SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
 
-  case MYSQL_TYPE_ENUM:
+  case DES_TYPE_ENUM:
     if (buff)
       (void)desodbc_stpmov(buff, "enum");
     return SQL_CHAR;
 
-  case MYSQL_TYPE_SET:
+  case DES_TYPE_SET:
     if (buff)
       (void)desodbc_stpmov(buff, "set");
     return SQL_CHAR;
 
-  case MYSQL_TYPE_GEOMETRY:
+  case DES_TYPE_GEOMETRY:
     if (buff)
       (void)desodbc_stpmov(buff, "geometry");
     return SQL_LONGVARBINARY;
 
-  case MYSQL_TYPE_JSON:
+  case DES_TYPE_JSON:
     if (buff)
       (void)desodbc_stpmov(buff, "json");
     return stmt->dbc->unicode ? SQL_WLONGVARCHAR : SQL_LONGVARCHAR;
@@ -1167,7 +1167,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
 
   @return  void
 */
-SQLLEN fill_display_size_buff(char *buff, STMT *stmt, MYSQL_FIELD *field)
+SQLLEN fill_display_size_buff(char *buff, STMT *stmt, DES_FIELD *field)
 {
   /* See comment for fill_transfer_oct_len_buff()*/
   SQLLEN size= get_display_size(stmt, field);
@@ -1185,7 +1185,7 @@ SQLLEN fill_display_size_buff(char *buff, STMT *stmt, MYSQL_FIELD *field)
 
   @return  void
 */
-SQLLEN fill_transfer_oct_len_buff(char *buff, STMT *stmt, MYSQL_FIELD *field)
+SQLLEN fill_transfer_oct_len_buff(char *buff, STMT *stmt, DES_FIELD *field)
 {
   /* The only possible negative value get_transfer_octet_length can return is SQL_NO_TOTAL
      But it can return value which is greater that biggest signed integer(%ld).
@@ -1208,7 +1208,7 @@ SQLLEN fill_transfer_oct_len_buff(char *buff, STMT *stmt, MYSQL_FIELD *field)
 
   @return  void
 */
-SQLULEN fill_column_size_buff(char *buff, STMT *stmt, MYSQL_FIELD *field)
+SQLULEN fill_column_size_buff(char *buff, STMT *stmt, DES_FIELD *field)
 {
   SQLULEN size= get_column_size(stmt, field);
   sprintf(buff, (size== SQL_NO_TOTAL ? "%d" :
@@ -1249,7 +1249,7 @@ SQLULEN get_column_size_from_str(STMT *stmt, const char *size_str)
 
   @return  The column size of the field
 */
-SQLULEN get_column_size(STMT *stmt, MYSQL_FIELD *field)
+SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
 {
   SQLULEN length= field->length;
   /* Work around a bug in some versions of the server. */
@@ -1259,48 +1259,48 @@ SQLULEN get_column_size(STMT *stmt, MYSQL_FIELD *field)
   length= cap_length(stmt, (unsigned long)length);
 
   switch (field->type) {
-  case MYSQL_TYPE_TINY:
+  case DES_TYPE_TINY:
     return (field->flags & NUM_FLAG) ? 3 : 1;
 
-  case MYSQL_TYPE_SHORT:
+  case DES_TYPE_SHORT:
     return 5;
 
-  case MYSQL_TYPE_LONG:
+  case DES_TYPE_LONG:
     return 10;
 
-  case MYSQL_TYPE_FLOAT:
+  case DES_TYPE_FLOAT:
     return 7;
 
-  case MYSQL_TYPE_DOUBLE:
+  case DES_TYPE_DOUBLE:
     return 15;
 
-  case MYSQL_TYPE_NULL:
+  case DES_TYPE_NULL:
     return 0;
 
-  case MYSQL_TYPE_LONGLONG:
+  case DES_TYPE_LONGLONG:
     if (stmt->dbc->ds.opt_NO_BIGINT)
       return 10; /* same as MYSQL_TYPE_LONG */
     else
       return (field->flags & UNSIGNED_FLAG) ? 20 : 19;
 
-  case MYSQL_TYPE_INT24:
+  case DES_TYPE_INT24:
     return 8;
 
-  case MYSQL_TYPE_DATE:
+  case DES_TYPE_DATE:
     return 10;
 
-  case MYSQL_TYPE_TIME:
+  case DES_TYPE_TIME:
     return 8;
 
-  case MYSQL_TYPE_TIMESTAMP:
-  case MYSQL_TYPE_DATETIME:
-  case MYSQL_TYPE_NEWDATE:
+  case DES_TYPE_TIMESTAMP:
+  case DES_TYPE_DATETIME:
+  case DES_TYPE_NEWDATE:
     return 19;
 
-  case MYSQL_TYPE_YEAR:
+  case DES_TYPE_YEAR:
     return 4;
 
-  case MYSQL_TYPE_DECIMAL:
+  case DES_TYPE_DECIMAL:
   case DES_TYPE_NEWDECIMAL:
     return (length -
             (!(field->flags & UNSIGNED_FLAG) ? 1:  0) - /* sign? */
@@ -1315,23 +1315,23 @@ SQLULEN get_column_size(STMT *stmt, MYSQL_FIELD *field)
       return 1;
     return (length + 7) / 8;
 
-  case MYSQL_TYPE_ENUM:
-  case MYSQL_TYPE_SET:
-  case MYSQL_TYPE_VARCHAR:
-  case MYSQL_TYPE_VAR_STRING:
-  case MYSQL_TYPE_STRING:
-  case MYSQL_TYPE_TINY_BLOB:
-  case MYSQL_TYPE_MEDIUM_BLOB:
-  case MYSQL_TYPE_LONG_BLOB:
-  case MYSQL_TYPE_BLOB:
-  case MYSQL_TYPE_GEOMETRY:
+  case DES_TYPE_ENUM:
+  case DES_TYPE_SET:
+  case DES_TYPE_VARCHAR:
+  case DES_TYPE_VAR_STRING:
+  case DES_TYPE_STRING:
+  case DES_TYPE_TINY_BLOB:
+  case DES_TYPE_MEDIUM_BLOB:
+  case DES_TYPE_LONG_BLOB:
+  case DES_TYPE_BLOB:
+  case DES_TYPE_GEOMETRY:
     // For LONGTEXT we must return 4G or 2G if it was capped.
     if (length >= INT32_MAX)
       return length;
     // For BINARY charset the maxlen is 1, so the result
     // will be the byte length.
     return length / get_charset_maxlen(field->charsetnr);
-  case MYSQL_TYPE_JSON:
+  case DES_TYPE_JSON:
     return UINT32_MAX / 4; // Because JSON is always UTF8MB4
   case DES_TYPE_VECTOR:
     return length / 4; // Length should be the number of elements in VECTOR
@@ -1354,23 +1354,23 @@ SQLULEN get_column_size(STMT *stmt, MYSQL_FIELD *field)
   or SQL_DESC_PRECISION for some data types.
 */
 SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
-                          MYSQL_FIELD *field)
+                          DES_FIELD *field)
 {
   switch (field->type) {
-  case MYSQL_TYPE_DECIMAL:
+  case DES_TYPE_DECIMAL:
   case DES_TYPE_NEWDECIMAL:
     return field->decimals;
 
   /* All exact numeric types. */
-  case MYSQL_TYPE_TINY:
-  case MYSQL_TYPE_SHORT:
-  case MYSQL_TYPE_LONG:
-  case MYSQL_TYPE_LONGLONG:
-  case MYSQL_TYPE_INT24:
-  case MYSQL_TYPE_YEAR:
-  case MYSQL_TYPE_TIME:
-  case MYSQL_TYPE_TIMESTAMP:
-  case MYSQL_TYPE_DATETIME:
+  case DES_TYPE_TINY:
+  case DES_TYPE_SHORT:
+  case DES_TYPE_LONG:
+  case DES_TYPE_LONGLONG:
+  case DES_TYPE_INT24:
+  case DES_TYPE_YEAR:
+  case DES_TYPE_TIME:
+  case DES_TYPE_TIMESTAMP:
+  case DES_TYPE_DATETIME:
     return 0;
 
   /* We treat DES_TYPE_BIT as an exact numeric type only for BIT(1). */
@@ -1397,7 +1397,7 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
 
   @return  The transfer octet length
 */
-SQLLEN get_transfer_octet_length(STMT *stmt, MYSQL_FIELD *field)
+SQLLEN get_transfer_octet_length(STMT *stmt, DES_FIELD *field)
 {
   int capint32= stmt->dbc->ds.opt_COLUMN_SIZE_S32 ? 1 : 0;
   SQLLEN length;
@@ -1408,45 +1408,45 @@ SQLLEN get_transfer_octet_length(STMT *stmt, MYSQL_FIELD *field)
     length= field->length;
 
   switch (field->type) {
-  case MYSQL_TYPE_TINY:
+  case DES_TYPE_TINY:
     return 1;
 
-  case MYSQL_TYPE_SHORT:
+  case DES_TYPE_SHORT:
     return 2;
 
-  case MYSQL_TYPE_INT24:
+  case DES_TYPE_INT24:
     return 3;
 
-  case MYSQL_TYPE_LONG:
+  case DES_TYPE_LONG:
     return 4;
 
-  case MYSQL_TYPE_FLOAT:
+  case DES_TYPE_FLOAT:
     return 4;
 
-  case MYSQL_TYPE_DOUBLE:
+  case DES_TYPE_DOUBLE:
     return 8;
 
-  case MYSQL_TYPE_NULL:
+  case DES_TYPE_NULL:
     return 1;
 
-  case MYSQL_TYPE_LONGLONG:
+  case DES_TYPE_LONGLONG:
     return 20;
 
-  case MYSQL_TYPE_DATE:
+  case DES_TYPE_DATE:
     return sizeof(SQL_DATE_STRUCT);
 
-  case MYSQL_TYPE_TIME:
+  case DES_TYPE_TIME:
     return sizeof(SQL_TIME_STRUCT);
 
-  case MYSQL_TYPE_TIMESTAMP:
-  case MYSQL_TYPE_DATETIME:
-  case MYSQL_TYPE_NEWDATE:
+  case DES_TYPE_TIMESTAMP:
+  case DES_TYPE_DATETIME:
+  case DES_TYPE_NEWDATE:
     return sizeof(SQL_TIMESTAMP_STRUCT);
 
-  case MYSQL_TYPE_YEAR:
+  case DES_TYPE_YEAR:
     return 1;
 
-  case MYSQL_TYPE_DECIMAL:
+  case DES_TYPE_DECIMAL:
   case DES_TYPE_NEWDECIMAL:
     return field->length;
 
@@ -1458,7 +1458,7 @@ SQLLEN get_transfer_octet_length(STMT *stmt, MYSQL_FIELD *field)
     */
     return (field->length + 7) / 8;
 
-  case MYSQL_TYPE_STRING:
+  case DES_TYPE_STRING:
     if (stmt->dbc->ds.opt_PAD_SPACE)
     {
       unsigned int csmaxlen = get_charset_maxlen(field->charsetnr);
@@ -1474,16 +1474,16 @@ SQLLEN get_transfer_octet_length(STMT *stmt, MYSQL_FIELD *field)
     }
     /* FALLTHROUGH */
 
-  case MYSQL_TYPE_ENUM:
-  case MYSQL_TYPE_SET:
-  case MYSQL_TYPE_VARCHAR:
-  case MYSQL_TYPE_VAR_STRING:
-  case MYSQL_TYPE_TINY_BLOB:
-  case MYSQL_TYPE_MEDIUM_BLOB:
-  case MYSQL_TYPE_LONG_BLOB:
-  case MYSQL_TYPE_BLOB:
-  case MYSQL_TYPE_GEOMETRY:
-  case MYSQL_TYPE_JSON:
+  case DES_TYPE_ENUM:
+  case DES_TYPE_SET:
+  case DES_TYPE_VARCHAR:
+  case DES_TYPE_VAR_STRING:
+  case DES_TYPE_TINY_BLOB:
+  case DES_TYPE_MEDIUM_BLOB:
+  case DES_TYPE_LONG_BLOB:
+  case DES_TYPE_BLOB:
+  case DES_TYPE_GEOMETRY:
+  case DES_TYPE_JSON:
     {
       if (capint32 && length > INT_MAX32)
         length= INT_MAX32;
@@ -1506,51 +1506,51 @@ SQLLEN get_transfer_octet_length(STMT *stmt, MYSQL_FIELD *field)
 
   @return  The display size
 */
-SQLLEN get_display_size(STMT *stmt __attribute__((unused)),MYSQL_FIELD *field)
+SQLLEN get_display_size(STMT *stmt __attribute__((unused)),DES_FIELD *field)
 {
   int capint32 = stmt->dbc->ds.opt_COLUMN_SIZE_S32 ? 1 : 0;
   unsigned int mbmaxlen = get_charset_maxlen(field->charsetnr);
 
   switch (field->type) {
-  case MYSQL_TYPE_TINY:
+  case DES_TYPE_TINY:
     return 3 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
 
-  case MYSQL_TYPE_SHORT:
+  case DES_TYPE_SHORT:
     return 5 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
 
-  case MYSQL_TYPE_INT24:
+  case DES_TYPE_INT24:
     return 8 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
 
-  case MYSQL_TYPE_LONG:
+  case DES_TYPE_LONG:
     return 10 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
 
-  case MYSQL_TYPE_FLOAT:
+  case DES_TYPE_FLOAT:
     return 14;
 
-  case MYSQL_TYPE_DOUBLE:
+  case DES_TYPE_DOUBLE:
     return 24;
 
-  case MYSQL_TYPE_NULL:
+  case DES_TYPE_NULL:
     return 1;
 
-  case MYSQL_TYPE_LONGLONG:
+  case DES_TYPE_LONGLONG:
     return 20;
 
-  case MYSQL_TYPE_DATE:
+  case DES_TYPE_DATE:
     return 10;
 
-  case MYSQL_TYPE_TIME:
+  case DES_TYPE_TIME:
     return 8;
 
-  case MYSQL_TYPE_TIMESTAMP:
-  case MYSQL_TYPE_DATETIME:
-  case MYSQL_TYPE_NEWDATE:
+  case DES_TYPE_TIMESTAMP:
+  case DES_TYPE_DATETIME:
+  case DES_TYPE_NEWDATE:
     return 19;
 
-  case MYSQL_TYPE_YEAR:
+  case DES_TYPE_YEAR:
     return 4;
 
-  case MYSQL_TYPE_DECIMAL:
+  case DES_TYPE_DECIMAL:
   case DES_TYPE_NEWDECIMAL:
     return field->length;
 
@@ -1564,22 +1564,22 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),MYSQL_FIELD *field)
       return 1;
     return (field->length + 7) / 8 * 2;
 
-  case MYSQL_TYPE_TINY_BLOB:
-  case MYSQL_TYPE_MEDIUM_BLOB:
-  case MYSQL_TYPE_LONG_BLOB:
-  case MYSQL_TYPE_BLOB:
+  case DES_TYPE_TINY_BLOB:
+  case DES_TYPE_MEDIUM_BLOB:
+  case DES_TYPE_LONG_BLOB:
+  case DES_TYPE_BLOB:
     // For these types the storage is in bytes and it is fixed,
     // not specified by the user.
     // The driver must give the maximum possible display size.
     mbmaxlen = 1;
     // Fall through
 
-  case MYSQL_TYPE_ENUM:
-  case MYSQL_TYPE_SET:
-  case MYSQL_TYPE_VARCHAR:
-  case MYSQL_TYPE_VAR_STRING:
-  case MYSQL_TYPE_STRING:
-  case MYSQL_TYPE_GEOMETRY:
+  case DES_TYPE_ENUM:
+  case DES_TYPE_SET:
+  case DES_TYPE_VARCHAR:
+  case DES_TYPE_VAR_STRING:
+  case DES_TYPE_STRING:
+  case DES_TYPE_GEOMETRY:
     {
       unsigned long length;
       if (field->charsetnr == BINARY_CHARSET_NUMBER)
@@ -1591,7 +1591,7 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),MYSQL_FIELD *field)
         length= INT_MAX32;
       return length;
     }
-  case MYSQL_TYPE_JSON:
+  case DES_TYPE_JSON:
     return UINT_MAX32 / 4; // 4 is the character size in UTF8MB4
   case DES_TYPE_VECTOR:
     return 15 * (field->length / 4) + 1;
@@ -1755,7 +1755,7 @@ SQLSMALLINT get_type_from_concise_type(SQLSMALLINT concise_type)
   @purpose : returns internal type to C type
 */
 
-int unireg_to_c_datatype(MYSQL_FIELD *field)
+int unireg_to_c_datatype(DES_FIELD *field)
 {
     switch ( field->type )
     {
@@ -1765,34 +1765,34 @@ int unireg_to_c_datatype(MYSQL_FIELD *field)
               treat it as a BINARY field.
             */
             return (field->length > 1) ? SQL_C_BINARY : SQL_C_BIT;
-        case MYSQL_TYPE_TINY:
+        case DES_TYPE_TINY:
             return SQL_C_TINYINT;
-        case MYSQL_TYPE_YEAR:
-        case MYSQL_TYPE_SHORT:
+        case DES_TYPE_YEAR:
+        case DES_TYPE_SHORT:
             return SQL_C_SHORT;
-        case MYSQL_TYPE_INT24:
-        case MYSQL_TYPE_LONG:
+        case DES_TYPE_INT24:
+        case DES_TYPE_LONG:
             return SQL_C_LONG;
-        case MYSQL_TYPE_FLOAT:
+        case DES_TYPE_FLOAT:
             return SQL_C_FLOAT;
-        case MYSQL_TYPE_DOUBLE:
+        case DES_TYPE_DOUBLE:
             return SQL_C_DOUBLE;
-        case MYSQL_TYPE_TIMESTAMP:
-        case MYSQL_TYPE_DATETIME:
+        case DES_TYPE_TIMESTAMP:
+        case DES_TYPE_DATETIME:
             return SQL_C_TIMESTAMP;
-        case MYSQL_TYPE_NEWDATE:
-        case MYSQL_TYPE_DATE:
+        case DES_TYPE_NEWDATE:
+        case DES_TYPE_DATE:
             return SQL_C_DATE;
-        case MYSQL_TYPE_TIME:
+        case DES_TYPE_TIME:
             return SQL_C_TIME;
-        case MYSQL_TYPE_BLOB:
-        case MYSQL_TYPE_TINY_BLOB:
-        case MYSQL_TYPE_MEDIUM_BLOB:
-        case MYSQL_TYPE_LONG_BLOB:
-        case MYSQL_TYPE_JSON:
+        case DES_TYPE_BLOB:
+        case DES_TYPE_TINY_BLOB:
+        case DES_TYPE_MEDIUM_BLOB:
+        case DES_TYPE_LONG_BLOB:
+        case DES_TYPE_JSON:
         case DES_TYPE_VECTOR:
             return SQL_C_BINARY;
-        case MYSQL_TYPE_LONGLONG: /* Must be returned as char */
+        case DES_TYPE_LONGLONG: /* Must be returned as char */
         default:
             return SQL_C_CHAR;
     }
@@ -2215,7 +2215,7 @@ int check_if_server_is_alive( DBC *dbc )
 
     if ( (ulong)(seconds - dbc->last_query_time) >= CHECK_IF_ALIVE )
     {
-        if ( mysql_ping( dbc->mysql ) )
+        if ( mysql_ping( dbc->des ) )
         {
             /*  BUG: 14639
 
@@ -2232,7 +2232,7 @@ int check_if_server_is_alive( DBC *dbc )
                 PAH - 9.MAR.06
             */
 
-            if (is_connection_lost(mysql_errno( dbc->mysql )))
+            if (is_connection_lost(mysql_errno( dbc->des )))
                 result = 1;
         }
     }
@@ -2271,10 +2271,10 @@ int reget_current_catalog(DBC *dbc)
     }
     else
     {
-        MYSQL_RES *res;
-        MYSQL_ROW row;
+        DES_RES *res;
+        DES_ROW row;
 
-        if ( (res= mysql_store_result(dbc->mysql)) &&
+        if ( (res= mysql_store_result(dbc->des)) &&
              (row= mysql_fetch_row(res)) )
         {
 /*            if (cmp_database(row[0], dbc->database)) */
@@ -2446,7 +2446,7 @@ des_bool is_minimum_version(const char *server_version,const char *version)
  problematic characters (", ', \n, etc). Like mysql_real_escape_string() but
  also including % and _. Can be used with an identified by passing escape_id.
 
- @param[in]   mysql         Pointer to MYSQL structure
+ @param[in]   mysql         Pointer to DES structure
  @param[out]  to            Buffer for escaped string
  @param[in]   to_length     Length of destination buffer, or 0 for "big enough"
  @param[in]   from          The string to escape
@@ -3123,77 +3123,77 @@ char* proc_get_param_dbtype(char *proc, int len, char *ptype)
 SQLTypeMap SQL_TYPE_MAP_values[]=
 {
   /* SQL_CHAR= 1 */
-  {(SQLCHAR*)"char", 4, SQL_CHAR, MYSQL_TYPE_STRING, 0, 0},
-  {(SQLCHAR*)"enum", 4, SQL_CHAR, MYSQL_TYPE_STRING, 0, 0},
-  {(SQLCHAR*)"set", 3, SQL_CHAR, MYSQL_TYPE_STRING, 0, 0},
+  {(SQLCHAR*)"char", 4, SQL_CHAR, DES_TYPE_STRING, 0, 0},
+  {(SQLCHAR*)"enum", 4, SQL_CHAR, DES_TYPE_STRING, 0, 0},
+  {(SQLCHAR*)"set", 3, SQL_CHAR, DES_TYPE_STRING, 0, 0},
 
   /* SQL_BIT= -7 */
   {(SQLCHAR*)"bit", 3, SQL_BIT, DES_TYPE_BIT, 1, 1},
   {(SQLCHAR*)"bool", 4, SQL_BIT, DES_TYPE_BIT, 1, 1},
 
   /* SQL_TINY= -6 */
-  {(SQLCHAR*)"tinyint", 7, SQL_TINYINT, MYSQL_TYPE_TINY, 1, 1},
+  {(SQLCHAR*)"tinyint", 7, SQL_TINYINT, DES_TYPE_TINY, 1, 1},
 
   /* SQL_BIGINT= -5 */
-  {(SQLCHAR*)"bigint", 6, SQL_BIGINT, MYSQL_TYPE_LONGLONG, 20, 1},
+  {(SQLCHAR*)"bigint", 6, SQL_BIGINT, DES_TYPE_LONGLONG, 20, 1},
 
   /* SQL_LONGVARBINARY= -4 */
-  {(SQLCHAR*)"long varbinary", 14, SQL_LONGVARBINARY, MYSQL_TYPE_MEDIUM_BLOB, 16777215, 1},
-  {(SQLCHAR*)"blob", 4, SQL_LONGVARBINARY, MYSQL_TYPE_BLOB, 65535, 1},
-  {(SQLCHAR*)"longblob", 8, SQL_LONGVARBINARY, MYSQL_TYPE_LONG_BLOB, 4294967295UL, 1},
-  {(SQLCHAR*)"tinyblob", 8, SQL_LONGVARBINARY, MYSQL_TYPE_TINY_BLOB, 255, 1},
-  {(SQLCHAR*)"mediumblob", 10, SQL_LONGVARBINARY, MYSQL_TYPE_MEDIUM_BLOB, 16777215,1 },
+  {(SQLCHAR*)"long varbinary", 14, SQL_LONGVARBINARY, DES_TYPE_MEDIUM_BLOB, 16777215, 1},
+  {(SQLCHAR*)"blob", 4, SQL_LONGVARBINARY, DES_TYPE_BLOB, 65535, 1},
+  {(SQLCHAR*)"longblob", 8, SQL_LONGVARBINARY, DES_TYPE_LONG_BLOB, 4294967295UL, 1},
+  {(SQLCHAR*)"tinyblob", 8, SQL_LONGVARBINARY, DES_TYPE_TINY_BLOB, 255, 1},
+  {(SQLCHAR*)"mediumblob", 10, SQL_LONGVARBINARY, DES_TYPE_MEDIUM_BLOB, 16777215,1 },
 
   /* SQL_VARBINARY= -3 */
-  {(SQLCHAR*)"varbinary", 9, SQL_VARBINARY, MYSQL_TYPE_VAR_STRING, 0, 1},
+  {(SQLCHAR*)"varbinary", 9, SQL_VARBINARY, DES_TYPE_VAR_STRING, 0, 1},
   {(SQLCHAR*)"vector", 9, SQL_VARBINARY, DES_TYPE_VECTOR, 16382 * 4, 1},
 
   /* SQL_BINARY= -2 */
-  {(SQLCHAR*)"binary", 6, SQL_BINARY, MYSQL_TYPE_STRING, 0, 1},
+  {(SQLCHAR*)"binary", 6, SQL_BINARY, DES_TYPE_STRING, 0, 1},
 
   /* SQL_LONGVARCHAR= -1 */
-  {(SQLCHAR*)"long varchar", 12, SQL_LONGVARCHAR, MYSQL_TYPE_MEDIUM_BLOB, 16777215, 0},
-  {(SQLCHAR*)"text", 4, SQL_LONGVARCHAR, MYSQL_TYPE_BLOB, 65535, 0},
-  {(SQLCHAR*)"mediumtext", 10, SQL_LONGVARCHAR, MYSQL_TYPE_MEDIUM_BLOB, 16777215, 0},
-  {(SQLCHAR*)"longtext", 8, SQL_LONGVARCHAR, MYSQL_TYPE_LONG_BLOB, 4294967295UL, 0},
-  {(SQLCHAR*)"tinytext", 8, SQL_LONGVARCHAR, MYSQL_TYPE_TINY_BLOB, 255, 0},
+  {(SQLCHAR*)"long varchar", 12, SQL_LONGVARCHAR, DES_TYPE_MEDIUM_BLOB, 16777215, 0},
+  {(SQLCHAR*)"text", 4, SQL_LONGVARCHAR, DES_TYPE_BLOB, 65535, 0},
+  {(SQLCHAR*)"mediumtext", 10, SQL_LONGVARCHAR, DES_TYPE_MEDIUM_BLOB, 16777215, 0},
+  {(SQLCHAR*)"longtext", 8, SQL_LONGVARCHAR, DES_TYPE_LONG_BLOB, 4294967295UL, 0},
+  {(SQLCHAR*)"tinytext", 8, SQL_LONGVARCHAR, DES_TYPE_TINY_BLOB, 255, 0},
 
   /* SQL_NUMERIC= 2 */
-  {(SQLCHAR*)"numeric", 7, SQL_NUMERIC, MYSQL_TYPE_DECIMAL, 0, 1},
+  {(SQLCHAR*)"numeric", 7, SQL_NUMERIC, DES_TYPE_DECIMAL, 0, 1},
 
   /* SQL_DECIMAL= 3 */
-  {(SQLCHAR*)"decimal", 7, SQL_DECIMAL, MYSQL_TYPE_DECIMAL, 0, 1},
+  {(SQLCHAR*)"decimal", 7, SQL_DECIMAL, DES_TYPE_DECIMAL, 0, 1},
 
   /* SQL_INTEGER= 4 */
-  {(SQLCHAR*)"int", 3, SQL_INTEGER, MYSQL_TYPE_LONG, 10, 1},
-  {(SQLCHAR*)"mediumint", 9, SQL_INTEGER, MYSQL_TYPE_INT24, 8, 1},
+  {(SQLCHAR*)"int", 3, SQL_INTEGER, DES_TYPE_LONG, 10, 1},
+  {(SQLCHAR*)"mediumint", 9, SQL_INTEGER, DES_TYPE_INT24, 8, 1},
 
   /* SQL_SMALLINT= 5 */
-  {(SQLCHAR*)"smallint", 8, SQL_SMALLINT, MYSQL_TYPE_SHORT, 5, 1},
+  {(SQLCHAR*)"smallint", 8, SQL_SMALLINT, DES_TYPE_SHORT, 5, 1},
 
   /* SQL_REAL= 7 */
-  {(SQLCHAR*)"float", 5, SQL_REAL, MYSQL_TYPE_FLOAT, 7, 1},
+  {(SQLCHAR*)"float", 5, SQL_REAL, DES_TYPE_FLOAT, 7, 1},
 
   /* SQL_DOUBLE= 8 */
-  {(SQLCHAR*)"double", 6, SQL_DOUBLE, MYSQL_TYPE_DOUBLE, 15, 1},
+  {(SQLCHAR*)"double", 6, SQL_DOUBLE, DES_TYPE_DOUBLE, 15, 1},
 
   /* SQL_DATETIME= 9 */
-  {(SQLCHAR*)"datetime", 8, SQL_TYPE_TIMESTAMP, MYSQL_TYPE_DATETIME, 19, 1},
+  {(SQLCHAR*)"datetime", 8, SQL_TYPE_TIMESTAMP, DES_TYPE_DATETIME, 19, 1},
 
   /* SQL_VARCHAR= 12 */
-  {(SQLCHAR*)"varchar", 7, SQL_VARCHAR, MYSQL_TYPE_VARCHAR, 0, 0},
+  {(SQLCHAR*)"varchar", 7, SQL_VARCHAR, DES_TYPE_VARCHAR, 0, 0},
 
   /* SQL_TYPE_DATE= 91 */
-  {(SQLCHAR*)"date", 4, SQL_TYPE_DATE, MYSQL_TYPE_DATE, 10, 1},
+  {(SQLCHAR*)"date", 4, SQL_TYPE_DATE, DES_TYPE_DATE, 10, 1},
 
   /* YEAR - SQL_SMALLINT */
-  {(SQLCHAR*)"year", 4, SQL_SMALLINT, MYSQL_TYPE_YEAR, 2, 1},
+  {(SQLCHAR*)"year", 4, SQL_SMALLINT, DES_TYPE_YEAR, 2, 1},
 
   /* SQL_TYPE_TIMESTAMP= 93 */
-  {(SQLCHAR*)"timestamp", 9, SQL_TYPE_TIMESTAMP, MYSQL_TYPE_TIMESTAMP, 19, 1},
+  {(SQLCHAR*)"timestamp", 9, SQL_TYPE_TIMESTAMP, DES_TYPE_TIMESTAMP, 19, 1},
 
   /* SQL_TYPE_TIME= 92 */
-  {(SQLCHAR*)"time", 4, SQL_TYPE_TIME, MYSQL_TYPE_TIME, 8, 1}
+  {(SQLCHAR*)"time", 4, SQL_TYPE_TIME, DES_TYPE_TIME, 8, 1}
 
 };
 
@@ -3208,7 +3208,7 @@ enum enum_field_types map_sql2mysql_type(SQLSMALLINT sql_type)
     }
   }
 
-  return MYSQL_TYPE_BLOB;
+  return DES_TYPE_BLOB;
 }
 
 /**
@@ -3362,22 +3362,22 @@ SQLUINTEGER proc_get_param_size(SQLCHAR *ptype, int len, int sql_type_index, SQL
   switch (SQL_TYPE_MAP_values[sql_type_index].mysql_type)
   {
     /* these type sizes need to be parsed */
-    case MYSQL_TYPE_DECIMAL:
+    case DES_TYPE_DECIMAL:
       param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
       if(!param_size)
         param_size= 10; /* by default */
       break;
 
-    case MYSQL_TYPE_YEAR:
+    case DES_TYPE_YEAR:
       *dec= 0;
       param_size= proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
       if(!param_size)
         param_size= 4; /* by default */
       break;
 
-    case MYSQL_TYPE_VARCHAR:
-    case MYSQL_TYPE_VAR_STRING:
-    case MYSQL_TYPE_STRING:
+    case DES_TYPE_VARCHAR:
+    case DES_TYPE_VAR_STRING:
+    case DES_TYPE_STRING:
       if (!desodbc_strcasecmp((const char*)(SQL_TYPE_MAP_values[sql_type_index].type_name), "set"))
       {
         param_size = proc_parse_enum_set(start_pos, (int)(end_pos - start_pos), FALSE);
@@ -3399,13 +3399,13 @@ SQLUINTEGER proc_get_param_size(SQLCHAR *ptype, int len, int sql_type_index, SQL
       param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
 
       /* fall through*/
-    case MYSQL_TYPE_DATETIME:
+    case DES_TYPE_DATETIME:
 
-    case MYSQL_TYPE_TINY:
-    case MYSQL_TYPE_SHORT:
-    case MYSQL_TYPE_INT24:
-    case MYSQL_TYPE_LONG:
-    case MYSQL_TYPE_LONGLONG:
+    case DES_TYPE_TINY:
+    case DES_TYPE_SHORT:
+    case DES_TYPE_INT24:
+    case DES_TYPE_LONG:
+    case DES_TYPE_LONGLONG:
       *dec= 0;
       break;
 
@@ -3429,10 +3429,10 @@ Returns parameter octet length
 SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
                               SQLSMALLINT decimal_digits, unsigned int flags, char * str_buff)
 {
-  MYSQL_FIELD temp_fld;
+  DES_FIELD temp_fld;
 
   temp_fld.length= (unsigned long)col_size +
-    (SQL_TYPE_MAP_values[sql_type_index].mysql_type == MYSQL_TYPE_DECIMAL ?
+    (SQL_TYPE_MAP_values[sql_type_index].mysql_type == DES_TYPE_DECIMAL ?
     1 + (flags & UNSIGNED_FLAG ? 0 : 1) : 0); /* add 1for sign, if needed, and 1 for decimal point */
 
 
@@ -3445,9 +3445,9 @@ SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
 
   temp_fld.type= (enum_field_types)(SQL_TYPE_MAP_values[sql_type_index].mysql_type);
 
-  if (temp_fld.type == MYSQL_TYPE_STRING ||
-      temp_fld.type == MYSQL_TYPE_VARCHAR ||
-      temp_fld.type == MYSQL_TYPE_LONG_BLOB ||
+  if (temp_fld.type == DES_TYPE_STRING ||
+      temp_fld.type == DES_TYPE_VARCHAR ||
+      temp_fld.type == DES_TYPE_LONG_BLOB ||
       SQL_TYPE_MAP_values[sql_type_index].binary)
   {
     // The types with specifiers for character lengths are CHAR(N) and VARCHAR(N).
@@ -3462,9 +3462,9 @@ SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
     temp_fld.charsetnr = stmt->dbc->cxn_charset_info->number;
   }
 
-  if (temp_fld.type == MYSQL_TYPE_TINY_BLOB ||
-      temp_fld.type == MYSQL_TYPE_BLOB ||
-      temp_fld.type == MYSQL_TYPE_MEDIUM_BLOB)
+  if (temp_fld.type == DES_TYPE_TINY_BLOB ||
+      temp_fld.type == DES_TYPE_BLOB ||
+      temp_fld.type == DES_TYPE_MEDIUM_BLOB)
   {
     // We need to mimic the behavior of mysqlclient, which is
     // multiplying the length by the max character length.
@@ -3496,10 +3496,10 @@ SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
 SQLLEN proc_get_param_octet_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
                                 SQLSMALLINT decimal_digits, unsigned int flags, char * str_buff)
 {
-  MYSQL_FIELD temp_fld;
+  DES_FIELD temp_fld;
 
   temp_fld.length= (unsigned long)col_size +
-    (SQL_TYPE_MAP_values[sql_type_index].mysql_type == MYSQL_TYPE_DECIMAL ?
+    (SQL_TYPE_MAP_values[sql_type_index].mysql_type == DES_TYPE_DECIMAL ?
     1 + (flags & UNSIGNED_FLAG ? 0 : 1) : 0); /* add 1for sign, if needed, and 1 for decimal point */
 
   temp_fld.max_length = (unsigned long)col_size;
@@ -3607,16 +3607,16 @@ char *proc_param_next_token(char *str, char *str_end)
 
 
 /**
-   Sets row_count in STMT's MYSQL_RES and affected rows property MYSQL object. Primary use is to set
+   Sets row_count in STMT's DES_RES and affected rows property DES object. Primary use is to set
    number of affected rows for constructed resulsets. Setting mysql.affected_rows
    is required for SQLRowCount to return correct data for such resultsets.
 */
-void set_row_count(STMT *stmt, my_ulonglong rows)
+void set_row_count(STMT *stmt, des_ulonglong rows)
 {
   if (stmt != NULL && stmt->result != NULL)
   {
     stmt->result->row_count= rows;
-    stmt->dbc->mysql->affected_rows= rows;
+    stmt->dbc->des->affected_rows= rows;
   }
 }
 
@@ -3950,7 +3950,7 @@ const char* check_row_locking(desodbc::CHARSET_INFO* cs, const char * query, con
 
   for (i = 0; i < index_max; ++i)
   {
-    token = mystr_get_prev_token(cs, &before_token, query);
+    token = desstr_get_prev_token(cs, &before_token, query);
     if (desodbc_casecmp(token, check[i], (uint)strlen(check[i])))
       return NULL;
   }
@@ -4055,8 +4055,8 @@ int got_out_parameters(STMT *stmt)
 int get_session_variable(STMT *stmt, const char *var, char *result)
 {
   char buff[255+4*NAME_CHAR_LEN], *to;
-  MYSQL_RES *res;
-  MYSQL_ROW row;
+  DES_RES *res;
+  DES_ROW row;
 
   if (var)
   {
@@ -4070,7 +4070,7 @@ int get_session_variable(STMT *stmt, const char *var, char *result)
       return 0;
     }
 
-    res= mysql_store_result(stmt->dbc->mysql);
+    res= mysql_store_result(stmt->dbc->des);
     if (!res)
       return 0;
 
@@ -4103,7 +4103,7 @@ SQLRETURN set_query_timeout(STMT *stmt, SQLULEN new_value)
   SQLRETURN rc= SQL_SUCCESS;
 
   if (new_value == stmt->stmt_options.query_timeout ||
-      !is_minimum_version(stmt->dbc->mysql->server_version, "5.7.8"))
+      !is_minimum_version(stmt->dbc->des->server_version, "5.7.8"))
   {
     /* Do nothing if setting same timeout or MySQL server older than 5.7.8 */
     return SQL_SUCCESS;
@@ -4134,7 +4134,7 @@ SQLULEN get_query_timeout(STMT *stmt)
 {
   SQLULEN query_timeout= SQL_QUERY_TIMEOUT_DEFAULT; /* 0 */
 
-  if (is_minimum_version(stmt->dbc->mysql->server_version, "5.7.8"))
+  if (is_minimum_version(stmt->dbc->des->server_version, "5.7.8"))
   {
     /* Be cautious with very long values even if they don't make sense */
     char query_timeout_char[32]= {0};
@@ -4153,7 +4153,7 @@ const char get_identifier_quote(STMT *stmt)
 {
   const char tick= '`', quote= '"', empty= ' ';
 
-  if (is_minimum_version(stmt->dbc->mysql->server_version, "3.23.06"))
+  if (is_minimum_version(stmt->dbc->des->server_version, "3.23.06"))
   {
     /*
       The full list of all SQL modes takes over 512 symbols, so we reserve

@@ -83,7 +83,7 @@ des_bool odbc_supported_conversion(SQLSMALLINT sqlType, SQLSMALLINT cType)
     (i.e. to odbc_supported_conversion() results).
     e.g. we map bit(n>1) to SQL_BINARY, but provide its conversion to numeric
     types */
- des_bool driver_supported_conversion(MYSQL_FIELD * field, SQLSMALLINT cType)
+ des_bool driver_supported_conversion(DES_FIELD * field, SQLSMALLINT cType)
  {
    switch(field->type)
    {
@@ -113,7 +113,7 @@ des_bool odbc_supported_conversion(SQLSMALLINT sqlType, SQLSMALLINT cType)
          return TRUE;
        }
      }
-   case MYSQL_TYPE_STRING:
+   case DES_TYPE_STRING:
      {
        switch (cType)
        {
@@ -379,7 +379,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
              SQLPOINTER rgbValue, SQLLEN cbValueMax, SQLLEN *pcbValue,
              char *value, ulong length, DESCREC *arrec)
 {
-  MYSQL_FIELD *field= mysql_fetch_field_direct(stmt->result, column_number);
+  DES_FIELD *field= mysql_fetch_field_direct(stmt->result, column_number);
   SQLLEN    tmp;
   long long numeric_value = 0;
   unsigned long long u_numeric_value = 0;
@@ -509,7 +509,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
            how to get MYSQL_TYPE_TIMESTAMP with short format date in modern
            servers. That also makes me think we do not need to consider
            possibility of having fractional part in complete_timestamp() */
-        if (field->type == MYSQL_TYPE_TIMESTAMP && length < 19)
+        if (field->type == DES_TYPE_TIMESTAMP && length < 19)
         {
           /* Convert MySQL timestamp to full ANSI timestamp format. */
           /*TODO if stlen_ind_ptr was not passed - error has to be returned */
@@ -682,7 +682,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
     case SQL_C_INTERVAL_HOUR_TO_SECOND:
     case SQL_C_INTERVAL_HOUR_TO_MINUTE:
       {
-        if (field->type= MYSQL_TYPE_TIME)
+        if (field->type= DES_TYPE_TIME)
         {
           SQL_TIME_STRUCT ts;
           char *tmp= get_string(stmt,
@@ -724,8 +724,8 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       }
     case SQL_C_TIME:
     case SQL_C_TYPE_TIME:
-      if (field->type == MYSQL_TYPE_TIMESTAMP ||
-          field->type == MYSQL_TYPE_DATETIME)
+      if (field->type == DES_TYPE_TIMESTAMP ||
+          field->type == DES_TYPE_DATETIME)
       {
         SQL_TIMESTAMP_STRUCT ts;
 
@@ -758,7 +758,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
           }
         }
       }
-      else if (field->type == MYSQL_TYPE_DATE)
+      else if (field->type == DES_TYPE_DATE)
       {
         SQL_TIME_STRUCT *time_info= (SQL_TIME_STRUCT *)rgbValue;
 
@@ -817,7 +817,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       {
       char *tmp= get_string(stmt, column_number, value, &length, as_string);
 
-      if (field->type == MYSQL_TYPE_TIME)
+      if (field->type == DES_TYPE_TIME)
       {
         SQL_TIME_STRUCT ts;
 
@@ -1115,7 +1115,7 @@ DESDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   if (stmt->dbc->ds.opt_FULL_COLUMN_NAMES && irrec->table_name)
   {
-    char *tmp= (char*)myodbc_malloc(strlen((char *)irrec->name) +
+    char *tmp= (char*)desodbc_malloc(strlen((char *)irrec->name) +
                          strlen((char *)irrec->table_name) + 2,
                          DESF(0));
     if (!tmp)
@@ -1602,16 +1602,16 @@ SQLRETURN SQL_API SQLMoreResults( SQLHSTMT hstmt )
   /* call to mysql_next_result() failed */
   if (nRetVal > 0)
   {
-    nRetVal= mysql_errno(stmt->dbc->mysql);
+    nRetVal= mysql_errno(stmt->dbc->des);
 
     switch ( nRetVal )
     {
       case CR_SERVER_GONE_ERROR:
       case CR_SERVER_LOST:
-#if MYSQL_VERSION_ID > 80023
+#if DES_VERSION_ID > 80023
       case ER_CLIENT_INTERACTION_TIMEOUT:
 #endif
-        nReturn = stmt->set_error("08S01", mysql_error( stmt->dbc->mysql ), nRetVal );
+        nReturn = stmt->set_error("08S01", mysql_error( stmt->dbc->des ), nRetVal );
         goto exitSQLMoreResults;
       case CR_COMMANDS_OUT_OF_SYNC:
       case CR_UNKNOWN_ERROR:
@@ -1835,7 +1835,7 @@ fill_fetch_bookmark_buffers(STMT *stmt, ulong value, uint rownum)
   @param[in]  rownum      Row number of current fetch block
 */
 static SQLRETURN
-fill_fetch_buffers(STMT *stmt, MYSQL_ROW values, uint rownum)
+fill_fetch_buffers(STMT *stmt, DES_ROW values, uint rownum)
 {
   SQLRETURN res= SQL_SUCCESS, tmp_res;
   int i;
@@ -1927,8 +1927,8 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
   long              cur_row, max_row;
   SQLRETURN         row_res, res;
   STMT              *stmt= (STMT *) hstmt;
-  MYSQL_ROW         values= 0;
-  MYSQL_ROW_OFFSET  save_position= 0;
+  DES_ROW         values= 0;
+  DES_ROW_OFFSET  save_position= 0;
   SQLULEN           dummy_pcrow;
   BOOL              disconnected= FALSE;
   long              brow= 0;
@@ -2043,7 +2043,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
             stmt->set_error("01S07", "One or more row has error.", 0);
             return SQL_SUCCESS_WITH_INFO; //SQL_NO_DATA_FOUND
           case SQL_ERROR:   return stmt->set_error(DESERR_S1000,
-                                            mysql_error(stmt->dbc->mysql), 0);
+                                            mysql_error(stmt->dbc->des), 0);
         }
       }
       else
@@ -2187,7 +2187,7 @@ exitSQLSingleFetch:
     stmt->rows_found_in_set= 1;
     *pcrow= cur_row;
 
-    disconnected= is_connection_lost(mysql_errno(stmt->dbc->mysql))
+    disconnected= is_connection_lost(mysql_errno(stmt->dbc->des))
       && handle_connection_error(stmt);
 
     if ( upd_status && stmt->ird->rows_processed_ptr )
@@ -2258,14 +2258,14 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
   SQLULEN           i;
   SQLRETURN         row_res, res, row_book= SQL_SUCCESS;
   STMT              *stmt= (STMT *) hstmt;
-  MYSQL_ROW         values= 0;
-  MYSQL_ROW_OFFSET  save_position= 0;
+  DES_ROW         values= 0;
+  DES_ROW_OFFSET  save_position= 0;
   SQLULEN           dummy_pcrow;
   BOOL              disconnected= FALSE;
   long              brow= 0;
 
   auto span_stop_if_no_data = [](STMT *stmt) {
-    if (!mysql_more_results(stmt->dbc->mysql))
+    if (!mysql_more_results(stmt->dbc->des))
     {
       stmt->telemetry.span_end(stmt);
     }
@@ -2492,7 +2492,7 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
     stmt->rows_found_in_set = (uint)i;
     *pcrow= i;
 
-    disconnected= is_connection_lost(mysql_errno(stmt->dbc->mysql))
+    disconnected= is_connection_lost(mysql_errno(stmt->dbc->des))
       && handle_connection_error(stmt);
 
     if ( upd_status && stmt->ird->rows_processed_ptr )

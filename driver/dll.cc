@@ -133,9 +133,9 @@ void desodbc_end()
 
     /* my_thread_end_wait_time was added in 5.1.14 and 5.0.32 */
 #if !defined(NONTHREADSAFE) && \
-    (MYSQL_VERSION_ID >= 50114 || \
-    (MYSQL_VERSION_ID >= 50032 && MYSQL_VERSION_ID < 50100)) && \
-    MYSQL_VERSION_ID < 50701
+    (DES_VERSION_ID >= 50114 || \
+    (DES_VERSION_ID >= 50032 && DES_VERSION_ID < 50100)) && \
+    DES_VERSION_ID < 50701
     /*
        This eliminates the delay when mysys_end() is called and other threads
        have been initialized but not ended.
@@ -244,7 +244,7 @@ int __stdcall DllMain(HANDLE hInst,DWORD ul_reason_being_called,
 int _export PASCAL libmain(HANDLE hModule,short cbHeapSize,
 	     SQLCHAR *lszCmdLine)
 {
-  myodbc_init();
+  desodbc_init();
   return TRUE;
 }
 

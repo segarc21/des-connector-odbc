@@ -12,7 +12,7 @@
 #define MYSQL_SERVER_VERSION       "8.0.39"
 #define MYSQL_BASE_VERSION         "mysqld-8.0"
 #define MYSQL_SERVER_SUFFIX_DEF    ""
-#define MYSQL_VERSION_ID            80039
+#define DES_VERSION_ID            80039
 #define MYSQL_VERSION_STABILITY     "LTS"
 #define MYSQL_PORT                  3306
 #define MYSQL_ADMIN_PORT            33062

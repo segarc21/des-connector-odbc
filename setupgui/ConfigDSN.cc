@@ -167,7 +167,7 @@ BOOL INSTAPI ConfigDSNW(HWND hWnd, WORD nRequest, LPCWSTR pszDriver,
     // it will allow editing a CHARSET option, which normally should be
     // disabled for Unicode version of the driver.
     if (static_cast<std::string>(driver.lib).find(
-          "myodbc" + std::to_string(MYODBC_MAJOR_VERSION) + "w."
+          "myodbc" + std::to_string(DESODBC_MAJOR_VERSION) + "w."
         ) != std::string::npos)
     {
       is_unicode = 1;
@@ -233,9 +233,9 @@ BOOL INSTAPI ConfigDSN(HWND hWnd, WORD nRequest, LPCSTR pszDriverA,
   size_t lenAttrib = strlen(pszAttributesA);
 
   /* We will assume using one-byte Latin string as a subset of UTF-8 */
-  SQLWCHAR *pszDriverW= (SQLWCHAR *) myodbc_malloc((lenDriver + 1) *
+  SQLWCHAR *pszDriverW= (SQLWCHAR *) desodbc_malloc((lenDriver + 1) *
                                                 sizeof(SQLWCHAR), DESF(0));
-  SQLWCHAR *pszAttributesW= (SQLWCHAR *)myodbc_malloc((lenAttrib + 1) *
+  SQLWCHAR *pszAttributesW= (SQLWCHAR *)desodbc_malloc((lenAttrib + 1) *
                                                   sizeof(SQLWCHAR), DESF(0));
 
   utf8_as_sqlwchar(pszDriverW, lenDriver, (SQLCHAR* )pszDriverA, lenDriver);

@@ -95,7 +95,7 @@ void *my_once_alloc(size_t Size, myf MyFlags) {
   point = (uchar *)((char *)next + (next->size - next->left));
   next->left -= (uint)Size;
 
-  if (MyFlags & MY_ZEROFILL) memset(point, 0, Size);
+  if (MyFlags & DES_ZEROFILL) memset(point, 0, Size);
   return ((void *)point);
 } /* my_once_alloc */
 

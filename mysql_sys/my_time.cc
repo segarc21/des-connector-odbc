@@ -2812,12 +2812,12 @@ int my_time_compare(const MYSQL_TIME &my_time_a, const MYSQL_TIME &my_time_b) {
 longlong TIME_to_longlong_packed(const MYSQL_TIME &my_time,
                                  enum enum_field_types type) {
   switch (type) {
-    case MYSQL_TYPE_TIME:
+    case DES_TYPE_TIME:
       return TIME_to_longlong_time_packed(my_time);
-    case MYSQL_TYPE_DATETIME:
-    case MYSQL_TYPE_TIMESTAMP:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
       return TIME_to_longlong_datetime_packed(my_time);
-    case MYSQL_TYPE_DATE:
+    case DES_TYPE_DATE:
       return TIME_to_longlong_date_packed(my_time);
     default:
       return TIME_to_longlong_packed(my_time);
@@ -2835,14 +2835,14 @@ longlong TIME_to_longlong_packed(const MYSQL_TIME &my_time,
 void TIME_from_longlong_packed(MYSQL_TIME *ltime, enum enum_field_types type,
                                longlong packed_value) {
   switch (type) {
-    case MYSQL_TYPE_TIME:
+    case DES_TYPE_TIME:
       TIME_from_longlong_time_packed(ltime, packed_value);
       break;
-    case MYSQL_TYPE_DATE:
+    case DES_TYPE_DATE:
       TIME_from_longlong_date_packed(ltime, packed_value);
       break;
-    case MYSQL_TYPE_DATETIME:
-    case MYSQL_TYPE_TIMESTAMP:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
       TIME_from_longlong_datetime_packed(ltime, packed_value);
       break;
     default:
@@ -2865,14 +2865,14 @@ longlong longlong_from_datetime_packed(enum enum_field_types type,
                                        longlong packed_value) {
   MYSQL_TIME ltime;
   switch (type) {
-    case MYSQL_TYPE_TIME:
+    case DES_TYPE_TIME:
       TIME_from_longlong_time_packed(&ltime, packed_value);
       return TIME_to_ulonglong_time(ltime);
-    case MYSQL_TYPE_DATE:
+    case DES_TYPE_DATE:
       TIME_from_longlong_date_packed(&ltime, packed_value);
       return TIME_to_ulonglong_date(ltime);
-    case MYSQL_TYPE_DATETIME:
-    case MYSQL_TYPE_TIMESTAMP:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
       TIME_from_longlong_datetime_packed(&ltime, packed_value);
       return TIME_to_ulonglong_datetime(ltime);
     default:

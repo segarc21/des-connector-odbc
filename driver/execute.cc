@@ -69,11 +69,11 @@ SQLRETURN do_query(STMT *stmt, std::string query)
     if ( check_if_server_is_alive( stmt->dbc ) )
     {
       stmt->set_error("08S01" /* "HYT00" */,
-                      mysql_error(stmt->dbc->mysql),
-                      mysql_errno(stmt->dbc->mysql));
+                      mysql_error(stmt->dbc->des),
+                      mysql_errno(stmt->dbc->des));
 
       translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_08S01 /* S1000 */,
-                      mysql_errno(stmt->dbc->mysql));
+                      mysql_errno(stmt->dbc->des));
       goto exit;
     }
 
@@ -102,7 +102,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
       scroller_move(stmt);
       DESLOG_QUERY(stmt, stmt->scroller.query);
 
-      native_error = mysql_real_query(stmt->dbc->mysql, stmt->scroller.query,
+      native_error = mysql_real_query(stmt->dbc->des, stmt->scroller.query,
                                   (unsigned long)stmt->scroller.query_len);
     }
       /* Not using ssps for scroller so far. Relaxing a bit condition
@@ -134,7 +134,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
         goto exit;
       }
 
-      native_error= mysql_real_query(stmt->dbc->mysql, query.c_str(),
+      native_error= mysql_real_query(stmt->dbc->des, query.c_str(),
         (unsigned long)query_length);
     }
 
@@ -243,7 +243,7 @@ SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery)
     DESCREC *aprec= desc_get_rec(stmt->apd, i, FALSE);
     DESCREC *iprec= desc_get_rec(stmt->ipd, i, FALSE);
     const char *pos;
-    MYSQL_BIND * bind;
+    DES_BIND * bind;
 
     if (stmt->dummy_state != ST_DUMMY_PREPARED &&
         (!aprec || !aprec->par.real_param_done))
@@ -320,7 +320,7 @@ error:
 }
 
 static
-void put_null_param(STMT *stmt, MYSQL_BIND *bind)
+void put_null_param(STMT *stmt, DES_BIND *bind)
 {
   if (bind != NULL && ssps_used(stmt))
   {
@@ -334,7 +334,7 @@ void put_null_param(STMT *stmt, MYSQL_BIND *bind)
 
 
 static
-void put_default_value(STMT *stmt, MYSQL_BIND *bind)
+void put_default_value(STMT *stmt, DES_BIND *bind)
 {
   if (bind != NULL && ssps_used(stmt))
   {
@@ -349,7 +349,7 @@ void put_default_value(STMT *stmt, MYSQL_BIND *bind)
 
 
 static
-BOOL allocate_param_buffer(MYSQL_BIND *bind, unsigned long length)
+BOOL allocate_param_buffer(DES_BIND *bind, unsigned long length)
 {
   if (bind == NULL)
     return FALSE;
@@ -358,7 +358,7 @@ BOOL allocate_param_buffer(MYSQL_BIND *bind, unsigned long length)
        a separate data structure. and free right after use */
   if (bind->buffer == NULL)
   {
-    bind->buffer= myodbc_malloc(length, DESF(0));
+    bind->buffer= desodbc_malloc(length, DESF(0));
     bind->buffer_length= length;
   }
   else if(bind->buffer_length < length)
@@ -378,7 +378,7 @@ BOOL allocate_param_buffer(MYSQL_BIND *bind, unsigned long length)
 
 /* Buffer has to be allocated - no checks */
 static
-unsigned long add2param_value(MYSQL_BIND *bind, unsigned long pos,
+unsigned long add2param_value(DES_BIND *bind, unsigned long pos,
                               const char *value, unsigned long length)
 {
   memcpy((char*)bind->buffer + pos, value, length);
@@ -387,7 +387,7 @@ unsigned long add2param_value(MYSQL_BIND *bind, unsigned long pos,
   return pos + length;
 }
 
-bool bind_param(MYSQL_BIND *bind, const char *value, unsigned long length,
+bool bind_param(DES_BIND *bind, const char *value, unsigned long length,
                 enum enum_field_types buffer_type)
 {
   if (bind->buffer == (void*)value)
@@ -409,12 +409,12 @@ bool bind_param(MYSQL_BIND *bind, const char *value, unsigned long length,
 
 /* TRUE - on memory allocation error */
 static
-BOOL put_param_value(STMT *stmt, MYSQL_BIND *bind,
+BOOL put_param_value(STMT *stmt, DES_BIND *bind,
                      const char * value, unsigned long length)
 {
   if (bind)
   {
-    return bind_param(bind, value, length, MYSQL_TYPE_STRING);
+    return bind_param(bind, value, length, DES_TYPE_STRING);
   }
   else
   {
@@ -493,7 +493,7 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
         *length = int_len;
 
         if (has_utf8_maxlen4 &&
-            !is_minimum_version(stmt->dbc->mysql->server_version, "5.5.3"))
+            !is_minimum_version(stmt->dbc->des->server_version, "5.5.3"))
         {
           return stmt->set_error("HY000",
                                 "Server does not support 4-byte encoded "
@@ -760,12 +760,12 @@ const char *get_date_time_substr(const char *data, long &len)
 
   @param[in]      mysql
   @param[in,out]  toptr - either pointer to a string where to write
-                  parameter value, or a pointer to MYSQL_BIND structure.
+                  parameter value, or a pointer to DES_BIND structure.
   @param[in]      apd The APD of the current statement
   @param[in]      aprec The APD record of the parameter
   @param[in]      iprec The IPD record of the parameter
 */
-SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
+SQLRETURN insert_param(STMT *stmt, DES_BIND *bind, DESC* apd,
                        DESCREC *aprec, DESCREC *iprec, SQLULEN row)
 {
     long length;
@@ -912,7 +912,7 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
 
             /* The length parameter is changed by get_date_time_substr()
                because it is passed as a reference */
-            if (bind_param(bind, tt, length, MYSQL_TYPE_STRING))
+            if (bind_param(bind, tt, length, DES_TYPE_STRING))
             {
               goto memerror;
             }
@@ -980,7 +980,7 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
           {
             if (bind != NULL)
             {
-              if (bind_param(bind, data, length, MYSQL_TYPE_BLOB))
+              if (bind_param(bind, data, length, DES_TYPE_BLOB))
               {
                 goto memerror;
               }
@@ -1096,7 +1096,7 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
           {
             char bit_val= atoi(data)!= 0 ? 1 : 0;
             /* Generic ODBC supports only BIT(1) */
-            bind_param(bind, &bit_val, 1, MYSQL_TYPE_TINY);
+            bind_param(bind, &bit_val, 1, DES_TYPE_TINY);
           }
           else if (!convert)
           {
@@ -1163,7 +1163,7 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
 
     if (bind != NULL && stmt->setpos_op == 0)
     {
-      bind_param(bind, data, length, MYSQL_TYPE_STRING);
+      bind_param(bind, data, length, DES_TYPE_STRING);
     }
     else
     {
@@ -1192,7 +1192,7 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
           goto memerror;
         }
 
-        size_t added = mysql_real_escape_string(dbc->mysql, stmt->endbuf(), data, length);
+        size_t added = mysql_real_escape_string(dbc->des, stmt->endbuf(), data, length);
         stmt->buf_add_pos(added);
         stmt->add_to_buffer("'", 1);
       }
@@ -1775,7 +1775,7 @@ SQLRETURN SQL_API SQLParamData(SQLHSTMT hstmt, SQLPOINTER *prbgValue)
     if (stmt->send_data_param > 0)
     {
 
-      if (mysql_stmt_bind_param(stmt->ssps, (MYSQL_BIND*)stmt->param_bind->buffer))
+      if (mysql_stmt_bind_param(stmt->ssps, (DES_BIND*)stmt->param_bind->buffer))
       {
         stmt->set_error("HY000", mysql_stmt_error(stmt->ssps),
                       mysql_stmt_errno(stmt->ssps));
@@ -1872,7 +1872,7 @@ SQLRETURN SQL_API SQLPutData( SQLHSTMT      hstmt,
 */
 SQLRETURN SQL_API SQLCancel(SQLHSTMT hstmt)
 {
-  MYSQL *second= NULL;
+  DES *second= NULL;
   DBC *dbc;
   STMT *stmt = (STMT *)hstmt;
 
@@ -1915,7 +1915,7 @@ SQLRETURN SQL_API SQLCancel(SQLHSTMT hstmt)
   {
     char buff[40];
     /* buff is always big enough because max length of %lu is 15 */
-    desodbc_snprintf(buff, sizeof(buff), "KILL /*!50000 QUERY */ %lu", mysql_thread_id(dbc->mysql));
+    desodbc_snprintf(buff, sizeof(buff), "KILL /*!50000 QUERY */ %lu", mysql_thread_id(dbc->des));
     if (mysql_real_query(second, buff, (unsigned long)strlen(buff)))
     {
       mysql_close(second);

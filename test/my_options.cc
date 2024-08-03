@@ -1114,7 +1114,7 @@ DECLARE_TEST(t_wl16311_charset_deprecation)
 
 BEGIN_TESTS
   ADD_TEST(t_wl16311_charset_deprecation)
-#if MYSQL_VERSION_ID >= 80300
+#if DES_VERSION_ID >= 80300
   ADD_TEST(t_wl15978_auto_reconnect_deprecation)
 #endif
   ADD_TEST(t_collation_set)

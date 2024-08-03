@@ -56,7 +56,7 @@
 
 const char usage[] =
 "+---                                                                   \n"
-"| myodbc-installer v" MYODBC_VERSION "                                 \n"
+"| myodbc-installer v" DESODBC_VERSION "                                 \n"
 "+---                                                                   \n"
 "|                                                                      \n"
 "| Description                                                          \n"
@@ -120,33 +120,33 @@ const char usage[] =
 "|                                                                      \n"
 #ifndef _WIN32
 "|    Register a Unicode driver (UNIX example)                          \n"
-"|    shell> myodbc-installer -d -a -n \"MySQL ODBC " MYODBC_STRSERIES " Unicode Driver\" \\ \n"
-"|              -t \"DRIVER=/path/to/driver/libmyodbc" MYODBC_STRMAJOR_VERSION "w.so;SETUP=/path/to/gui/libmyodbc" MYODBC_STRMAJOR_VERSION "S.so\"\n"
+"|    shell> myodbc-installer -d -a -n \"MySQL ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
+"|              -t \"DRIVER=/path/to/driver/libmyodbc" DESODBC_STRMAJOR_VERSION "w.so;SETUP=/path/to/gui/libmyodbc" DESODBC_STRMAJOR_VERSION "S.so\"\n"
 "|                                                                      \n"
 "|      Note                                                            \n"
 "|         * The /path/to/driver is /usr/lib for 32-bit systems and     \n"
 "|           some 64-bit systems, and /usr/lib64 for most 64-bit systems\n"
 "|                                                                      \n"
-"|         * driver_name is libmyodbc" MYODBC_STRMAJOR_VERSION "a.so for the ANSI version and     \n"
-"|           libmyodbc" MYODBC_STRMAJOR_VERSION "w.so for the Unicode version of MySQL ODBC Driver\n"
+"|         * driver_name is libmyodbc" DESODBC_STRMAJOR_VERSION "a.so for the ANSI version and     \n"
+"|           libmyodbc" DESODBC_STRMAJOR_VERSION "w.so for the Unicode version of MySQL ODBC Driver\n"
 "|                                                                      \n"
 "|         * The SETUP parameter is optional; it provides location of   \n"
-"|           the GUI module (libmyodbc" MYODBC_STRMAJOR_VERSION "S.so) for DSN setup, which       \n"
+"|           the GUI module (libmyodbc" DESODBC_STRMAJOR_VERSION "S.so) for DSN setup, which       \n"
 "|           is not supported on Solaris and Mac OSX systems            \n"
 "|                                                                      \n"
 #else
 "|    Register a Unicode driver (Windows example)                       \n"
-"|    shell> myodbc-installer -d -a -n \"MySQL ODBC " MYODBC_STRSERIES " Unicode Driver\" \\ \n"
-"|              -t \"DRIVER=myodbc" MYODBC_STRMAJOR_VERSION "w.dll;SETUP=myodbc" MYODBC_STRMAJOR_VERSION "S.dll\"\n"
+"|    shell> myodbc-installer -d -a -n \"MySQL ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
+"|              -t \"DRIVER=myodbc" DESODBC_STRMAJOR_VERSION "w.dll;SETUP=myodbc" DESODBC_STRMAJOR_VERSION "S.dll\"\n"
 "|                                                                      \n"
 "|      Note                                                            \n"
-"|         * driver_name is myodbc" MYODBC_STRMAJOR_VERSION "a.dll for the ANSI version and       \n"
-"|           myodbc" MYODBC_STRMAJOR_VERSION "w.dll for the Unicode version of MySQL ODBC Driver  \n"
+"|         * driver_name is myodbc" DESODBC_STRMAJOR_VERSION "a.dll for the ANSI version and       \n"
+"|           myodbc" DESODBC_STRMAJOR_VERSION "w.dll for the Unicode version of MySQL ODBC Driver  \n"
 "|                                                                      \n"
 #endif
 "|    Add a new system data source name for Unicode driver              \n"
 "|    shell> myodbc-installer -s -a -c2 -n \"test\" \\                  \n"
-"|              -t \"DRIVER=MySQL ODBC " MYODBC_STRSERIES " Unicode Driver;SERVER=localhost;DATABASE=test;UID=myid;PWD=mypwd\"\n"
+"|              -t \"DRIVER=MySQL ODBC " DESODBC_STRSERIES " Unicode Driver;SERVER=localhost;DATABASE=test;UID=myid;PWD=mypwd\"\n"
 "|                                                                      \n"
 "|    List data source name attributes for 'test'                       \n"
 "|    shell> myodbc-installer -s -l -c2 -n \"test\"                    \n"
@@ -326,7 +326,7 @@ SQLInstallDriverExW(const MyODBC_LPCWSTR lpszDriver, const MyODBC_LPCWSTR lpszPa
   pathin= (char *)sqlwchar_as_utf8(lpszPathIn, &len);
 
   if (cbPathOutMax > 0)
-    pathout= (char *)myodbc_malloc(cbPathOutMax * 4 + 1, DESF(0)); /* 4 = max utf8 charlen */
+    pathout= (char *)desodbc_malloc(cbPathOutMax * 4 + 1, DESF(0)); /* 4 = max utf8 charlen */
 
   rc= SQLInstallDriverEx(driver, pathin, pathout, cbPathOutMax * 4,
                          pcbPathOut, fRequest, lpdwUsageCount);
@@ -669,7 +669,7 @@ int add_datasource(DataSource *ds, const SQLWCHAR *attrs)
     return 1;
   }
 
-#if MYSQL_VERSION_ID >= 80300
+#if DES_VERSION_ID >= 80300
   if (ds->opt_AUTO_RECONNECT)
   {
     // We will not return the error code 1, just print a warning to stderr.

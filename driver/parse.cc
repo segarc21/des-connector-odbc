@@ -294,7 +294,7 @@ int  get_ctype(DES_PARSER *parser)
 }
 
 
-const char *mystr_get_prev_token(desodbc::CHARSET_INFO *charset,
+const char *desstr_get_prev_token(desodbc::CHARSET_INFO *charset,
                                         const char **query, const char *start)
 {
   const char *pos= *query, *end= *query;
@@ -341,7 +341,7 @@ const char * find_token(desodbc::CHARSET_INFO *charset, const char * begin,
   const char * token, *before= end;
 
   /* we will not check 1st token in the string - no need at the moment */
-  while ((token= mystr_get_prev_token(charset,&before, begin)) != begin)
+  while ((token= desstr_get_prev_token(charset,&before, begin)) != begin)
   {
     if (!desodbc_casecmp(token, target, (uint)strlen(target)))
     {

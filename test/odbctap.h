@@ -140,7 +140,7 @@ const char * wstr4output(const wchar_t *wstr)
 #define _MY_NEWLINE "\n"
 #endif
 
-SQLCHAR *mydriver= (SQLCHAR *)"{MySQL ODBC " MYODBC_STRSERIES " Driver}";
+SQLCHAR *mydriver= (SQLCHAR *)"{MySQL ODBC " DESODBC_STRSERIES " Driver}";
 SQLCHAR mydrv_nobrackets[255] = {'\0'}; /* mydriver value will be copied here */
 SQLCHAR *mydsn= (SQLCHAR *)"test";
 SQLCHAR *myuid= (SQLCHAR *)"root";
@@ -1301,7 +1301,7 @@ SQLCHAR *make_conn_str(const SQLCHAR *dsn, const SQLCHAR *uid,
     strncat((char*)connIn, (char*)options, sizeof(connIn) - 1);
   }
 
-#if MYSQL_VERSION_ID >= 50507
+#if DES_VERSION_ID >= 50507
   if (init_auth_plugin)
   {
     init_auth_plugin= 0; /* reset the plugin init flag */

@@ -110,7 +110,7 @@ struct MEM_ROOT;
   Some mysys functions produce error messages. These mostly go
   to stderr.
   This constant defines the size of the buffer used to format
-  the message. It should be kept in sync with MYSQL_ERRMSG_SIZE,
+  the message. It should be kept in sync with DES_ERRMSG_SIZE,
   since sometimes mysys errors are stored in the server diagnostics
   area, and we would like to avoid unexpected truncation.
 */
@@ -137,7 +137,7 @@ struct MEM_ROOT;
 #define MY_HOLD_ORIGINAL_MODES 128  /* my_copy() holds to file modes */
 #define MY_SEEK_NOT_DONE 32         /* my_lock may have to do a seek */
 #define MY_DONT_WAIT 64             /* my_lock() don't wait if can't lock */
-#define MY_ZEROFILL 32              /* my_malloc(), fill array with zero */
+#define DES_ZEROFILL 32              /* my_malloc(), fill array with zero */
 #define MY_ALLOW_ZERO_PTR 64        /* my_realloc() ; zero ptr -> malloc */
 #define MY_FREE_ON_ERROR 128        /* my_realloc() ; Free old ptr on error */
 #define MY_HOLD_ON_ERROR 256        /* my_realloc() ; Return old ptr on error */

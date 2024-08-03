@@ -200,7 +200,7 @@ SQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   if (free_value == -1)
   {
-    set_mem_error(stmt->dbc->mysql);
+    set_mem_error(stmt->dbc->des);
     return handle_connection_error(stmt);
   }
 
@@ -253,7 +253,7 @@ SQLDriverConnect(SQLHDBC hdbc, SQLHWND hwnd, SQLCHAR *in, SQLSMALLINT in_len,
 
   if (outw_max)
   {
-    outw= (SQLWCHAR *)myodbc_malloc(sizeof(SQLWCHAR) * out_max, DESF(0));
+    outw= (SQLWCHAR *)desodbc_malloc(sizeof(SQLWCHAR) * out_max, DESF(0));
     if (!outw)
     {
       rc= ((DBC*)hdbc)->set_error("HY001", NULL, 0);

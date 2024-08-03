@@ -199,7 +199,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 
   case SQL_CREATE_VIEW:
     /** @todo SQL_CV_LOCAL ? */
-    if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_ULONG(SQL_CV_CREATE_VIEW | SQL_CV_CHECK_OPTION |
                        SQL_CV_CASCADED);
     else
@@ -241,7 +241,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 
   case SQL_DBMS_VER:
     /** @todo technically this is not right: should be ##.##.#### */
-    DESINFO_SET_STR(dbc->mysql->server_version);
+    DESINFO_SET_STR(dbc->des->server_version);
 
   case SQL_DDL_INDEX:
     DESINFO_SET_ULONG(SQL_DI_CREATE_INDEX | SQL_DI_DROP_INDEX);
@@ -255,15 +255,15 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
   case SQL_DRIVER_NAME:
 #ifdef MYODBC_UNICODEDRIVER
 # ifdef WIN32
-    DESINFO_SET_STR("myodbc" MYODBC_STRMAJOR_VERSION "w.dll");
+    DESINFO_SET_STR("myodbc" DESODBC_STRMAJOR_VERSION "w.dll");
 # else
-    DESINFO_SET_STR("libmyodbc" MYODBC_STRMAJOR_VERSION "w.so");
+    DESINFO_SET_STR("libmyodbc" DESODBC_STRMAJOR_VERSION "w.so");
 # endif
 #else
 # ifdef WIN32
-    DESINFO_SET_STR("myodbc" MYODBC_STRMAJOR_VERSION "a.dll");
+    DESINFO_SET_STR("myodbc" DESODBC_STRMAJOR_VERSION "a.dll");
 # else
-    DESINFO_SET_STR("libmyodbc" MYODBC_STRMAJOR_VERSION "a.so");
+    DESINFO_SET_STR("libmyodbc" DESODBC_STRMAJOR_VERSION "a.so");
 # endif
 #endif
   case SQL_DRIVER_ODBC_VER:
@@ -284,7 +284,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     DESINFO_SET_ULONG(SQL_DT_DROP_TABLE | SQL_DT_CASCADE | SQL_DT_RESTRICT);
 
   case SQL_DROP_VIEW:
-    if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_ULONG(SQL_DV_DROP_VIEW | SQL_DV_CASCADE | SQL_DV_RESTRICT);
     else
       DESINFO_SET_ULONG(0);
@@ -359,7 +359,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     We have INFORMATION_SCHEMA.SCHEMATA, but we don't report it
     because the driver exposes databases (schema) as catalogs.
     */
-    if (is_minimum_version(dbc->mysql->server_version, "5.1"))
+    if (is_minimum_version(dbc->des->server_version, "5.1"))
       DESINFO_SET_ULONG(SQL_ISV_CHARACTER_SETS | SQL_ISV_COLLATIONS |
                        SQL_ISV_COLUMN_PRIVILEGES | SQL_ISV_COLUMNS |
                        SQL_ISV_KEY_COLUMN_USAGE |
@@ -367,7 +367,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                        /* SQL_ISV_SCHEMATA | */ SQL_ISV_TABLE_CONSTRAINTS |
                        SQL_ISV_TABLE_PRIVILEGES | SQL_ISV_TABLES |
                        SQL_ISV_VIEWS);
-    else if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    else if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_ULONG(SQL_ISV_CHARACTER_SETS | SQL_ISV_COLLATIONS |
                        SQL_ISV_COLUMN_PRIVILEGES | SQL_ISV_COLUMNS |
                        SQL_ISV_KEY_COLUMN_USAGE | /* SQL_ISV_SCHEMATA | */
@@ -393,7 +393,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     the MySQL Reference Manual (which is, in turn, generated from the source)
     with the pre-reserved ODBC keywords removed.
     */
-    if (is_minimum_version(dbc->mysql->server_version, "8.0.22"))
+    if (is_minimum_version(dbc->des->server_version, "8.0.22"))
       DESINFO_SET_STR("ACCESSIBLE,ANALYZE,ASENSITIVE,BEFORE,BIGINT,BINARY,BLOB,"
                      "CALL,CHANGE,CONDITION,DATABASE,DATABASES,DAY_HOUR,"
                      "DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DELAYED,"
@@ -418,7 +418,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                      "TINYBLOB,TINYINT,TINYTEXT,TRIGGER,UNDO,UNLOCK,UNSIGNED,"
                      "USE,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VARBINARY,"
                      "VARCHARACTER,WHILE,X509,XOR,YEAR_MONTH,ZEROFILL");
-    else if (is_minimum_version(dbc->mysql->server_version, "5.7"))
+    else if (is_minimum_version(dbc->des->server_version, "5.7"))
       DESINFO_SET_STR("ACCESSIBLE,ANALYZE,ASENSITIVE,BEFORE,BIGINT,BINARY,BLOB,"
                      "CALL,CHANGE,CONDITION,DATABASE,DATABASES,DAY_HOUR,"
                      "DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DELAYED,"
@@ -443,7 +443,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                      "TINYBLOB,TINYINT,TINYTEXT,TRIGGER,UNDO,UNLOCK,UNSIGNED,"
                      "USE,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VARBINARY,"
                      "VARCHARACTER,WHILE,X509,XOR,YEAR_MONTH,ZEROFILL");
-    else if (is_minimum_version(dbc->mysql->server_version, "5.6"))
+    else if (is_minimum_version(dbc->des->server_version, "5.6"))
       DESINFO_SET_STR("ACCESSIBLE,ANALYZE,ASENSITIVE,BEFORE,BIGINT,BINARY,BLOB,"
                      "CALL,CHANGE,CONDITION,DATABASE,DATABASES,DAY_HOUR,"
                      "DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DELAYED,"
@@ -468,7 +468,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                      "TINYBLOB,TINYINT,TINYTEXT,TRIGGER,UNDO,UNLOCK,UNSIGNED,"
                      "USE,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VARBINARY,"
                      "VARCHARACTER,WHILE,X509,XOR,YEAR_MONTH,ZEROFILL");
-    else if (is_minimum_version(dbc->mysql->server_version, "5.5"))
+    else if (is_minimum_version(dbc->des->server_version, "5.5"))
       DESINFO_SET_STR("ACCESSIBLE,ANALYZE,ASENSITIVE,BEFORE,BIGINT,BINARY,BLOB,"
                      "CALL,CHANGE,CONDITION,DATABASE,DATABASES,DAY_HOUR,"
                      "DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DELAYED,"
@@ -491,7 +491,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                      "TINYBLOB,TINYINT,TINYTEXT,TRIGGER,UNDO,UNLOCK,UNSIGNED,"
                      "USE,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VARBINARY,"
                      "VARCHARACTER,WHILE,X509,XOR,YEAR_MONTH,ZEROFILL");
-    else if (is_minimum_version(dbc->mysql->server_version, "5.1"))
+    else if (is_minimum_version(dbc->des->server_version, "5.1"))
       DESINFO_SET_STR("ACCESSIBLE,ANALYZE,ASENSITIVE,BEFORE,BIGINT,BINARY,BLOB,"
                      "CALL,CHANGE,CONDITION,DATABASE,DATABASES,DAY_HOUR,"
                      "DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DELAYED,"
@@ -513,7 +513,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                      "TINYTEXT,TRIGGER,UNDO,UNLOCK,UNSIGNED,USE,UTC_DATE,"
                      "UTC_TIME,UTC_TIMESTAMP,VARBINARY,VARCHARACTER,WHILE,X509,"
                      "XOR,YEAR_MONTH,ZEROFILL");
-    else if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    else if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_STR("ANALYZE,ASENSITIVE,BEFORE,BIGINT,BINARY,BLOB,CALL,CHANGE,"
                      "CONDITION,DATABASE,DATABASES,DAY_HOUR,DAY_MICROSECOND,"
                      "DAY_MINUTE,DAY_SECOND,DELAYED,DETERMINISTIC,DISTINCTROW,"
@@ -605,7 +605,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     DESINFO_SET_USHORT(NAME_LEN);
 
   case SQL_MAX_INDEX_SIZE:
-    if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_USHORT(3072);
     else
       DESINFO_SET_USHORT(1024);
@@ -633,7 +633,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     DESINFO_SET_USHORT(NAME_LEN);
 
   case SQL_MAX_TABLES_IN_SELECT:
-    if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_USHORT(63);
     else
       DESINFO_SET_USHORT(31);
@@ -691,13 +691,13 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     DESINFO_SET_ULONG(SQL_PAS_NO_BATCH);
 
   case SQL_PROCEDURE_TERM:
-    if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_STR("stored procedure");
     else
       DESINFO_SET_STR("");
 
   case SQL_PROCEDURES:
-    if (is_minimum_version(dbc->mysql->server_version, "5.0"))
+    if (is_minimum_version(dbc->des->server_version, "5.0"))
       DESINFO_SET_STR("Y");
     else
       DESINFO_SET_STR("N");
@@ -736,7 +736,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     DESINFO_SET_STR("\\");
 
   case SQL_SERVER_NAME:
-    DESINFO_SET_STR(dbc->mysql->host_info);
+    DESINFO_SET_STR(dbc->des->host_info);
 
   case SQL_SPECIAL_CHARACTERS:
     /* We can handle anything but / and \xff. */
@@ -928,7 +928,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 Function sets up a result set containing details of the types
 supported by mysql.
 */
-MYSQL_FIELD SQL_GET_TYPE_INFO_fields[] =
+DES_FIELD SQL_GET_TYPE_INFO_fields[] =
 {
   DESODBC_FIELD_STRING("TYPE_NAME", 32, NOT_NULL_FLAG),
   DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
@@ -1077,7 +1077,7 @@ char *SQL_GET_TYPE_INFO_values[][19] =
   /* ENUM and SET are not included -- it confuses some applications. */
 };
 
-const uint MYSQL_DATA_TYPES = (uint)array_elements(SQL_GET_TYPE_INFO_values);
+const uint DES_DATA_TYPES = (uint)array_elements(SQL_GET_TYPE_INFO_values);
 
 /**
 Return information about data types supported by the server.
@@ -1113,7 +1113,7 @@ SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType)
   }
 
   /* Set up result Data dictionary. */
-  stmt->result = (MYSQL_RES *)myodbc_malloc(sizeof(MYSQL_RES), DESF(MY_ZEROFILL));
+  stmt->result = (DES_RES *)desodbc_malloc(sizeof(DES_RES), DESF(DES_ZEROFILL));
   stmt->fake_result = 1;
 
   if (!stmt->result) {
@@ -1127,12 +1127,12 @@ SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType)
     memcpy(stmt->result_array,
            SQL_GET_TYPE_INFO_values,
            sizeof(SQL_GET_TYPE_INFO_values));
-    stmt->result->row_count = MYSQL_DATA_TYPES;
+    stmt->result->row_count = DES_DATA_TYPES;
   }
   else
   {
     stmt->result->row_count= 0;
-    for (i = 0; i < MYSQL_DATA_TYPES; ++i)
+    for (i = 0; i < DES_DATA_TYPES; ++i)
     {
       if (atoi(SQL_GET_TYPE_INFO_values[i][1]) == fSqlType ||
           atoi(SQL_GET_TYPE_INFO_values[i][15]) == fSqlType)
@@ -1220,7 +1220,7 @@ void desodbc_ov_init(SQLINTEGER odbc_version)
 /**
 List of functions supported in the driver.
 */
-SQLUSMALLINT myodbc3_functions[] =
+SQLUSMALLINT desodbc3_functions[] =
 {
   SQL_API_SQLALLOCHANDLE,
   SQL_API_SQLBINDCOL,
@@ -1311,18 +1311,18 @@ SQLRETURN SQL_API SQLGetFunctions(SQLHDBC hdbc __attribute__((unused)),
                                   SQLUSMALLINT fFunction,
                                   SQLUSMALLINT *pfExists)
 {
-  SQLUSMALLINT index, myodbc_func_size;
+  SQLUSMALLINT index, desodbc_func_size;
 
-  myodbc_func_size = sizeof(myodbc3_functions) / sizeof(myodbc3_functions[0]);
+  desodbc_func_size = sizeof(desodbc3_functions) / sizeof(desodbc3_functions[0]);
 
   if (fFunction == SQL_API_ODBC3_ALL_FUNCTIONS)
   {
     /* Clear and set bits in the 4000 bit vector */
     memset(pfExists, 0,
            sizeof(SQLUSMALLINT) * SQL_API_ODBC3_ALL_FUNCTIONS_SIZE);
-    for (index = 0; index < myodbc_func_size; ++index)
+    for (index = 0; index < desodbc_func_size; ++index)
     {
-      SQLUSMALLINT id = myodbc3_functions[index];
+      SQLUSMALLINT id = desodbc3_functions[index];
       pfExists[id >> 4] |= (1 << (id & 0x000F));
     }
     return SQL_SUCCESS;
@@ -1332,18 +1332,18 @@ SQLRETURN SQL_API SQLGetFunctions(SQLHDBC hdbc __attribute__((unused)),
   {
     /* Clear and set elements in the SQLUSMALLINT 100 element array */
     memset(pfExists, 0, sizeof(SQLUSMALLINT) * 100);
-    for (index = 0; index < myodbc_func_size; ++index)
+    for (index = 0; index < desodbc_func_size; ++index)
     {
-      if (myodbc3_functions[index] < 100)
-        pfExists[myodbc3_functions[index]] = SQL_TRUE;
+      if (desodbc3_functions[index] < 100)
+        pfExists[desodbc3_functions[index]] = SQL_TRUE;
     }
     return SQL_SUCCESS;
   }
 
   *pfExists = SQL_FALSE;
-  for (index = 0; index < myodbc_func_size; ++index)
+  for (index = 0; index < desodbc_func_size; ++index)
   {
-    if (myodbc3_functions[index] == fFunction)
+    if (desodbc3_functions[index] == fFunction)
     {
       *pfExists = SQL_TRUE;
       break;

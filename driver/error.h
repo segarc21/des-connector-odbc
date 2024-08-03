@@ -195,9 +195,9 @@ struct DESERROR
     sqlstate.clear();
   }
 
-  DESERROR(const char* state, MYSQL* mysql) :
-    DESERROR(state, mysql_error(mysql),
-      mysql_errno(mysql), DESODBC_ERROR_PREFIX)
+  DESERROR(const char* state, DES* des) :
+    DESERROR(state, mysql_error(des),
+      mysql_errno(des), DESODBC_ERROR_PREFIX)
   {}
 
   DESERROR(const char* state, std::string errmsg) :
