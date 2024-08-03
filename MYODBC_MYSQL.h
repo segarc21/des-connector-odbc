@@ -31,7 +31,7 @@
 
 #define DONT_DEFINE_VOID
 
-#define my_bool bool
+#define des_bool bool
 #define TRUE 1
 #define FALSE 0
 
@@ -97,7 +97,7 @@ extern "C"
 #define x_free(A) { void *tmp= (A); if (tmp) free((char *) tmp); }
 #define myodbc_malloc(A, B) (B == MY_ZEROFILL ? calloc(A, 1) : malloc(A))
 #define myodbc_realloc(A, B) realloc(A, B)
-#define myodbc_snprintf snprintf
+#define desodbc_snprintf snprintf
 
 
 /* Get rid of defines from des_config.h that conflict with our myconf.h */

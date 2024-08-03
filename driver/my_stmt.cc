@@ -66,9 +66,9 @@ BOOL returned_result(STMT *stmt)
 }
 
 
-my_bool free_current_result(STMT *stmt)
+des_bool free_current_result(STMT *stmt)
 {
-  my_bool res= 0;
+  des_bool res= 0;
   if (stmt->result)
   {
     if (ssps_used(stmt))
@@ -423,7 +423,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
      If that changes we will need to make "parse" to set error and return rc */
   if (parse(&stmt->query))
   {
-    return stmt->set_error( MYERR_S1001, NULL, 4001);
+    return stmt->set_error( DESERR_S1001, NULL, 4001);
   }
 
   ssps_close(stmt);
@@ -434,7 +434,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
     && !IS_BATCH(&stmt->query) &&
       stmt->query.preparable_on_server(stmt->dbc->mysql->server_version))
   {
-    MYLOG_QUERY(stmt, "Using prepared statement");
+    DESLOG_QUERY(stmt, "Using prepared statement");
     ssps_init(stmt);
 
     /* If the query is in the form of "WHERE CURRENT OF" - we do not need to prepare
@@ -453,7 +453,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
 
      if (prep_res)
       {
-        MYLOG_QUERY(stmt, mysql_error(stmt->dbc->mysql));
+        DESLOG_QUERY(stmt, mysql_error(stmt->dbc->mysql));
 
         stmt->set_error("HY000");
         translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_S1000,
@@ -581,7 +581,7 @@ void scroller_create(STMT * stmt, const char *query, SQLULEN query_len)
   /* MAX32_BUFF_SIZE includes place for terminating null, which we do not need
      and will use for comma */
   const size_t len2add = 7/*" LIMIT "*/ + MAX64_BUFF_SIZE/*offset*/ /*- 1*/ + MAX32_BUFF_SIZE;
-  MY_LIMIT_CLAUSE limit = find_position4limit(stmt->dbc->cxn_charset_info,
+  DES_LIMIT_CLAUSE limit = find_position4limit(stmt->dbc->cxn_charset_info,
                                             query, query + query_len);
 
   stmt->scroller.start_offset= limit.offset;
@@ -591,7 +591,7 @@ void scroller_create(STMT * stmt, const char *query, SQLULEN query_len)
   {
     // This has to be recalculated only if limit is specified
     stmt->scroller.total_rows= stmt->scroller.total_rows > 0 ?
-      myodbc_min(limit.row_count, stmt->scroller.total_rows) :
+      desodbc_min(limit.row_count, stmt->scroller.total_rows) :
       limit.row_count;
   }
 
@@ -617,7 +617,7 @@ void scroller_create(STMT * stmt, const char *query, SQLULEN query_len)
   stmt->scroller.offset_pos = limptr + 7;
 
   /* putting row count in place. normally should not change or only once */
-  myodbc_snprintf(stmt->scroller.offset_pos + MAX64_BUFF_SIZE - 1, MAX32_BUFF_SIZE + 1,
+  desodbc_snprintf(stmt->scroller.offset_pos + MAX64_BUFF_SIZE - 1, MAX32_BUFF_SIZE + 1,
     ",%*u", MAX32_BUFF_SIZE-1, stmt->scroller.row_count);
   /* cpy'ing end of query from original query - not sure if we will allow to
      have one */
@@ -630,7 +630,7 @@ void scroller_create(STMT * stmt, const char *query, SQLULEN query_len)
 /* Returns next offset/maxrow for current fetch*/
 unsigned long long scroller_move(STMT * stmt)
 {
-  myodbc_snprintf(stmt->scroller.offset_pos, MAX64_BUFF_SIZE, "%*llu", MAX64_BUFF_SIZE - 1,
+  desodbc_snprintf(stmt->scroller.offset_pos, MAX64_BUFF_SIZE, "%*llu", MAX64_BUFF_SIZE - 1,
     stmt->scroller.next_offset);
   stmt->scroller.offset_pos[MAX64_BUFF_SIZE - 1]=',';
 
@@ -654,7 +654,7 @@ SQLRETURN scroller_prefetch(STMT * stmt)
 
     if (count > 0)
     {
-      myodbc_snprintf(stmt->scroller.offset_pos + MAX64_BUFF_SIZE, MAX32_BUFF_SIZE,
+      desodbc_snprintf(stmt->scroller.offset_pos + MAX64_BUFF_SIZE, MAX32_BUFF_SIZE,
               "%*u", MAX32_BUFF_SIZE - 1, (unsigned long)count);
       stmt->scroller.offset_pos[MAX64_BUFF_SIZE + MAX32_BUFF_SIZE - 1] = ' ';
     }
@@ -664,7 +664,7 @@ SQLRETURN scroller_prefetch(STMT * stmt)
     }
   }
 
-  MYLOG_QUERY(stmt, stmt->scroller.query);
+  DESLOG_QUERY(stmt, stmt->scroller.query);
 
   LOCK_DBC(stmt->dbc);
 
@@ -706,7 +706,7 @@ bool scrollable(STMT * stmt, const char * query, const char * query_end)
     /* FROM can be only token before a last one at most
        no need to scroll if there is no FROM clause
      */
-    if ( myodbc_casecmp(prev,"FROM", 4)
+    if ( desodbc_casecmp(prev,"FROM", 4)
       && !find_token(stmt->dbc->cxn_charset_info, query, before_token, "FROM"))
     {
       return FALSE;

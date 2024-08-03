@@ -68,10 +68,10 @@ static SQLRETURN my_transact(SQLHDBC hdbc, SQLSMALLINT CompletionType)
       break;
 
     default:
-      return ((DBC*)hdbc)->set_error(MYERR_S1012, NULL, 0);
+      return ((DBC*)hdbc)->set_error(DESERR_S1012, NULL, 0);
     }
 
-    MYLOG_DBC_QUERY(dbc, query);
+    DESLOG_DBC_QUERY(dbc, query);
 
     LOCK_DBC(dbc);
     if (check_if_server_is_alive(dbc) ||
@@ -128,7 +128,7 @@ end_transaction(SQLSMALLINT HandleType,
   }
   default:
     result= SQL_ERROR;
-    ((STMT*)Handle)->set_error(MYERR_S1092,NULL,0);
+    ((STMT*)Handle)->set_error(DESERR_S1092,NULL,0);
     break;
   }
   return result;

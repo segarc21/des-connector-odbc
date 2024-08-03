@@ -290,7 +290,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   unsigned long flags;
   /* Use 'int' and fill all bits to avoid alignment Bug#25920 */
   unsigned int opt_ssl_verify_server_cert = ~0;
-  const my_bool on = 1;
+  const des_bool on = 1;
   unsigned int on_int = 1;
   unsigned long max_long = ~0L;
   bool initstmt_executed = false;
@@ -493,7 +493,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
         "Failed to set mode for authentication_kerberos_client plugin", 0);
     }
 #else
-    if (myodbc_strcasecmp("GSSAPI",
+    if (desodbc_strcasecmp("GSSAPI",
       (const char *)dsrc->opt_AUTHENTICATION_KERBEROS_MODE))
     {
       return set_error("HY000",
@@ -650,15 +650,15 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   if (dsrc->opt_SSL_MODE)
   {
     unsigned int mode = 0;
-    if (!myodbc_strcasecmp(ODBC_SSL_MODE_DISABLED, dsrc->opt_SSL_MODE))
+    if (!desodbc_strcasecmp(ODBC_SSL_MODE_DISABLED, dsrc->opt_SSL_MODE))
       mode = SSL_MODE_DISABLED;
-    if (!myodbc_strcasecmp(ODBC_SSL_MODE_PREFERRED, dsrc->opt_SSL_MODE))
+    if (!desodbc_strcasecmp(ODBC_SSL_MODE_PREFERRED, dsrc->opt_SSL_MODE))
       mode = SSL_MODE_PREFERRED;
-    if (!myodbc_strcasecmp(ODBC_SSL_MODE_REQUIRED, dsrc->opt_SSL_MODE))
+    if (!desodbc_strcasecmp(ODBC_SSL_MODE_REQUIRED, dsrc->opt_SSL_MODE))
       mode = SSL_MODE_REQUIRED;
-    if (!myodbc_strcasecmp(ODBC_SSL_MODE_VERIFY_CA, dsrc->opt_SSL_MODE))
+    if (!desodbc_strcasecmp(ODBC_SSL_MODE_VERIFY_CA, dsrc->opt_SSL_MODE))
       mode = SSL_MODE_VERIFY_CA;
-    if (!myodbc_strcasecmp(ODBC_SSL_MODE_VERIFY_IDENTITY, dsrc->opt_SSL_MODE))
+    if (!desodbc_strcasecmp(ODBC_SSL_MODE_VERIFY_IDENTITY, dsrc->opt_SSL_MODE))
       mode = SSL_MODE_VERIFY_IDENTITY;
 
     // Don't do anything if there is no match with any of the available modes
@@ -731,7 +731,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 #else
 
 #define SET_OTEL_MODE(X,N) \
-    if (!myodbc_strcasecmp(#X, dsrc->opt_OPENTELEMETRY)) \
+    if (!desodbc_strcasecmp(#X, dsrc->opt_OPENTELEMETRY)) \
     { telemetry.set_mode(OTEL_ ## X); break; }
 
     ODBC_OTEL_MODE(SET_OTEL_MODE)
@@ -807,7 +807,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
          that, but the driver was linked  that
          does not support this option. Thus we change native error. */
         /* TODO: enum/defines for driver specific errors */
-        return set_conn_error(dbc, MYERR_08004,
+        return set_conn_error(dbc, DESERR_08004,
                               "Your password has expired, but underlying library doesn't support "
                               "this functionlaity", 0);
       }
@@ -938,7 +938,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     query_log = init_query_log();
 
   /* Set the statement error prefix based on the server version. */
-  desodbc::strxmov(st_error_prefix, MYODBC_ERROR_PREFIX, "[mysqld-",
+  desodbc::strxmov(st_error_prefix, DESODBC_ERROR_PREFIX, "[mysqld-",
           mysql->server_version, "]", NullS);
 
   /*
@@ -965,7 +965,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     if (!transactions_supported() || ds.opt_NO_TRANSACTIONS)
     {
       commit_flag = CHECK_AUTOCOMMIT_ON;
-      rc = set_error(MYERR_01S02,
+      rc = set_error(DESERR_01S02,
              "Transactions are not enabled, option value "
              "SQL_AUTOCOMMIT_OFF changed to SQL_AUTOCOMMIT_ON",
              SQL_SUCCESS_WITH_INFO);
@@ -1012,7 +1012,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     else
     {
       txn_isolation = SQL_TXN_READ_UNCOMMITTED;
-      rc = set_error(MYERR_01S02,
+      rc = set_error(DESERR_01S02,
              "Transactions are not enabled, so transaction isolation "
              "was ignored.", SQL_SUCCESS_WITH_INFO);
     }
@@ -1071,7 +1071,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   @since ODBC 1.0
   @since ISO SQL 92
 */
-SQLRETURN SQL_API MySQLConnect(SQLHDBC   hdbc,
+SQLRETURN SQL_API DESConnect(SQLHDBC   hdbc,
                                SQLWCHAR *szDSN, SQLSMALLINT cbDSN,
                                SQLWCHAR *szUID, SQLSMALLINT cbUID,
                                SQLWCHAR *szAuth, SQLSMALLINT cbAuth)
@@ -1087,7 +1087,7 @@ SQLRETURN SQL_API MySQLConnect(SQLHDBC   hdbc,
 
   /* Can't connect if we're already connected. */
   if (is_connected(dbc))
-    return ((DBC*)hdbc)->set_error(MYERR_08002, NULL, 0);
+    return ((DBC*)hdbc)->set_error(DESERR_08002, NULL, 0);
 
   /* Reset error state */
   CLEAR_DBC_ERROR(dbc);
@@ -1147,7 +1147,7 @@ SQLRETURN SQL_API MySQLConnect(SQLHDBC   hdbc,
   @since ODBC 1.0
   @since ISO SQL 92
 */
-SQLRETURN SQL_API MySQLDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
+SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
                                      SQLWCHAR *szConnStrIn,
                                      SQLSMALLINT cbConnStrIn,
                                      SQLWCHAR *szConnStrOut,
@@ -1381,7 +1381,7 @@ SQLRETURN SQL_API MySQLDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
     */
     if (szConnStrOut)
     {
-      *pcbConnStrOut= (SQLSMALLINT)myodbc_min(cbConnStrOutMax, *pcbConnStrOut);
+      *pcbConnStrOut= (SQLSMALLINT)desodbc_min(cbConnStrOutMax, *pcbConnStrOut);
       memcpy(szConnStrOut, prompt_outstr, (size_t)*pcbConnStrOut*sizeof(SQLWCHAR));
       /* term needed if possibly truncated */
       szConnStrOut[*pcbConnStrOut - 1] = 0;
@@ -1423,7 +1423,7 @@ connected:
     }
 
     size_t inlen = conn_str_out.length();
-    copylen = myodbc_min((size_t)cbConnStrOutMax, inlen + 1) * sizeof(SQLWCHAR);
+    copylen = desodbc_min((size_t)cbConnStrOutMax, inlen + 1) * sizeof(SQLWCHAR);
 
     if (szConnStrOut && copylen)
     {
@@ -1469,7 +1469,7 @@ void DBC::free_connection_stmts()
   {
       STMT *stmt = *it;
       it = stmt_list.erase(it);
-      my_SQLFreeStmt((SQLHSTMT)stmt, SQL_DROP);
+      DES_SQLFreeStmt((SQLHSTMT)stmt, SQL_DROP);
   }
   stmt_list.clear();
 }
@@ -1506,7 +1506,7 @@ SQLRETURN SQL_API SQLDisconnect(SQLHDBC hdbc)
 
 
 SQLRETURN DBC::execute_query(const char* query,
-  SQLULEN query_length, my_bool req_lock)
+  SQLULEN query_length, des_bool req_lock)
 {
   SQLRETURN result = SQL_SUCCESS;
   LOCK_DBC_DEFER(this);

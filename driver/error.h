@@ -51,8 +51,8 @@
 /*
   myodbc error prefix
 */
-#define MYODBC_ERROR_PREFIX	 "[MySQL][ODBC " MYODBC_STRDRIVERID " Driver]"
-#define MYODBC_ERROR_CODE_START  500
+#define DESODBC_ERROR_PREFIX	 "[DES][ODBC " DESODBC_STRDRIVERID " Driver]"
+#define DESODBC_ERROR_CODE_START  500
 
 #define CLEAR_ENV_ERROR(env)   (((ENV *)env)->error.clear())
 #define CLEAR_DBC_ERROR(dbc)   (((DBC *)dbc)->error.clear())
@@ -70,62 +70,62 @@
 /*
   list of MyODBC3 error codes
 */
-typedef enum myodbc_errid
+typedef enum desodbc_errid
 {
-    MYERR_01000 = 0,
-    MYERR_01004,
-    MYERR_01S02,
-    MYERR_01S03,
-    MYERR_01S04,
-    MYERR_01S06,
-    MYERR_07001,
+    DESERR_01000 = 0,
+    DESERR_01004,
+    DESERR_01S02,
+    DESERR_01S03,
+    DESERR_01S04,
+    DESERR_01S06,
+    DESERR_07001,
     DESERR_07005,
-    MYERR_07006,
-    MYERR_07009,
-    MYERR_08002,
-    MYERR_08003,
-    MYERR_24000,
-    MYERR_25000,
-    MYERR_25S01,
-    MYERR_34000,
-    MYERR_HYT00,
+    DESERR_07006,
+    DESERR_07009,
+    DESERR_08002,
+    DESERR_08003,
+    DESERR_24000,
+    DESERR_25000,
+    DESERR_25S01,
+    DESERR_34000,
+    DESERR_HYT00,
     DESERR_S1000,
-    MYERR_S1001,
-    MYERR_S1002,
-    MYERR_S1003,
-    MYERR_S1004,
-    MYERR_S1007,
-    MYERR_S1009,
-    MYERR_S1010,
-    MYERR_S1011,
-    MYERR_S1012,
-    MYERR_S1013,
-    MYERR_S1015,
-    MYERR_S1016,
-    MYERR_S1017,
-    MYERR_S1024,
-    MYERR_S1090,
-    MYERR_S1091,
-    MYERR_S1092,
-    MYERR_S1093,
-    MYERR_S1095,
-    MYERR_S1106,
-    MYERR_S1107,
-    MYERR_S1109,
+    DESERR_S1001,
+    DESERR_S1002,
+    DESERR_S1003,
+    DESERR_S1004,
+    DESERR_S1007,
+    DESERR_S1009,
+    DESERR_S1010,
+    DESERR_S1011,
+    DESERR_S1012,
+    DESERR_S1013,
+    DESERR_S1015,
+    DESERR_S1016,
+    DESERR_S1017,
+    DESERR_S1024,
+    DESERR_S1090,
+    DESERR_S1091,
+    DESERR_S1092,
+    DESERR_S1093,
+    DESERR_S1095,
+    DESERR_S1106,
+    DESERR_S1107,
+    DESERR_S1109,
     DESERR_S1C00,
 
-    MYERR_21S01,
-    MYERR_23000,
+    DESERR_21S01,
+    DESERR_23000,
     DESERR_42000,
     DESERR_42S01,
     DESERR_42S02,
     DESERR_42S12,
     DESERR_42S21,
     DESERR_42S22,
-    MYERR_08S01,
+    DESERR_08S01,
     /* Please add new errors to the end of enum, and not in alphabet order */
-    MYERR_08004,
-} myodbc_errid;
+    DESERR_08004,
+} desodbc_errid;
 
 /*
   error handler structure
@@ -146,7 +146,7 @@ struct DESERROR
     retcode = rc;
   }
 
-  DESERROR(myodbc_errid errid, const char *errtext, SQLINTEGER errcode,
+  DESERROR(desodbc_errid errid, const char *errtext, SQLINTEGER errcode,
     const char *prefix);
 
   DESERROR(const char *state, const char *msg, SQLINTEGER errcode,
@@ -197,11 +197,11 @@ struct DESERROR
 
   DESERROR(const char* state, MYSQL* mysql) :
     DESERROR(state, mysql_error(mysql),
-      mysql_errno(mysql), MYODBC_ERROR_PREFIX)
+      mysql_errno(mysql), DESODBC_ERROR_PREFIX)
   {}
 
   DESERROR(const char* state, std::string errmsg) :
-    DESERROR(state, errmsg.c_str(), 0, MYODBC_ERROR_PREFIX)
+    DESERROR(state, errmsg.c_str(), 0, DESODBC_ERROR_PREFIX)
   {}
 };
 
@@ -209,10 +209,10 @@ struct DESERROR
   error handler-predefined structure
   odbc2 state, odbc3 state, message and return code
 */
-typedef struct myodbc3_err_str {
+typedef struct desodbc3_err_str {
   char	   sqlstate[6];  /* ODBC3 STATE, if SQL_OV_ODBC2, then ODBC2 STATE */
   char	   message[SQL_MAX_MESSAGE_LENGTH+1];/* ERROR MSG */
   SQLRETURN   retcode;	    /* RETURN CODE */
-} MYODBC3_ERR_STR;
+} DESODBC3_ERR_STR;
 
 #endif /* __ERROR_H__ */

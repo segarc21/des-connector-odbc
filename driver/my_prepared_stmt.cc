@@ -38,7 +38,7 @@
 /* {{{ my_l_to_a() -I- */
 static char * my_l_to_a(char * buf, size_t buf_size, long long a)
 {
-  myodbc_snprintf(buf, buf_size, "%lld", (long long) a);
+  desodbc_snprintf(buf, buf_size, "%lld", (long long) a);
   return buf;
 }
 /* }}} */
@@ -47,7 +47,7 @@ static char * my_l_to_a(char * buf, size_t buf_size, long long a)
 /* {{{ my_ul_to_a() -I- */
 static char * my_ul_to_a(char * buf, size_t buf_size, unsigned long long a)
 {
-  myodbc_snprintf(buf, buf_size, "%llu", (unsigned long long) a);
+  desodbc_snprintf(buf, buf_size, "%llu", (unsigned long long) a);
   return buf;
 }
 /* }}} */
@@ -139,16 +139,16 @@ BOOL ssps_get_out_params(STMT *stmt)
       if (out_params)
       {
         for (i= 0;
-             i < myodbc_min(stmt->ipd->rcount(), stmt->apd->rcount()) && counter < stmt->field_count();
+             i < desodbc_min(stmt->ipd->rcount(), stmt->apd->rcount()) && counter < stmt->field_count();
              ++i)
         {
           /* Making bit field look "normally" */
-          if (stmt->result_bind[counter].buffer_type == MYSQL_TYPE_BIT)
+          if (stmt->result_bind[counter].buffer_type == DES_TYPE_BIT)
           {
             MYSQL_FIELD *field= mysql_fetch_field_direct(stmt->result, counter);
             unsigned long long numeric;
 
-            assert(field->type == MYSQL_TYPE_BIT);
+            assert(field->type == DES_TYPE_BIT);
             /* terminating with NULL */
             values[counter][*stmt->result_bind[counter].length]= '\0';
             numeric= strtoull(values[counter], NULL, 10);
@@ -345,7 +345,7 @@ void ssps_close(STMT *stmt)
 SQLRETURN ssps_fetch_chunk(STMT *stmt, char *dest, unsigned long dest_bytes, unsigned long *avail_bytes)
 {
   MYSQL_BIND bind;
-  my_bool is_null, error= 0;
+  des_bool is_null, error= 0;
 
   bind.buffer= dest;
   bind.buffer_length= dest_bytes;
@@ -369,7 +369,7 @@ SQLRETURN ssps_fetch_chunk(STMT *stmt, char *dest, unsigned long dest_bytes, uns
   else
   {
     *avail_bytes= (SQLULEN)bind.length_value - stmt->getdata.src_offset;
-    stmt->getdata.src_offset+= myodbc_min((SQLULEN)dest_bytes, *avail_bytes);
+    stmt->getdata.src_offset+= desodbc_min((SQLULEN)dest_bytes, *avail_bytes);
 
     if (*bind.error)
     {
@@ -399,7 +399,7 @@ bool is_varlen_type(enum enum_field_types type)
           type == MYSQL_TYPE_LONG_BLOB ||
           type == MYSQL_TYPE_VAR_STRING ||
           type == MYSQL_TYPE_JSON
-          || type == MYSQL_TYPE_VECTOR
+          || type == DES_TYPE_VECTOR
           );
 }
 
@@ -482,7 +482,7 @@ allocate_buffer_for_field(const MYSQL_FIELD * const field, BOOL outparams)
     case MYSQL_TYPE_STRING:
     case MYSQL_TYPE_VAR_STRING:
     case MYSQL_TYPE_JSON:
-    case MYSQL_TYPE_VECTOR:
+    case DES_TYPE_VECTOR:
       /* We will get length with fetch and then fetch column */
       if (field->length > 0 && field->length < 1025)
         result.size= field->length + 1;
@@ -495,7 +495,7 @@ allocate_buffer_for_field(const MYSQL_FIELD * const field, BOOL outparams)
       break;
 
     case MYSQL_TYPE_DECIMAL:
-    case MYSQL_TYPE_NEWDECIMAL:
+    case DES_TYPE_NEWDECIMAL:
       result.size=64;
       break;
 
@@ -510,8 +510,8 @@ allocate_buffer_for_field(const MYSQL_FIELD * const field, BOOL outparams)
     case MYSQL_TYPE_ENUM:
     case MYSQL_TYPE_SET:
     #endif
-    case MYSQL_TYPE_BIT:
-      result.type= (enum_field_types)MYSQL_TYPE_BIT;
+    case DES_TYPE_BIT:
+      result.type= (enum_field_types)DES_TYPE_BIT;
       if (outparams)
       {
         /* For out params we surprisingly get it as string representation of a
@@ -762,14 +762,14 @@ void STMT::reset_getdata_position()
   getdata.latest_bytes = getdata.latest_used = 0;
 }
 
-SQLRETURN STMT::set_error(myodbc_errid errid, const char *errtext,
+SQLRETURN STMT::set_error(desodbc_errid errid, const char *errtext,
                          SQLINTEGER errcode)
 {
   error = DESERROR(errid, errtext, errcode, dbc->st_error_prefix);
   return error.retcode;
 }
 
-SQLRETURN STMT::set_error(myodbc_errid errid)
+SQLRETURN STMT::set_error(desodbc_errid errid)
 {
   if (ssps)
     return set_error(errid, mysql_stmt_error(ssps), mysql_stmt_errno(ssps));
@@ -852,7 +852,7 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow)
   break;
 
   default:
-    set_error(MYERR_S1106, "Fetch type out of range", 0);
+    set_error(DESERR_S1106, "Fetch type out of range", 0);
     throw error;
   }
 
@@ -914,11 +914,11 @@ int STMT::ssps_bind_result()
 
   if (!result_bind)
   {
-    rb_is_null.reset(new my_bool[num_fields]());
-    rb_err.reset(new my_bool[num_fields]());
+    rb_is_null.reset(new des_bool[num_fields]());
+    rb_err.reset(new des_bool[num_fields]());
     rb_len.reset(new unsigned long[num_fields]());
-    my_bool *is_null = rb_is_null.get();
-    my_bool *err = rb_err.get();
+    des_bool *is_null = rb_is_null.get();
+    des_bool *err = rb_err.get();
     unsigned long *len = rb_len.get();
 
     /*TODO care about memory allocation errors */
@@ -1006,13 +1006,13 @@ SQLRETURN STMT::bind_query_attrs(bool use_ssps)
   uint rcount = (uint)apd->rcount();
   if (rcount < param_count)
   {
-    return set_error(MYERR_07001,
+    return set_error(DESERR_07001,
                      "The number of parameter markers is larger "
                      "than he number of parameters provided", 0);
   }
   else if (!dbc->has_query_attrs)
   {
-    return set_error(MYERR_01000,
+    return set_error(DESERR_01000,
                      "The server does not support query attributes", 0);
   }
 
@@ -1151,14 +1151,14 @@ char * ssps_get_string(STMT *stmt, ulong column_number, char *value, ulong *leng
       MYSQL_TIME * t = (MYSQL_TIME *)(col_rbind->buffer);
 
       buffer= ALLOC_IFNULL(buffer, 30);
-      myodbc_snprintf(buffer, 20, "%04u-%02u-%02u %02u:%02u:%02u",
+      desodbc_snprintf(buffer, 20, "%04u-%02u-%02u %02u:%02u:%02u",
                       t->year, t->month, t->day, t->hour, t->minute, t->second);
 
       *length= 19;
 
       if (t->second_part > 0)
       {
-        myodbc_snprintf(buffer+*length, 8, ".%06lu", t->second_part);
+        desodbc_snprintf(buffer+*length, 8, ".%06lu", t->second_part);
         *length= 26;
       }
 
@@ -1169,7 +1169,7 @@ char * ssps_get_string(STMT *stmt, ulong column_number, char *value, ulong *leng
       MYSQL_TIME * t = (MYSQL_TIME *)(col_rbind->buffer);
 
       buffer= ALLOC_IFNULL(buffer, 12);
-      myodbc_snprintf(buffer, 11, "%04u-%02u-%02u", t->year, t->month, t->day);
+      desodbc_snprintf(buffer, 11, "%04u-%02u-%02u", t->year, t->month, t->day);
       *length= 10;
 
       return buffer;
@@ -1179,18 +1179,18 @@ char * ssps_get_string(STMT *stmt, ulong column_number, char *value, ulong *leng
       MYSQL_TIME * t = (MYSQL_TIME *)(col_rbind->buffer);
 
       buffer= ALLOC_IFNULL(buffer, 20);
-      myodbc_snprintf(buffer, 10, "%s%02u:%02u:%02u", t->neg? "-":"", t->hour,
+      desodbc_snprintf(buffer, 10, "%s%02u:%02u:%02u", t->neg? "-":"", t->hour,
                                               t->minute, t->second);
       *length= t->neg ? 9 : 8;
 
       if (t->second_part > 0)
       {
-        myodbc_snprintf(buffer+*length, 8, ".%06lu", t->second_part);
+        desodbc_snprintf(buffer+*length, 8, ".%06lu", t->second_part);
         *length+= 7;
       }
       return buffer;
     }
-    case MYSQL_TYPE_BIT:
+    case DES_TYPE_BIT:
     case MYSQL_TYPE_YEAR:  // fetched as a SMALLINT
     case MYSQL_TYPE_TINY:
     case MYSQL_TYPE_SHORT:
@@ -1226,14 +1226,14 @@ char * ssps_get_string(STMT *stmt, ulong column_number, char *value, ulong *leng
     }
 
     case MYSQL_TYPE_DECIMAL:
-    case MYSQL_TYPE_NEWDECIMAL:
+    case DES_TYPE_NEWDECIMAL:
     case MYSQL_TYPE_STRING:
     case MYSQL_TYPE_LONG_BLOB:
     case MYSQL_TYPE_BLOB:
     case MYSQL_TYPE_VARCHAR:
     case MYSQL_TYPE_VAR_STRING:
     case MYSQL_TYPE_JSON:
-    case MYSQL_TYPE_VECTOR:
+    case DES_TYPE_VECTOR:
       *length= *col_rbind->length;
       return (char *)(col_rbind->buffer);
     default:
@@ -1259,7 +1259,7 @@ double ssps_get_double(STMT *stmt, ulong column_number, char *value, ulong lengt
   }
 
   switch (col_rbind->buffer_type) {
-    case MYSQL_TYPE_BIT:
+    case DES_TYPE_BIT:
     case MYSQL_TYPE_YEAR:  // fetched as a SMALLINT
     case MYSQL_TYPE_TINY:
     case MYSQL_TYPE_SHORT:
@@ -1283,7 +1283,7 @@ double ssps_get_double(STMT *stmt, ulong column_number, char *value, ulong lengt
       return ret;
     }
     case MYSQL_TYPE_DECIMAL:
-    case MYSQL_TYPE_NEWDECIMAL:
+    case DES_TYPE_NEWDECIMAL:
     case MYSQL_TYPE_TIMESTAMP:
     case MYSQL_TYPE_DATETIME:
     case MYSQL_TYPE_DATE:
@@ -1361,7 +1361,7 @@ T ssps_get_int64(STMT *stmt, ulong column_number, char *value, ulong length)
       return (T)ssps_get_double(stmt, column_number, value, length);
 
     case MYSQL_TYPE_DECIMAL:
-    case MYSQL_TYPE_NEWDECIMAL:
+    case DES_TYPE_NEWDECIMAL:
     case MYSQL_TYPE_TIMESTAMP:
     case MYSQL_TYPE_DATETIME:
     case MYSQL_TYPE_DATE:
@@ -1375,7 +1375,7 @@ T ssps_get_int64(STMT *stmt, ulong column_number, char *value, ulong length)
       return strtoll(ssps_get_string(stmt, column_number, value, &length, buf),
                       NULL, 10);
     }
-    case MYSQL_TYPE_BIT:
+    case DES_TYPE_BIT:
     {
       /* This length is in bytes, on the contrary to what can be seen in mysql_resultset.cpp where the Meta is used */
       return binary2numeric<T>((char*)col_rbind->buffer, (uint64)(*col_rbind->length));

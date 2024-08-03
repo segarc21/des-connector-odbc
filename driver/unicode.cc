@@ -92,11 +92,11 @@ SQLColAttributeWImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
   SQLWCHAR *wvalue;
   SQLINTEGER len= SQL_NTS;
   uint errors;
-  SQLRETURN rc= MySQLColAttribute(hstmt, column, field, &value, num_attr);
+  SQLRETURN rc= DESColAttribute(hstmt, column, field, &value, num_attr);
 
   if (value)
   {
-    my_bool free_value= FALSE;
+    des_bool free_value= FALSE;
     wvalue= sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value,
                                 &len, &errors);
 
@@ -105,14 +105,14 @@ SQLColAttributeWImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
 
     /* We set the error only when the result is intented to be returned */
     if ((char_attr || num_attr) && len > char_attr_max - 1)
-      rc= stmt->set_error( MYERR_01004, NULL, 0);
+      rc= stmt->set_error( DESERR_01004, NULL, 0);
 
     if (char_attr_len)
       *char_attr_len= (SQLSMALLINT)len * sizeof(SQLWCHAR);
 
     if (char_attr_max > 0)
     {
-      len= myodbc_min(len, char_attr_max - 1);
+      len= desodbc_min(len, char_attr_max - 1);
       (void)memcpy((char *)char_attr, (const char *)wvalue,
                    len * sizeof(SQLWCHAR));
       ((SQLWCHAR *)char_attr)[len]= 0;
@@ -160,7 +160,7 @@ SQLColumnPrivilegesW(SQLHSTMT hstmt,
   column8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, column, &len, &errors);
   column_len= (SQLSMALLINT)len;
 
-  rc= MySQLColumnPrivileges(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESColumnPrivileges(hstmt, catalog8, catalog_len, schema8, schema_len,
                             table8, table_len, column8, column_len);
 
   x_free(catalog8);
@@ -205,7 +205,7 @@ SQLColumnsW(SQLHSTMT hstmt,
   column8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, column, &len, &errors);
   column_len= (SQLSMALLINT)len;
 
-  rc= MySQLColumns(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESColumns(hstmt, catalog8, catalog_len, schema8, schema_len,
                    table8, table_len, column8, column_len);
 
   x_free(catalog8);
@@ -226,7 +226,7 @@ SQLConnectW(SQLHDBC hdbc, SQLWCHAR *dsn, SQLSMALLINT dsn_len,
 
   ((DBC *)hdbc)->unicode= TRUE; /* Hooray, a Unicode connection! */
 
-  return MySQLConnect(hdbc, dsn, dsn_len, user, user_len, auth, auth_len);
+  return DESConnect(hdbc, dsn, dsn_len, user, user_len, auth, auth_len);
 }
 
 
@@ -246,7 +246,7 @@ SQLDriverConnectW(SQLHDBC hdbc, SQLHWND hwnd,
 
   ((DBC *)hdbc)->unicode= TRUE; /* Hooray, a Unicode connection! */
 
-  return MySQLDriverConnect(hdbc, hwnd, in, in_len, out, out_max,
+  return DESDriverConnect(hdbc, hwnd, in, in_len, out, out_max,
                             out_len, completion);
 }
 
@@ -268,7 +268,7 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   LOCK_STMT(hstmt);
 
-  rc= MySQLDescribeCol(hstmt, column, &value, &free_value, type,
+  rc= DESDescribeCol(hstmt, column, &value, &free_value, type,
                                  size, scale, nullable);
 
   if (free_value == -1)
@@ -291,14 +291,14 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
 
     /* We set the error only when the result is intented to be returned */
     if (name && len > name_max - 1)
-      rc= stmt->set_error( MYERR_01004, NULL, 0);
+      rc= stmt->set_error( DESERR_01004, NULL, 0);
 
     if (name_len)
       *name_len= (SQLSMALLINT)len;
 
     if (name && name_max > 0)
     {
-      len= myodbc_min(len, name_max - 1);
+      len= desodbc_min(len, name_max - 1);
       (void)memcpy((char *)name, (const char *)wvalue,
                    len * sizeof(SQLWCHAR));
       ((SQLWCHAR *)name)[len]= 0;
@@ -322,7 +322,7 @@ SQLExecDirectW(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len)
 
   if ((error= SQLPrepareWImpl(hstmt, str, str_len, false)))
     return error;
-  error= my_SQLExecute((STMT *)hstmt);
+  error= DES_SQLExecute((STMT *)hstmt);
 
   return error;
 }
@@ -378,7 +378,7 @@ SQLForeignKeysW(SQLHSTMT hstmt,
                                  &errors);
   fk_table_len= (SQLSMALLINT)len;
 
-  rc= MySQLForeignKeys(hstmt, pk_catalog8, pk_catalog_len,
+  rc= DESForeignKeys(hstmt, pk_catalog8, pk_catalog_len,
                        pk_schema8, pk_schema_len, pk_table8, pk_table_len,
                        fk_catalog8, fk_catalog_len, fk_schema8, fk_schema_len,
                        fk_table8, fk_table_len);
@@ -418,7 +418,7 @@ SQLGetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
     the valid output buffer to prevent crashes
   */
   if (value)
-    rc= MySQLGetConnectAttr(hdbc, attribute, &char_value, value);
+    rc= DESGetConnectAttr(hdbc, attribute, &char_value, value);
 
   if (char_value)
   {
@@ -450,14 +450,14 @@ SQLGetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
       see: "if (char_value)"
     */
     if (len > value_max - 1)
-      rc = dbc->set_error(MYERR_01004, NULL, 0);
+      rc = dbc->set_error(DESERR_01004, NULL, 0);
 
     if (value_len)
       *value_len= len * sizeof(SQLWCHAR);
 
     if (value_max > 0)
     {
-      len= myodbc_min(len, value_max - 1);
+      len= desodbc_min(len, value_max - 1);
       (void)memcpy((char *)value, (const char *)wvalue,
                    len * sizeof(SQLWCHAR));
       ((SQLWCHAR *)value)[len]= 0;
@@ -485,21 +485,21 @@ SQLGetCursorNameW(SQLHSTMT hstmt, SQLWCHAR *cursor, SQLSMALLINT cursor_max,
   CLEAR_STMT_ERROR(stmt);
 
   if (cursor_max < 0)
-    return stmt->set_error( MYERR_S1090, NULL, 0);
+    return stmt->set_error( DESERR_S1090, NULL, 0);
 
   name= sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info,
-                            MySQLGetCursorName(hstmt), &len, &errors);
+                            DESGetCursorName(hstmt), &len, &errors);
 
   if (cursor_len)
     *cursor_len= (SQLSMALLINT)len;
 
   /* Warn if name truncated, but buffer is not null */
   if (cursor && len > cursor_max - 1)
-    rc= stmt->set_error( MYERR_01004, NULL, 0);
+    rc= stmt->set_error( DESERR_01004, NULL, 0);
 
   if (cursor_max > 0)
   {
-    len= myodbc_min(len, cursor_max - 1);
+    len= desodbc_min(len, cursor_max - 1);
     (void)memcpy((char *)cursor, (const char *)name, len * sizeof(SQLWCHAR));
     cursor[len]= 0;
   }
@@ -524,7 +524,7 @@ SQLGetDiagFieldW(SQLSMALLINT handle_type, SQLHANDLE handle,
 
   CHECK_HANDLE(handle);
 
-  rc= MySQLGetDiagField(handle_type, handle, record, field,
+  rc= DESGetDiagField(handle_type, handle, record, field,
                         &value, info);
 
   switch (handle_type) {
@@ -555,14 +555,14 @@ SQLGetDiagFieldW(SQLSMALLINT handle_type, SQLHANDLE handle,
 
     /* We set the error only when the result is intented to be returned */
     if (info && len > info_max - 1)
-      rc= dbc->set_error(MYERR_01004, NULL, 0);
+      rc= dbc->set_error(DESERR_01004, NULL, 0);
 
     if (info_len)
       *info_len= (SQLSMALLINT)len * sizeof(SQLWCHAR);
 
     if (info_max > 0)
     {
-      len= myodbc_min(len, info_max - 1);
+      len= desodbc_min(len, info_max - 1);
       (void)memcpy((char *)info, (const char *)wvalue,
                    len * sizeof(SQLWCHAR));
       ((SQLWCHAR *)info)[len]= 0;
@@ -623,7 +623,7 @@ SQLGetDiagRecWImpl(SQLSMALLINT handle_type, SQLHANDLE handle,
   if (message_max < 0)
     return SQL_ERROR;
 
-  rc= MySQLGetDiagRec(handle_type, handle, record, &sqlstate_value,
+  rc= DESGetDiagRec(handle_type, handle, record, &sqlstate_value,
                       native_error, &msg_value);
 
   if (rc == SQL_NO_DATA_FOUND)
@@ -643,14 +643,14 @@ SQLGetDiagRecWImpl(SQLSMALLINT handle_type, SQLHANDLE handle,
       and message_max is greaater than 0
     */
     if (message && message_max && len > message_max - 1)
-      rc = dbc->set_error(MYERR_01004, NULL, 0);
+      rc = dbc->set_error(DESERR_01004, NULL, 0);
 
     if (message_len)
       *message_len= (SQLSMALLINT)len;
 
     if (message_max > 0)
     {
-      len= myodbc_min(len, message_max - 1);
+      len= desodbc_min(len, message_max - 1);
       (void)memcpy((char *)message, (const char *)wvalue,
                    len * sizeof(SQLWCHAR));
       ((SQLWCHAR *)message)[len]= 0;
@@ -702,7 +702,7 @@ SQLGetInfoW(SQLHDBC hdbc, SQLUSMALLINT type, SQLPOINTER value,
 
   CHECK_HANDLE(hdbc);
 
-  rc= MySQLGetInfo(hdbc, type, &char_value, value, value_len);
+  rc= DESGetInfo(hdbc, type, &char_value, value, value_len);
 
   if (char_value)
   {
@@ -719,14 +719,14 @@ SQLGetInfoW(SQLHDBC hdbc, SQLUSMALLINT type, SQLPOINTER value,
       value is not NULL and value_max is 0
      */
     if (value && value_max && len > value_max - 1)
-      rc = dbc->set_error(MYERR_01004, NULL, 0);
+      rc = dbc->set_error(DESERR_01004, NULL, 0);
 
     if (value_len)
       *value_len= (SQLSMALLINT)len * sizeof(SQLWCHAR);
 
     if (value && value_max > 0)
     {
-      len= myodbc_min(len, value_max - 1);
+      len= desodbc_min(len, value_max - 1);
       (void)memcpy((char *)value, (const char *)wvalue,
                    len * sizeof(SQLWCHAR));
       ((SQLWCHAR *)value)[len]= 0;
@@ -745,7 +745,7 @@ SQLGetStmtAttrW(SQLHSTMT hstmt, SQLINTEGER attribute, SQLPOINTER value,
 {
   LOCK_STMT(hstmt);
 
-  return MySQLGetStmtAttr(hstmt, attribute, value, value_max, value_len);
+  return DESGetStmtAttr(hstmt, attribute, value, value_max, value_len);
 }
 
 
@@ -755,7 +755,7 @@ SQLGetTypeInfoW(SQLHSTMT hstmt, SQLSMALLINT type)
 {
   LOCK_STMT(hstmt);
 
-  return MySQLGetTypeInfo(hstmt, type);
+  return DESGetTypeInfo(hstmt, type);
 }
 
 
@@ -774,7 +774,7 @@ SQLNativeSqlW(SQLHDBC hdbc, SQLWCHAR *in, SQLINTEGER in_len,
     *out_len= in_len;
 
   if (out && in_len >= out_max)
-    rc = ((DBC*)hdbc)->set_error(MYERR_01004, NULL, 0);
+    rc = ((DBC*)hdbc)->set_error(DESERR_01004, NULL, 0);
 
   if (out_max > 0)
   {
@@ -815,7 +815,7 @@ SQLPrepareWImpl(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len,
     return stmt->set_error("22018", NULL, 0);
   }
 
-  SQLRETURN rc = MySQLPrepare(hstmt, conv, str_len, false, force_prepare);
+  SQLRETURN rc = DESPrepare(hstmt, conv, str_len, false, force_prepare);
   x_free(conv);
   return rc;
 }
@@ -848,7 +848,7 @@ SQLPrimaryKeysW(SQLHSTMT hstmt,
   table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
   table_len= (SQLSMALLINT)len;
 
-  rc= MySQLPrimaryKeys(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESPrimaryKeys(hstmt, catalog8, catalog_len, schema8, schema_len,
                        table8, table_len);
 
   x_free(catalog8);
@@ -891,7 +891,7 @@ SQLProcedureColumnsW(SQLHSTMT hstmt,
   column8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, column, &len, &errors);
   column_len= (SQLSMALLINT)len;
 
-  rc= MySQLProcedureColumns(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESProcedureColumns(hstmt, catalog8, catalog_len, schema8, schema_len,
                                proc8, proc_len, column8, column_len);
 
   x_free(catalog8);
@@ -930,7 +930,7 @@ SQLProceduresW(SQLHSTMT hstmt,
   proc8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, proc, &len, &errors);
   proc_len= (SQLSMALLINT)len;
 
-  rc= MySQLProcedures(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESProcedures(hstmt, catalog8, catalog_len, schema8, schema_len,
                       proc8, proc_len);
   // Remove parameters
   ((STMT *)hstmt)->free_reset_params();
@@ -959,7 +959,7 @@ SQLSetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute,
 {
   SQLRETURN rc;
   DBC *dbc= (DBC *)hdbc;
-  my_bool free_value= FALSE;
+  des_bool free_value= FALSE;
   /* Let's make it for windows only so far */
 #ifdef _WIN32
   SQLINTEGER len= value_len == SQL_NTS ? SQL_NTS : value_len / sizeof(SQLWCHAR);
@@ -988,7 +988,7 @@ SQLSetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute,
     free_value= TRUE;
   }
 
-  rc= MySQLSetConnectAttr(hdbc, attribute, value, len);
+  rc= DESSetConnectAttr(hdbc, attribute, value, len);
 
   if (free_value)
     x_free(value);
@@ -1012,7 +1012,7 @@ SQLSetCursorNameW(SQLHSTMT hstmt, SQLWCHAR *name, SQLSMALLINT name_len)
   name_char= sqlwchar_as_sqlchar(dbc->cxn_charset_info,
                                           name, &len, &errors);
 
-  rc= MySQLSetCursorName(hstmt, name_char, (SQLSMALLINT)len);
+  rc= DESSetCursorName(hstmt, name_char, (SQLSMALLINT)len);
 
   x_free(name_char);
 
@@ -1035,7 +1035,7 @@ SQLSetStmtAttrW(SQLHSTMT hstmt, SQLINTEGER attribute,
   LOCK_STMT(hstmt);
 
   /* Nothing special to do, since we don't have any string stmt attribs */
-  return MySQLSetStmtAttr(hstmt, attribute, value, value_len);
+  return DESSetStmtAttr(hstmt, attribute, value, value_len);
 }
 
 
@@ -1067,7 +1067,7 @@ SQLSpecialColumnsW(SQLHSTMT hstmt, SQLUSMALLINT type,
   table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
   table_len= (SQLSMALLINT)len;
 
-  rc= MySQLSpecialColumns(hstmt, type, catalog8, catalog_len,
+  rc= DESSpecialColumns(hstmt, type, catalog8, catalog_len,
                           schema8, schema_len, table8, table_len,
                           scope, nullable);
 
@@ -1107,7 +1107,7 @@ SQLStatisticsW(SQLHSTMT hstmt,
   table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
   table_len= (SQLSMALLINT)len;
 
-  rc= MySQLStatistics(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESStatistics(hstmt, catalog8, catalog_len, schema8, schema_len,
                       table8, table_len, unique, accuracy);
 
   x_free(catalog8);
@@ -1145,7 +1145,7 @@ SQLTablePrivilegesW(SQLHSTMT hstmt,
   table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
   table_len= (SQLSMALLINT)len;
 
-  rc= MySQLTablePrivileges(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESTablePrivileges(hstmt, catalog8, catalog_len, schema8, schema_len,
                            table8, table_len);
 
   x_free(catalog8);
@@ -1197,7 +1197,7 @@ SQLTablesW(SQLHSTMT hstmt,
   type8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, type, &len, &errors);
   type_len= (SQLSMALLINT)len;
 
-  rc= MySQLTables(hstmt, catalog8, catalog_len, schema8, schema_len,
+  rc= DESTables(hstmt, catalog8, catalog_len, schema8, schema_len,
                   table8, table_len, type8, type_len);
 
   if (catalog_len)
@@ -1218,7 +1218,7 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT record, SQLSMALLINT field,
 {
   CHECK_HANDLE(hdesc);
 
-  return MySQLGetDescField(hdesc, record, field, value, value_max, value_len);
+  return DESGetDescField(hdesc, record, field, value, value_max, value_len);
 }
 
 

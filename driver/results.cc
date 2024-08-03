@@ -40,7 +40,7 @@
 
 /* Verifies if C type is suitable for copying SQL_BINARY data
    http://msdn.microsoft.com/en-us/library/ms713559%28VS.85%29.aspx */
-my_bool is_binary_ctype( SQLSMALLINT cType)
+des_bool is_binary_ctype( SQLSMALLINT cType)
 {
   return (cType == SQL_C_CHAR
        || cType == SQL_C_BINARY
@@ -52,7 +52,7 @@ my_bool is_binary_ctype( SQLSMALLINT cType)
    and underlying pages.
    Currently checks conversions for MySQL BIT(n) field(SQL_BIT or SQL_BINARY)
 */
-my_bool odbc_supported_conversion(SQLSMALLINT sqlType, SQLSMALLINT cType)
+des_bool odbc_supported_conversion(SQLSMALLINT sqlType, SQLSMALLINT cType)
 {
   switch (sqlType)
   {
@@ -83,11 +83,11 @@ my_bool odbc_supported_conversion(SQLSMALLINT sqlType, SQLSMALLINT cType)
     (i.e. to odbc_supported_conversion() results).
     e.g. we map bit(n>1) to SQL_BINARY, but provide its conversion to numeric
     types */
- my_bool driver_supported_conversion(MYSQL_FIELD * field, SQLSMALLINT cType)
+ des_bool driver_supported_conversion(MYSQL_FIELD * field, SQLSMALLINT cType)
  {
    switch(field->type)
    {
-   case MYSQL_TYPE_BIT:
+   case DES_TYPE_BIT:
      {
        switch (cType)
        {
@@ -211,7 +211,7 @@ sql_get_bookmark_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
                                 pcbValue, NULL, value, length);
       if (SQL_SUCCEEDED(ret))
       {
-        copy_bytes= myodbc_min((unsigned long)length, cbValueMax);
+        copy_bytes= desodbc_min((unsigned long)length, cbValueMax);
         result_end= (SQLCHAR *)rgbValue + copy_bytes;
         if (result_end)
           *result_end= 0;
@@ -325,7 +325,7 @@ sql_get_bookmark_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
     break;
 
   default:
-    return stmt->set_error(MYERR_07006,
+    return stmt->set_error(DESERR_07006,
                      "Restricted data type attribute violation",0);
     break;
   }
@@ -383,7 +383,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
   SQLLEN    tmp;
   long long numeric_value = 0;
   unsigned long long u_numeric_value = 0;
-  my_bool   convert= 1;
+  des_bool   convert= 1;
   SQLRETURN result= SQL_SUCCESS;
   char      as_string[50]; /* Buffer that might be required to convert other
                               types data to its string representation */
@@ -451,7 +451,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       pcbValue= &tmp; /* Easier code */
     }
 
-    if (field->type == MYSQL_TYPE_BIT)
+    if (field->type == DES_TYPE_BIT)
     {
       switch(fCType)
       {
@@ -716,7 +716,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
         }
         else
         {
-          return stmt->set_error(MYERR_07006,
+          return stmt->set_error(DESERR_07006,
                        "Restricted data type attribute violation",0);
         }
 
@@ -930,7 +930,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       break;
 
     default:
-      return stmt->set_error(MYERR_07006,
+      return stmt->set_error(DESERR_07006,
                        "Restricted data type attribute violation",0);
       break;
     }
@@ -966,7 +966,7 @@ static SQLRETURN check_result(STMT *stmt)
         SQLULEN real_max_rows= stmt->stmt_options.max_rows;
         stmt->stmt_options.max_rows= 1;
         /* select limit will be restored back to max_rows before real execution */
-        if ( (error= my_SQLExecute(stmt)) == SQL_SUCCESS )
+        if ( (error= DES_SQLExecute(stmt)) == SQL_SUCCESS )
         {
           stmt->state= ST_PRE_EXECUTED;  /* mark for execute */
         }
@@ -1004,7 +1004,7 @@ SQLRETURN do_dummy_parambind(SQLHSTMT hstmt)
         {
             /* do the dummy bind temporarily to get the result set
                and once everything is done, remove it */
-            if (!SQL_SUCCEEDED(rc= my_SQLBindParameter(hstmt, nparam+1,
+            if (!SQL_SUCCEEDED(rc= DES_SQLBindParameter(hstmt, nparam+1,
                                                        SQL_PARAM_INPUT,
                                                        SQL_C_CHAR,
                                                        SQL_VARCHAR, 0, 0,
@@ -1066,7 +1066,7 @@ SQLRETURN SQL_API SQLNumResultCols(SQLHSTMT  hstmt, SQLSMALLINT *pccol)
   @param[out] nullable   Whether the column is nullable
 */
 SQLRETURN SQL_API
-MySQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
+DESDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
                  SQLCHAR **name, SQLSMALLINT *need_free, SQLSMALLINT *type,
                  SQLULEN *size, SQLSMALLINT *scale, SQLSMALLINT *nullable)
 {
@@ -1151,7 +1151,7 @@ MySQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
   @since ODBC 1.0
 */
 SQLRETURN SQL_API
-MySQLColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
+DESColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
                   SQLUSMALLINT attrib, SQLCHAR **char_attr, SQLLEN *num_attr)
 {
   STMT *stmt= (STMT *)hstmt;
@@ -1161,7 +1161,7 @@ MySQLColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   if (!ssps_used(stmt))
   {
-    /* MySQLColAttribute can be called before SQLExecute. Thus we need make sure that
+    /* DESColAttribute can be called before SQLExecute. Thus we need make sure that
     all parameters have been bound */
     if ( stmt->param_count > 0 && stmt->dummy_state == ST_DUMMY_UNKNOWN &&
       (stmt->state != ST_PRE_EXECUTED || stmt->state != ST_EXECUTED) )
@@ -1187,7 +1187,7 @@ MySQLColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
   }
 
   if (column == 0 || column > stmt->ird->rcount())
-    return ((STMT*)hstmt)->set_error(MYERR_07009, NULL, 0);
+    return ((STMT*)hstmt)->set_error(DESERR_07009, NULL, 0);
 
   if (!num_attr)
     num_attr= &nparam;
@@ -1392,7 +1392,7 @@ SQLRETURN SQL_API SQLBindCol(SQLHSTMT      StatementHandle,
       (stmt->state == ST_EXECUTED && ColumnNumber > stmt->ird->rcount()))
   {
     return stmt->set_error("07009", "Invalid descriptor index",
-                          MYERR_07009);
+                          DESERR_07009);
   }
 
   arrec= desc_get_rec(stmt->ard, ColumnNumber - 1, TRUE);
@@ -1430,13 +1430,13 @@ SQLRETURN SQL_API SQLBindCol(SQLHSTMT      StatementHandle,
   @purpose : returns the latest resultset(dynamic)
 */
 
-my_bool set_dynamic_result(STMT *stmt)
+des_bool set_dynamic_result(STMT *stmt)
 {
   SQLRETURN rc;
   long row= stmt->current_row;
   uint rows= stmt->rows_found_in_set;
 
-  rc= my_SQLExecute(stmt);
+  rc= DES_SQLExecute(stmt);
 
   stmt->current_row= row;
   stmt->rows_found_in_set= rows;
@@ -1484,7 +1484,7 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
          && stmt->stmt_options.bookmarks == (SQLUINTEGER) SQL_UB_OFF)
         || ColumnNumber > stmt->ird->rcount() )
     {
-      return stmt->set_error("07009", "Invalid descriptor index", MYERR_07009);
+      return stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
     }
 
     if (sColNum == 0 && TargetType != SQL_C_BOOKMARK
@@ -1506,7 +1506,7 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
       {
         return stmt->set_error("07009", "The parameter number value was not equal to \
                                             the ordinal of the parameter that is available.",
-                              MYERR_07009);
+                              DESERR_07009);
       }
       else
       {
@@ -1631,7 +1631,7 @@ SQLRETURN SQL_API SQLMoreResults( SQLHSTMT hstmt )
   }
 
   /* cleanup existing resultset */
-  nReturn = my_SQLFreeStmtExtended((SQLHSTMT)stmt, SQL_CLOSE, 0);
+  nReturn = DES_SQLFreeStmtExtended((SQLHSTMT)stmt, SQL_CLOSE, 0);
   if (!SQL_SUCCEEDED( nReturn ))
   {
     goto exitSQLMoreResults;
@@ -1842,7 +1842,7 @@ fill_fetch_buffers(STMT *stmt, MYSQL_ROW values, uint rownum)
   ulong length= 0;
   DESCREC *irrec, *arrec;
 
-  for (i= 0; i < myodbc_min(stmt->ird->rcount(), stmt->ard->rcount()); ++i, ++values)
+  for (i= 0; i < desodbc_min(stmt->ird->rcount(), stmt->ard->rcount()); ++i, ++values)
   {
     irrec= desc_get_rec(stmt->ird, i, FALSE);
     arrec= desc_get_rec(stmt->ard, i, FALSE);
@@ -1921,7 +1921,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
                                        SQLLEN               irow,
                                        SQLULEN             *pcrow,
                                        SQLUSMALLINT        *rgfRowStatus,
-                                       my_bool              upd_status )
+                                       des_bool              upd_status )
 {
   SQLULEN           rows_to_fetch;
   long              cur_row, max_row;
@@ -2020,7 +2020,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
         break;
 
       default:
-          return stmt->set_error( MYERR_S1106, "Fetch type out of range", 0);
+          return stmt->set_error( DESERR_S1106, "Fetch type out of range", 0);
     }
 
     if ( cur_row < 0 )
@@ -2075,7 +2075,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
     }
     else
     {
-      rows_to_fetch= myodbc_min(max_row-cur_row,
+      rows_to_fetch= desodbc_min(max_row-cur_row,
                                 (long)stmt->ard->array_size);
     }
 
@@ -2246,12 +2246,12 @@ exitSQLSingleFetch:
 
   This function is way to long and needs to be structured.
 */
-SQLRETURN SQL_API my_SQLExtendedFetch( SQLHSTMT             hstmt,
+SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
                                        SQLUSMALLINT         fFetchType,
                                        SQLLEN               irow,
                                        SQLULEN             *pcrow,
                                        SQLUSMALLINT        *rgfRowStatus,
-                                       my_bool              upd_status )
+                                       des_bool              upd_status )
 {
   SQLULEN           rows_to_fetch;
   long              cur_row, max_row;
@@ -2304,7 +2304,7 @@ SQLRETURN SQL_API my_SQLExtendedFetch( SQLHSTMT             hstmt,
     {
       if ( fFetchType != SQL_FETCH_NEXT && !stmt->dbc->ds.opt_SAFE )
       {
-        res = stmt->set_error(MYERR_S1106,
+        res = stmt->set_error(DESERR_S1106,
               "Wrong fetchtype with FORWARD ONLY cursor", 0);
         throw stmt->error;
       }
@@ -2335,7 +2335,7 @@ SQLRETURN SQL_API my_SQLExtendedFetch( SQLHSTMT             hstmt,
     }
     else
     {
-      rows_to_fetch= myodbc_min(max_row-cur_row,
+      rows_to_fetch= desodbc_min(max_row-cur_row,
                                 (long)stmt->ard->array_size);
     }
 
@@ -2570,7 +2570,7 @@ SQLRETURN SQL_API SQLExtendedFetch( SQLHSTMT        hstmt,
     options= &((STMT *)hstmt)->stmt_options;
     options->rowStatusPtr_ex= rgfRowStatus;
 
-    rc= my_SQLExtendedFetch(hstmt, fFetchType, irow, &rows, rgfRowStatus, 1);
+    rc= DES_SQLExtendedFetch(hstmt, fFetchType, irow, &rows, rgfRowStatus, 1);
     if (pcrow)
       *pcrow= (SQLULEN) rows;
 
@@ -2612,7 +2612,7 @@ SQLRETURN SQL_API SQLFetchScroll( SQLHSTMT      StatementHandle,
                        stmt->stmt_options.bookmark_ptr);
     }
 
-    SQLRETURN rc = my_SQLExtendedFetch(StatementHandle, FetchOrientation, FetchOffset,
+    SQLRETURN rc = DES_SQLExtendedFetch(StatementHandle, FetchOrientation, FetchOffset,
                                stmt->ird->rows_processed_ptr, stmt->ird->array_status_ptr,
                                0);
     return rc;
@@ -2634,7 +2634,7 @@ SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle)
     options= &stmt->stmt_options;
     options->rowStatusPtr_ex= NULL;
 
-    return my_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
+    return DES_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
                                stmt->ird->rows_processed_ptr, stmt->ird->array_status_ptr,
                                0);
 }

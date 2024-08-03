@@ -56,13 +56,13 @@
   @param[in] dupe   Set to @c TRUE if query is already a duplicate, and
                     freeing the value is now up to the driver
 */
-SQLRETURN SQL_API MySQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
+SQLRETURN SQL_API DESPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
                                bool reset_select_limit, bool force_prepare)
 {
   STMT *stmt= (STMT *)hstmt;
   /*
-    We free orig_query here, instead of my_SQLPrepare, because
-    my_SQLPrepare is used by my_pos_update() when a statement requires
+    We free orig_query here, instead of DES_SQLPrepare, because
+    DES_SQLPrepare is used by my_pos_update() when a statement requires
     additional parameters.
   */
 
@@ -71,7 +71,7 @@ SQLRETURN SQL_API MySQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
     stmt->orig_query.reset(NULL, NULL, NULL);
   }
 
-  return my_SQLPrepare(hstmt, query, len, reset_select_limit,
+  return DES_SQLPrepare(hstmt, query, len, reset_select_limit,
                        force_prepare);
 }
 
@@ -80,7 +80,7 @@ SQLRETURN SQL_API MySQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
   @type    : myodbc3 internal
   @purpose : prepares an SQL string for execution
 */
-SQLRETURN my_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr, SQLINTEGER cbSqlStr,
+SQLRETURN DES_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr, SQLINTEGER cbSqlStr,
                         bool reset_select_limit, bool force_prepare)
 {
   STMT *stmt= (STMT *) hstmt;
@@ -110,7 +110,7 @@ SQLRETURN my_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr, SQLINTEGER cbSqlStr,
   @purpose : binds a buffer to a parameter marker in an SQL statement.
 */
 
-SQLRETURN SQL_API my_SQLBindParameter( SQLHSTMT     StatementHandle,
+SQLRETURN SQL_API DES_SQLBindParameter( SQLHSTMT     StatementHandle,
                                        SQLUSMALLINT ParameterNumber,
                                        SQLSMALLINT  InputOutputType,
                                        SQLSMALLINT  ValueType,
@@ -131,7 +131,7 @@ SQLRETURN SQL_API my_SQLBindParameter( SQLHSTMT     StatementHandle,
 
     if (ParameterNumber < 1)
     {
-        stmt->set_error(MYERR_S1093,NULL,0);
+        stmt->set_error(DESERR_S1093,NULL,0);
         return SQL_ERROR;
     }
 
@@ -264,7 +264,7 @@ SQLRETURN SQL_API SQLBindParameter( SQLHSTMT        hstmt,
 {
   LOCK_STMT(hstmt);
 
-  return my_SQLBindParameter(hstmt, ipar, fParamType, fCType, fSqlType,
+  return DES_SQLBindParameter(hstmt, ipar, fParamType, fCType, fSqlType,
                              cbColDef, ibScale, rgbValue, cbValueMax, pcbValue);
 }
 
@@ -326,10 +326,10 @@ SQLRETURN SQL_API SQLParamOptions( SQLHSTMT     hstmt,
 
   CHECK_HANDLE(hstmt);
 
-  rc= MySQLSetStmtAttr(stmt, SQL_ATTR_PARAMSET_SIZE, (SQLPOINTER)crow, 0);
+  rc= DESSetStmtAttr(stmt, SQL_ATTR_PARAMSET_SIZE, (SQLPOINTER)crow, 0);
   if (!SQL_SUCCEEDED(rc))
     return rc;
-  rc= MySQLSetStmtAttr(stmt, SQL_ATTR_PARAMS_PROCESSED_PTR, pirow, 0);
+  rc= DESSetStmtAttr(stmt, SQL_ATTR_PARAMS_PROCESSED_PTR, pirow, 0);
   return rc;
 }
 #endif

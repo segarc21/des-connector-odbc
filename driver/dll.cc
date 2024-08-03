@@ -121,7 +121,7 @@ void desodbc_init(void)
   @type    : myodbc3 internal
   @purpose : clean all resources while unloading..
 */
-void myodbc_end()
+void desodbc_end()
 {
   if (!desodbc_inited)
     return;
@@ -194,7 +194,7 @@ int APIENTRY LibMain(HANDLE inst, DWORD ul_reason_being_called,
       // Process is about to detach. All has to be deinited to avoid
       // memory leaks even if initialized multiple times (myodbc_inited > 1).
       desodbc_inited = 1;
-      myodbc_end();
+      desodbc_end();
     }
     break;
 

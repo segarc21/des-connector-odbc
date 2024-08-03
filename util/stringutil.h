@@ -46,7 +46,7 @@ extern "C" {
 
 #include "unicode_transcode.h"
 
-#define myodbc_min(a, b) ((a) < (b) ? (a) : (b))
+#define desodbc_min(a, b) ((a) < (b) ? (a) : (b))
 #define myodbc_max(a, b) ((a) > (b) ? (a) : (b))
 
 #ifdef HAVE_LPCWSTR

@@ -69,7 +69,7 @@ enum enum_field_types
   MYSQL_TYPE_YEAR,
   MYSQL_TYPE_NEWDATE, /**< Internal to MySQL. Not used in protocol */
   MYSQL_TYPE_VARCHAR,
-  MYSQL_TYPE_BIT,
+  DES_TYPE_BIT,
   MYSQL_TYPE_TIMESTAMP2,
   MYSQL_TYPE_DATETIME2,   /**< Internal to MySQL. Not used in protocol */
   MYSQL_TYPE_TIME2,       /**< Internal to MySQL. Not used in protocol */
@@ -77,7 +77,7 @@ enum enum_field_types
   MYSQL_TYPE_INVALID = 243,
   MYSQL_TYPE_BOOL = 244, /**< Currently just a placeholder */
   MYSQL_TYPE_JSON = 245,
-  MYSQL_TYPE_NEWDECIMAL = 246,
+  DES_TYPE_NEWDECIMAL = 246,
   MYSQL_TYPE_ENUM = 247,
   MYSQL_TYPE_SET = 248,
   MYSQL_TYPE_TINY_BLOB = 249,

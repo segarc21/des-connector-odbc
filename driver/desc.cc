@@ -181,7 +181,7 @@ void DESCREC::par_struct::add_param_data(const char *chunk,
     tempbuf.add_to_buffer(chunk, length);
 
     // TODO: do the memory errors
-    //  return stmt->set_error(MYERR_S1001, NULL, 4001);
+    //  return stmt->set_error(DESERR_S1001, NULL, 4001);
 }
 
 /*
@@ -194,7 +194,7 @@ void DESCREC::par_struct::add_param_data(const char *chunk,
  * @return The requested record of NULL if it doesn't exist
  *         (and isn't created).
  */
-DESCREC *desc_get_rec(DESC *desc, int recnum, my_bool expand)
+DESCREC *desc_get_rec(DESC *desc, int recnum, des_bool expand)
 {
   DESCREC *rec= NULL;
 
@@ -215,7 +215,7 @@ DESCREC *desc_get_rec(DESC *desc, int recnum, my_bool expand)
   }
   else if (recnum < 0)
   {
-    desc->stmt->set_error("07009", "Invalid descriptor index", MYERR_07009);
+    desc->stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
     return NULL;
   }
   else
@@ -521,7 +521,7 @@ getfield(SQLSMALLINT fldid)
   @purpose : Get a field of a descriptor.
  */
 SQLRETURN
-MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
+DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
                   SQLPOINTER valptr, SQLINTEGER buflen, SQLINTEGER *outlen)
 {
   DESC *desc= (DESC *)hdesc;
@@ -541,7 +541,7 @@ MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
      * or must we pre-execute it */
     return set_desc_error(desc, "HY007",
               "Associated statement is not prepared",
-              MYERR_S1007);
+              DESERR_S1007);
 
   if ((fld == NULL) ||
       /* header permissions check */
@@ -551,7 +551,7 @@ MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
   {
     return set_desc_error(desc, "HY091",
               "Invalid descriptor field identifier",
-              MYERR_S1091);
+              DESERR_S1091);
   }
   else if (fld->loc == DESC_REC)
   {
@@ -570,7 +570,7 @@ MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
     if ((~fld->perms & perms) == perms)
       return set_desc_error(desc, "HY091",
                 "Invalid descriptor field identifier",
-                MYERR_S1091);
+                DESERR_S1091);
   }
 
   /* get the src struct */
@@ -581,7 +581,7 @@ MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
     if (recnum < 1 || recnum > desc->rcount())
       return set_desc_error(desc, "07009",
                 "Invalid descriptor index",
-                MYERR_07009);
+                DESERR_07009);
     src_struct= desc_get_rec(desc, recnum - 1, FALSE);
     assert(src_struct);
   }
@@ -602,7 +602,7 @@ MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
       (fld->data_type != SQL_IS_POINTER && buflen == SQL_IS_POINTER))
     return set_desc_error(desc, "HY015",
                           "Invalid parameter type",
-                          MYERR_S1015);
+                          DESERR_S1015);
 
   switch (buflen)
   {
@@ -756,7 +756,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
       default:
       return set_error("HY016",
                       "Cannot modify an implementation row descriptor",
-                      MYERR_S1016);
+                      DESERR_S1016);
     }
   }
 
@@ -768,7 +768,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
   {
     return set_error("HY091",
                      "Invalid descriptor field identifier",
-                     MYERR_S1091);
+                     DESERR_S1091);
   }
   else if (fld->loc == DESC_REC)
   {
@@ -787,7 +787,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
     if ((~fld->perms & perms) == perms)
       return set_error("HY091",
                        "Invalid descriptor field identifier",
-                       MYERR_S1091);
+                       DESERR_S1091);
   }
 
   /* get the dest struct */
@@ -798,7 +798,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
     if (recnum < 1 && stmt->stmt_options.bookmarks == SQL_UB_OFF)
       return set_error("07009",
                        "Invalid descriptor index",
-                       MYERR_07009);
+                       DESERR_07009);
     else
       dest_struct= desc_get_rec(this, recnum - 1, TRUE);
   }
@@ -814,7 +814,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
       (fld->data_type != SQL_IS_POINTER && buflen == SQL_IS_POINTER))
     return set_error("HY015",
                      "Invalid parameter type",
-                     MYERR_S1015);
+                     DESERR_S1015);
 
   /* per-field checks/functionality */
   switch (fldid)
@@ -836,12 +836,12 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
     /* We don't support named parameters, values stay as initialized */
     //return set_desc_error(desc, "01S01",
     //                      "Option value changed",
-    //                      MYERR_01S02);
+    //                      DESERR_01S02);
   case SQL_DESC_UNNAMED:
     if ((size_t)val == SQL_NAMED)
       return set_error("HY092",
                        "Invalid attribute/option identifier",
-                       MYERR_S1092);
+                       DESERR_S1092);
   }
 
   /* We have to unbind the value if not setting a buffer */
@@ -940,12 +940,12 @@ SQLRETURN MySQLCopyDesc(SQLHDESC SourceDescHandle, SQLHDESC TargetDescHandle)
   if (IS_IRD(dest))
     return set_desc_error(dest, "HY016",
                           "Cannot modify an implementation row descriptor",
-                          MYERR_S1016);
+                          DESERR_S1016);
 
   if (IS_IRD(src) && src->stmt->state < ST_PREPARED)
     return set_desc_error(dest, "HY007",
               "Associated statement is not prepared",
-              MYERR_S1007);
+              DESERR_S1007);
 
   /* copy the records, copy constructors should take care of everything */
   *dest = *src;
@@ -966,7 +966,7 @@ stmt_SQLGetDescField(STMT *stmt, DESC *desc, SQLSMALLINT recnum,
                      SQLINTEGER buflen, SQLINTEGER *outlen)
 {
   SQLRETURN rc;
-  if ((rc= MySQLGetDescField((SQLHANDLE)desc, recnum, fldid,
+  if ((rc= DESGetDescField((SQLHANDLE)desc, recnum, fldid,
                              valptr, buflen, outlen)) != SQL_SUCCESS)
     stmt->error = desc->error;
   return rc;

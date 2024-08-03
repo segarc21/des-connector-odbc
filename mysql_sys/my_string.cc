@@ -26,7 +26,7 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
 /**
-  @file mysys/my_string.cc
+  @file mysys/des_string.cc
   Code for handling strings with can grow dynamically.
 */
 

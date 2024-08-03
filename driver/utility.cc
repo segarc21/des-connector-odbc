@@ -53,7 +53,7 @@ const SQLULEN sql_select_unlimited= (SQLULEN)-1;
                             when executing a query
 */
 SQLRETURN exec_stmt_query(STMT *stmt, const char *query,
-                          SQLULEN query_length, my_bool req_lock)
+                          SQLULEN query_length, des_bool req_lock)
 {
   SQLRETURN rc;
   if(!SQL_SUCCEEDED(rc= set_sql_select_limit(stmt->dbc,
@@ -91,7 +91,7 @@ SQLRETURN exec_stmt_query_std(STMT *stmt, const std::string &query,
   @param[in] fields      The fields to attach to the statement
   @param[in] field_count The number of fields
 */
-void myodbc_link_fields(STMT *stmt, MYSQL_FIELD *fields, uint field_count)
+void desodbc_link_fields(STMT *stmt, MYSQL_FIELD *fields, uint field_count)
 {
     MYSQL_RES *result;
     assert(stmt);
@@ -105,7 +105,7 @@ void myodbc_link_fields(STMT *stmt, MYSQL_FIELD *fields, uint field_count)
 
 
 /**
-Fills STMT's lengths array for given row. Makes use of myodbc_link_fields a bit
+Fills STMT's lengths array for given row. Makes use of desodbc_link_fields a bit
 less terrible.
 
 @param[in,out] stmt     The statement to modify
@@ -269,7 +269,7 @@ void fix_result_types(STMT *stmt)
       irrec->literal_suffix= (SQLCHAR *) "'";
       break;
 
-    case MYSQL_TYPE_VECTOR:
+    case DES_TYPE_VECTOR:
       irrec->literal_prefix = (SQLCHAR *) "";
       irrec->literal_suffix = (SQLCHAR *) "";
       break;
@@ -399,7 +399,7 @@ copy_binary_result(STMT *stmt,
       return SQL_NO_DATA_FOUND;
   }
 
-  copy_bytes= myodbc_min((unsigned long)result_bytes, src_bytes);
+  copy_bytes= desodbc_min((unsigned long)result_bytes, src_bytes);
 
   if (result && stmt->stmt_options.retrieve_data)
     memcpy(result, src, copy_bytes);
@@ -461,7 +461,7 @@ copy_ansi_result(STMT *stmt,
                           field, src, src_bytes);
 
   if (SQL_SUCCEEDED(rc) && result && stmt->stmt_options.retrieve_data)
-    result[myodbc_min(*avail_bytes, result_bytes)]= '\0';
+    result[desodbc_min(*avail_bytes, result_bytes)]= '\0';
 
   return rc;
 }
@@ -654,7 +654,7 @@ convert_to_out:
       *avail_bytes= used_chars * sizeof(SQLWCHAR);
   }
 
-  stmt->getdata.dst_offset+= myodbc_min((ulong)(result_len ?
+  stmt->getdata.dst_offset+= desodbc_min((ulong)(result_len ?
                                                 result_len - 1 : 0),
                                         used_chars) * sizeof(SQLWCHAR);
 
@@ -720,7 +720,7 @@ SQLRETURN copy_binhex_result(STMT *stmt,
   src += *offset;
   src_length -= *offset;
   length = cbValueMax ? (ulong)(cbValueMax - 1) / 2 : 0;
-  length = myodbc_min(src_length, length);
+  length = desodbc_min(src_length, length);
   (*offset) += length;     /* Fix for next call */
   if (pcbValue && stmt->stmt_options.retrieve_data)
     *pcbValue = src_length * 2 * sizeof(T);
@@ -742,7 +742,7 @@ SQLRETURN copy_binhex_result(STMT *stmt,
   if ( *offset * sizeof(T) >= src_length )
       return SQL_SUCCESS;
 
-  stmt->set_error(MYERR_01004, NULL, 0);
+  stmt->set_error(DESERR_01004, NULL, 0);
   return SQL_SUCCESS_WITH_INFO;
 }
 
@@ -928,12 +928,12 @@ SQLSMALLINT compute_sql_data_type(STMT *stmt, SQLSMALLINT sql_type,
 */
 SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
 {
-  my_bool field_is_binary= (field->charsetnr == BINARY_CHARSET_NUMBER ? 1 : 0) &&
+  des_bool field_is_binary= (field->charsetnr == BINARY_CHARSET_NUMBER ? 1 : 0) &&
                            ((field->org_table_length > 0 ? 1 : 0) ||
                             !stmt->dbc->ds.opt_NO_BINARY_RESULT);
 
   switch (field->type) {
-  case MYSQL_TYPE_BIT:
+  case DES_TYPE_BIT:
     if (buff)
       (void)desodbc_stpmov(buff, "bit");
     /*
@@ -943,7 +943,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
     return (field->length > 1) ? SQL_BINARY : SQL_BIT;
 
   case MYSQL_TYPE_DECIMAL:
-  case MYSQL_TYPE_NEWDECIMAL:
+  case DES_TYPE_NEWDECIMAL:
     if (buff)
       (void)desodbc_stpmov(buff, "decimal");
     return SQL_DECIMAL;
@@ -1147,7 +1147,7 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, MYSQL_FIELD *field, char *buff)
       (void)desodbc_stpmov(buff, "json");
     return stmt->dbc->unicode ? SQL_WLONGVARCHAR : SQL_LONGVARCHAR;
 
-  case MYSQL_TYPE_VECTOR:
+  case DES_TYPE_VECTOR:
     if (buff)
       (void)desodbc_stpmov(buff, "vector");
     return SQL_VARBINARY;
@@ -1301,12 +1301,12 @@ SQLULEN get_column_size(STMT *stmt, MYSQL_FIELD *field)
     return 4;
 
   case MYSQL_TYPE_DECIMAL:
-  case MYSQL_TYPE_NEWDECIMAL:
+  case DES_TYPE_NEWDECIMAL:
     return (length -
             (!(field->flags & UNSIGNED_FLAG) ? 1:  0) - /* sign? */
             (field->decimals ? 1 : 0));             /* decimal point? */
 
-  case MYSQL_TYPE_BIT:
+  case DES_TYPE_BIT:
     /*
       We treat a BIT(n) as a SQL_BIT if n == 1, otherwise we treat it
       as a SQL_BINARY, so length is (bits + 7) / 8.
@@ -1333,7 +1333,7 @@ SQLULEN get_column_size(STMT *stmt, MYSQL_FIELD *field)
     return length / get_charset_maxlen(field->charsetnr);
   case MYSQL_TYPE_JSON:
     return UINT32_MAX / 4; // Because JSON is always UTF8MB4
-  case MYSQL_TYPE_VECTOR:
+  case DES_TYPE_VECTOR:
     return length / 4; // Length should be the number of elements in VECTOR
   }
 
@@ -1358,7 +1358,7 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
 {
   switch (field->type) {
   case MYSQL_TYPE_DECIMAL:
-  case MYSQL_TYPE_NEWDECIMAL:
+  case DES_TYPE_NEWDECIMAL:
     return field->decimals;
 
   /* All exact numeric types. */
@@ -1373,8 +1373,8 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
   case MYSQL_TYPE_DATETIME:
     return 0;
 
-  /* We treat MYSQL_TYPE_BIT as an exact numeric type only for BIT(1). */
-  case MYSQL_TYPE_BIT:
+  /* We treat DES_TYPE_BIT as an exact numeric type only for BIT(1). */
+  case DES_TYPE_BIT:
     if (field->length == 1)
       return 0;
 
@@ -1447,10 +1447,10 @@ SQLLEN get_transfer_octet_length(STMT *stmt, MYSQL_FIELD *field)
     return 1;
 
   case MYSQL_TYPE_DECIMAL:
-  case MYSQL_TYPE_NEWDECIMAL:
+  case DES_TYPE_NEWDECIMAL:
     return field->length;
 
-  case MYSQL_TYPE_BIT:
+  case DES_TYPE_BIT:
     /*
       We treat a BIT(n) as a SQL_BIT if n == 1, otherwise we treat it
       as a SQL_BINARY, so length is (bits + 7) / 8. field->length has
@@ -1488,7 +1488,7 @@ SQLLEN get_transfer_octet_length(STMT *stmt, MYSQL_FIELD *field)
       if (capint32 && length > INT_MAX32)
         length= INT_MAX32;
       return length;
-  case MYSQL_TYPE_VECTOR:
+  case DES_TYPE_VECTOR:
     return length;
     }
   }
@@ -1551,10 +1551,10 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),MYSQL_FIELD *field)
     return 4;
 
   case MYSQL_TYPE_DECIMAL:
-  case MYSQL_TYPE_NEWDECIMAL:
+  case DES_TYPE_NEWDECIMAL:
     return field->length;
 
-  case MYSQL_TYPE_BIT:
+  case DES_TYPE_BIT:
     /*
       We treat a BIT(n) as a SQL_BIT if n == 1, otherwise we treat it
       as a SQL_BINARY, so display length is (bits + 7) / 8 * 2.
@@ -1593,7 +1593,7 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),MYSQL_FIELD *field)
     }
   case MYSQL_TYPE_JSON:
     return UINT_MAX32 / 4; // 4 is the character size in UTF8MB4
-  case MYSQL_TYPE_VECTOR:
+  case DES_TYPE_VECTOR:
     return 15 * (field->length / 4) + 1;
   }
 
@@ -1759,7 +1759,7 @@ int unireg_to_c_datatype(MYSQL_FIELD *field)
 {
     switch ( field->type )
     {
-        case MYSQL_TYPE_BIT:
+        case DES_TYPE_BIT:
             /*
               MySQL's BIT type can have more than one bit, in which case we
               treat it as a BINARY field.
@@ -1790,7 +1790,7 @@ int unireg_to_c_datatype(MYSQL_FIELD *field)
         case MYSQL_TYPE_MEDIUM_BLOB:
         case MYSQL_TYPE_LONG_BLOB:
         case MYSQL_TYPE_JSON:
-        case MYSQL_TYPE_VECTOR:
+        case DES_TYPE_VECTOR:
             return SQL_C_BINARY;
         case MYSQL_TYPE_LONGLONG: /* Must be returned as char */
         default:
@@ -2039,7 +2039,7 @@ int str_to_ts(SQL_TIMESTAMP_STRUCT *ts, const char *str, int len, int zeroToMin,
   @purpose : convert a possible string to a time value
 */
 
-my_bool str_to_time_st(SQL_TIME_STRUCT *ts, const char *str)
+des_bool str_to_time_st(SQL_TIME_STRUCT *ts, const char *str)
 {
     char buff[24],*to, *tokens[3] = {0, 0, 0};
     int num= 0, int_hour=0, int_min= 0, int_sec= 0;
@@ -2104,7 +2104,7 @@ my_bool str_to_time_st(SQL_TIME_STRUCT *ts, const char *str)
              converted to the min valid ODBC date
 */
 
-my_bool str_to_date(SQL_DATE_STRUCT *rgbValue, const char *str,
+des_bool str_to_date(SQL_DATE_STRUCT *rgbValue, const char *str,
                     uint length, int zeroToMin)
 {
     uint field_length,year_length,digits,i,date[3];
@@ -2247,7 +2247,7 @@ int check_if_server_is_alive( DBC *dbc )
   @purpose : appends quoted string to dynamic string
 */
 
-bool myodbc_append_quoted_name_std(std::string &str, const char *name)
+bool desodbc_append_quoted_name_std(std::string &str, const char *name)
 {
   size_t namelen = strlen(name);
   str.reserve(str.length() + namelen + 4);
@@ -2297,7 +2297,7 @@ int reget_current_catalog(DBC *dbc)
   @purpose : compare strings without regarding to case
 */
 
-int myodbc_strcasecmp(const char *s, const char *t)
+int desodbc_strcasecmp(const char *s, const char *t)
 {
   if (!s && !t)
   {
@@ -2321,7 +2321,7 @@ int myodbc_strcasecmp(const char *s, const char *t)
   @purpose : compare strings without regarding to case
 */
 
-int myodbc_casecmp(const char *s, const char *t, uint len)
+int desodbc_casecmp(const char *s, const char *t, uint len)
 {
   if (!s && !t)
   {
@@ -2420,7 +2420,7 @@ void end_query_log(FILE *query_log)
 }
 
 
-my_bool is_minimum_version(const char *server_version,const char *version)
+des_bool is_minimum_version(const char *server_version,const char *version)
 {
   /*
     Variables have to be initialized if we don't want to get random
@@ -2454,18 +2454,18 @@ my_bool is_minimum_version(const char *server_version,const char *version)
  @param[in]   escape_id     Escaping an identified that will be quoted
 
 */
-ulong myodbc_escape_string(STMT *stmt,
+ulong desodbc_escape_string(STMT *stmt,
                            char *to, ulong to_length,
                            const char *from, ulong length, int escape_id)
 {
   const char *to_start= to;
   const char *end, *to_end=to_start + (to_length ? to_length-1 : 2*length);
-  my_bool overflow= FALSE;
+  des_bool overflow= FALSE;
   /*get_charset_by_csname(charset,
                         DESF(DES_CS_PRIMARY),
                         DESF(0));*/
   desodbc::CHARSET_INFO *charset_info= stmt->dbc->cxn_charset_info;
-  my_bool use_mb_flag= use_mb(charset_info);
+  des_bool use_mb_flag= use_mb(charset_info);
   for (end= from + length; from < end; ++from)
   {
     char escape= 0;
@@ -2987,7 +2987,7 @@ void *ptr_offset_adjust(void *ptr, SQLULEN *bind_offset_ptr,
 
   Returns new_value if operation was successful, -1 otherwise
  */
-SQLRETURN set_sql_select_limit(DBC *dbc, SQLULEN lim_value, my_bool req_lock)
+SQLRETURN set_sql_select_limit(DBC *dbc, SQLULEN lim_value, des_bool req_lock)
 {
   char query[44];
   SQLRETURN rc;
@@ -2998,7 +2998,7 @@ SQLRETURN set_sql_select_limit(DBC *dbc, SQLULEN lim_value, my_bool req_lock)
     return SQL_SUCCESS;
 
   if (lim_value > 0 && lim_value < sql_select_unlimited)
-    myodbc_snprintf(query, sizeof(query), "set @@sql_select_limit=%lu",
+    desodbc_snprintf(query, sizeof(query), "set @@sql_select_limit=%lu",
                     (unsigned long)lim_value);
   else
   {
@@ -3029,19 +3029,19 @@ char *proc_get_param_type(char *proc, int len, SQLSMALLINT *ptype)
   while (isspace(*proc) && (len--))
     ++proc;
 
-  if (len >= 6 && !myodbc_casecmp(proc, "INOUT ", 6))
+  if (len >= 6 && !desodbc_casecmp(proc, "INOUT ", 6))
   {
     *ptype= (SQLSMALLINT) SQL_PARAM_INPUT_OUTPUT;
     return proc + 6;
   }
 
-  if (len >= 4 && !myodbc_casecmp(proc, "OUT ", 4))
+  if (len >= 4 && !desodbc_casecmp(proc, "OUT ", 4))
   {
     *ptype= (SQLSMALLINT) SQL_PARAM_OUTPUT;
     return proc + 4;
   }
 
-  if (len >= 3 && !myodbc_casecmp(proc, "IN ", 3))
+  if (len >= 3 && !desodbc_casecmp(proc, "IN ", 3))
   {
     *ptype= (SQLSMALLINT) SQL_PARAM_INPUT;
     return proc + 3;
@@ -3128,8 +3128,8 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
   {(SQLCHAR*)"set", 3, SQL_CHAR, MYSQL_TYPE_STRING, 0, 0},
 
   /* SQL_BIT= -7 */
-  {(SQLCHAR*)"bit", 3, SQL_BIT, MYSQL_TYPE_BIT, 1, 1},
-  {(SQLCHAR*)"bool", 4, SQL_BIT, MYSQL_TYPE_BIT, 1, 1},
+  {(SQLCHAR*)"bit", 3, SQL_BIT, DES_TYPE_BIT, 1, 1},
+  {(SQLCHAR*)"bool", 4, SQL_BIT, DES_TYPE_BIT, 1, 1},
 
   /* SQL_TINY= -6 */
   {(SQLCHAR*)"tinyint", 7, SQL_TINYINT, MYSQL_TYPE_TINY, 1, 1},
@@ -3146,7 +3146,7 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
 
   /* SQL_VARBINARY= -3 */
   {(SQLCHAR*)"varbinary", 9, SQL_VARBINARY, MYSQL_TYPE_VAR_STRING, 0, 1},
-  {(SQLCHAR*)"vector", 9, SQL_VARBINARY, MYSQL_TYPE_VECTOR, 16382 * 4, 1},
+  {(SQLCHAR*)"vector", 9, SQL_VARBINARY, DES_TYPE_VECTOR, 16382 * 4, 1},
 
   /* SQL_BINARY= -2 */
   {(SQLCHAR*)"binary", 6, SQL_BINARY, MYSQL_TYPE_STRING, 0, 1},
@@ -3225,7 +3225,7 @@ int proc_get_param_sql_type_index(const char *ptype, int len)
   for (auto &elem : SQL_TYPE_MAP_values)
   {
     if (len >= elem.name_length &&
-        (!myodbc_casecmp(ptype, (const char*)elem.type_name,
+        (!desodbc_casecmp(ptype, (const char*)elem.type_name,
          elem.name_length)))
       return i;
     ++i;
@@ -3378,11 +3378,11 @@ SQLUINTEGER proc_get_param_size(SQLCHAR *ptype, int len, int sql_type_index, SQL
     case MYSQL_TYPE_VARCHAR:
     case MYSQL_TYPE_VAR_STRING:
     case MYSQL_TYPE_STRING:
-      if (!myodbc_strcasecmp((const char*)(SQL_TYPE_MAP_values[sql_type_index].type_name), "set"))
+      if (!desodbc_strcasecmp((const char*)(SQL_TYPE_MAP_values[sql_type_index].type_name), "set"))
       {
         param_size = proc_parse_enum_set(start_pos, (int)(end_pos - start_pos), FALSE);
       }
-      else if (!myodbc_strcasecmp((const char*)(SQL_TYPE_MAP_values[sql_type_index].type_name), "enum"))
+      else if (!desodbc_strcasecmp((const char*)(SQL_TYPE_MAP_values[sql_type_index].type_name), "enum"))
       {
         param_size = proc_parse_enum_set(start_pos, (int)(end_pos - start_pos), TRUE);
       }
@@ -3395,7 +3395,7 @@ SQLUINTEGER proc_get_param_size(SQLCHAR *ptype, int len, int sql_type_index, SQL
       }
 
       break;
-    case MYSQL_TYPE_BIT:
+    case DES_TYPE_BIT:
       param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
 
       /* fall through*/
@@ -3873,11 +3873,11 @@ const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, cons
   int index_pos = 0;
 
   // Skip spaces after LIMIT
-  while ((query_end > query) && myodbc_isspace(cs, query, query_end))
+  while ((query_end > query) && desodbc_isspace(cs, query, query_end))
     ++query;
 
   // Collect all numbers for the offset
-  while ((query_end > query) && myodbc_isnum(cs, query, query_end))
+  while ((query_end > query) && desodbc_isnum(cs, query, query_end))
   {
     digit_buf[index_pos] = *query;
     ++index_pos;
@@ -3894,7 +3894,7 @@ const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, cons
   *offs_out = (unsigned long long)atoll(digit_buf);
 
   // Find the row number for "LIMIT offset, row_number"
-  while ((query_end > query) && !myodbc_isnum(cs, query, query_end))
+  while ((query_end > query) && !desodbc_isnum(cs, query, query_end))
     ++query;
 
   if (query == query_end)
@@ -3909,7 +3909,7 @@ const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, cons
   index_pos = 0; // reset index to use with another number
 
   // Collect all numbers for the row number
-  while ((query_end > query) && myodbc_isnum(cs, query, query_end))
+  while ((query_end > query) && desodbc_isnum(cs, query, query_end))
   {
     digit_buf[index_pos] = *query;
     ++index_pos;
@@ -3951,16 +3951,16 @@ const char* check_row_locking(desodbc::CHARSET_INFO* cs, const char * query, con
   for (i = 0; i < index_max; ++i)
   {
     token = mystr_get_prev_token(cs, &before_token, query);
-    if (myodbc_casecmp(token, check[i], (uint)strlen(check[i])))
+    if (desodbc_casecmp(token, check[i], (uint)strlen(check[i])))
       return NULL;
   }
   return token;
 }
 
 
-MY_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end)
+DES_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end)
 {
-  MY_LIMIT_CLAUSE result(0,0,NULL,NULL);
+  DES_LIMIT_CLAUSE result(0,0,NULL,NULL);
   char *limit_pos = NULL;
 
   result.begin= result.end= query_end;
@@ -3988,7 +3988,7 @@ MY_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query
     else
     {
       while(query_end > query && (!*query_end ||
-                myodbc_isspace(cs, query_end, result.end)))
+                desodbc_isspace(cs, query_end, result.end)))
       {
         --query_end;
       }
@@ -4004,7 +4004,7 @@ MY_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query
 }
 
 
-BOOL myodbc_isspace(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
+BOOL desodbc_isspace(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
 {
   int ctype;
   cs->cset->ctype(cs, &ctype, (const uchar*) begin, (const uchar*) end);
@@ -4012,7 +4012,7 @@ BOOL myodbc_isspace(desodbc::CHARSET_INFO* cs, const char * begin, const char *e
   return ctype & _MY_SPC;
 }
 
-BOOL myodbc_isnum(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
+BOOL desodbc_isnum(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
 {
   int ctype;
   cs->cset->ctype(cs, &ctype, (const uchar*)begin, (const uchar*)end);
@@ -4112,7 +4112,7 @@ SQLRETURN set_query_timeout(STMT *stmt, SQLULEN new_value)
   if (new_value > 0)
   {
     unsigned long long msec_value= (unsigned long long)new_value * 1000;
-    myodbc_snprintf(query, sizeof(query),
+    desodbc_snprintf(query, sizeof(query),
                     "set @@max_execution_time=%llu", msec_value);
   }
   else

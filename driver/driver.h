@@ -87,10 +87,10 @@ using std::nullptr_t;
 
 // SQL_DRIVER_CONNECT_ATTR_BASE is not defined in all driver managers.
 // Therefore use a custom constant until it becomes a standard.
-#define MYSQL_DRIVER_CONNECT_ATTR_BASE 0x00004000
+#define DES_DRIVER_CONNECT_ATTR_BASE 0x00004000
 
-#define CB_FIDO_GLOBAL MYSQL_DRIVER_CONNECT_ATTR_BASE + 0x00001000
-#define CB_FIDO_CONNECTION MYSQL_DRIVER_CONNECT_ATTR_BASE + 0x00001001
+#define CB_FIDO_GLOBAL DES_DRIVER_CONNECT_ATTR_BASE + 0x00001000
+#define CB_FIDO_CONNECTION DES_DRIVER_CONNECT_ATTR_BASE + 0x00001001
 
 #if defined(_WIN32) || defined(WIN32)
 # define INTFUNC  __stdcall
@@ -108,9 +108,9 @@ using std::nullptr_t;
 # define FreeLibrary(module) dlclose((module))
 #endif
 
-#define ODBC_DRIVER	  "ODBC " MYODBC_STRSERIES " Driver"
-#define DRIVER_NAME	  "MySQL ODBC " MYODBC_STRSERIES " Driver"
-#define DRIVER_NONDSN_TAG "DRIVER={MySQL ODBC " MYODBC_STRSERIES " Driver}"
+#define ODBC_DRIVER	  "DES " MYODBC_STRSERIES " Driver"
+#define DRIVER_NAME	  "DES ODBC " MYODBC_STRSERIES " Driver"
+#define DRIVER_NONDSN_TAG "DRIVER={DES ODBC " MYODBC_STRSERIES " Driver}"
 
 #if defined(__APPLE__)
 
@@ -136,13 +136,13 @@ using std::nullptr_t;
 #define FREE_STMT_CLEAR_RESULT 1
 #define FREE_STMT_DO_LOCK 2
 
-#define MYSQL_3_21_PROTOCOL 10	  /* OLD protocol */
+#define DES_3_21_PROTOCOL 10	  /* OLD protocol */
 #define CHECK_IF_ALIVE	    1800  /* Seconds between queries for ping */
 
-#define MYSQL_MAX_CURSOR_LEN 18   /* Max cursor name length */
-#define MYSQL_STMT_LEN 1024	  /* Max statement length */
-#define MYSQL_STRING_LEN 1024	  /* Max string length */
-#define MYSQL_MAX_SEARCH_STRING_LEN NAME_LEN+10 /* Max search string length */
+#define DES_MAX_CURSOR_LEN 18   /* Max cursor name length */
+#define DES_STMT_LEN 1024	  /* Max statement length */
+#define DES_STRING_LEN 1024	  /* Max string length */
+#define DES_MAX_SEARCH_STRING_LEN NAME_LEN+10 /* Max search string length */
 /* Max Primary keys in a cursor * WHERE clause */
 #define MY_MAX_PK_PARTS 32
 
@@ -239,7 +239,7 @@ extern std::mutex global_fido_mutex;
 #define DONT_USE_LOCALE_CHECK(STMT) if (!STMT->dbc->ds.opt_NO_LOCALE)
 
 #ifndef HAVE_TYPE_VECTOR
-#define MYSQL_TYPE_VECTOR 242
+#define DES_TYPE_VECTOR 242
 #endif
 
 #if defined _WIN32
@@ -362,10 +362,10 @@ struct DESCREC{
       know any longer it was a data-at-exec param.
     */
     char is_dae;
-    //my_bool alloced;
+    //des_bool alloced;
     /* Whether this parameter has been bound by the application
      * (if not, was created by dummy execution) */
-    my_bool real_param_done;
+    des_bool real_param_done;
 
     par_struct() : tempbuf(0), is_dae(0), real_param_done(false)
     {}
@@ -627,31 +627,31 @@ struct DBC
 
   void set_charset(std::string charset);
   SQLRETURN set_charset_options(const char* charset);
-  SQLRETURN set_error(myodbc_errid errid, const char* errtext,
+  SQLRETURN set_error(desodbc_errid errid, const char* errtext,
     SQLINTEGER errcode);
   SQLRETURN execute_query(const char *query,
-    SQLULEN query_length, my_bool req_lock);
+    SQLULEN query_length, des_bool req_lock);
 };
 
 
 /* Statement states */
 
-enum MY_STATE { ST_UNKNOWN = 0, ST_PREPARED, ST_PRE_EXECUTED, ST_EXECUTED };
-enum MY_DUMMY_STATE { ST_DUMMY_UNKNOWN = 0, ST_DUMMY_PREPARED, ST_DUMMY_EXECUTED };
+enum DES_STATE { ST_UNKNOWN = 0, ST_PREPARED, ST_PRE_EXECUTED, ST_EXECUTED };
+enum DES_DUMMY_STATE { ST_DUMMY_UNKNOWN = 0, ST_DUMMY_PREPARED, ST_DUMMY_EXECUTED };
 
 
-struct MY_LIMIT_CLAUSE
+struct DES_LIMIT_CLAUSE
 {
   unsigned long long  offset;
   unsigned int        row_count;
   const char                *begin, *end;
-  MY_LIMIT_CLAUSE(unsigned long long offs, unsigned int rc, char* b, char *e) :
+  DES_LIMIT_CLAUSE(unsigned long long offs, unsigned int rc, char* b, char *e) :
     offset(offs), row_count(rc), begin(b), end(e)
   {}
 
 };
 
-struct MY_LIMIT_SCROLLER
+struct DES_LIMIT_SCROLLER
 {
    tempBuf buf;
    char *query, *offset_pos;
@@ -659,7 +659,7 @@ struct MY_LIMIT_SCROLLER
    unsigned long long start_offset;
    unsigned long long next_offset, total_rows, query_len;
 
-   MY_LIMIT_SCROLLER() : buf(1024), query(buf.buf), offset_pos(query),
+   DES_LIMIT_SCROLLER() : buf(1024), query(buf.buf), offset_pos(query),
                          row_count(0), start_offset(0), next_offset(0),
                          total_rows(0), query_len(0)
    {}
@@ -669,12 +669,12 @@ struct MY_LIMIT_SCROLLER
 };
 
 /* Statement primary key handler for cursors */
-struct MY_PK_COLUMN
+struct DES_PK_COLUMN
 {
   char	      name[NAME_LEN+1];
-  my_bool     bind_done;
+  des_bool     bind_done;
 
-  MY_PK_COLUMN()
+  DES_PK_COLUMN()
   {
     name[0] = 0;
     bind_done = FALSE;
@@ -683,14 +683,14 @@ struct MY_PK_COLUMN
 
 
 /* Statement cursor handler */
-struct MYCURSOR
+struct DESCURSOR
 {
   std::string name;
   uint	       pk_count;
-  my_bool      pk_validated;
-  MY_PK_COLUMN pkcol[MY_MAX_PK_PARTS];
+  des_bool      pk_validated;
+  DES_PK_COLUMN pkcol[MY_MAX_PK_PARTS];
 
-  MYCURSOR() : pk_count(0), pk_validated(FALSE)
+  DESCURSOR() : pk_count(0), pk_validated(FALSE)
   {}
 
 };
@@ -987,7 +987,7 @@ struct STMT
 {
   DBC               *dbc;
   MYSQL_RES         *result;
-  my_bool           fake_result;
+  des_bool           fake_result;
   charPtrBuf        array;
   charPtrBuf        result_array;
   MYSQL_ROW         current_values;
@@ -997,18 +997,18 @@ struct STMT
   tempBuf           tempbuf;
   ROW_STORAGE       m_row_storage;
 
-  MYCURSOR          cursor;
+  DESCURSOR          cursor;
   DESERROR           error;
   STMT_OPTIONS      stmt_options;
   std::string       table_name;
   std::string       catalog_name;
 
-  MY_PARSED_QUERY	query, orig_query;
+  DES_PARSED_QUERY	query, orig_query;
   std::vector<MYSQL_BIND> param_bind;
   std::vector<const char*> query_attr_names;
 
-  std::unique_ptr<my_bool[]> rb_is_null;
-  std::unique_ptr<my_bool[]> rb_err;
+  std::unique_ptr<des_bool[]> rb_is_null;
+  std::unique_ptr<des_bool[]> rb_err;
   std::unique_ptr<unsigned long[]> rb_len;
   std::unique_ptr<unsigned long[]> lengths;
 
@@ -1021,8 +1021,8 @@ struct STMT
 
   uint		param_count, current_param, rows_found_in_set;
 
-  enum MY_STATE state;
-  enum MY_DUMMY_STATE dummy_state;
+  enum DES_STATE state;
+  enum DES_DUMMY_STATE dummy_state;
 
   /* APD for data-at-exec on SQLSetPos() */
   std::unique_ptr<DESC> setpos_apd;
@@ -1034,7 +1034,7 @@ struct STMT
   MYSQL_STMT *ssps;
   MYSQL_BIND *result_bind;
 
-  MY_LIMIT_SCROLLER scroller;
+  DES_LIMIT_SCROLLER scroller;
 
   enum OUT_PARAM_STATE out_params_state;
 
@@ -1088,13 +1088,13 @@ struct STMT
 
   bool is_dynamic_cursor();
 
-  SQLRETURN set_error(myodbc_errid errid, const char *errtext, SQLINTEGER errcode);
+  SQLRETURN set_error(desodbc_errid errid, const char *errtext, SQLINTEGER errcode);
   SQLRETURN set_error(const char *state, const char *errtext, SQLINTEGER errcode);
 
   /*
     Error message and errno is taken from dbc->mysql
   */
-  SQLRETURN set_error(myodbc_errid errid);
+  SQLRETURN set_error(desodbc_errid errid);
 
   void add_query_attr(const char *name, std::string val);
   bool query_attr_exists(const char *name);
@@ -1272,47 +1272,47 @@ extern std::string default_plugin_location;
 #define EDRIVERCONNECT	1003
 
 /* New data type definitions for compatibility with MySQL 5 */
-#ifndef MYSQL_TYPE_NEWDECIMAL
-# define MYSQL_TYPE_NEWDECIMAL 246
+#ifndef DES_TYPE_NEWDECIMAL
+# define DES_TYPE_NEWDECIMAL 246
 #endif
-#ifndef MYSQL_TYPE_BIT
-# define MYSQL_TYPE_BIT 16
+#ifndef DES_TYPE_BIT
+# define DES_TYPE_BIT 16
 #endif
 
-MY_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end);
+DES_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end);
 
 #include "myutil.h"
 #include "stringutil.h"
 
 
-SQLRETURN SQL_API MySQLColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
+SQLRETURN SQL_API DESColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
                                     SQLUSMALLINT attrib, SQLCHAR **char_attr,
                                     SQLLEN *num_attr);
-SQLRETURN SQL_API MySQLColumnPrivileges(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESColumnPrivileges(SQLHSTMT hstmt,
                                         SQLCHAR *catalog,
                                         SQLSMALLINT catalog_len,
                                         SQLCHAR *schema, SQLSMALLINT schema_len,
                                         SQLCHAR *table, SQLSMALLINT table_len,
                                         SQLCHAR *column,
                                         SQLSMALLINT column_len);
-SQLRETURN SQL_API MySQLColumns(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESColumns(SQLHSTMT hstmt,
                                SQLCHAR *catalog, SQLSMALLINT catalog_len,
                                SQLCHAR *schema, SQLSMALLINT schema_len,
                                SQLCHAR *sztable, SQLSMALLINT table_len,
                                SQLCHAR *column, SQLSMALLINT column_len);
-SQLRETURN SQL_API MySQLConnect(SQLHDBC hdbc, SQLWCHAR *szDSN, SQLSMALLINT cbDSN,
+SQLRETURN SQL_API DESConnect(SQLHDBC hdbc, SQLWCHAR *szDSN, SQLSMALLINT cbDSN,
                                SQLWCHAR *szUID, SQLSMALLINT cbUID,
                                SQLWCHAR *szAuth, SQLSMALLINT cbAuth);
-SQLRETURN SQL_API MySQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
+SQLRETURN SQL_API DESDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
                                    SQLCHAR **name, SQLSMALLINT *need_free,
                                    SQLSMALLINT *type, SQLULEN *def,
                                    SQLSMALLINT *scale, SQLSMALLINT *nullable);
-SQLRETURN SQL_API MySQLDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
+SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
                                      SQLWCHAR *in, SQLSMALLINT in_len,
                                      SQLWCHAR *out, SQLSMALLINT out_max,
                                      SQLSMALLINT *out_len,
                                      SQLUSMALLINT completion);
-SQLRETURN SQL_API MySQLForeignKeys(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESForeignKeys(SQLHSTMT hstmt,
                                    SQLCHAR *pkcatalog,
                                    SQLSMALLINT pkcatalog_len,
                                    SQLCHAR *pkschema, SQLSMALLINT pkschema_len,
@@ -1321,35 +1321,35 @@ SQLRETURN SQL_API MySQLForeignKeys(SQLHSTMT hstmt,
                                    SQLSMALLINT fkcatalog_len,
                                    SQLCHAR *fkschema, SQLSMALLINT fkschema_len,
                                    SQLCHAR *fktable, SQLSMALLINT fktable_len);
-SQLCHAR *MySQLGetCursorName(HSTMT hstmt);
-SQLRETURN SQL_API MySQLGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
+SQLCHAR *DESGetCursorName(HSTMT hstmt);
+SQLRETURN SQL_API DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                                SQLCHAR **char_info, SQLPOINTER num_info,
                                SQLSMALLINT *value_len);
-SQLRETURN SQL_API MySQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib,
+SQLRETURN SQL_API DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib,
                                       SQLCHAR **char_attr, SQLPOINTER num_attr);
-SQLRETURN MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum,
+SQLRETURN DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum,
                             SQLSMALLINT fldid, SQLPOINTER valptr,
                             SQLINTEGER buflen, SQLINTEGER *strlen);
-SQLRETURN SQL_API MySQLGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle,
+SQLRETURN SQL_API DESGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle,
                                     SQLSMALLINT record, SQLSMALLINT identifier,
                                     SQLCHAR **char_value, SQLPOINTER num_value);
-SQLRETURN SQL_API MySQLGetDiagRec(SQLSMALLINT handle_type, SQLHANDLE handle,
+SQLRETURN SQL_API DESGetDiagRec(SQLSMALLINT handle_type, SQLHANDLE handle,
                                   SQLSMALLINT record, SQLCHAR **sqlstate,
                                   SQLINTEGER *native, SQLCHAR **message);
-SQLRETURN SQL_API MySQLGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute,
+SQLRETURN SQL_API DESGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute,
                                    SQLPOINTER ValuePtr,
                                    SQLINTEGER BufferLength
                                      __attribute__((unused)),
                                   SQLINTEGER *StringLengthPtr);
-SQLRETURN SQL_API MySQLGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType);
-SQLRETURN SQL_API MySQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
+SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType);
+SQLRETURN SQL_API DESPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
                                bool reset_select_limit,
                                bool force_prepare);
-SQLRETURN SQL_API MySQLPrimaryKeys(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESPrimaryKeys(SQLHSTMT hstmt,
                                    SQLCHAR *catalog, SQLSMALLINT catalog_len,
                                    SQLCHAR *schema, SQLSMALLINT schema_len,
                                    SQLCHAR *table, SQLSMALLINT table_len);
-SQLRETURN SQL_API MySQLProcedureColumns(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESProcedureColumns(SQLHSTMT hstmt,
                                         SQLCHAR *catalog,
                                         SQLSMALLINT catalog_len,
                                         SQLCHAR *schema,
@@ -1358,34 +1358,34 @@ SQLRETURN SQL_API MySQLProcedureColumns(SQLHSTMT hstmt,
                                         SQLSMALLINT proc_len,
                                         SQLCHAR *column,
                                         SQLSMALLINT column_len);
-SQLRETURN SQL_API MySQLProcedures(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESProcedures(SQLHSTMT hstmt,
                                   SQLCHAR *catalog, SQLSMALLINT catalog_len,
                                   SQLCHAR *schema, SQLSMALLINT schema_len,
                                   SQLCHAR *proc, SQLSMALLINT proc_len);
-SQLRETURN SQL_API MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
+SQLRETURN SQL_API DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
                                       SQLPOINTER ValuePtr,
                                       SQLINTEGER StringLengthPtr);
-SQLRETURN SQL_API MySQLSetCursorName(SQLHSTMT hstmt, SQLCHAR *name,
+SQLRETURN SQL_API DESSetCursorName(SQLHSTMT hstmt, SQLCHAR *name,
                                      SQLSMALLINT len);
-SQLRETURN SQL_API MySQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER attribute,
+SQLRETURN SQL_API DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER attribute,
                                    SQLPOINTER value, SQLINTEGER len);
-SQLRETURN SQL_API MySQLSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT type,
+SQLRETURN SQL_API DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT type,
                                       SQLCHAR *catalog, SQLSMALLINT catalog_len,
                                       SQLCHAR *schema, SQLSMALLINT schema_len,
                                       SQLCHAR *table, SQLSMALLINT table_len,
                                       SQLUSMALLINT scope,
                                       SQLUSMALLINT nullable);
-SQLRETURN SQL_API MySQLStatistics(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESStatistics(SQLHSTMT hstmt,
                                   SQLCHAR *catalog, SQLSMALLINT catalog_len,
                                   SQLCHAR *schema, SQLSMALLINT schema_len,
                                   SQLCHAR *table, SQLSMALLINT table_len,
                                   SQLUSMALLINT unique, SQLUSMALLINT accuracy);
-SQLRETURN SQL_API MySQLTablePrivileges(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESTablePrivileges(SQLHSTMT hstmt,
                                        SQLCHAR *catalog,
                                        SQLSMALLINT catalog_len,
                                        SQLCHAR *schema, SQLSMALLINT schema_len,
                                        SQLCHAR *table, SQLSMALLINT table_len);
-SQLRETURN SQL_API MySQLTables(SQLHSTMT hstmt,
+SQLRETURN SQL_API DESTables(SQLHSTMT hstmt,
                               SQLCHAR *catalog, SQLSMALLINT catalog_len,
                               SQLCHAR *schema, SQLSMALLINT schema_len,
                               SQLCHAR *table, SQLSMALLINT table_len,

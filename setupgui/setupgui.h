@@ -124,10 +124,10 @@ void setStrFieldDataTab(const SQLWCHAR *param, unsigned int framenum, int idc );
 
 void setComboFieldDataTab(const SQLWCHAR *param, unsigned int framenum, int idc);
 
-my_bool getBoolFieldData(HWND hwnd, int idc);
-my_bool getBoolFieldDataTab(unsigned int framenum, int idc);
-void setBoolFieldDataTab(unsigned int framenum, int idc, my_bool state);
-void setBoolFieldData(HWND hwnd, int idc, my_bool state);
+des_bool getBoolFieldData(HWND hwnd, int idc);
+des_bool getBoolFieldDataTab(unsigned int framenum, int idc);
+void setBoolFieldDataTab(unsigned int framenum, int idc, des_bool state);
+void setBoolFieldData(HWND hwnd, int idc, des_bool state);
 
 unsigned int getUnsignedFieldData(HWND hwnd, int idc );
 unsigned int getUnsignedFieldDataTab(unsigned int tab_num, int idc );
@@ -137,7 +137,7 @@ void setUnsignedFieldDataTab(unsigned int framenum, const unsigned int param, in
 HWND getTabCtrlTab(void);
 HWND getTabCtrlTabPages(unsigned int framenum);
 void SwitchTcpOrPipe(HWND hwnd, BOOL usePipe);
-void setControlEnabled(unsigned int framenum, int idc, my_bool state);
+void setControlEnabled(unsigned int framenum, int idc, des_bool state);
 
 #define GET_STRING(name) \
   {                                                                \

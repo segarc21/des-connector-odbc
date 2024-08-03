@@ -117,7 +117,7 @@ SQLWCHAR *sqlchar_as_sqlwchar(desodbc::CHARSET_INFO *charset_info, SQLCHAR *str,
   SQLCHAR *pos, *str_end;
   SQLWCHAR *out;
   SQLINTEGER i, out_bytes;
-  my_bool free_str= 0;
+  des_bool free_str= 0;
 
   if (str && *len == SQL_NTS)
   {
@@ -537,7 +537,7 @@ SQLINTEGER sqlwchar_as_sqlchar_buf(desodbc::CHARSET_INFO *charset_info,
   if (!str || len == 0)
     return 0;
 
-  str_end = str + myodbc_min(len, out_bytes);
+  str_end = str + desodbc_min(len, out_bytes);
 
   for (i= 0; str < str_end; )
   {
@@ -1405,7 +1405,7 @@ char *desodbc_stpmov(char *dst, const char *src)
 }
 
 char *myodbc_d2str(double val, char *buf, size_t buf_size, bool max_precision) {
-  myodbc_snprintf(buf, buf_size, max_precision ? "%.17e" : "%.15e", val);
+  desodbc_snprintf(buf, buf_size, max_precision ? "%.17e" : "%.15e", val);
   delocalize_radix(buf);
   return buf;
 }
@@ -1525,7 +1525,7 @@ void myodbc_qsort(void *base_ptr, size_t count, size_t size, qsort_cmp cmp)
 {
   char *low, *high, *pivot;
   stack_node stack[STACK_SIZE], *stack_ptr;
-  my_bool ptr_cmp;
+  des_bool ptr_cmp;
   /* Handle the simple case first */
   /* This will also make the rest of the code simpler */
   if (count <= 1)

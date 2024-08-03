@@ -44,7 +44,7 @@
   - return code
 */
 
-static MYODBC3_ERR_STR desodbc3_errors[]=
+static DESODBC3_ERR_STR desodbc3_errors[]=
 {
   {"01000","General warning", SQL_SUCCESS_WITH_INFO},
   {"01004","String data, right truncated", SQL_SUCCESS_WITH_INFO},
@@ -135,7 +135,7 @@ void desodbc_sqlstate2_init(void)
   @purpose : If ODBC version is SQL_OV_ODBC3, initialize to original SQLSTATEs
 */
 
-void myodbc_sqlstate3_init(void)
+void desodbc_sqlstate3_init(void)
 {
     uint i;
 
@@ -153,13 +153,13 @@ void myodbc_sqlstate3_init(void)
     desodbc_stpmov(desodbc3_errors[DESERR_42S22].sqlstate,"42S22");
 }
 
-DESERROR::DESERROR(myodbc_errid errid, const char* errtext, SQLINTEGER errcode,
+DESERROR::DESERROR(desodbc_errid errid, const char* errtext, SQLINTEGER errcode,
   const char* prefix)
 {
   std::string errmsg;
 
   errmsg = (errtext ? errtext : desodbc3_errors[errid].message);
-  native_error = errcode ? (myodbc_errid)errcode : errid + MYODBC_ERROR_CODE_START;
+  native_error = errcode ? (desodbc_errid)errcode : errid + DESODBC_ERROR_CODE_START;
 
   retcode = desodbc3_errors[errid].retcode;
   sqlstate = desodbc3_errors[errid].sqlstate;
@@ -170,7 +170,7 @@ DESERROR::DESERROR(const char* state, const char* msg, SQLINTEGER errcode,
   const char* prefix)
 {
   sqlstate = state ? state : "";
-  message = std::string(prefix ? prefix : MYODBC_ERROR_PREFIX) +
+  message = std::string(prefix ? prefix : DESODBC_ERROR_PREFIX) +
     (msg ? msg : "");
   native_error = errcode;
   retcode = SQL_ERROR;
@@ -186,7 +186,7 @@ SQLRETURN set_desc_error(DESC *        desc,
                          const char *  message,
                          uint          errcode)
 {
-  desc->error = DESERROR(state, message, errcode, MYODBC_ERROR_PREFIX);
+  desc->error = DESERROR(state, message, errcode, DESODBC_ERROR_PREFIX);
   return SQL_ERROR;
 }
 
@@ -196,7 +196,7 @@ SQLRETURN set_desc_error(DESC *        desc,
   @purpose : translates SQL error to ODBC error
 */
 
-void translate_error(char *save_state, myodbc_errid errid, uint mysql_err)
+void translate_error(char *save_state, desodbc_errid errid, uint mysql_err)
 {
     const char *state= desodbc3_errors[errid].sqlstate;
 
@@ -263,10 +263,10 @@ void translate_error(char *save_state, myodbc_errid errid, uint mysql_err)
   @purpose : sets the error information to environment handle.
 */
 
-SQLRETURN set_env_error(ENV *env, myodbc_errid errid, const char *errtext,
+SQLRETURN set_env_error(ENV *env, desodbc_errid errid, const char *errtext,
                         SQLINTEGER errcode)
 {
-  env->error = DESERROR(errid, errtext, errcode, MYODBC_ERROR_PREFIX);
+  env->error = DESERROR(errid, errtext, errcode, DESODBC_ERROR_PREFIX);
   return env->error.retcode;
 }
 
@@ -314,7 +314,7 @@ SQLRETURN handle_connection_error(STMT *stmt)
   Little helper to check if error code means that we have lost connection
   @param[in]  errcode  code of the last error
 */
-my_bool is_connection_lost(uint errcode)
+des_bool is_connection_lost(uint errcode)
 {
   if (errcode==CR_SERVER_GONE_ERROR || errcode==CR_SERVER_LOST
 #if MYSQL_VERSION_ID > 80023
@@ -335,7 +335,7 @@ my_bool is_connection_lost(uint errcode)
 */
 
 SQLRETURN set_handle_error(SQLSMALLINT HandleType, SQLHANDLE handle,
-                           myodbc_errid errid, const char *errtext,
+                           desodbc_errid errid, const char *errtext,
                            SQLINTEGER errcode)
 {
   switch ( HandleType )
@@ -365,7 +365,7 @@ SQLRETURN set_handle_error(SQLSMALLINT HandleType, SQLHANDLE handle,
 /**
 */
 SQLRETURN SQL_API
-MySQLGetDiagRec(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
+DESGetDiagRec(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
                 SQLCHAR **sqlstate, SQLINTEGER *native, SQLCHAR **message)
 {
   DESERROR *error;
@@ -439,7 +439,7 @@ bool is_odbc3_subclass(std::string sqlstate)
   that contains error, warning, and status information
 */
 SQLRETURN SQL_API
-MySQLGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
+DESGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
                   SQLSMALLINT identifier, SQLCHAR **char_value,
                   SQLPOINTER num_value)
 {

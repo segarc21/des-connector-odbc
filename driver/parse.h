@@ -36,34 +36,34 @@
 
 #include <vector>
 
-typedef struct my_string
+typedef struct des_string
 {
   char *str;
   uint chars; /* probably it is not needed and is useless */
   uint bytes;
-} MY_STRING;
+} DES_STRING;
 
-typedef enum myodbcQueryType
+typedef enum desodbcQueryType
 {
-  myqtSelect= 0,
-  myqtInsert,
-  myqtUpdate,
-  myqtCall,
-  myqtShow,
-  myqtUse,        /*5*/
-  myqtCreateTable,
-  myqtCreateProc,
-  myqtCreateFunc,
-  myqtDropProc,
-  myqtDropFunc,   /*10*/
-  myqtOptimize,
-  myqtOther       /* Any type of query(including those above) that we do not
+  desqtSelect= 0,
+  desqtInsert,
+  desqtUpdate,
+  desqtCall,
+  desqtShow,
+  desqtUse,        /*5*/
+  desqtCreateTable,
+  desqtCreateProc,
+  desqtCreateFunc,
+  desqtDropProc,
+  desqtDropFunc,   /*10*/
+  desqtOptimize,
+  desqtOther       /* Any type of query(including those above) that we do not
                      care about for that or other reason */
 } QUERY_TYPE_ENUM;
 
 typedef struct qt_resolving
 {
-  const MY_STRING *           keyword;
+  const DES_STRING *           keyword;
   uint                        pos_from;
   uint                        pos_thru;
   QUERY_TYPE_ENUM             query_type;
@@ -73,50 +73,50 @@ typedef struct qt_resolving
 
 typedef struct
 {
-  my_bool       returns_rs;
-  my_bool       preparable_on_server;
+  des_bool       returns_rs;
+  des_bool       preparable_on_server;
   const char *  server_version;
-} MY_QUERY_TYPE;
+} DES_QUERY_TYPE;
 
 /* To organize constant data needed for parsing - to keep it in required encoding */
 typedef struct syntax_markers
 {
-  const MY_STRING quote[3];
-  const MY_STRING query_sep[2];
-  const MY_STRING *escape;
-  const MY_STRING *odbc_escape_open;
-  const MY_STRING *odbc_escape_close;
-  const MY_STRING *param_marker;
-  const MY_STRING hash_comment;
-  const MY_STRING dash_comment;
-  const MY_STRING c_style_open_comment;
-  const MY_STRING c_style_close_comment;
-  const MY_STRING c_var_open_comment;
-  const MY_STRING new_line_end;
+  const DES_STRING quote[3];
+  const DES_STRING query_sep[2];
+  const DES_STRING *escape;
+  const DES_STRING *odbc_escape_open;
+  const DES_STRING *odbc_escape_close;
+  const DES_STRING *param_marker;
+  const DES_STRING hash_comment;
+  const DES_STRING dash_comment;
+  const DES_STRING c_style_open_comment;
+  const DES_STRING c_style_close_comment;
+  const DES_STRING c_var_open_comment;
+  const DES_STRING new_line_end;
 
-  struct my_keywords
+  struct des_keywords
   {
-    const MY_STRING * select;
-    const MY_STRING * insert;
-    const MY_STRING * update;
-    const MY_STRING * call;
-    const MY_STRING * show;
-    const MY_STRING * use;
-    const MY_STRING * create;
-    const MY_STRING * drop;
-    const MY_STRING * table;
-    const MY_STRING * procedure;
-    const MY_STRING * function;
+    const DES_STRING * select;
+    const DES_STRING * insert;
+    const DES_STRING * update;
+    const DES_STRING * call;
+    const DES_STRING * show;
+    const DES_STRING * use;
+    const DES_STRING * create;
+    const DES_STRING * drop;
+    const DES_STRING * table;
+    const DES_STRING * procedure;
+    const DES_STRING * function;
 
-    const MY_STRING * where_;
-    const MY_STRING * current;
-    const MY_STRING * of;
-    const MY_STRING * limit;
+    const DES_STRING * where_;
+    const DES_STRING * current;
+    const DES_STRING * of;
+    const DES_STRING * limit;
 
   } keyword;
   /* TODO: comments */
 
-} MY_SYNTAX_MARKERS;
+} DES_SYNTAX_MARKERS;
 
 struct tempBuf {
   char *buf;
@@ -147,7 +147,7 @@ struct tempBuf {
 };
 
 
-struct MY_PARSED_QUERY
+struct DES_PARSED_QUERY
 {
   desodbc::CHARSET_INFO  *cs;                   /* We need it for parsing                  */
   tempBuf buf;
@@ -161,9 +161,9 @@ struct MY_PARSED_QUERY
   QUERY_TYPE_ENUM query_type;
   const char *  is_batch;   /* Pointer to the begin of a 2nd query in a batch */
 
-  MY_PARSED_QUERY();
-  MY_PARSED_QUERY &operator=(const MY_PARSED_QUERY &src);
-  ~MY_PARSED_QUERY();
+  DES_PARSED_QUERY();
+  DES_PARSED_QUERY &operator=(const DES_PARSED_QUERY &src);
+  ~DES_PARSED_QUERY();
 
   void reset(char *query, char *query_end, desodbc::CHARSET_INFO *cs);
   const char *get_token(uint index);
@@ -182,23 +182,23 @@ typedef struct parser
   const char        *pos;
   int               bytes_at_pos;
   int               ctype;
-  const MY_STRING   *quote;  /* If quote was open - pointer to the quote char */
-  MY_PARSED_QUERY   *query;
+  const DES_STRING   *quote;  /* If quote was open - pointer to the quote char */
+  DES_PARSED_QUERY   *query;
   BOOL hash_comment;      /* Comment starts with "#" and end with end of line */
   BOOL dash_comment;      /* Comment starts with "-- " and end with end of line  */
   BOOL c_style_comment;   /* C style comment */
 
-  const MY_SYNTAX_MARKERS *syntax;
-} MY_PARSER;
+  const DES_SYNTAX_MARKERS *syntax;
+} DES_PARSER;
 
-/* Those are taking pointer to MY_PARSED_QUERY as a parameter*/
+/* Those are taking pointer to DES_PARSED_QUERY as a parameter*/
 #define GET_QUERY(pq) (pq)->query
 #define GET_QUERY_END(pq) (pq)->query_end
 #define GET_QUERY_LENGTH(pq) (GET_QUERY_END(pq) - GET_QUERY(pq))
 #define PARAM_COUNT(pq) (pq).param_pos.size()
 #define IS_BATCH(pq) ((pq)->is_batch != NULL)
 
-MY_PARSER * init_parser(MY_PARSER *parser, MY_PARSED_QUERY *pq);
+DES_PARSER * init_parser(DES_PARSER *parser, DES_PARSED_QUERY *pq);
 
 /* this will not work for some mb charsets */
 #define END_NOT_REACHED(parser) ((parser)->pos < (parser)->query->query_end)
@@ -208,27 +208,27 @@ MY_PARSER * init_parser(MY_PARSER *parser, MY_PARSED_QUERY *pq);
 #define IS_SPL_CHAR(parser) ((parser)->ctype & _MY_CTR)
 
 /* But returns bytes in current character */
-int               get_ctype(MY_PARSER *parser);
-BOOL              skip_spaces(MY_PARSER *parser);
-void              add_token(MY_PARSER *parser);
-BOOL              is_escape(MY_PARSER *parser);
-const MY_STRING * is_quote(MY_PARSER *parser);
-BOOL              open_quote(MY_PARSER *parser, const MY_STRING * quote);
-BOOL              is_query_separator(MY_PARSER *parser);
+int               get_ctype(DES_PARSER *parser);
+BOOL              skip_spaces(DES_PARSER *parser);
+void              add_token(DES_PARSER *parser);
+BOOL              is_escape(DES_PARSER *parser);
+const DES_STRING * is_quote(DES_PARSER *parser);
+BOOL              open_quote(DES_PARSER *parser, const DES_STRING * quote);
+BOOL              is_query_separator(DES_PARSER *parser);
 /* Installs position on the character next after closing quote */
-const char *            find_closing_quote(MY_PARSER *parser);
-BOOL              is_param_marker(MY_PARSER *parser);
-void              add_parameter(MY_PARSER *parser);
-void              step_char(MY_PARSER *parser);
-BOOL              tokenize(MY_PARSER *parser);
-QUERY_TYPE_ENUM   detect_query_type(MY_PARSER *parser,
+const char *            find_closing_quote(DES_PARSER *parser);
+BOOL              is_param_marker(DES_PARSER *parser);
+void              add_parameter(DES_PARSER *parser);
+void              step_char(DES_PARSER *parser);
+BOOL              tokenize(DES_PARSER *parser);
+QUERY_TYPE_ENUM   detect_query_type(DES_PARSER *parser,
                                     const QUERY_TYPE_RESOLVING *rule);
 
-BOOL              parser_compare     (MY_PARSER *parser, const MY_STRING *str);
-BOOL              case_compare(MY_PARSED_QUERY *parser, const char *pos,
-                               const MY_STRING *str);
+BOOL              parser_compare     (DES_PARSER *parser, const DES_STRING *str);
+BOOL              case_compare(DES_PARSED_QUERY *parser, const char *pos,
+                               const DES_STRING *str);
 
-BOOL              parse(MY_PARSED_QUERY *pq);
+BOOL              parse(DES_PARSED_QUERY *pq);
 
 
 const char *mystr_get_prev_token(desodbc::CHARSET_INFO *charset,
@@ -247,9 +247,9 @@ BOOL        is_drop_function        (const SQLCHAR * query);
 BOOL        is_create_procedure     (const SQLCHAR * query);
 BOOL        is_create_function      (const SQLCHAR * query);
 BOOL        is_use_db               (const SQLCHAR * query);
-BOOL        is_call_procedure       (const MY_PARSED_QUERY *query);
-BOOL        stmt_returns_result     (const MY_PARSED_QUERY *query);
+BOOL        is_call_procedure       (const DES_PARSED_QUERY *query);
+BOOL        stmt_returns_result     (const DES_PARSED_QUERY *query);
 
-BOOL        remove_braces           (MY_PARSER *query);
+BOOL        remove_braces           (DES_PARSER *query);
 
 #endif

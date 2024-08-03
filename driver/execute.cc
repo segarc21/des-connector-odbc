@@ -64,7 +64,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
       goto exit;
     }
 
-    MYLOG_QUERY(stmt, query.c_str());
+    DESLOG_QUERY(stmt, query.c_str());
     DO_LOCK_STMT();
     if ( check_if_server_is_alive( stmt->dbc ) )
     {
@@ -72,7 +72,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
                       mysql_error(stmt->dbc->mysql),
                       mysql_errno(stmt->dbc->mysql));
 
-      translate_error((char*)stmt->error.sqlstate.c_str(), MYERR_08S01 /* S1000 */,
+      translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_08S01 /* S1000 */,
                       mysql_errno(stmt->dbc->mysql));
       goto exit;
     }
@@ -100,7 +100,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
 
       scroller_create(stmt, query.c_str(), query_length);
       scroller_move(stmt);
-      MYLOG_QUERY(stmt, stmt->scroller.query);
+      DESLOG_QUERY(stmt, stmt->scroller.query);
 
       native_error = mysql_real_query(stmt->dbc->mysql, stmt->scroller.query,
                                   (unsigned long)stmt->scroller.query_len);
@@ -118,11 +118,11 @@ SQLRETURN do_query(STMT *stmt, std::string query)
       }
 
       native_error = mysql_stmt_execute(stmt->ssps);
-      MYLOG_QUERY(stmt, "ssps has been executed");
+      DESLOG_QUERY(stmt, "ssps has been executed");
     }
     else
     {
-      MYLOG_QUERY(stmt, "Using direct execution");
+      DESLOG_QUERY(stmt, "Using direct execution");
       /* Need to close ps handler if it is open as our relsult will be generated
          by direct execution. and ps handler may create some chaos */
       ssps_close(stmt);
@@ -138,12 +138,12 @@ SQLRETURN do_query(STMT *stmt, std::string query)
         (unsigned long)query_length);
     }
 
-    MYLOG_QUERY(stmt, "query has been executed");
+    DESLOG_QUERY(stmt, "query has been executed");
 
     if (native_error)
     {
       error = stmt->set_error("HY000");
-      MYLOG_QUERY(stmt, stmt->error.message.c_str());
+      DESLOG_QUERY(stmt, stmt->error.message.c_str());
 
       /* For some errors - translating to more appropriate status */
       translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_S1000,
@@ -248,7 +248,7 @@ SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery)
     if (stmt->dummy_state != ST_DUMMY_PREPARED &&
         (!aprec || !aprec->par.real_param_done))
     {
-      rc= stmt->set_error( MYERR_07001,
+      rc= stmt->set_error( DESERR_07001,
           "The number of parameter markers is not equal "
           "to the number of parameters provided",0);
       goto error;
@@ -313,7 +313,7 @@ SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery)
   return rc;
 
 memerror:      /* Too much data */
-  rc= stmt->set_error(MYERR_S1001,NULL,4001);
+  rc= stmt->set_error(DESERR_S1001,NULL,4001);
 
 error:
   return rc;
@@ -571,11 +571,11 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
         if (stmt->dbc->ds.opt_MIN_DATE_TO_ZERO && !date->year
           && (date->month == date->day == 1))
         {
-          *length = myodbc_snprintf(buff, buff_max, "0000-00-00");
+          *length = desodbc_snprintf(buff, buff_max, "0000-00-00");
         }
         else
         {
-          *length = myodbc_snprintf(buff, buff_max, "%04d-%02d-%02d",
+          *length = desodbc_snprintf(buff, buff_max, "%04d-%02d-%02d",
                                     date->year, date->month, date->day);
         }
         *res= buff;
@@ -591,7 +591,7 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
           return stmt->set_error("22008", "Not a valid time value supplied", 0);
         }
 
-        *length = myodbc_snprintf(buff, buff_max, "%02d:%02d:%02d",
+        *length = desodbc_snprintf(buff, buff_max, "%02d:%02d:%02d",
                                   time->hour, time->minute, time->second);
         *res= buff;
         break;
@@ -604,12 +604,12 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
         if (stmt->dbc->ds.opt_MIN_DATE_TO_ZERO &&
             !time->year && (time->month == time->day == 1))
         {
-          *length = myodbc_snprintf(buff, buff_max, "0000-00-00 %02d:%02d:%02d",
+          *length = desodbc_snprintf(buff, buff_max, "0000-00-00 %02d:%02d:%02d",
                                     time->hour, time->minute, time->second);
         }
         else
         {
-          *length = myodbc_snprintf(buff, buff_max,
+          *length = desodbc_snprintf(buff, buff_max,
                     "%04d-%02d-%02d %02d:%02d:%02d",
                     time->year, time->month, time->day,
                     time->hour, time->minute, time->second);
@@ -622,7 +622,7 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
           /* Start cleaning from the end */
           int tmp_pos= 9;
 
-          myodbc_snprintf(tmp_buf, buff_max - *length,
+          desodbc_snprintf(tmp_buf, buff_max - *length,
                           ".%09d", time->fraction);
 
           /*
@@ -678,13 +678,13 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
           /* Dirty-hackish */
           if (ssps_used(stmt))
           {
-            *length = myodbc_snprintf(buff, buff_max, "%d:%02d:00",
+            *length = desodbc_snprintf(buff, buff_max, "%d:%02d:00",
                                       interval->intval.day_second.hour,
                                       interval->intval.day_second.minute);
           }
           else
           {
-            *length = myodbc_snprintf(buff, buff_max, "'%d:%02d:00'",
+            *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:00'",
                                       interval->intval.day_second.hour,
                                       interval->intval.day_second.minute);
           }
@@ -693,14 +693,14 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
         {
           if (ssps_used(stmt))
           {
-            *length = myodbc_snprintf(buff, buff_max, "%d:%02d:%02d",
+            *length = desodbc_snprintf(buff, buff_max, "%d:%02d:%02d",
                                       interval->intval.day_second.hour,
                                       interval->intval.day_second.minute,
                                       interval->intval.day_second.second);
           }
           else
           {
-            *length = myodbc_snprintf(buff, buff_max, "'%d:%02d:%02d'",
+            *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:%02d'",
                                       interval->intval.day_second.hour,
                                       interval->intval.day_second.minute,
                                       interval->intval.day_second.second);
@@ -827,7 +827,7 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
         if (!octet_length_ptr && aprec->octet_length > 0 &&
             aprec->octet_length != SQL_SETPARAM_VALUE_MAX)
         {
-          length = (long)myodbc_min(length, aprec->octet_length);
+          length = (long)desodbc_min(length, aprec->octet_length);
         }
       }
       else
@@ -1029,12 +1029,12 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
 
           if (bind != NULL)
           {
-            length = myodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d",
+            length = desodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d",
                                      time->hour, time->minute, time->second);
           }
           else
           {
-            length = myodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'",
+            length = desodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'",
                                      time->hour, time->minute, time->second);
           }
 
@@ -1069,14 +1069,14 @@ SQLRETURN insert_param(STMT *stmt, MYSQL_BIND *bind, DESC* apd,
 
           if (bind != NULL)
           {
-            length = myodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d",
+            length = desodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d",
                                      hours,
                                      (int) time/100%100,
                                      (int) time%100);
           }
           else
           {
-            length = myodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'",
+            length = desodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'",
                                      hours,
                                      (int) time/100%100,
                                      (int) time%100);
@@ -1211,7 +1211,7 @@ memerror:
     {
       x_free(data);
     }
-    return stmt->set_error( MYERR_S1001, NULL, 4001);
+    return stmt->set_error( DESERR_S1001, NULL, 4001);
 }
 
 
@@ -1237,13 +1237,13 @@ SQLRETURN do_my_pos_cursor_std( STMT *pStmt, STMT *pStmtCursor )
 
   query = pszQuery;
 
-  if ( !myodbc_casecmp( pszQuery, "delete", 6 ) )
+  if ( !desodbc_casecmp( pszQuery, "delete", 6 ) )
   {
-      nReturn = my_pos_delete_std( pStmtCursor, pStmt, 1, query );
+      nReturn = des_pos_delete_std( pStmtCursor, pStmt, 1, query );
   }
-  else if ( !myodbc_casecmp( pszQuery, "update", 6 ) )
+  else if ( !desodbc_casecmp( pszQuery, "update", 6 ) )
   {
-      nReturn = my_pos_update_std( pStmtCursor, pStmt, 1, query );
+      nReturn = des_pos_update_std( pStmtCursor, pStmt, 1, query );
   }
   else
   {
@@ -1268,7 +1268,7 @@ SQLRETURN SQL_API SQLExecute(SQLHSTMT hstmt)
 {
   LOCK_STMT(hstmt);
 
-  return my_SQLExecute((STMT *)hstmt);
+  return DES_SQLExecute((STMT *)hstmt);
 }
 
 
@@ -1304,7 +1304,7 @@ BOOL map_error_to_param_status( SQLUSMALLINT *param_status_ptr, SQLRETURN rc)
   exist in the statement
 */
 
-SQLRETURN my_SQLExecute( STMT *pStmt )
+SQLRETURN DES_SQLExecute( STMT *pStmt )
 {
   std::string query;
   char *cursor_pos;
@@ -1348,7 +1348,7 @@ SQLRETURN my_SQLExecute( STMT *pStmt )
 
     if (!GET_QUERY(&pStmt->query))
     {
-      rc = pStmt->set_error( MYERR_S1010,
+      rc = pStmt->set_error( DESERR_S1010,
                         "No previous SQLPrepare done", 0);
       throw pStmt->error;
     }
@@ -1369,7 +1369,7 @@ SQLRETURN my_SQLExecute( STMT *pStmt )
         will couse commands out of sync */
       if (if_forward_cache(pStmtCursor))
       {
-        rc = pStmt->set_error(MYERR_S1010,NULL,0);
+        rc = pStmt->set_error(DESERR_S1010,NULL,0);
         throw pStmt->error;
       }
 
@@ -1383,7 +1383,7 @@ SQLRETURN my_SQLExecute( STMT *pStmt )
         return rc;
     }
 
-    my_SQLFreeStmt((SQLHSTMT)pStmt,FREE_STMT_RESET_BUFFERS);
+    DES_SQLFreeStmt((SQLHSTMT)pStmt,FREE_STMT_RESET_BUFFERS);
 
     query= GET_QUERY(&pStmt->query);
 
@@ -1689,12 +1689,12 @@ static SQLRETURN execute_dae(STMT *stmt)
     break;
   case DAE_SETPOS_INSERT:
     stmt->dae_type= DAE_SETPOS_DONE;
-    rc= my_SQLSetPos((HSTMT)stmt, stmt->setpos_row, SQL_ADD, stmt->setpos_lock);
+    rc= DES_SQLSetPos((HSTMT)stmt, stmt->setpos_row, SQL_ADD, stmt->setpos_lock);
     stmt->setpos_apd.reset();
     break;
   case DAE_SETPOS_UPDATE:
     stmt->dae_type= DAE_SETPOS_DONE;
-    rc= my_SQLSetPos((HSTMT)stmt, stmt->setpos_row, SQL_UPDATE, stmt->setpos_lock);
+    rc= DES_SQLSetPos((HSTMT)stmt, stmt->setpos_row, SQL_UPDATE, stmt->setpos_lock);
     stmt->setpos_apd.reset();
     break;
   }
@@ -1885,10 +1885,10 @@ SQLRETURN SQL_API SQLCancel(SQLHSTMT hstmt)
   {
     /*
       DBC lock can be released.
-      STMT lock will be acquired inside my_SQLFreeStmtExtended.
+      STMT lock will be acquired inside DES_SQLFreeStmtExtended.
     */
     dlock.unlock();
-    return my_SQLFreeStmtExtended(hstmt, SQL_CLOSE,
+    return DES_SQLFreeStmtExtended(hstmt, SQL_CLOSE,
       FREE_STMT_CLEAR_RESULT | FREE_STMT_DO_LOCK);
   }
 
@@ -1915,7 +1915,7 @@ SQLRETURN SQL_API SQLCancel(SQLHSTMT hstmt)
   {
     char buff[40];
     /* buff is always big enough because max length of %lu is 15 */
-    myodbc_snprintf(buff, sizeof(buff), "KILL /*!50000 QUERY */ %lu", mysql_thread_id(dbc->mysql));
+    desodbc_snprintf(buff, sizeof(buff), "KILL /*!50000 QUERY */ %lu", mysql_thread_id(dbc->mysql));
     if (mysql_real_query(second, buff, (unsigned long)strlen(buff)))
     {
       mysql_close(second);

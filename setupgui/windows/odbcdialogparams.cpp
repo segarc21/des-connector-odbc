@@ -279,7 +279,7 @@ HWND getTabCtrlTabPages(unsigned int framenum)
 }
 
 
-my_bool getBoolFieldDataTab(unsigned int framenum, int idc)
+des_bool getBoolFieldDataTab(unsigned int framenum, int idc)
 {
   assert(TabCtrl_1.hTabPages);
   HWND checkbox = GetDlgItem(TabCtrl_1.hTabPages[framenum-1], idc);
@@ -293,7 +293,7 @@ my_bool getBoolFieldDataTab(unsigned int framenum, int idc)
 
 
 /* this reads non-DSN bool data */
-my_bool getBoolFieldData(HWND hwnd, int idc)
+des_bool getBoolFieldData(HWND hwnd, int idc)
 {
   HWND checkbox = GetDlgItem(hwnd, idc);
 
@@ -305,7 +305,7 @@ my_bool getBoolFieldData(HWND hwnd, int idc)
 }
 
 
-void setBoolFieldData(HWND hwnd, int idc, my_bool state)
+void setBoolFieldData(HWND hwnd, int idc, des_bool state)
 {
   HWND checkbox = GetDlgItem(hwnd, idc);
   assert(checkbox);
@@ -314,7 +314,7 @@ void setBoolFieldData(HWND hwnd, int idc, my_bool state)
 }
 
 
-void setBoolFieldDataTab(unsigned int framenum, int idc, my_bool state)
+void setBoolFieldDataTab(unsigned int framenum, int idc, des_bool state)
 {
   assert(TabCtrl_1.hTabPages);
   Button_SetCheck(GetDlgItem(TabCtrl_1.hTabPages[framenum-1],idc), state);
@@ -322,7 +322,7 @@ void setBoolFieldDataTab(unsigned int framenum, int idc, my_bool state)
 }
 
 
-void setControlEnabled(unsigned int framenum, int idc, my_bool state)
+void setControlEnabled(unsigned int framenum, int idc, des_bool state)
 {
   HWND cursorTab= TabCtrl_1.hTabPages[framenum-1];
   assert(cursorTab);

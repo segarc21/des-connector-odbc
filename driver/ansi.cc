@@ -86,7 +86,7 @@ SQLColAttributeImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
   STMT *stmt= (STMT *)hstmt;
   SQLCHAR *value= NULL;
   SQLINTEGER len= SQL_NTS;
-  SQLRETURN rc= MySQLColAttribute(hstmt, column, field, &value, num_attr);
+  SQLRETURN rc= DESColAttribute(hstmt, column, field, &value, num_attr);
 
   if (value)
   {
@@ -95,7 +95,7 @@ SQLColAttributeImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
 
     /* We set the error only when the result is intented to be returned */
     if ((char_attr || num_attr) && len > char_attr_max - 1)
-      rc= stmt->set_error(MYERR_01004, NULL, 0);
+      rc= stmt->set_error(DESERR_01004, NULL, 0);
 
     if (char_attr && char_attr_max > 1)
       desodbc::strmake((char *)char_attr, (char *)value, char_attr_max - 1);
@@ -123,7 +123,7 @@ SQLColumnPrivileges(SQLHSTMT hstmt,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLColumnPrivileges(hstmt, catalog, catalog_len, schema, schema_len,
+  rc= DESColumnPrivileges(hstmt, catalog, catalog_len, schema, schema_len,
                             table, table_len, column, column_len);
 
   return rc;
@@ -143,7 +143,7 @@ SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog, SQLSMALLINT catalog_len,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLColumns(hstmt, catalog, catalog_len, schema, schema_len,
+  rc= DESColumns(hstmt, catalog, catalog_len, schema, schema_len,
                    table, table_len, column, column_len);
 
   return rc;
@@ -169,7 +169,7 @@ SQLConnect(SQLHDBC hdbc, SQLCHAR *dsn, SQLSMALLINT dsn_len_in,
 
   CHECK_HANDLE(hdbc);
 
-  rc= MySQLConnect(hdbc, dsnw, dsn_len_in, userw, user_len_in,
+  rc= DESConnect(hdbc, dsnw, dsn_len_in, userw, user_len_in,
                    authw, auth_len_in);
 
   x_free(dsnw);
@@ -195,7 +195,7 @@ SQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   LOCK_STMT(hstmt);
 
-  rc= MySQLDescribeCol(hstmt, column, &value, &free_value, type,
+  rc= DESDescribeCol(hstmt, column, &value, &free_value, type,
                                  size, scale, nullable);
 
   if (free_value == -1)
@@ -211,7 +211,7 @@ SQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
 
     /* We set the error only when the result is intented to be returned */
     if (name && len > name_max - 1)
-      rc= stmt->set_error(MYERR_01004, NULL, 0);
+      rc= stmt->set_error(DESERR_01004, NULL, 0);
 
     if (name && name_max > 1)
       desodbc::strmake((char *)name, (char *)value, name_max - 1);
@@ -261,7 +261,7 @@ SQLDriverConnect(SQLHDBC hdbc, SQLHWND hwnd, SQLCHAR *in, SQLSMALLINT in_len,
     }
   }
 
-  rc= MySQLDriverConnect(hdbc, hwnd, inw, in_len,
+  rc= DESDriverConnect(hdbc, hwnd, inw, in_len,
                          outw, out_max, out_len, completion);
 
 #ifdef WIN32
@@ -304,7 +304,7 @@ SQLExecDirect(SQLHSTMT hstmt, SQLCHAR *str, SQLINTEGER str_len)
 
   if ((error= SQLPrepareImpl(hstmt, str, str_len, false)))
     return error;
-  error= my_SQLExecute((STMT *)hstmt);
+  error= DES_SQLExecute((STMT *)hstmt);
 
   return error;
 }
@@ -326,7 +326,7 @@ SQLForeignKeys(SQLHSTMT hstmt,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLForeignKeys(hstmt, pk_catalog, pk_catalog_len,
+  rc= DESForeignKeys(hstmt, pk_catalog, pk_catalog_len,
                        pk_schema, pk_schema_len, pk_table, pk_table_len,
                        fk_catalog, fk_catalog_len, fk_schema, fk_schema_len,
                        fk_table, fk_table_len);
@@ -358,7 +358,7 @@ SQLGetConnectAttrImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
     the valid output buffer to prevent crashes
   */
   if (value)
-    rc= MySQLGetConnectAttr(hdbc, attribute, &char_value, value);
+    rc= DESGetConnectAttr(hdbc, attribute, &char_value, value);
 
   if (char_value)
   {
@@ -370,7 +370,7 @@ SQLGetConnectAttrImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
       see: "if (char_value)"
     */
     if (len > value_max - 1)
-      rc = dbc->set_error(MYERR_01004, NULL, 0);
+      rc = dbc->set_error(DESERR_01004, NULL, 0);
 
     if (value && value_max > 1)
       desodbc::strmake((char *)value, (char *)char_value, value_max - 1);
@@ -395,9 +395,9 @@ SQLGetCursorName(SQLHSTMT hstmt, SQLCHAR *cursor, SQLSMALLINT cursor_max,
   CLEAR_STMT_ERROR(stmt);
 
   if (cursor_max < 0)
-    return stmt->set_error(MYERR_S1090, NULL, 0);
+    return stmt->set_error(DESERR_S1090, NULL, 0);
 
-  name= MySQLGetCursorName(hstmt);
+  name= DESGetCursorName(hstmt);
   SQLINTEGER len = (SQLINTEGER)strlen((char *)name);
 
   if (cursor && cursor_max > 1)
@@ -408,7 +408,7 @@ SQLGetCursorName(SQLHSTMT hstmt, SQLCHAR *cursor, SQLSMALLINT cursor_max,
 
   /* We set the error only when the result is intented to be returned */
   if (cursor && len > cursor_max - 1)
-    return stmt->set_error(MYERR_01004, NULL, 0);
+    return stmt->set_error(DESERR_01004, NULL, 0);
 
   return SQL_SUCCESS;
 }
@@ -427,7 +427,7 @@ SQLGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle,
 
   CHECK_HANDLE(handle);
 
-  rc= MySQLGetDiagField(handle_type, handle, record, field,
+  rc= DESGetDiagField(handle_type, handle, record, field,
                         &value, info);
 
   switch (handle_type) {
@@ -451,7 +451,7 @@ SQLGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle,
 
     /* We set the error only when the result is intented to be returned */
     if (info && len > info_max - 1)
-      rc = dbc->set_error(MYERR_01004, NULL, 0);
+      rc = dbc->set_error(DESERR_01004, NULL, 0);
 
     if (info_len)
       *info_len= (SQLSMALLINT)len;
@@ -510,7 +510,7 @@ SQLGetDiagRecImpl(SQLSMALLINT handle_type, SQLHANDLE handle,
   if (message_max < 0)
     return SQL_ERROR;
 
-  rc= MySQLGetDiagRec(handle_type, handle, record, &sqlstate_value,
+  rc= DESGetDiagRec(handle_type, handle, record, &sqlstate_value,
                       native_error, &msg_value);
 
   if (rc == SQL_NO_DATA_FOUND)
@@ -527,7 +527,7 @@ SQLGetDiagRecImpl(SQLSMALLINT handle_type, SQLHANDLE handle,
       and message_max is greaater than 0
     */
     if (message && message_max && len > message_max - 1)
-      rc = dbc->set_error(MYERR_01004, NULL, 0);
+      rc = dbc->set_error(DESERR_01004, NULL, 0);
 
     if (message_len)
       *message_len= (SQLSMALLINT)len;
@@ -555,7 +555,7 @@ SQLGetInfo(SQLHDBC hdbc, SQLUSMALLINT type, SQLPOINTER value,
 
   CHECK_HANDLE(hdbc);
 
-  SQLRETURN rc = MySQLGetInfo(hdbc, type, &char_value, value, value_len);
+  SQLRETURN rc = DESGetInfo(hdbc, type, &char_value, value, value_len);
 
   if (char_value)
   {
@@ -566,7 +566,7 @@ SQLGetInfo(SQLHDBC hdbc, SQLUSMALLINT type, SQLPOINTER value,
       value is not NULL and value_max is 0
      */
     if (value && value_max && len > value_max - 1)
-      rc = dbc->set_error(MYERR_01004, NULL, 0);
+      rc = dbc->set_error(DESERR_01004, NULL, 0);
 
     if (value && value_max > 1)
       desodbc::strmake((char *)value, (char *)char_value, value_max - 1);
@@ -586,7 +586,7 @@ SQLGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER attribute, SQLPOINTER value,
   LOCK_STMT(hstmt);
 
   /* Nothing special to do, since we don't have any string stmt attribs */
-  return MySQLGetStmtAttr(hstmt, attribute, value, value_max, value_len);
+  return DESGetStmtAttr(hstmt, attribute, value, value_max, value_len);
 }
 
 
@@ -595,7 +595,7 @@ SQLGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT type)
 {
   LOCK_STMT(hstmt);
 
-  return MySQLGetTypeInfo(hstmt, type);
+  return DESGetTypeInfo(hstmt, type);
 }
 
 
@@ -619,7 +619,7 @@ SQLNativeSql(SQLHDBC hdbc, SQLCHAR *in, SQLINTEGER in_len,
 
   if (out && in_len >= out_max)
   {
-    rc = ((DBC *)hdbc)->set_error(MYERR_01004, NULL, 0);
+    rc = ((DBC *)hdbc)->set_error(DESERR_01004, NULL, 0);
   }
 
   if(out_max > 0)
@@ -657,7 +657,7 @@ SQLPrepareImpl(SQLHSTMT hstmt, SQLCHAR *str, SQLINTEGER str_len,
     we can pass it straight through. Otherwise it needs to be converted to
     the connection character set (probably utf-8).
   */
-  return MySQLPrepare(hstmt, str, str_len, false, force_prepare);
+  return DESPrepare(hstmt, str, str_len, false, force_prepare);
 }
 
 
@@ -674,7 +674,7 @@ SQLPrimaryKeys(SQLHSTMT hstmt,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLPrimaryKeys(hstmt, catalog, catalog_len, schema, schema_len,
+  rc= DESPrimaryKeys(hstmt, catalog, catalog_len, schema, schema_len,
                        table, table_len);
 
   return rc;
@@ -695,7 +695,7 @@ SQLProcedureColumns(SQLHSTMT hstmt,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLProcedureColumns(hstmt, catalog, catalog_len,
+  rc= DESProcedureColumns(hstmt, catalog, catalog_len,
                             schema, schema_len, proc, proc_len,
                             column, column_len);
 
@@ -716,7 +716,7 @@ SQLProcedures(SQLHSTMT hstmt,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLProcedures(hstmt, catalog, catalog_len, schema, schema_len,
+  rc= DESProcedures(hstmt, catalog, catalog_len, schema, schema_len,
                       proc, proc_len);
   // Remove parameters
   ((STMT *)hstmt)->free_reset_params();
@@ -741,7 +741,7 @@ SQLSetConnectAttrImpl(SQLHDBC hdbc, SQLINTEGER attribute,
 {
   SQLRETURN rc;
   DBC *dbc= (DBC *)hdbc;
-  rc= MySQLSetConnectAttr(hdbc, attribute, value, value_len);
+  rc= DESSetConnectAttr(hdbc, attribute, value, value_len);
   return rc;
 }
 
@@ -754,7 +754,7 @@ SQLSetCursorName(SQLHSTMT hstmt, SQLCHAR *name, SQLSMALLINT name_len)
   uint errors= 0;
 
   LOCK_STMT(hstmt);
-  return MySQLSetCursorName(hstmt, name, name_len);
+  return DESSetCursorName(hstmt, name, name_len);
 }
 
 
@@ -765,7 +765,7 @@ SQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER attribute,
   LOCK_STMT(hstmt);
 
   /* Nothing special to do, since we don't have any string stmt attribs */
-  return MySQLSetStmtAttr(hstmt, attribute, value, value_len);
+  return DESSetStmtAttr(hstmt, attribute, value, value_len);
 }
 
 
@@ -783,7 +783,7 @@ SQLSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT type,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLSpecialColumns(hstmt, type, catalog, catalog_len, schema, schema_len,
+  rc= DESSpecialColumns(hstmt, type, catalog, catalog_len, schema, schema_len,
                           table, table_len, scope, nullable);
 
   return rc;
@@ -803,7 +803,7 @@ SQLStatistics(SQLHSTMT hstmt,
   LOCK_STMT(hstmt);
 
   dbc= ((STMT *)hstmt)->dbc;
-  rc= MySQLStatistics(hstmt, catalog, catalog_len, schema, schema_len,
+  rc= DESStatistics(hstmt, catalog, catalog_len, schema, schema_len,
                       table, table_len, unique, accuracy);
   return rc;
 }
@@ -822,7 +822,7 @@ SQLTablePrivileges(SQLHSTMT hstmt,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLTablePrivileges(hstmt, catalog, catalog_len, schema, schema_len,
+  rc= DESTablePrivileges(hstmt, catalog, catalog_len, schema, schema_len,
                            table, table_len);
 
   return rc;
@@ -843,7 +843,7 @@ SQLTables(SQLHSTMT hstmt,
 
   dbc= ((STMT *)hstmt)->dbc;
 
-  rc= MySQLTables(hstmt, catalog, catalog_len, schema, schema_len,
+  rc= DESTables(hstmt, catalog, catalog_len, schema, schema_len,
                   table, table_len, type, type_len);
 
   return rc;
@@ -856,7 +856,7 @@ SQLGetDescField(SQLHDESC hdesc, SQLSMALLINT record, SQLSMALLINT field,
 {
   CHECK_HANDLE(hdesc);
 
-  return MySQLGetDescField(hdesc, record, field, value, value_max, value_len);
+  return DESGetDescField(hdesc, record, field, value, value_max, value_len);
 }
 
 

@@ -38,21 +38,21 @@
 */
 
 /* SQLColumns */
-enum myodbcColumns {mycTABLE_CAT= 0,      mycTABLE_SCHEM,      mycTABLE_NAME,
-              /*3*/ mycCOLUMN_NAME,       mycDATA_TYPE,        mycTYPE_NAME,
-              /*6*/ mycCOLUMN_SIZE,       mycBUFFER_LENGTH,    mycDECIMAL_DIGITS,
-              /*9*/ mycNUM_PREC_RADIX,    mycNULLABLE,         mycREMARKS,
-              /*12*/mycCOLUMN_DEF,        mycSQL_DATA_TYPE,    mycSQL_DATETIME_SUB,
-              /*15*/mycCHAR_OCTET_LENGTH, mycORDINAL_POSITION, mycIS_NULLABLE };
+enum desodbcColumns {des_cTABLE_CAT= 0,      des_cTABLE_SCHEM,      des_cTABLE_NAME,
+              /*3*/ des_cCOLUMN_NAME,       des_cDATA_TYPE,        des_cTYPE_NAME,
+              /*6*/ des_cCOLUMN_SIZE,       des_cBUFFER_LENGTH,    des_cDECIMAL_DIGITS,
+              /*9*/ des_cNUM_PREC_RADIX,    des_cNULLABLE,         des_cREMARKS,
+              /*12*/des_cCOLUMN_DEF,        des_cSQL_DATA_TYPE,    des_cSQL_DATETIME_SUB,
+              /*15*/des_cCHAR_OCTET_LENGTH, des_cORDINAL_POSITION, des_cIS_NULLABLE };
 
 /* SQLProcedureColumns */
-enum myodbcProcColumns {mypcPROCEDURE_CAT= 0, mypcPROCEDURE_SCHEM,  mypcPROCEDURE_NAME,
-                  /*3*/ mypcCOLUMN_NAME,      mypcCOLUMN_TYPE,      mypcDATA_TYPE,
-                  /*6*/ mypcTYPE_NAME,        mypcCOLUMN_SIZE,      mypcBUFFER_LENGTH,
-                  /*9*/ mypcDECIMAL_DIGITS,   mypcNUM_PREC_RADIX,   mypcNULLABLE,
-                  /*12*/mypcREMARKS,          mypcCOLUMN_DEF,       mypcSQL_DATA_TYPE,
-                  /*15*/mypcSQL_DATETIME_SUB, mypcCHAR_OCTET_LENGTH,mypcORDINAL_POSITION,
-                  /*18*/mypcIS_NULLABLE };
+enum desodbcProcColumns {des_pcPROCEDURE_CAT= 0, des_pcPROCEDURE_SCHEM,  des_pcPROCEDURE_NAME,
+                  /*3*/ des_pcCOLUMN_NAME,      des_pcCOLUMN_TYPE,      des_pcDATA_TYPE,
+                  /*6*/ des_pcTYPE_NAME,        des_pcCOLUMN_SIZE,      des_pcBUFFER_LENGTH,
+                  /*9*/ des_pcDECIMAL_DIGITS,   des_pcNUM_PREC_RADIX,   des_pcNULLABLE,
+                  /*12*/des_pcREMARKS,          des_pcCOLUMN_DEF,       des_pcSQL_DATA_TYPE,
+                  /*15*/des_pcSQL_DATETIME_SUB, des_pcCHAR_OCTET_LENGTH,des_pcORDINAL_POSITION,
+                  /*18*/des_pcIS_NULLABLE };
 
 typedef std::vector<MYSQL_BIND> vec_bind;
 
@@ -142,9 +142,9 @@ MYSQL_RES *table_status(STMT        *stmt,
                         SQLSMALLINT  db_length,
                         SQLCHAR     *table,
                         SQLSMALLINT  table_length,
-                        my_bool      wildcard,
-                        my_bool      show_tables,
-                        my_bool      show_views);
+                        des_bool      wildcard,
+                        des_bool      show_tables,
+                        des_bool      show_views);
 
 SQLRETURN
 primary_keys_no_i_s(SQLHSTMT hstmt,

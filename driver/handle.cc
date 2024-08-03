@@ -42,6 +42,7 @@
 
 #include "driver.h"
 #include <mutex>
+#include <mysql_sys/my_thr_init.cc>
 
 thread_local long thread_count = 0;
 
@@ -69,7 +70,7 @@ DBC::DBC(ENV *p_env)  : env(p_env), mysql(nullptr),
                         last_query_time((time_t) time((time_t*) 0))
 {
   //mysql->net.vio = nullptr;
-  myodbc_ov_init(env->odbc_ver);
+  desodbc_ov_init(env->odbc_ver);
   env->add_dbc(this);
 }
 
@@ -115,7 +116,7 @@ DBC::~DBC()
 SQLRETURN DBC::set_error(char * state, const char * message, uint errcode)
 {
   error.sqlstate = state ? state : "";
-  error.message = std::string(MYODBC_ERROR_PREFIX) + message;
+  error.message = std::string(DESODBC_ERROR_PREFIX) + message;
   error.native_error= errcode;
   return SQL_ERROR;
 }
@@ -127,10 +128,10 @@ SQLRETURN DBC::set_error(char * state)
 }
 
 
-SQLRETURN DBC::set_error(myodbc_errid errid, const char* errtext,
+SQLRETURN DBC::set_error(desodbc_errid errid, const char* errtext,
   SQLINTEGER errcode)
 {
-  error = DESERROR(errid, errtext, errcode, MYODBC_ERROR_PREFIX);
+  error = DESERROR(errid, errtext, errcode, DESODBC_ERROR_PREFIX);
   return error.retcode;
 }
 
@@ -163,13 +164,13 @@ SQLRETURN SQL_API DES_SQLAllocEnv(SQLHENV *phenv)
   @purpose : to free the environment handle
 */
 
-SQLRETURN SQL_API my_SQLFreeEnv(SQLHENV henv)
+SQLRETURN SQL_API DES_SQLFreeEnv(SQLHENV henv)
 {
     ENV *env= (ENV *) henv;
     delete env;
 #ifndef _UNIX_
 #else
-    myodbc_end();
+    desodbc_end();
 #endif /* _UNIX_ */
     return(SQL_SUCCESS);
 }
@@ -189,7 +190,7 @@ SQLRETURN my_GetLastError(ENV *henv)
                   0,
                   NULL );
 
-    ret = set_env_error(henv,MYERR_S1001,(const char*)msg,0);
+    ret = set_env_error(henv,DESERR_S1001,(const char*)msg,0);
     LocalFree(msg);
 
     return ret;
@@ -202,30 +203,30 @@ SQLRETURN my_GetLastError(ENV *henv)
        maintain the connection list
 */
 
-SQLRETURN SQL_API my_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
+SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
 {
     DBC *dbc;
     ENV *penv= (ENV *) henv;
 
     if (!thread_count)
-      mysql_thread_init();
+      desodbc::des_thread_init();
 
     ++thread_count;
 
-    if (mysql_get_client_version() < MIN_MYSQL_VERSION)
+    if (MYSQL_VERSION_ID < MIN_MYSQL_VERSION)
     {
         char buff[255];
-        myodbc_snprintf(buff, sizeof(buff),
+        desodbc_snprintf(buff, sizeof(buff),
           "Wrong libmysqlclient library version: %ld. "
           "MyODBC needs at least version: %ld",
-          mysql_get_client_version(), MIN_MYSQL_VERSION);
+            MYSQL_VERSION_ID, MIN_MYSQL_VERSION);
 
         return(set_env_error((ENV*)henv, DESERR_S1000, buff, 0));
     }
 
     if (!penv->odbc_ver)
     {
-        return set_env_error((ENV*)henv, MYERR_S1010,
+        return set_env_error((ENV*)henv, DESERR_S1010,
                              "Can't allocate connection "
                              "until ODBC version specified.", 0);
     }
@@ -304,7 +305,7 @@ int wakeup_connection(DBC *dbc)
        maintain the connection list
 */
 
-SQLRETURN SQL_API my_SQLFreeConnect(SQLHDBC hdbc)
+SQLRETURN SQL_API DES_SQLFreeConnect(SQLHDBC hdbc)
 {
     DBC *dbc= (DBC *) hdbc;
     delete dbc;
@@ -349,7 +350,7 @@ int adjust_param_bind_array(STMT *stmt)
   @type    : myodbc3 internal
   @purpose : allocates the statement handle
 */
-SQLRETURN SQL_API my_SQLAllocStmt(SQLHDBC hdbc, SQLHSTMT *phstmt)
+SQLRETURN SQL_API DES_SQLAllocStmt(SQLHDBC hdbc, SQLHSTMT *phstmt)
 {
   std::unique_ptr<STMT> stmt;
   DBC   *dbc= (DBC*) hdbc;
@@ -364,7 +365,7 @@ SQLRETURN SQL_API my_SQLAllocStmt(SQLHDBC hdbc, SQLHSTMT *phstmt)
   }
   catch (...)
   {
-    return dbc->set_error( "HY001", "Memory allocation error", MYERR_S1001);
+    return dbc->set_error( "HY001", "Memory allocation error", DESERR_S1001);
   }
 
   *phstmt = (SQLHSTMT*)stmt.release();
@@ -383,7 +384,7 @@ SQLRETURN SQL_API my_SQLAllocStmt(SQLHDBC hdbc, SQLHSTMT *phstmt)
 SQLRETURN SQL_API SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT fOption)
 {
   CHECK_HANDLE(hstmt);
-  return my_SQLFreeStmt(hstmt, fOption);
+  return DES_SQLFreeStmt(hstmt, fOption);
 }
 
 
@@ -395,9 +396,9 @@ SQLRETURN SQL_API SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT fOption)
        resources associated with the statement handle
 */
 
-SQLRETURN SQL_API my_SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT f_option)
+SQLRETURN SQL_API DES_SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT f_option)
 {
-  return my_SQLFreeStmtExtended(hstmt, f_option,
+  return DES_SQLFreeStmtExtended(hstmt, f_option,
     FREE_STMT_CLEAR_RESULT | FREE_STMT_DO_LOCK);
 }
 
@@ -409,7 +410,7 @@ SQLRETURN SQL_API my_SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT f_option)
        resources associated with the statement handle
 */
 
-SQLRETURN SQL_API my_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
+SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
   SQLUSMALLINT f_extra)
 {
     STMT *stmt= (STMT *) hstmt;
@@ -535,7 +536,7 @@ SQLRETURN my_SQLAllocDesc(SQLHDBC hdbc, SQLHANDLE *pdesc)
   LOCK_DBC(dbc);
 
   if (!desc)
-    return dbc->set_error( "HY001", "Memory allocation error", MYERR_S1001);
+    return dbc->set_error( "HY001", "Memory allocation error", DESERR_S1001);
 
   desc->dbc= dbc;
 
@@ -562,7 +563,7 @@ SQLRETURN my_SQLFreeDesc(SQLHANDLE hdesc)
     return SQL_ERROR;
   if (desc->alloc_type != SQL_DESC_ALLOC_USER)
     return set_desc_error(desc, "HY017", "Invalid use of an automatically "
-                          "allocated descriptor handle.", MYERR_S1017);
+                          "allocated descriptor handle.", DESERR_S1017);
 
   /* remove from DBC */
   dbc->remove_desc(desc);
@@ -602,13 +603,13 @@ SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT HandleType,
         case SQL_HANDLE_DBC:
             CHECK_HANDLE(InputHandle);
             CHECK_DBC_OUTPUT(InputHandle, OutputHandlePtr);
-            error= my_SQLAllocConnect(InputHandle,OutputHandlePtr);
+            error= DES_SQLAllocConnect(InputHandle,OutputHandlePtr);
             break;
 
         case SQL_HANDLE_STMT:
             CHECK_HANDLE(InputHandle);
             CHECK_STMT_OUTPUT(InputHandle, OutputHandlePtr);
-            error= my_SQLAllocStmt(InputHandle,OutputHandlePtr);
+            error= DES_SQLAllocStmt(InputHandle,OutputHandlePtr);
             break;
 
         case SQL_HANDLE_DESC:
@@ -666,15 +667,15 @@ SQLRETURN SQL_API SQLFreeHandle(SQLSMALLINT HandleType,
     switch (HandleType)
     {
         case SQL_HANDLE_ENV:
-            error= my_SQLFreeEnv((ENV *)Handle);
+            error= DES_SQLFreeEnv((ENV *)Handle);
             break;
 
         case SQL_HANDLE_DBC:
-            error= my_SQLFreeConnect((DBC *)Handle);
+            error= DES_SQLFreeConnect((DBC *)Handle);
             break;
 
         case SQL_HANDLE_STMT:
-            error= my_SQLFreeStmt((STMT *)Handle, SQL_DROP);
+            error= DES_SQLFreeStmt((STMT *)Handle, SQL_DROP);
             break;
 
         case SQL_HANDLE_DESC:

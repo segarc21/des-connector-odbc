@@ -49,14 +49,14 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
     {
         case SQL_ATTR_ASYNC_ENABLE:
             if (ValuePtr == (SQLPOINTER) SQL_ASYNC_ENABLE_ON)
-                return set_handle_error(HandleType,Handle,MYERR_01S02,
+                return set_handle_error(HandleType,Handle,DESERR_01S02,
                                         "Doesn't support asynchronous, changed to default",0);
             break;
 
         case SQL_ATTR_CURSOR_SENSITIVITY:
             if (ValuePtr != (SQLPOINTER) SQL_UNSPECIFIED)
             {
-                return set_handle_error(HandleType,Handle,MYERR_01S02,
+                return set_handle_error(HandleType,Handle,DESERR_01S02,
                                         "Option value changed to default cursor sensitivity(unspecified)",0);
             }
             break;
@@ -66,7 +66,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
             {
                 options->cursor_type= SQL_CURSOR_FORWARD_ONLY;
                 if (ValuePtr != (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY)
-                    return set_handle_error(HandleType,Handle,MYERR_01S02,
+                    return set_handle_error(HandleType,Handle,DESERR_01S02,
                                             "Forcing the use of forward-only cursor)",0);
             }
             else if (((STMT *)Handle)->dbc->ds.opt_DYNAMIC_CURSOR)
@@ -77,7 +77,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
                 else
                 {
                     options->cursor_type= SQL_CURSOR_STATIC;
-                    return set_handle_error(HandleType,Handle,MYERR_01S02,
+                    return set_handle_error(HandleType,Handle,DESERR_01S02,
                                             "Option value changed to default static cursor",0);
                 }
             }
@@ -90,7 +90,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
                 else
                 {
                     options->cursor_type= SQL_CURSOR_STATIC;
-                    return set_handle_error(HandleType,Handle,MYERR_01S02,
+                    return set_handle_error(HandleType,Handle,DESERR_01S02,
                                             "Option value changed to default static cursor",0);
                 }
             }
@@ -106,7 +106,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
 
         case SQL_ATTR_METADATA_ID:
             if (ValuePtr == (SQLPOINTER) SQL_TRUE)
-                return set_handle_error(HandleType,Handle,MYERR_01S02,
+                return set_handle_error(HandleType,Handle,DESERR_01S02,
                                         "Doesn't support SQL_ATTR_METADATA_ID to true, changed to default",0);
             break;
 
@@ -116,7 +116,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
 
         case SQL_ATTR_SIMULATE_CURSOR:
             if (ValuePtr != (SQLPOINTER) SQL_SC_TRY_UNIQUE)
-                return set_handle_error(HandleType,Handle,MYERR_01S02,
+                return set_handle_error(HandleType,Handle,DESERR_01S02,
                                         "Option value changed to default cursor simulation",0);
             break;
 
@@ -253,7 +253,7 @@ get_constmt_attr(SQLSMALLINT  HandleType,
 */
 
 SQLRETURN SQL_API
-MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
+DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
                     SQLPOINTER ValuePtr, SQLINTEGER StringLengthPtr)
 {
   DBC *dbc= (DBC *) hdbc;
@@ -296,7 +296,7 @@ MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
         /* we can't change timeout values in post connect state */
         if (is_connected(dbc))
         {
-          return dbc->set_error(MYERR_S1011, NULL, 0);
+          return dbc->set_error(DESERR_S1011, NULL, 0);
         }
         else
         {
@@ -331,12 +331,12 @@ MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
         LOCK_DBC(dbc);
         if (cat_len > NAME_LEN)
         {
-          return dbc->set_error(MYERR_01004,
+          return dbc->set_error(DESERR_01004,
             "Invalid string or buffer length", 0);
         }
 
         if (!(db= fix_str((char *)ldb, (char *)ValuePtr, StringLengthPtr)))
-          return dbc->set_error(MYERR_S1009,NULL, 0);
+          return dbc->set_error(DESERR_S1009,NULL, 0);
 
         if (is_connected(dbc))
         {
@@ -355,7 +355,7 @@ MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
     case SQL_ATTR_ODBC_CURSORS:
       if (dbc->ds.opt_FORWARD_CURSOR &&
         ValuePtr != (SQLPOINTER) SQL_CUR_USE_ODBC)
-        return ((DBC*)hdbc)->set_error(MYERR_01S02,
+        return ((DBC*)hdbc)->set_error(DESERR_01S02,
           "Forcing the Driver Manager to use ODBC cursor library",0);
       break;
 
@@ -366,11 +366,11 @@ MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
     case SQL_TRANSLATE_OPTION:
       {
         char buff[100];
-        myodbc_snprintf(buff, sizeof(buff),
+        desodbc_snprintf(buff, sizeof(buff),
                         "Suppose to set this attribute '%d' through driver "
                         "manager, not by the driver",
                         (int)Attribute);
-        return ((DBC*)hdbc)->set_error(MYERR_01S02, buff, 0);
+        return ((DBC*)hdbc)->set_error(DESERR_01S02, buff, 0);
       }
 
     case SQL_ATTR_PACKET_SIZE:
@@ -464,7 +464,7 @@ MySQLSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
  @param[out] num_attr
 */
 SQLRETURN SQL_API
-MySQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
+DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
                     SQLPOINTER num_attr)
 {
   DBC *dbc= (DBC *)hdbc;
@@ -599,7 +599,7 @@ MySQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   default:
-    return set_handle_error(SQL_HANDLE_DBC, hdbc, MYERR_S1092, NULL, 0);
+    return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1092, NULL, 0);
   }
 
   return result;
@@ -612,7 +612,7 @@ MySQLGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
 */
 
 SQLRETURN SQL_API
-MySQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
+DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
                  SQLINTEGER StringLengthPtr __attribute__((unused)))
 {
     STMT *stmt= (STMT *)hstmt;
@@ -665,19 +665,19 @@ MySQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
 
               if (desc->alloc_type == SQL_DESC_ALLOC_AUTO &&
                   desc->stmt != stmt)
-                return ((STMT*)hstmt)->set_error(MYERR_S1017,
+                return ((STMT*)hstmt)->set_error(DESERR_S1017,
                                  "Invalid use of an automatically allocated "
                                  "descriptor handle",0);
 
               if (desc->alloc_type == SQL_DESC_ALLOC_USER &&
                   stmt->dbc != desc->dbc)
-                return ((STMT*)hstmt)->set_error(MYERR_S1024,
+                return ((STMT*)hstmt)->set_error(DESERR_S1024,
                                  "Invalid attribute value",0);
 
               if (desc->desc_type != DESC_UNKNOWN &&
                   desc->desc_type != desc_type)
               {
-                return ((STMT*)hstmt)->set_error(MYERR_S1024,
+                return ((STMT*)hstmt)->set_error(DESERR_S1024,
                                  "Descriptor type mismatch",0);
               }
 
@@ -700,7 +700,7 @@ MySQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
 
         case SQL_ATTR_IMP_PARAM_DESC:
         case SQL_ATTR_IMP_ROW_DESC:
-            return ((STMT*)hstmt)->set_error(MYERR_S1024,
+            return ((STMT*)hstmt)->set_error(DESERR_S1024,
                              "Invalid attribute/option identifier",0);
 
         case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
@@ -792,7 +792,7 @@ MySQLSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
 */
 
 SQLRETURN SQL_API
-MySQLGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
+DESGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
                  SQLINTEGER BufferLength __attribute__((unused)),
                  SQLINTEGER *StringLengthPtr)
 {
@@ -927,7 +927,7 @@ SQLSetEnvAttr(SQLHENV    henv,
   CHECK_HANDLE(henv);
 
   if (((ENV *)henv)->has_connections())
-      return set_env_error((ENV*)henv, MYERR_S1010, NULL, 0);
+      return set_env_error((ENV*)henv, DESERR_S1010, NULL, 0);
 
   switch (Attribute)
   {
@@ -943,7 +943,7 @@ SQLSetEnvAttr(SQLHENV    henv,
             ((ENV *)henv)->odbc_ver= (SQLINTEGER)(SQLLEN)ValuePtr;
             break;
           default:
-            return set_env_error((ENV*)henv,MYERR_S1024,NULL,0);
+            return set_env_error((ENV*)henv,DESERR_S1024,NULL,0);
           }
           break;
         }
@@ -1003,7 +1003,7 @@ SQLGetStmtOption(SQLHSTMT hstmt,SQLUSMALLINT option, SQLPOINTER param)
 {
   LOCK_STMT(hstmt);
 
-  return MySQLGetStmtAttr(hstmt, option, param, SQL_NTS, (SQLINTEGER *)NULL);
+  return DESGetStmtAttr(hstmt, option, param, SQL_NTS, (SQLINTEGER *)NULL);
 }
 
 
@@ -1012,7 +1012,7 @@ SQLSetStmtOption(SQLHSTMT hstmt, SQLUSMALLINT option, SQLULEN param)
 {
   LOCK_STMT(hstmt);
 
-  return MySQLSetStmtAttr(hstmt, option, (SQLPOINTER)param, SQL_NTS);
+  return DESSetStmtAttr(hstmt, option, (SQLPOINTER)param, SQL_NTS);
 }
 
 #endif

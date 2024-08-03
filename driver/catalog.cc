@@ -47,37 +47,37 @@ static char *SQLCOLUMNS_values[]= {
 
 static MYSQL_FIELD SQLCOLUMNS_fields[]=
 {
-  MYODBC_FIELD_NAME("TABLE_CAT", 0),
-  MYODBC_FIELD_NAME("TABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
-  MYODBC_FIELD_STRING("TYPE_NAME", 20, NOT_NULL_FLAG),
-  MYODBC_FIELD_LONG("COLUMN_SIZE", 0),
-  MYODBC_FIELD_LONG("BUFFER_LENGTH", 0),
-  MYODBC_FIELD_SHORT("DECIMAL_DIGITS", 0),
-  MYODBC_FIELD_SHORT("NUM_PREC_RADIX", 0),
-  MYODBC_FIELD_SHORT("NULLABLE", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("REMARKS", 0),
-  MYODBC_FIELD_NAME("COLUMN_DEF", 0),
-  MYODBC_FIELD_SHORT("SQL_DATA_TYPE", NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT("SQL_DATETIME_SUB", 0),
-  MYODBC_FIELD_LONG("CHAR_OCTET_LENGTH", 0),
-  MYODBC_FIELD_LONG("ORDINAL_POSITION", NOT_NULL_FLAG),
-  MYODBC_FIELD_STRING("IS_NULLABLE", 3, 0),
+  DESODBC_FIELD_NAME("TABLE_CAT", 0),
+  DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
+  DESODBC_FIELD_STRING("TYPE_NAME", 20, NOT_NULL_FLAG),
+  DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
+  DESODBC_FIELD_LONG("BUFFER_LENGTH", 0),
+  DESODBC_FIELD_SHORT("DECIMAL_DIGITS", 0),
+  DESODBC_FIELD_SHORT("NUM_PREC_RADIX", 0),
+  DESODBC_FIELD_SHORT("NULLABLE", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("REMARKS", 0),
+  DESODBC_FIELD_NAME("COLUMN_DEF", 0),
+  DESODBC_FIELD_SHORT("SQL_DATA_TYPE", NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT("SQL_DATETIME_SUB", 0),
+  DESODBC_FIELD_LONG("CHAR_OCTET_LENGTH", 0),
+  DESODBC_FIELD_LONG("ORDINAL_POSITION", NOT_NULL_FLAG),
+  DESODBC_FIELD_STRING("IS_NULLABLE", 3, 0),
 };
 
 const uint SQLCOLUMNS_FIELDS= (uint)array_elements(SQLCOLUMNS_values);
 
 static MYSQL_FIELD SQLSPECIALCOLUMNS_fields[] = {
-    MYODBC_FIELD_SHORT("SCOPE", 0),
-    MYODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
-    MYODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
-    MYODBC_FIELD_STRING("TYPE_NAME", 20, NOT_NULL_FLAG),
-    MYODBC_FIELD_LONG("COLUMN_SIZE", 0),
-    MYODBC_FIELD_LONG("BUFFER_LENGTH", 0),
-    MYODBC_FIELD_LONG("DECIMAL_DIGITS", 0),
-    MYODBC_FIELD_SHORT("PSEUDO_COLUMN", 0),
+    DESODBC_FIELD_SHORT("SCOPE", 0),
+    DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_STRING("TYPE_NAME", 20, NOT_NULL_FLAG),
+    DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
+    DESODBC_FIELD_LONG("BUFFER_LENGTH", 0),
+    DESODBC_FIELD_LONG("DECIMAL_DIGITS", 0),
+    DESODBC_FIELD_SHORT("PSEUDO_COLUMN", 0),
 };
 
 static char *SQLSPECIALCOLUMNS_values[] = {0, NULL, 0, NULL, 0, 0, 0, 0};
@@ -228,7 +228,7 @@ create_fake_resultset(STMT *stmt, MYSQL_ROW rowval, size_t rowsize,
 
   set_row_count(stmt, rowcnt);
 
-  myodbc_link_fields(stmt, fields, fldcnt);
+  desodbc_link_fields(stmt, fields, fldcnt);
 
   return SQL_SUCCESS;
 }
@@ -280,7 +280,7 @@ MYSQL_RES *db_status(STMT *stmt, std::string &db)
   if (db.length())
   {
     query.append("SCHEMA_NAME LIKE '");
-    cnt = myodbc_escape_string(stmt, tmpbuff, sizeof(tmpbuff),
+    cnt = desodbc_escape_string(stmt, tmpbuff, sizeof(tmpbuff),
                               (char *)db.c_str(), (ulong)db.length(), 1);
     query.append(tmpbuff, cnt);
     query.append("' ");
@@ -292,7 +292,7 @@ MYSQL_RES *db_status(STMT *stmt, std::string &db)
 
   query.append(" ORDER BY SCHEMA_NAME");
 
-  MYLOG_QUERY(stmt, query.c_str());
+  DESLOG_QUERY(stmt, query.c_str());
 
   if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
   {
@@ -323,9 +323,9 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
                                    SQLSMALLINT  db_len,
                                    SQLCHAR     *table_name,
                                    SQLSMALLINT  table_len,
-                                   my_bool      wildcard,
-                                   my_bool      show_tables,
-                                   my_bool      show_views)
+                                   des_bool      wildcard,
+                                   des_bool      show_tables,
+                                   des_bool      show_views)
 {
   MYSQL *mysql= stmt->dbc->mysql;
   /** the buffer size should count possible escapes */
@@ -341,7 +341,7 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
   if (db_name && *db_name)
   {
     query.append("TABLE_SCHEMA LIKE '");
-    cnt = myodbc_escape_string(stmt, tmpbuff, sizeof(tmpbuff),
+    cnt = desodbc_escape_string(stmt, tmpbuff, sizeof(tmpbuff),
                               (char *)db_name, db_len, 1);
     query.append(tmpbuff, cnt);
     query.append("' ");
@@ -389,7 +389,7 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
     }
     else
     {
-      cnt = myodbc_escape_string(stmt, tmpbuff, sizeof(tmpbuff),
+      cnt = desodbc_escape_string(stmt, tmpbuff, sizeof(tmpbuff),
                                 (char *)table_name, table_len, 0);
       query.append(tmpbuff, cnt);
     }
@@ -398,7 +398,7 @@ static MYSQL_RES *table_status_i_s(STMT    *stmt,
 
   query.append(" ORDER BY TABLE_SCHEMA, TABLE_NAME");
 
-  MYLOG_QUERY(stmt, query.c_str());
+  DESLOG_QUERY(stmt, query.c_str());
 
   if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
   {
@@ -427,9 +427,9 @@ MYSQL_RES *table_status(STMT        *stmt,
                         SQLSMALLINT  db_len,
                         SQLCHAR     *table_name,
                         SQLSMALLINT  table_len,
-                        my_bool      wildcard,
-                        my_bool      show_tables,
-                        my_bool      show_views)
+                        des_bool      wildcard,
+                        des_bool      show_tables,
+                        des_bool      show_views)
 {
     return table_status_i_s(stmt, db_name, db_len, table_name, table_len,
                             wildcard, show_tables, show_views);
@@ -449,7 +449,7 @@ int add_name_condition_oa_id(HSTMT hstmt, std::string &query, SQLCHAR * name,
   SQLUINTEGER metadata_id;
 
   /* this shouldn't be very expensive, so no need to complicate things with additional parameter etc */
-  MySQLGetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER)&metadata_id, 0, NULL);
+  DESGetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER)&metadata_id, 0, NULL);
 
   /* we can't rely here that column was checked and is not null */
   if (name)
@@ -495,7 +495,7 @@ int add_name_condition_pv_id(HSTMT hstmt, std::string &query, SQLCHAR * name,
 {
   SQLUINTEGER metadata_id;
   /* this shouldn't be very expensive, so no need to complicate things with additional parameter etc */
-  MySQLGetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER)&metadata_id, 0, NULL);
+  DESGetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER)&metadata_id, 0, NULL);
 
   /* we can't rely here that column was checked and is not null */
   if (name)
@@ -574,7 +574,7 @@ tables_i_s(SQLHSTMT hstmt,
 
 
 SQLRETURN SQL_API
-MySQLTables(SQLHSTMT hstmt,
+DESTables(SQLHSTMT hstmt,
             SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
             SQLCHAR *schema_name, SQLSMALLINT schema_len,
             SQLCHAR *table_name, SQLSMALLINT table_len,
@@ -583,7 +583,7 @@ MySQLTables(SQLHSTMT hstmt,
   STMT *stmt= (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog_name, catalog_len);
   GET_NAME_LEN(stmt, schema_name, schema_len);
@@ -757,7 +757,7 @@ void ODBC_CATALOG::execute()
   if (!order_by.empty())
     query.append(" ORDER BY " + order_by);
 
-  MYLOG_QUERY(stmt, query.c_str());
+  DESLOG_QUERY(stmt, query.c_str());
   if (SQL_SUCCESS !=
       stmt->dbc->execute_query(query.c_str(), query.length(), true)) {
     // Throwing the error for NO_SSPS case.
@@ -1019,7 +1019,7 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
     stmt->result_array = (MYSQL_ROW)data.data();
     create_fake_resultset(stmt, stmt->result_array, SQLCOLUMNS_FIELDS, rows,
       SQLCOLUMNS_fields, SQLCOLUMNS_FIELDS, false);
-    myodbc_link_fields(stmt, SQLCOLUMNS_fields, SQLCOLUMNS_FIELDS);
+    desodbc_link_fields(stmt, SQLCOLUMNS_fields, SQLCOLUMNS_FIELDS);
     return SQL_SUCCESS;
   }
 
@@ -1045,7 +1045,7 @@ columns_i_s(SQLHSTMT hstmt, SQLCHAR *catalog, unsigned long catalog_len,
   @param[in] column_len       Length of column pattern
 */
 SQLRETURN SQL_API
-MySQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
+DESColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
              SQLCHAR *schema_name,
              SQLSMALLINT schema_len,
              SQLCHAR *table_name, SQLSMALLINT table_len,
@@ -1055,7 +1055,7 @@ MySQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
   STMT *stmt= (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog_name, catalog_len);
   GET_NAME_LEN(stmt, schema_name, schema_len);
@@ -1104,7 +1104,7 @@ statistics_i_s(SQLHSTMT hstmt,
 */
 
 SQLRETURN SQL_API
-MySQLStatistics(SQLHSTMT hstmt,
+DESStatistics(SQLHSTMT hstmt,
                 SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
                 SQLCHAR *schema_name,
                 SQLSMALLINT schema_len,
@@ -1115,7 +1115,7 @@ MySQLStatistics(SQLHSTMT hstmt,
   STMT *stmt= (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog_name, catalog_len);
   GET_NAME_LEN(stmt, schema_name, schema_len);
@@ -1169,11 +1169,11 @@ SQLRETURN list_table_priv_i_s(SQLHSTMT    hstmt,
   /* TABLE_CAT is always NULL in mysql I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, PRIVILEGE, GRANTEE");
 
-  if( !SQL_SUCCEEDED(rc= MySQLPrepare(hstmt, (SQLCHAR *)query.c_str(),
+  if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(),
                           (SQLINTEGER)(query.length()), true, false)))
     return rc;
 
-  return my_SQLExecute(stmt);
+  return DES_SQLExecute(stmt);
 }
 
 
@@ -1184,7 +1184,7 @@ SQLRETURN list_table_priv_i_s(SQLHSTMT    hstmt,
              set on the specified statement.
 */
 SQLRETURN SQL_API
-MySQLTablePrivileges(SQLHSTMT hstmt,
+DESTablePrivileges(SQLHSTMT hstmt,
                      SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
                      SQLCHAR *schema_name,
                      SQLSMALLINT schema_len,
@@ -1193,7 +1193,7 @@ MySQLTablePrivileges(SQLHSTMT hstmt,
     STMT     *stmt= (STMT *)hstmt;
 
     CLEAR_STMT_ERROR(hstmt);
-    my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+    DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
     GET_NAME_LEN(stmt, catalog_name, catalog_len);
     GET_NAME_LEN(stmt, schema_name, schema_len);
@@ -1251,16 +1251,16 @@ static SQLRETURN list_column_priv_i_s(HSTMT       hstmt,
   /* TABLE_CAT is always NULL in mysql I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, PRIVILEGE");
 
-  if( !SQL_SUCCEEDED(rc= MySQLPrepare(hstmt, (SQLCHAR *)query.c_str(), SQL_NTS,
+  if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(), SQL_NTS,
                                       true, false)))
     return rc;
 
-  return my_SQLExecute(stmt);
+  return DES_SQLExecute(stmt);
 }
 
 
 SQLRETURN SQL_API
-MySQLColumnPrivileges(SQLHSTMT hstmt,
+DESColumnPrivileges(SQLHSTMT hstmt,
                       SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
                       SQLCHAR *schema_name,
                       SQLSMALLINT schema_len,
@@ -1270,7 +1270,7 @@ MySQLColumnPrivileges(SQLHSTMT hstmt,
   STMT     *stmt= (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog_name, catalog_len);
   GET_NAME_LEN(stmt, schema_name, schema_len);
@@ -1303,7 +1303,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
   tempBuf temp(1024);
 
   /* Reset the statement in order to avoid memory leaks when working with ADODB */
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   // The catalog query result set will have two extra columns for internal
   // use that are not reported to the user in the function result.
@@ -1472,7 +1472,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
       create_fake_resultset(stmt, stmt->result_array, SQLSPECIALCOLUMNS_FIELDS, rnum - 1,
         SQLSPECIALCOLUMNS_fields, SQLSPECIALCOLUMNS_FIELDS, false);
 
-      myodbc_link_fields(stmt,SQLSPECIALCOLUMNS_fields,SQLSPECIALCOLUMNS_FIELDS);
+      desodbc_link_fields(stmt,SQLSPECIALCOLUMNS_fields,SQLSPECIALCOLUMNS_FIELDS);
     }
     else
     {
@@ -1507,7 +1507,7 @@ special_columns_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
 */
 
 SQLRETURN SQL_API
-MySQLSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
+DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
                     SQLCHAR *catalog, SQLSMALLINT catalog_len,
                     SQLCHAR *schema, SQLSMALLINT schema_len,
                     SQLCHAR *table_name, SQLSMALLINT table_len,
@@ -1517,7 +1517,7 @@ MySQLSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
   STMT        *stmt=(STMT *) hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog, catalog_len);
   GET_NAME_LEN(stmt, schema, schema_len);
@@ -1558,7 +1558,7 @@ primary_keys_i_s(SQLHSTMT hstmt,
 */
 
 SQLRETURN SQL_API
-MySQLPrimaryKeys(SQLHSTMT hstmt,
+DESPrimaryKeys(SQLHSTMT hstmt,
                  SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
                  SQLCHAR *schema_name,
                  SQLSMALLINT schema_len,
@@ -1567,7 +1567,7 @@ MySQLPrimaryKeys(SQLHSTMT hstmt,
   STMT *stmt= (STMT *) hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog_name, catalog_len);
   GET_NAME_LEN(stmt, schema_name, schema_len);
@@ -1733,13 +1733,13 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
   }
 
   query.append(order_by);
-  rc= MySQLPrepare(hstmt, (SQLCHAR *)query.c_str(), (SQLINTEGER)(query.length()),
+  rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(), (SQLINTEGER)(query.length()),
                    true, false);
 
   if (!SQL_SUCCEEDED(rc))
     return rc;
 
-  return my_SQLExecute((STMT*)hstmt);
+  return DES_SQLExecute((STMT*)hstmt);
 }
 /**
   Retrieve either a list of foreign keys in a specified table, or the list
@@ -1770,7 +1770,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
   @since ODBC 1.0
 */
 SQLRETURN SQL_API
-MySQLForeignKeys(SQLHSTMT hstmt,
+DESForeignKeys(SQLHSTMT hstmt,
                  SQLCHAR *pk_catalog_name,
                  SQLSMALLINT pk_catalog_len,
                  SQLCHAR *pk_schema_name,
@@ -1784,7 +1784,7 @@ MySQLForeignKeys(SQLHSTMT hstmt,
   STMT *stmt=(STMT *) hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, pk_catalog_name, pk_catalog_len);
   GET_NAME_LEN(stmt, fk_catalog_name, fk_catalog_len);
@@ -1824,7 +1824,7 @@ SQLProcedures and SQLProcedureColumns
   @param[in] proc_len         Length of procedure name
 */
 SQLRETURN SQL_API
-MySQLProcedures(SQLHSTMT hstmt,
+DESProcedures(SQLHSTMT hstmt,
                 SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
                 SQLCHAR *schema_name,
                 SQLSMALLINT schema_len,
@@ -1834,7 +1834,7 @@ MySQLProcedures(SQLHSTMT hstmt,
   STMT *stmt= (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog_name, catalog_len);
   GET_NAME_LEN(stmt, schema_name, schema_len);
@@ -1885,7 +1885,7 @@ MySQLProcedures(SQLHSTMT hstmt,
                  " FROM INFORMATION_SCHEMA.ROUTINES"
                  " WHERE ROUTINE_SCHEMA = DATABASE()");
 
-  rc= MySQLPrepare(hstmt, (SQLCHAR*)query.c_str(), SQL_NTS,
+  rc= DESPrepare(hstmt, (SQLCHAR*)query.c_str(), SQL_NTS,
                    true, false);
 
   if (!SQL_SUCCEEDED(rc))
@@ -1893,7 +1893,7 @@ MySQLProcedures(SQLHSTMT hstmt,
 
   if (proc_name)
   {
-    rc= my_SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_C_CHAR,
+    rc= DES_SQLBindParameter(hstmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_C_CHAR,
                             0, 0, proc_name, proc_len, NULL);
     if (!SQL_SUCCEEDED(rc))
       return rc;
@@ -1901,14 +1901,14 @@ MySQLProcedures(SQLHSTMT hstmt,
 
   if (catalog_name)
   {
-    rc= my_SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR,
+    rc= DES_SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR,
                             SQL_C_CHAR, 0, 0, catalog_name, catalog_len,
                             NULL);
     if (!SQL_SUCCEEDED(rc))
       return rc;
   }
 
-  return my_SQLExecute((STMT*)hstmt);
+  return DES_SQLExecute((STMT*)hstmt);
 }
 
 
@@ -1948,7 +1948,7 @@ procedure_columns_i_s(SQLHSTMT hstmt,
 */
 
 SQLRETURN SQL_API
-MySQLProcedureColumns(SQLHSTMT hstmt,
+DESProcedureColumns(SQLHSTMT hstmt,
                     SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
                     SQLCHAR *schema_name,
                     SQLSMALLINT schema_len,
@@ -1958,7 +1958,7 @@ MySQLProcedureColumns(SQLHSTMT hstmt,
   STMT *stmt= (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
-  my_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   GET_NAME_LEN(stmt, catalog_name, catalog_len);
   GET_NAME_LEN(stmt, schema_name, schema_len);

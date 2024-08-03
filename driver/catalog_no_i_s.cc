@@ -76,13 +76,13 @@ std::string get_database_name(STMT *stmt,
   @type    : internal
   @purpose : validate for give table type from the list
 */
-static my_bool check_table_type(const SQLCHAR *TableType,
+static des_bool check_table_type(const SQLCHAR *TableType,
                                 const char *req_type,
                                 uint       len)
 {
     char    req_type_quoted[NAME_LEN+2], req_type_quoted1[NAME_LEN+2];
     char    *type, *table_type= (char *)TableType;
-    my_bool found= 0;
+    des_bool found= 0;
 
     if ( !TableType || !TableType[0] )
         return found;
@@ -103,9 +103,9 @@ static my_bool check_table_type(const SQLCHAR *TableType,
     while ( type )
     {
         while ( isspace(*(table_type)) ) ++table_type;
-        if ( !myodbc_casecmp(table_type,req_type,len) ||
-             !myodbc_casecmp(table_type,req_type_quoted,len+2) ||
-             !myodbc_casecmp(table_type,req_type_quoted1,len+2) )
+        if ( !desodbc_casecmp(table_type,req_type,len) ||
+             !desodbc_casecmp(table_type,req_type_quoted,len+2) ||
+             !desodbc_casecmp(table_type,req_type_quoted1,len+2) )
         {
             found= 1;
             break;
@@ -116,9 +116,9 @@ static my_bool check_table_type(const SQLCHAR *TableType,
     if ( !found )
     {
         while ( isspace(*(table_type)) ) ++table_type;
-        if ( !myodbc_casecmp(table_type,req_type,len) ||
-             !myodbc_casecmp(table_type,req_type_quoted,len+2) ||
-             !myodbc_casecmp(table_type,req_type_quoted1,len+2) )
+        if ( !desodbc_casecmp(table_type,req_type,len) ||
+             !desodbc_casecmp(table_type,req_type_quoted,len+2) ||
+             !desodbc_casecmp(table_type,req_type_quoted1,len+2) )
             found= 1;
     }
     return found;
@@ -146,18 +146,18 @@ static MYSQL_RES *server_list_dbkeys(STMT *stmt,
 
     if (catalog_len)
     {
-      cnt = myodbc_escape_string(stmt, tmpbuff, (ulong)sizeof(tmpbuff),
+      cnt = desodbc_escape_string(stmt, tmpbuff, (ulong)sizeof(tmpbuff),
                                 (char *)catalog, catalog_len, 1);
       query.append(tmpbuff, cnt);
       query.append("`.`");
     }
 
-    cnt = myodbc_escape_string(stmt, tmpbuff, (ulong)sizeof(tmpbuff),
+    cnt = desodbc_escape_string(stmt, tmpbuff, (ulong)sizeof(tmpbuff),
                               (char *)table, table_len, 1);
     query.append(tmpbuff, cnt);
     query.append("`");
 
-    MYLOG_DBC_QUERY(dbc, query.c_str());
+    DESLOG_DBC_QUERY(dbc, query.c_str());
     if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
         return NULL;
     return mysql_store_result(mysql);
@@ -200,7 +200,7 @@ static MYSQL_RES *table_privs_raw_data( STMT *      stmt,
 
   query.append(" ORDER BY Db, Table_name, Table_priv, User");
 
-  MYLOG_DBC_QUERY(dbc, query.c_str());
+  DESLOG_DBC_QUERY(dbc, query.c_str());
   if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
     return NULL;
 
@@ -218,13 +218,13 @@ const char *SQLTABLES_priv_values[]=
 
 MYSQL_FIELD SQLTABLES_priv_fields[]=
 {
-  MYODBC_FIELD_NAME("TABLE_CAT", 0),
-  MYODBC_FIELD_NAME("TABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("GRANTOR", 0),
-  MYODBC_FIELD_NAME("GRANTEE", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("PRIVILEGE", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("IS_GRANTABLE", 0),
+  DESODBC_FIELD_NAME("TABLE_CAT", 0),
+  DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("GRANTOR", 0),
+  DESODBC_FIELD_NAME("GRANTEE", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("PRIVILEGE", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("IS_GRANTABLE", 0),
 };
 
 const uint SQLTABLES_PRIV_FIELDS = (uint)array_elements(SQLTABLES_priv_values);
@@ -296,14 +296,14 @@ char *SQLCOLUMNS_priv_values[]=
 
 MYSQL_FIELD SQLCOLUMNS_priv_fields[]=
 {
-  MYODBC_FIELD_NAME("TABLE_CAT", 0),
-  MYODBC_FIELD_NAME("TABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("GRANTOR", 0),
-  MYODBC_FIELD_NAME("GRANTEE", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("PRIVILEGE", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("IS_GRANTABLE", 0),
+  DESODBC_FIELD_NAME("TABLE_CAT", 0),
+  DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("GRANTOR", 0),
+  DESODBC_FIELD_NAME("GRANTEE", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("PRIVILEGE", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("IS_GRANTABLE", 0),
 };
 
 
@@ -350,7 +350,7 @@ MYSQL_RES *server_show_create_table(STMT        *stmt,
     query.append(" `").append((char *)table).append("`");
   }
 
-  MYLOG_QUERY(stmt, query.c_str());
+  DESLOG_QUERY(stmt, query.c_str());
 
 
   if (mysql_real_query(mysql, query.c_str(),(unsigned long)query.length()))
@@ -369,20 +369,20 @@ SQLForeignKeys
 */
 MYSQL_FIELD SQLFORE_KEYS_fields[]=
 {
-  MYODBC_FIELD_NAME("PKTABLE_CAT", 0),
-  MYODBC_FIELD_NAME("PKTABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("PKTABLE_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("PKCOLUMN_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("FKTABLE_CAT", 0),
-  MYODBC_FIELD_NAME("FKTABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("FKTABLE_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("FKCOLUMN_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT("UPDATE_RULE", 0),
-  MYODBC_FIELD_SHORT("DELETE_RULE", 0),
-  MYODBC_FIELD_NAME("FK_NAME", 0),
-  MYODBC_FIELD_NAME("PK_NAME", 0),
-  MYODBC_FIELD_SHORT("DEFERRABILITY", 0),
+  DESODBC_FIELD_NAME("PKTABLE_CAT", 0),
+  DESODBC_FIELD_NAME("PKTABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("PKTABLE_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("PKCOLUMN_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("FKTABLE_CAT", 0),
+  DESODBC_FIELD_NAME("FKTABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("FKTABLE_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("FKCOLUMN_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT("UPDATE_RULE", 0),
+  DESODBC_FIELD_SHORT("DELETE_RULE", 0),
+  DESODBC_FIELD_NAME("FK_NAME", 0),
+  DESODBC_FIELD_NAME("PK_NAME", 0),
+  DESODBC_FIELD_SHORT("DEFERRABILITY", 0),
 };
 
 const uint SQLFORE_KEYS_FIELDS = (uint)array_elements(SQLFORE_KEYS_fields);
@@ -440,12 +440,12 @@ SQLPrimaryKeys
 
 MYSQL_FIELD SQLPRIM_KEYS_fields[]=
 {
-  MYODBC_FIELD_NAME("TABLE_CAT", 0),
-  MYODBC_FIELD_NAME("TABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
-  MYODBC_FIELD_STRING("PK_NAME", 128, 0),
+  DESODBC_FIELD_NAME("TABLE_CAT", 0),
+  DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
+  DESODBC_FIELD_STRING("PK_NAME", 128, 0),
 };
 
 const uint SQLPRIM_KEYS_FIELDS = (uint)array_elements(SQLPRIM_KEYS_fields);
@@ -533,7 +533,7 @@ primary_keys_no_i_s(SQLHSTMT hstmt,
 
     stmt->result_array = (MYSQL_ROW)data.data();
     set_row_count(stmt, row_count);
-    myodbc_link_fields(stmt,SQLPRIM_KEYS_fields,SQLPRIM_KEYS_FIELDS);
+    desodbc_link_fields(stmt,SQLPRIM_KEYS_fields,SQLPRIM_KEYS_FIELDS);
 
     return SQL_SUCCESS;
 }
@@ -555,25 +555,25 @@ char *SQLPROCEDURECOLUMNS_values[]= {
 /* TODO make LONGLONG fields just LONG if SQLLEN is 4 bytes */
 MYSQL_FIELD SQLPROCEDURECOLUMNS_fields[]=
 {
-  MYODBC_FIELD_NAME("PROCEDURE_CAT",     0),
-  MYODBC_FIELD_NAME("PROCEDURE_SCHEM",   0),
-  MYODBC_FIELD_NAME("PROCEDURE_NAME",    NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("COLUMN_NAME",       NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT ("COLUMN_TYPE",       NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT ("DATA_TYPE",         NOT_NULL_FLAG),
-  MYODBC_FIELD_STRING("TYPE_NAME",         20,       NOT_NULL_FLAG),
-  MYODBC_FIELD_LONGLONG("COLUMN_SIZE",       0),
-  MYODBC_FIELD_LONGLONG("BUFFER_LENGTH",     0),
-  MYODBC_FIELD_SHORT ("DECIMAL_DIGITS",    0),
-  MYODBC_FIELD_SHORT ("NUM_PREC_RADIX",    0),
-  MYODBC_FIELD_SHORT ("NULLABLE",          NOT_NULL_FLAG),
-  MYODBC_FIELD_NAME("REMARKS",           0),
-  MYODBC_FIELD_NAME("COLUMN_DEF",        0),
-  MYODBC_FIELD_SHORT ("SQL_DATA_TYPE",     NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT ("SQL_DATETIME_SUB",  0),
-  MYODBC_FIELD_LONGLONG("CHAR_OCTET_LENGTH", 0),
-  MYODBC_FIELD_LONG  ("ORDINAL_POSITION",  NOT_NULL_FLAG),
-  MYODBC_FIELD_STRING("IS_NULLABLE",       3,        0),
+  DESODBC_FIELD_NAME("PROCEDURE_CAT",     0),
+  DESODBC_FIELD_NAME("PROCEDURE_SCHEM",   0),
+  DESODBC_FIELD_NAME("PROCEDURE_NAME",    NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("COLUMN_NAME",       NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT ("COLUMN_TYPE",       NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT ("DATA_TYPE",         NOT_NULL_FLAG),
+  DESODBC_FIELD_STRING("TYPE_NAME",         20,       NOT_NULL_FLAG),
+  DESODBC_FIELD_LONGLONG("COLUMN_SIZE",       0),
+  DESODBC_FIELD_LONGLONG("BUFFER_LENGTH",     0),
+  DESODBC_FIELD_SHORT ("DECIMAL_DIGITS",    0),
+  DESODBC_FIELD_SHORT ("NUM_PREC_RADIX",    0),
+  DESODBC_FIELD_SHORT ("NULLABLE",          NOT_NULL_FLAG),
+  DESODBC_FIELD_NAME("REMARKS",           0),
+  DESODBC_FIELD_NAME("COLUMN_DEF",        0),
+  DESODBC_FIELD_SHORT ("SQL_DATA_TYPE",     NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT ("SQL_DATETIME_SUB",  0),
+  DESODBC_FIELD_LONGLONG("CHAR_OCTET_LENGTH", 0),
+  DESODBC_FIELD_LONG  ("ORDINAL_POSITION",  NOT_NULL_FLAG),
+  DESODBC_FIELD_STRING("IS_NULLABLE",       3,        0),
 };
 
 const uint SQLPROCEDURECOLUMNS_FIELDS =
@@ -658,7 +658,7 @@ static MYSQL_RES *server_list_proc_params(STMT *stmt,
     qbuff.append(" ORDER BY Db, name");
   }
 
-  MYLOG_DBC_QUERY(dbc, qbuff.c_str());
+  DESLOG_DBC_QUERY(dbc, qbuff.c_str());
   if (exec_stmt_query(stmt, qbuff.c_str(), qbuff.length(), FALSE))
     return NULL;
 
@@ -762,10 +762,10 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
       proc_get_param_octet_len(stmt, sql_type_index, param_size, dec, flags, (char*)param_buffer_len);
 
       /* PROCEDURE_CAT and PROCEDURE_SCHEMA */
-      CAT_SCHEMA_SET(data[mypcPROCEDURE_CAT], data[mypcPROCEDURE_SCHEM], row[2]);
+      CAT_SCHEMA_SET(data[des_pcPROCEDURE_CAT], data[des_pcPROCEDURE_SCHEM], row[2]);
 
-      data[mypcPROCEDURE_NAME] = row[0];
-      data[mypcCOLUMN_NAME] = (const char*)param_name;
+      data[des_pcPROCEDURE_NAME] = row[0];
+      data[des_pcCOLUMN_NAME] = (const char*)param_name;
 
       /* The ordinal position can start with "0" only for return values */
       if (row[4][0] == '0')
@@ -773,67 +773,67 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
         ptype= SQL_RETURN_VALUE;
       }
 
-      data[mypcCOLUMN_TYPE] = ptype;
+      data[des_pcCOLUMN_TYPE] = ptype;
 
-      if (!myodbc_strcasecmp((const char*)type_map->type_name, "bit") && param_size > 1)
-        data[mypcDATA_TYPE] = SQL_BINARY;
+      if (!desodbc_strcasecmp((const char*)type_map->type_name, "bit") && param_size > 1)
+        data[des_pcDATA_TYPE] = SQL_BINARY;
       else
-        data[mypcDATA_TYPE] = type_map->sql_type;
+        data[des_pcDATA_TYPE] = type_map->sql_type;
 
-      if (!myodbc_strcasecmp((const char*)type_map->type_name, "set") ||
-         !myodbc_strcasecmp((const char*)type_map->type_name, "enum"))
+      if (!desodbc_strcasecmp((const char*)type_map->type_name, "set") ||
+         !desodbc_strcasecmp((const char*)type_map->type_name, "enum"))
       {
-        data[mypcTYPE_NAME] = "char";
+        data[des_pcTYPE_NAME] = "char";
       }
       else
       {
-        data[mypcTYPE_NAME]= (const char*)type_map->type_name;
+        data[des_pcTYPE_NAME]= (const char*)type_map->type_name;
       }
 
       proc_get_param_col_len(stmt, sql_type_index, param_size, dec, flags, (char*)param_size_buf);
-      data[mypcCOLUMN_SIZE] = (const char*)param_size_buf;
-      data[mypcBUFFER_LENGTH] = (const char*)param_buffer_len;
+      data[des_pcCOLUMN_SIZE] = (const char*)param_size_buf;
+      data[des_pcBUFFER_LENGTH] = (const char*)param_buffer_len;
 
       if (dec != SQL_NO_TOTAL)
       {
-        data[mypcDECIMAL_DIGITS] = dec;
-        data[mypcNUM_PREC_RADIX] = "10";
+        data[des_pcDECIMAL_DIGITS] = dec;
+        data[des_pcNUM_PREC_RADIX] = "10";
       }
       else
       {
-        data[mypcDECIMAL_DIGITS] = nullptr;
-        data[mypcNUM_PREC_RADIX] = nullptr;
+        data[des_pcDECIMAL_DIGITS] = nullptr;
+        data[des_pcNUM_PREC_RADIX] = nullptr;
       }
-      data[mypcNULLABLE] = "1";  /* NULLABLE */
-      data[mypcREMARKS] = "";   /* REMARKS */
-      data[mypcCOLUMN_DEF] = nullptr; /* COLUMN_DEF */
+      data[des_pcNULLABLE] = "1";  /* NULLABLE */
+      data[des_pcREMARKS] = "";   /* REMARKS */
+      data[des_pcCOLUMN_DEF] = nullptr; /* COLUMN_DEF */
 
       if(type_map->sql_type == SQL_TYPE_DATE ||
          type_map->sql_type == SQL_TYPE_TIME ||
          type_map->sql_type == SQL_TYPE_TIMESTAMP)
       {
-        data[mypcSQL_DATA_TYPE] = SQL_DATETIME;
-        data[mypcSQL_DATETIME_SUB] = data[mypcDATA_TYPE];
+        data[des_pcSQL_DATA_TYPE] = SQL_DATETIME;
+        data[des_pcSQL_DATETIME_SUB] = data[des_pcDATA_TYPE];
       }
       else
       {
-        data[mypcSQL_DATA_TYPE] = data[mypcDATA_TYPE];
-        data[mypcSQL_DATETIME_SUB] = nullptr;
+        data[des_pcSQL_DATA_TYPE] = data[des_pcDATA_TYPE];
+        data[des_pcSQL_DATETIME_SUB] = nullptr;
       }
 
       if (is_char_sql_type(type_map->sql_type) || is_wchar_sql_type(type_map->sql_type) ||
           is_binary_sql_type(type_map->sql_type))
       {
-        data[mypcCHAR_OCTET_LENGTH] = data[mypcBUFFER_LENGTH];
+        data[des_pcCHAR_OCTET_LENGTH] = data[des_pcBUFFER_LENGTH];
       }
       else
       {
-        data[mypcCHAR_OCTET_LENGTH] = nullptr;
+        data[des_pcCHAR_OCTET_LENGTH] = nullptr;
       }
 
-      data[mypcORDINAL_POSITION] = row[4];
+      data[des_pcORDINAL_POSITION] = row[4];
 
-      data[mypcIS_NULLABLE] = "YES"; /* IS_NULLABLE */
+      data[des_pcIS_NULLABLE] = "YES"; /* IS_NULLABLE */
       ++total_params_num;
       data.next_row();
       token = proc_param_next_token(token, param_str_end);
@@ -847,7 +847,7 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
 
   set_row_count(stmt, return_params_num);
 
-  myodbc_link_fields(stmt, SQLPROCEDURECOLUMNS_fields, SQLPROCEDURECOLUMNS_FIELDS);
+  desodbc_link_fields(stmt, SQLPROCEDURECOLUMNS_fields, SQLPROCEDURECOLUMNS_FIELDS);
 
   }
   catch(ODBCEXCEPTION &ex)
@@ -882,19 +882,19 @@ char *SQLSTAT_values[]={NullS,NullS,"","",NullS,"",SS_type,"","","","",NullS,Nul
 
 MYSQL_FIELD SQLSTAT_fields[]=
 {
-  MYODBC_FIELD_NAME("TABLE_CAT", 0),
-  MYODBC_FIELD_NAME("TABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT("NON_UNIQUE", 0),
-  MYODBC_FIELD_NAME("INDEX_QUALIFIER", 0),
-  MYODBC_FIELD_NAME("INDEX_NAME", 0),
-  MYODBC_FIELD_SHORT("TYPE", NOT_NULL_FLAG),
-  MYODBC_FIELD_SHORT("ORDINAL_POSITION", 0),
-  MYODBC_FIELD_NAME("COLUMN_NAME", 0),
-  MYODBC_FIELD_STRING("ASC_OR_DESC", 1, 0),
-  MYODBC_FIELD_LONG("CARDINALITY", 0),
-  MYODBC_FIELD_LONG("PAGES", 0),
-  MYODBC_FIELD_STRING("FILTER_CONDITION", 10, 0),
+  DESODBC_FIELD_NAME("TABLE_CAT", 0),
+  DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT("NON_UNIQUE", 0),
+  DESODBC_FIELD_NAME("INDEX_QUALIFIER", 0),
+  DESODBC_FIELD_NAME("INDEX_NAME", 0),
+  DESODBC_FIELD_SHORT("TYPE", NOT_NULL_FLAG),
+  DESODBC_FIELD_SHORT("ORDINAL_POSITION", 0),
+  DESODBC_FIELD_NAME("COLUMN_NAME", 0),
+  DESODBC_FIELD_STRING("ASC_OR_DESC", 1, 0),
+  DESODBC_FIELD_LONG("CARDINALITY", 0),
+  DESODBC_FIELD_LONG("PAGES", 0),
+  DESODBC_FIELD_STRING("FILTER_CONDITION", 10, 0),
 };
 
 const uint SQLSTAT_FIELDS = (uint)array_elements(SQLSTAT_fields);
@@ -999,7 +999,7 @@ statistics_no_i_s(SQLHSTMT hstmt,
       stmt->result_array = (MYSQL_ROW)data.data();
       create_fake_resultset(stmt, stmt->result_array, SQLSTAT_FIELDS, rnum,
                             SQLSTAT_fields, SQLSTAT_FIELDS, false);
-      myodbc_link_fields(stmt, SQLSTAT_fields, SQLSTAT_FIELDS);
+      desodbc_link_fields(stmt, SQLSTAT_fields, SQLSTAT_FIELDS);
       return SQL_SUCCESS;
     }
   }
@@ -1027,14 +1027,14 @@ const char *SQLTABLES_type_values[3][5] = {
 
 MYSQL_FIELD SQLTABLES_fields[]=
 {
-  MYODBC_FIELD_NAME("TABLE_CAT",   0),
-  MYODBC_FIELD_NAME("TABLE_SCHEM", 0),
-  MYODBC_FIELD_NAME("TABLE_NAME",  0),
-  MYODBC_FIELD_NAME("TABLE_TYPE",  0),
+  DESODBC_FIELD_NAME("TABLE_CAT",   0),
+  DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+  DESODBC_FIELD_NAME("TABLE_NAME",  0),
+  DESODBC_FIELD_NAME("TABLE_TYPE",  0),
 /*
   Table remark length is 80 characters
 */
-  MYODBC_FIELD_STRING("REMARKS",     80, 0),
+  DESODBC_FIELD_STRING("REMARKS",     80, 0),
 };
 
 
@@ -1048,7 +1048,7 @@ tables_no_i_s(SQLHSTMT hstmt,
               SQLCHAR *type, SQLSMALLINT type_len)
 {
     STMT *stmt= (STMT *)hstmt;
-    my_bool user_tables, views;
+    des_bool user_tables, views;
 
     my_ulonglong row_count= 0;
     MYSQL_ROW db_row = nullptr;
@@ -1197,11 +1197,11 @@ tables_no_i_s(SQLHSTMT hstmt,
             int type_index = 2;
             int comment_index = 1;
             int cat_index= 3;
-            my_bool view;
+            des_bool view;
 
             db = row[cat_index];
 
-            view= (myodbc_casecmp(row[type_index], "VIEW", 4) == 0);
+            view= (desodbc_casecmp(row[type_index], "VIEW", 4) == 0);
 
             if ((view && !views) || (!view && !user_tables))
             {
@@ -1255,6 +1255,6 @@ tables_no_i_s(SQLHSTMT hstmt,
 
   set_row_count(stmt, row_count);
 
-  myodbc_link_fields(stmt, SQLTABLES_fields, SQLTABLES_FIELDS);
+  desodbc_link_fields(stmt, SQLTABLES_fields, SQLTABLES_FIELDS);
   return SQL_SUCCESS;
 }
