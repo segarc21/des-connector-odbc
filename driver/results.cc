@@ -1026,6 +1026,17 @@ SQLRETURN do_dummy_parambind(SQLHSTMT hstmt)
 SQLRETURN SQL_API SQLNumResultCols(SQLHSTMT  hstmt, SQLSMALLINT *pccol)
 {
   SQLRETURN error;
+  STMT *stmt = (STMT *)hstmt;
+
+  CHECK_HANDLE(hstmt);
+  CHECK_DATA_OUTPUT(hstmt, pccol);
+
+  *pccol = (SQLSMALLINT)stmt->table->col_count();
+
+  return SQL_SUCCESS;  
+
+    /*
+  SQLRETURN error;
   STMT *stmt= (STMT *) hstmt;
 
   CHECK_HANDLE(hstmt);
@@ -1050,6 +1061,7 @@ SQLRETURN SQL_API SQLNumResultCols(SQLHSTMT  hstmt, SQLSMALLINT *pccol)
   *pccol= (SQLSMALLINT) stmt->ird->rcount();
 
   return SQL_SUCCESS;
+*/
 }
 
 
@@ -1466,13 +1478,85 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
     SQLRETURN result = SQL_SUCCESS;
     ulong length= 0;
     DESCREC *irrec, *arrec;
-    /*
-      Signed column number required for bookmark column 0,
-      which will become -1 when decremented later.
-    */
     SQLSMALLINT sColNum= ColumnNumber;
-
+    sColNum--;
     LOCK_STMT(stmt);
+
+    //TODO: Check if the given pointers are null or not
+    std::string value =
+        stmt->table->get_value_row_col(stmt->current_row_des, sColNum);
+
+    if (value == "null") { //temporal debugging solution. null values must be taken into account before this
+        //(right now, if a varchar is called literally "null", it is recognized as null) TODO: fix
+      *StrLen_or_IndPtr = SQL_NULL_DATA;
+      return SQL_SUCCESS;
+    }
+
+    std::wstring unicode_str(value.begin(), value.end());
+    int int_value;
+    switch (TargetType) {
+        case SQL_C_CHAR:
+            break;
+        case SQL_C_BINARY:
+            break;
+        case SQL_C_WCHAR:
+          std::memcpy(TargetValuePtr, unicode_str.c_str(),
+                      (unicode_str.size() + 1) * sizeof(SQLWCHAR)); // +1 for the '\0' character
+          *StrLen_or_IndPtr = (unicode_str.size() + 1) * sizeof(SQLWCHAR);
+            break;
+        case SQL_C_BIT:
+            break;
+        case SQL_C_TINYINT:
+            break;
+        case SQL_C_STINYINT:
+            break;
+        case SQL_C_UTINYINT:
+            break;
+        case SQL_C_SHORT:
+            break;
+        case SQL_C_SSHORT:
+            break;
+        case SQL_C_USHORT:
+            break;
+        case SQL_C_LONG:
+            break;
+        case SQL_C_SLONG:
+            int_value = std::stoi(value);
+          *static_cast<int *>(TargetValuePtr) = int_value;
+          *StrLen_or_IndPtr = sizeof(int);
+            break;
+        case SQL_C_ULONG:
+            break;
+        case SQL_C_FLOAT:
+            break;
+        case SQL_C_DOUBLE:
+            break;
+        case SQL_C_DATE:
+            break;
+        case SQL_C_TYPE_DATE:
+            break;
+        case SQL_C_INTERVAL_HOUR_TO_SECOND:
+            break;
+        case SQL_C_INTERVAL_HOUR_TO_MINUTE:
+            break;
+        case SQL_C_TIME:
+            break;
+        case SQL_C_TYPE_TIME:
+            break;
+        case SQL_C_TIMESTAMP:
+            break;
+        case SQL_C_TYPE_TIMESTAMP:
+            break;
+        case SQL_C_SBIGINT:
+            break;
+        case SQL_C_UBIGINT:
+            break;
+        case SQL_C_NUMERIC:
+            break;
+    }
+
+    return SQL_SUCCESS;
+    /*
 
     if (!stmt->result || (!stmt->current_values && stmt->out_params_state != OPS_STREAMS_PENDING))
     {
@@ -1493,15 +1577,11 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
       return stmt->set_error("HY003", "Program type out of range", 0);
     }
 
-    --sColNum;     /* Easier code if start from 0 which will make bookmark column -1 */
+    --sColNum;
 
     if (stmt->out_params_state == OPS_STREAMS_PENDING)
     {
-      /* http://msdn.microsoft.com/en-us/library/windows/desktop/ms715441%28v=vs.85%29.aspx
-          "07009 Invalid descriptor index ...The Col_or_Param_Num value was not equal to the
-          ordinal of the parameter that is available."
-          Returning error if requested parameter number is different from the last call to
-          SQLParamData */
+
       if (sColNum != stmt->current_param)
       {
         return stmt->set_error("07009", "The parameter number value was not equal to \
@@ -1510,7 +1590,6 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
       }
       else
       {
-        /* In getdatat column we keep out parameter column number in the result */
         sColNum= stmt->getdata.column;
       }
 
@@ -1523,7 +1602,6 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
 
     if (sColNum != stmt->getdata.column)
     {
-      /* New column. Reset old offset */
       stmt->reset_getdata_position();
       stmt->getdata.column= sColNum;
     }
@@ -1534,7 +1612,6 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
     if ((sColNum == -1 && stmt->stmt_options.bookmarks == SQL_UB_VARIABLE))
     {
       std::string _value;
-      /* save position set using SQLSetPos in buffer */
       _value = std::to_string((stmt->cursor_row > 0) ? stmt->cursor_row : 0);
       arrec= desc_get_rec(stmt->ard, sColNum, FALSE);
       result= sql_get_bookmark_data(stmt, TargetType, sColNum,
@@ -1544,14 +1621,12 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
     }
     else
     {
-      /* catalog functions with "fake" results won't have lengths */
       length= irrec->row.datalen;
       if (!length && stmt->current_values[sColNum])
         length = (ulong)strlen(stmt->current_values[sColNum]);
 
       arrec= desc_get_rec(stmt->ard, sColNum, FALSE);
 
-      /* String will be used as a temporary storage which frees itself automatically */
       std::string temp_str;
       char *value = fix_padding(stmt, TargetType, stmt->current_values[sColNum],
                                       temp_str, BufferLength, length, irrec);
@@ -1562,6 +1637,7 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
     }
 
     return result;
+    */
 }
 
 
@@ -1708,6 +1784,16 @@ exitSQLMoreResults:
 SQLRETURN SQL_API SQLRowCount( SQLHSTMT hstmt,
                                SQLLEN * pcrow )
 {
+    STMT *stmt = (STMT *)hstmt;
+
+  CHECK_HANDLE(hstmt);
+  CHECK_DATA_OUTPUT(hstmt, pcrow);
+
+  *pcrow = (SQLLEN)stmt->table->row_count();
+
+  return SQL_SUCCESS;  
+
+    /*
     STMT *stmt= (STMT *) hstmt;
 
     CHECK_HANDLE(hstmt);
@@ -1726,6 +1812,7 @@ SQLRETURN SQL_API SQLRowCount( SQLHSTMT hstmt,
         *pcrow= (SQLLEN) stmt->affected_rows;
     }
     return SQL_SUCCESS;
+  */
 }
 
 
@@ -1935,9 +2022,9 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
 
   try
   {
+
     if ( !stmt->result )
       return stmt->set_error("24000", "Fetch without a SELECT", 0);
-
     cur_row = stmt->current_row;
 
     if ( !pcrow )
@@ -2624,17 +2711,46 @@ SQLRETURN SQL_API SQLFetchScroll( SQLHSTMT      StatementHandle,
   returns data for all bound columns
 */
 
-SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle)
-{
-    STMT *stmt = (STMT *)StatementHandle;
-    STMT_OPTIONS *options;
+SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle) {
+  STMT *stmt = (STMT *)StatementHandle;
+  STMT_OPTIONS *options;
 
-    LOCK_STMT(stmt);
+  LOCK_STMT(stmt);
 
-    options= &stmt->stmt_options;
-    options->rowStatusPtr_ex= NULL;
+  if (!stmt->fake_result) {
+    options = &stmt->stmt_options;
+    options->rowStatusPtr_ex = NULL;
+
+    if (stmt->new_row_des) {
+      stmt->new_row_des = false;
+    } else {
+      stmt->current_row_des++;
+      stmt->current_values_des = std::to_string(stmt->current_row_des+1);
+    }
+
+    if (stmt->current_row_des == stmt->table->row_count())
+      return SQL_NO_DATA;
+    else
+      return SQL_SUCCESS;
+
+    /*
+    return DES_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
+                                stmt->ird->rows_processed_ptr,
+                                stmt->ird->array_status_ptr, 0);
+    */
+  }
+  else {
+    return SQL_NO_DATA;
+    /*
+    
+    options = &stmt->stmt_options;
+    options->rowStatusPtr_ex = NULL;
 
     return DES_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
-                               stmt->ird->rows_processed_ptr, stmt->ird->array_status_ptr,
-                               0);
+                                stmt->ird->rows_processed_ptr,
+                                stmt->ird->array_status_ptr, 0);
+    
+    */
+
+  }
 }

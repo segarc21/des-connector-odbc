@@ -72,6 +72,11 @@ using std::nullptr_t;
 #include <vector>
 #include <list>
 #include <mutex>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <variant>
 
 #define LOCK_STMT(S) CHECK_HANDLE(S); \
   std::unique_lock<std::recursive_mutex> slock(((STMT*)S)->lock)
@@ -571,6 +576,13 @@ struct	ENV
 /* Connection handler */
 struct DBC
 {
+  PROCESS_INFORMATION process_info;
+  STARTUPINFOW startup_info_unicode;
+  HANDLE driver_to_des_out_rpipe;
+  HANDLE driver_to_des_out_wpipe;
+  HANDLE driver_to_des_in_rpipe;
+  HANDLE driver_to_des_in_wpipe;
+
   ENV           *env;
   DES         *des;
   std::list<STMT*> stmt_list;
@@ -606,6 +618,7 @@ struct DBC
   telemetry::Telemetry<DBC> telemetry;
 
   DBC(ENV *p_env);
+  SQLRETURN createDESProcess();
   void free_explicit_descriptors();
   void free_connection_stmts();
   void add_desc(DESC* desc);
@@ -632,6 +645,8 @@ struct DBC
   SQLRETURN execute_query(const char *query,
     SQLULEN query_length, des_bool req_lock);
 };
+
+extern DBC *dbc_global_var;
 
 
 /* Statement states */
@@ -983,6 +998,170 @@ class charPtrBuf {
   }
 };
 
+//Internal representation of a column from a result view.
+class Column {
+ public:
+  std::string name;
+  std::string type_str;
+  SQLSMALLINT type;
+  SQLULEN size;
+  SQLSMALLINT scale;
+  SQLSMALLINT nullable;
+  std::vector<std::string> values;
+
+  Column() {}
+
+  Column(const std::string &col_name, const std::string &col_type_str,
+         const SQLSMALLINT &col_type, const SQLULEN &col_size, const SQLSMALLINT &col_scale,
+         const SQLSMALLINT &col_nullable)
+      : name(col_name),
+        type_str(col_type_str),
+        type(col_type),
+        size(col_size),
+        scale(col_scale),
+        nullable(col_nullable) {}
+
+  SQLSMALLINT get_type() { return type; }
+  SQLULEN get_size() { return size; }
+  SQLSMALLINT get_scale() { return scale; }
+  SQLSMALLINT get_nullable() { return nullable; }
+
+  void insert_value(const std::string &value) { values.push_back(value); }
+  std::string get_value(int index) const { return values[index]; }
+
+};
+
+//Internal representation of a result view.
+class Table {
+ public:
+  //Vector of column names, ordered by insertion time.
+  std::vector<std::string> names_ordered;
+    
+  //Some calls are given to the driver using only the
+  //column name. We need therefore to search the column given its name.
+  std::unordered_map<std::string, Column> columns;
+
+  Table() {
+    /*
+        Default table (representation of metadata table).
+        We learnt from this studying calls to the MySQL ODBC.
+        We replicated the returned columns of the default table
+        and each of its characteristics.
+    */ 
+    insert_col("TABLE_CAT", "", -9, 64, 0, 1);
+    insert_col("TABLE_SCHEM", "", -9, 64, 0, 1);
+    insert_col("TABLE_NAME", "", -9, 64, 0, 1);
+    insert_col("TABLE_TYPE", "", -9, 64, 0, 1);
+    insert_col("REMARKS", "", -9, 80, 0, 1);
+  }
+
+  //Constructor of table from the parsing a TAPI-codified DES result.
+  Table(std::string str) {
+
+    //First, we separate the TAPI str into lines.
+    std::vector<std::string> lines;
+    std::stringstream ss(str);
+    std::string line;
+
+    while (std::getline(ss, line, '\n')) {
+      lines.push_back(line);
+    }
+
+    //We ignore the first line, that contains the keywords success/answer.
+    int i = 1;
+
+    //If lines.size()<=1, it is a TAPI message and not a table.
+    if (lines.size() > 1 && lines[0].substr(0, lines[0].size() - 1) != "$error") {
+      bool checked_cols = false;
+
+      while (!checked_cols) {
+        //For each column, TAPI gives in a line its name and then its type.
+        std::string name = lines[i].substr(0, lines[i].size() - 1);
+        std::string type_str = lines[i + 1].substr(0, lines[i+1].size() - 1);
+
+        SQLSMALLINT type = -9; //default
+        SQLULEN size = 255; //TODO my default varchar length, look through this
+        SQLSMALLINT scale = 0; //default
+        SQLSMALLINT nullable = 1; //default
+
+        if (type_str == "int") {
+            type = 4;
+            size = 10;
+        }
+
+        insert_col(name, type_str, type, size, scale, nullable);
+
+        i += 2;
+
+        if (lines[i].substr(0, lines[i].size() - 1) == "$")
+            checked_cols = true;
+      }
+
+      i++;  //We skip the final $
+
+      std::string aux = lines[i];
+      while (aux.substr(0, aux.size() - 1) != "$eot") {
+        for (int j = 0; j < names_ordered.size(); ++j) {
+
+          std::string name_col = names_ordered[j];
+          std::string value = lines[i].substr(0, lines[i].size() - 1);
+
+          //When we reach a varchar value, we remove the " ' " characters provided by the TAPI.
+          if (value.size() > 0 && value[0] == '\'') {
+            value = value.substr(1, value.size() - 2);
+          }
+
+          insert_value(name_col, value);
+          i++;
+        }
+        aux = lines[i];
+        i++; //to skip $ or $eot
+      }
+    
+    }
+
+  }
+
+  SQLSMALLINT col_type(const std::string &name) { return columns[name].get_type(); }
+  SQLULEN col_size(const std::string &name) { return columns[name].get_size(); }
+  SQLSMALLINT col_scale(const std::string &name) { return columns[name].get_scale(); }
+  SQLSMALLINT col_nullable(const std::string &name) { return columns[name].get_nullable(); }
+
+  size_t col_count() { return names_ordered.size(); }
+
+  size_t row_count() {
+    if (names_ordered.size() != 0)
+      return columns[names_ordered[0]].values.size();
+    else
+      return 0;
+  }
+
+  std::string index_to_name_col(size_t index) {
+    return names_ordered[index - 1];
+  }
+
+  void insert_col(const std::string &columnName,
+                 const std::string &columnTypeStr,
+                 const SQLSMALLINT &columnType, const SQLULEN &columnSize,
+                 const SQLSMALLINT &columnScale,
+                 const SQLSMALLINT &columnNullable) {
+    names_ordered.push_back(columnName);
+    columns[columnName] = Column(columnName, columnTypeStr, columnType, columnSize, columnScale, columnNullable);
+    
+  }
+
+  void insert_value(const std::string &columnName, const std::string &value) {
+    columns[columnName].insert_value(value);
+  }
+
+  std::string get_value_row_col(size_t row, size_t column) const {
+    if (columns.find(names_ordered[column]) != columns.end()) {
+      return columns.at(names_ordered[column]).values[row];
+    } else
+      return "null";
+  }
+};
+
 struct STMT
 {
   DBC               *dbc;
@@ -996,6 +1175,12 @@ struct STMT
   DES_ROW_OFFSET  end_of_set;
   tempBuf           tempbuf;
   ROW_STORAGE       m_row_storage;
+
+  //Adding the DES structures over the MySQL STMT. Temporal changes
+  Table *table = new Table(); //TODO review
+  bool new_row_des = true;
+  int current_row_des = 0;
+  std::string current_values_des = "1";
 
   DESCURSOR          cursor;
   DESERROR           error;
@@ -1252,6 +1437,7 @@ namespace desodbc {
     }
   };
 };
+
 
 extern std::string thousands_sep, decimal_point, default_locale;
 #ifndef _UNIX_

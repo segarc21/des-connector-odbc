@@ -35,10 +35,67 @@
 #include <locale.h>
 
 /*
-  @type    : myodbc3 internal
-  @purpose : internal function to execute query and return result
-  frees query if query != stmt->query
+    We create a global variable of DBC because some of the DBC connection fields
+    will be needed in SQLAPI functions that doesn't hold this structure in any
+    of its arguments. It is initialized when creating the handle.
 */
+DBC *dbc_global_var;
+
+/*
+    Function that executes a query into the DES executable (through its
+    STDIN pipe), and loads its result into a internal table, structure held by the stmt.
+*/
+SQLRETURN DES_do_query(STMT* stmt, std::string query) {
+
+  // Write the command to the child's STDIN
+  DWORD bytes_written;
+  std::string full_query = "/tapi " + query + '\n'; //query for the launched DES process
+
+  //We convert the string to a char*.
+  char *full_query_arr = new char[full_query.size() + sizeof(char)];  //we hold a final char for the delimiter '\0'
+  std::copy(full_query.begin(), full_query.end(), full_query_arr);
+  full_query_arr[full_query.size()] = '\0';
+
+
+  if (!WriteFile(dbc_global_var->driver_to_des_in_wpipe, full_query_arr, strlen(full_query_arr),
+                 &bytes_written, NULL)) { //as we explained in the connection part,
+                                          //the final argument must be not null only when the pipe was created with overlapping
+    return SQL_ERROR;
+  }
+
+  std::string tapi_output;
+
+  //Same considerations as those we took when reading the startup DES message.
+  bool finished_reading = false;
+  CHAR buffer[4096];
+  DWORD bytes_read;
+
+  while (!finished_reading) {
+     BOOL success =
+         ReadFile(dbc_global_var->driver_to_des_out_rpipe, buffer,
+             sizeof(buffer) - sizeof(char), &bytes_read, NULL);
+    if (!success)
+      return SQL_ERROR;
+    else if (bytes_read == 0)
+      finished_reading = true;
+    else {
+      buffer[bytes_read] = '\0';
+      std::string buffer_str = buffer;
+
+      tapi_output += buffer_str;
+
+      if (bytes_read < sizeof(buffer) - sizeof(char)) {
+        finished_reading = true;
+      }
+    }
+  }
+
+  //We parse the TAPI output and create an internal table from the result view
+  stmt->table = new Table(tapi_output);
+
+  return SQL_SUCCESS;
+}
+
 SQLRETURN do_query(STMT *stmt, std::string query)
 {
     int error= SQL_ERROR, native_error= 0;
@@ -1515,7 +1572,8 @@ SQLRETURN DES_SQLExecute( STMT *pStmt )
       {
         if (!connection_failure)
         {
-          rc = do_query(pStmt, query);
+          rc = DES_do_query(pStmt, query);
+          //rc = do_query(pStmt, query);
         }
         else
         {

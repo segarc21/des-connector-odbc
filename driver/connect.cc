@@ -275,6 +275,162 @@ class dbc_guard
   ~dbc_guard() { if (!m_success) m_dbc->close(); }
 };
 
+SQLRETURN DBC::createDESProcess() {
+
+    /*
+    
+    We will create anonymous pipes so
+    the driver can communicate with a new DES process.
+    The idea is that the driver can read and write onto
+    an exclusive instance of DES, as its executable provides
+    a CLI.
+    
+    For creating the pipes, we will follow this Microsoft article that shows how to
+    create a child process with redirected input and output:
+    https://learn.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
+
+    */
+
+  //We specify the security attributes of the pipe.
+  SECURITY_ATTRIBUTES des_pipe_sec_attr;
+  des_pipe_sec_attr.nLength = sizeof(SECURITY_ATTRIBUTES); //the manual specifies to initialize this as this size
+  des_pipe_sec_attr.lpSecurityDescriptor = NULL;  // if NULL, the pipe has the default security configuration
+  des_pipe_sec_attr.bInheritHandle = TRUE; //we need this process to inherit the handle
+  
+
+  DWORD des_pipe_buf_size = 0; //if 0, the system uses the default buffer size.
+
+  //We create the pipe
+  if (!CreatePipe(&this->driver_to_des_out_rpipe, &this->driver_to_des_out_wpipe, &des_pipe_sec_attr, des_pipe_buf_size)) {
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    return SQL_ERROR;
+  }
+
+ /* Now we need to specify to the read handle for STDOUT
+  * that it cannot be inherited. The problem with the children
+  * having access to it is that the parent process (the driver)
+  * doesn't have full control over it.*/ 
+
+  if (!SetHandleInformation(this->driver_to_des_out_rpipe, HANDLE_FLAG_INHERIT,
+                            0)) {
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    return SQL_ERROR;
+  }
+
+  //Now, we do the same for the STDIN.
+  if (!CreatePipe(&this->driver_to_des_in_rpipe, &this->driver_to_des_in_wpipe,
+                  &des_pipe_sec_attr, des_pipe_buf_size)) {
+    CloseHandle(this->driver_to_des_in_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    return SQL_ERROR;
+  }
+
+  if (!SetHandleInformation(this->driver_to_des_in_wpipe, HANDLE_FLAG_INHERIT,
+                            0)) {
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    CloseHandle(this->driver_to_des_in_rpipe);
+    CloseHandle(this->driver_to_des_in_wpipe);
+    return SQL_ERROR;
+  }
+
+ 
+  //Before creating the process, we need to create STARTUPINFO and PROCESS_INFORMATION structures.
+  //Piece of code extracted from the Microsoft's child process creating tutorial
+  ZeroMemory(&this->startup_info_unicode, sizeof(this->startup_info_unicode));
+  ZeroMemory(&this->process_info, sizeof(this->process_info));
+  this->startup_info_unicode.cb = sizeof(this->startup_info_unicode);
+  this->startup_info_unicode.hStdError = this->driver_to_des_out_wpipe;
+  this->startup_info_unicode.hStdOutput = this->driver_to_des_out_wpipe;
+  this->startup_info_unicode.hStdInput = this->driver_to_des_in_rpipe;
+  this->startup_info_unicode.dwFlags |= STARTF_USESTDHANDLES;
+  
+
+  //Path to the DES executable in Unicode format (wchars)
+  wchar_t unicode_path[500] =
+      L"C:\\Users\\sergi\\Desktop\\Todo\\Portables\\des\\des.exe"; //TODO: read it from the Windows registry key, once we have developed the installer.
+
+  /* Now, we will call the function CreateProcessW (processthreadsapi.h).
+  *
+  * From the win32 api manual:
+  *
+  * BOOL CreateProcessW(
+      [in, optional]      LPCWSTR               lpApplicationName,
+      [in, out, optional] LPWSTR                lpCommandLine,
+      [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
+      [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
+      [in]                BOOL                  bInheritHandles,
+      [in]                DWORD                 dwCreationFlags,
+      [in, optional]      LPVOID                lpEnvironment,
+      [in, optional]      LPCWSTR               lpCurrentDirectory,
+      [in]                LPSTARTUPINFOW        lpStartupInfo,
+      [out]               LPPROCESS_INFORMATION lpProcessInformation
+    );
+
+    - lpApplicationName: if NULL, it justs go for lpApplicationName (simpler).
+    - lpCommandLine: route of the DES executable.
+    - lpProcessAttributes: if NULL, the identifier of the new process cannot
+        be inherited (preferrable, as we have explained before)
+    - lpThreadAttributes: if NULL, it is not inheritable either.
+    - bInheritHandles: if TRUE, handlers are inheritable.
+    - dwCreationFlags: if 0, it has the default creation flags. We do not need
+  any special flags.
+    - lpEnvironment: if NULL, we use parent's environment block
+    - lpCurrentDirectory: if NULL, we use parent's starting directory
+    - lpStartupInfo: the pointer to a STARTUPINFO structure
+    - lpProcessInformation: the pointer to a PROCESS_INFORMATION structure
+
+  */
+  if (!CreateProcessW(NULL,
+                      unicode_path,
+                      NULL,
+                      NULL,
+                      TRUE,
+                      0,
+                      NULL,
+                      NULL,
+                      &this->startup_info_unicode,
+                      &this->process_info)) {
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    CloseHandle(this->driver_to_des_in_rpipe);
+    CloseHandle(this->driver_to_des_in_wpipe);
+    return SQL_ERROR;
+  }
+
+  /* Now, the DES process has just been created. However, we need to remove all the startup messages
+  from DES that are allocated into the STDOUT read pipe. We read from this pipe using the ReadFile
+  function (fileapi.h), and it writes it into a buffer. When the buffer contains "DES>", the startup
+  messages will have ended. */
+
+  CHAR buffer[4096]; //standard size
+  DWORD bytes_read;
+
+  bool finished_reading = false;
+  std::string complete_reading_str = "";
+  while (!finished_reading) {
+    BOOL success = ReadFile(this->driver_to_des_out_rpipe, buffer,
+                            sizeof(buffer) - sizeof(CHAR), &bytes_read, NULL);/* we don't write the final CHAR so as to put the '\0'
+                                                                                 char, like we will see.
+                                                                                 the final argument must be not null only when
+                                                                                 the pipe was created with overlapping */ 
+
+
+    buffer[bytes_read] = '/0'; //we need it to be zero-terminated, as advised by a warning when tring to assign the char[] to a new std::string
+    std::string buffer_str = buffer;
+
+    complete_reading_str += buffer_str;
+
+    if (!success || complete_reading_str.find("DES>") != std::string::npos) {
+      finished_reading = true;
+    }
+  }
+
+  return SQL_SUCCESS;
+}
+
 /**
   Try to establish a connection to a MySQL server based on the data source
   configuration.
@@ -1224,7 +1380,6 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
   case SQL_DRIVER_COMPLETE:
   case SQL_DRIVER_COMPLETE_REQUIRED:
     rc = dbc->connect(&ds);
-
     if (!SQL_SUCCEEDED(rc))
       dbc->telemetry.set_error(dbc, dbc->error.message);
 
@@ -1390,6 +1545,7 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
   }
 
   rc = dbc->connect(&ds);
+  rc = dbc->createDESProcess();
 
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO)
   {

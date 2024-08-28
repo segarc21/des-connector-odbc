@@ -234,6 +234,7 @@ SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
     try
     {
       dbc = new DBC(penv);
+      dbc_global_var = dbc;
       *phdbc = (SQLHDBC)dbc;
     }
     catch(...)

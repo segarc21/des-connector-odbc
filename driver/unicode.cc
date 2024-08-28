@@ -264,6 +264,39 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
   SQLSMALLINT free_value= 0;
   uint errors;
 
+  std::string name_str = stmt->table->index_to_name_col(column);
+  //We convert the name (in std::string) to an unsigned char vector
+  //in order to use the sqlchar_as_sqlwchar function provided by the MySQL ODBC source.
+  std::vector<unsigned char> name_uchar(name_str.begin(), name_str.end());
+  value = name_uchar.data();
+
+  wvalue =
+      sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value, &len, &errors);
+
+  if (name_len) *name_len = (SQLSMALLINT)len;
+
+  if (name && name_max > 0) {
+    len = desodbc_min(len, name_max - 1);
+    (void)memcpy((char *)name, (const char *)wvalue, len * sizeof(SQLWCHAR));
+    ((SQLWCHAR *)name)[len] = 0;
+  }
+
+  //TODO: code to check that all these pointers are not null
+  *type = stmt->table->col_type(name_str);
+  *size = stmt->table->col_size(name_str);
+  *scale = stmt->table->col_scale(name_str);
+  *nullable = stmt->table->col_nullable(name_str);
+
+  return SQL_SUCCESS;
+
+  /*
+  STMT *stmt= (STMT *)hstmt;
+  SQLCHAR *value= NULL;
+  SQLWCHAR *wvalue= NULL;
+  SQLINTEGER len= SQL_NTS;
+  SQLSMALLINT free_value= 0;
+  uint errors;
+
   SQLRETURN rc;
 
   LOCK_STMT(hstmt);
@@ -289,27 +322,25 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
       return handle_connection_error(stmt);
     }
 
-    /* We set the error only when the result is intented to be returned */
-    if (name && len > name_max - 1)
-      rc= stmt->set_error( DESERR_01004, NULL, 0);
+    // We set the error only when the result is intented to be returned
 
-    if (name_len)
-      *name_len= (SQLSMALLINT)len;
+  if (name && len > name_max - 1) rc = stmt->set_error(DESERR_01004, NULL, 0);
 
-    if (name && name_max > 0)
-    {
-      len= desodbc_min(len, name_max - 1);
-      (void)memcpy((char *)name, (const char *)wvalue,
-                   len * sizeof(SQLWCHAR));
-      ((SQLWCHAR *)name)[len]= 0;
-    }
+  if (name_len) *name_len = (SQLSMALLINT)len;
 
-    if (free_value)
-      x_free(value);
-    x_free(wvalue);
+  if (name && name_max > 0) {
+    len = desodbc_min(len, name_max - 1);
+    (void)memcpy((char *)name, (const char *)wvalue, len * sizeof(SQLWCHAR));
+    ((SQLWCHAR *)name)[len] = 0;
   }
 
-  return rc;
+  if (free_value) x_free(value);
+  x_free(wvalue);
+}
+
+return rc;
+*/
+
 }
 
 
@@ -325,6 +356,7 @@ SQLExecDirectW(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len)
   error= DES_SQLExecute((STMT *)hstmt);
 
   return error;
+  //return SQL_SUCCESS;
 }
 
 
