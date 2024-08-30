@@ -174,7 +174,7 @@ VOID OnWMNotify(WPARAM wParam, LPARAM lParam)
 
 			SET_TIP(drvname, L"An unique name for this data source");
 			SET_TIP(drvdesc, L"A brief description for this data source");
-			SET_TIP(srvname, L"The hostname for the MySQL Server");
+			SET_TIP(desexecpath, L"The path for the DES executable");
 			SET_TIP(PORT,    L"The TCP/IP port to use if server is not localhost");
 			SET_TIP(username, L"The username used to connect to MySQL");
 			SET_TIP(password, L"The password for the server user combination");

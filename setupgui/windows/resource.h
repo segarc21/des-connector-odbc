@@ -29,7 +29,7 @@
 #define IDC_EDIT_DSN                    10000
 #define IDC_EDIT_drvdesc                10001
 #define IDC_EDIT_DESCRIPTION            10001
-#define IDC_EDIT_srvname                10002
+#define IDC_EDIT_desexecpath            10002
 #define IDC_EDIT_DES_EXEC               10002
 #define IDC_EDIT_PATH                   10002
 #define IDC_EDIT_PORT                   10003
