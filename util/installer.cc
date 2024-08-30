@@ -87,7 +87,7 @@ static SQLWCHAR W_DRIVER[] = {'D', 'R', 'I', 'V', 'E', 'R', 0};
 static SQLWCHAR W_Driver[] = {'D', 'r', 'i', 'v', 'e', 'r', 0};
 static SQLWCHAR W_DESCRIPTION[] =
   {'D', 'E', 'S', 'C', 'R', 'I', 'P', 'T', 'I', 'O', 'N', 0};
-static SQLWCHAR W_SERVER[]= {'S', 'E', 'R', 'V', 'E', 'R', 0};
+static SQLWCHAR W_DES_EXEC[] = {'D', 'E', 'S', '_', 'E', 'X', 'E', 'C', 0};
 static SQLWCHAR W_UID[]= {'U', 'I', 'D', 0};
 static SQLWCHAR W_USER[]= {'U', 'S', 'E', 'R', 0};
 static SQLWCHAR W_PWD[]= {'P', 'W', 'D', 0};

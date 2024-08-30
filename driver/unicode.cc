@@ -281,11 +281,14 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
     ((SQLWCHAR *)name)[len] = 0;
   }
 
-  //TODO: code to check that all these pointers are not null
-  *type = stmt->table->col_type(name_str);
-  *size = stmt->table->col_size(name_str);
-  *scale = stmt->table->col_scale(name_str);
-  *nullable = stmt->table->col_nullable(name_str);
+  if (type)
+    *type = stmt->table->col_type(name_str);
+  if (size)
+    *size = stmt->table->col_size(name_str);
+  if (scale)
+    *scale = stmt->table->col_scale(name_str);
+  if (nullable)
+    *nullable = stmt->table->col_nullable(name_str);
 
   return SQL_SUCCESS;
 
@@ -1229,8 +1232,12 @@ SQLTablesW(SQLHSTMT hstmt,
   type8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, type, &len, &errors);
   type_len= (SQLSMALLINT)len;
 
+  //TODO: remove
+  /*
   rc= DESTables(hstmt, catalog8, catalog_len, schema8, schema_len,
                   table8, table_len, type8, type_len);
+  */
+  rc = SQL_SUCCESS;
 
   if (catalog_len)
     x_free(catalog8);
@@ -1241,6 +1248,7 @@ SQLTablesW(SQLHSTMT hstmt,
   x_free(type8);
 
   return rc;
+
 }
 
 

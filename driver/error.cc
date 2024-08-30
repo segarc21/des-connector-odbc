@@ -580,7 +580,7 @@ DESGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
       *char_value= (SQLCHAR *)"";
 
     if (ds)
-      *char_value= ds->opt_SERVER;
+        *char_value = ds->opt_DES_EXEC;
 
     return SQL_SUCCESS;
   }

@@ -618,7 +618,7 @@ struct DBC
   telemetry::Telemetry<DBC> telemetry;
 
   DBC(ENV *p_env);
-  SQLRETURN createDESProcess();
+  SQLRETURN createDESProcess(SQLWCHAR* des_path);
   void free_explicit_descriptors();
   void free_connection_stmts();
   void add_desc(DESC* desc);
@@ -1041,19 +1041,21 @@ class Table {
   //column name. We need therefore to search the column given its name.
   std::unordered_map<std::string, Column> columns;
 
-  Table() {
+  void insert_metadata_cols() {
     /*
-        Default table (representation of metadata table).
-        We learnt from this studying calls to the MySQL ODBC.
-        We replicated the returned columns of the default table
-        and each of its characteristics.
-    */ 
+      Default table (representation of metadata table).
+      We learnt from this studying calls to the MySQL ODBC.
+      We replicated the returned columns of the default table
+      and each of its characteristics.
+  */
     insert_col("TABLE_CAT", "", -9, 64, 0, 1);
     insert_col("TABLE_SCHEM", "", -9, 64, 0, 1);
     insert_col("TABLE_NAME", "", -9, 64, 0, 1);
     insert_col("TABLE_TYPE", "", -9, 64, 0, 1);
     insert_col("REMARKS", "", -9, 80, 0, 1);
   }
+
+  Table() { insert_metadata_cols(); }
 
   //Constructor of table from the parsing a TAPI-codified DES result.
   Table(std::string str) {
@@ -1118,6 +1120,8 @@ class Table {
         i++; //to skip $ or $eot
       }
     
+    } else { //if it is not possible, we create the default metadata table.
+      insert_metadata_cols();
     }
 
   }

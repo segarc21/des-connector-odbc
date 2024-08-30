@@ -223,7 +223,7 @@ void syncData(HWND hwnd, DataSource *params)
 {
   GET_STRING(DSN);
   GET_STRING(DESCRIPTION);
-  GET_STRING(SERVER);
+  GET_STRING(DES_EXEC);
   GET_STRING(SOCKET);
   GET_UNSIGNED(PORT);
   GET_STRING(UID);
@@ -245,7 +245,7 @@ void syncForm(HWND hwnd, DataSource *params)
 {
   SET_STRING(DSN);
   SET_STRING(DESCRIPTION);
-  SET_STRING(SERVER);
+  SET_STRING(DES_EXEC);
   SET_UNSIGNED(PORT);
   SET_STRING(UID);
   SET_STRING(PWD);
@@ -285,6 +285,7 @@ void syncForm(HWND hwnd, DataSource *params)
 */
 void syncTabsData(HWND hwnd, DataSource *params)
 {  /* 1 - Connection */
+  /*
   GET_BOOL_TAB(CONNECTION_TAB, BIG_PACKETS);
   GET_BOOL_TAB(CONNECTION_TAB, COMPRESSED_PROTO);
   GET_BOOL_TAB(CONNECTION_TAB, NO_PROMPT);
@@ -305,8 +306,9 @@ void syncTabsData(HWND hwnd, DataSource *params)
   GET_COMBO_TAB(CONNECTION_TAB, CHARSET);
   GET_STRING_TAB(CONNECTION_TAB, INITSTMT);
   GET_STRING_TAB(CONNECTION_TAB, PLUGIN_DIR);
-
+  */
   /* 2 - Authentication */
+  /*
   GET_BOOL_TAB(AUTH_TAB, ENABLE_CLEARTEXT_PLUGIN);
 #ifdef _WIN32
   GET_STRING_TAB(AUTH_TAB, AUTHENTICATION_KERBEROS_MODE);
@@ -318,16 +320,18 @@ void syncTabsData(HWND hwnd, DataSource *params)
 #endif
   GET_STRING_TAB(AUTH_TAB, OCI_CONFIG_FILE);
   GET_STRING_TAB(AUTH_TAB, OCI_CONFIG_PROFILE);
-
+  */
   /* 3 - Metadata*/
+  /*
   GET_BOOL_TAB(METADATA_TAB, NO_BIGINT);
   GET_BOOL_TAB(METADATA_TAB, NO_BINARY_RESULT);
   GET_BOOL_TAB(METADATA_TAB, FULL_COLUMN_NAMES);
   GET_BOOL_TAB(METADATA_TAB, NO_CATALOG);
   GET_BOOL_TAB(METADATA_TAB, NO_SCHEMA);
   GET_BOOL_TAB(METADATA_TAB, COLUMN_SIZE_S32);
-
+  */
   /* 4 - Cursors/Results */
+  /*
   GET_BOOL_TAB(CURSORS_TAB, FOUND_ROWS);
   GET_BOOL_TAB(CURSORS_TAB, AUTO_IS_NULL);
   GET_BOOL_TAB(CURSORS_TAB, DYNAMIC_CURSOR);
@@ -345,10 +349,12 @@ void syncTabsData(HWND hwnd, DataSource *params)
   {
     params->opt_PREFETCH = 0;
   }
+  */
   /* 5 - debug*/
-  GET_BOOL_TAB(DEBUG_TAB,LOG_QUERY);
+  //GET_BOOL_TAB(DEBUG_TAB,LOG_QUERY);
 
   /* 6 - ssl related */
+  /*
   GET_STRING_TAB(SSL_TAB, SSL_KEY);
   GET_STRING_TAB(SSL_TAB, SSL_CERT);
   GET_STRING_TAB(SSL_TAB, SSL_CA);
@@ -362,8 +368,9 @@ void syncTabsData(HWND hwnd, DataSource *params)
   GET_STRING_TAB(SSL_TAB, TLS_VERSIONS);
   GET_STRING_TAB(SSL_TAB, SSL_CRL);
   GET_STRING_TAB(SSL_TAB, SSL_CRLPATH);
-
+  */
   /* 7 - Misc*/
+  /*
   GET_BOOL_TAB(MISC_TAB, SAFE);
   GET_BOOL_TAB(MISC_TAB, NO_LOCALE);
   GET_BOOL_TAB(MISC_TAB, IGNORE_SPACE);
@@ -375,6 +382,7 @@ void syncTabsData(HWND hwnd, DataSource *params)
   GET_BOOL_TAB(MISC_TAB, NO_DATE_OVERFLOW);
   GET_BOOL_TAB(MISC_TAB, ENABLE_LOCAL_INFILE);
   GET_STRING_TAB(MISC_TAB, LOAD_DATA_LOCAL_DIR);
+  */
 }
 
 /*
@@ -383,6 +391,7 @@ void syncTabsData(HWND hwnd, DataSource *params)
 void syncTabs(HWND hwnd, DataSource *params)
 {
   /* 1 - Connection */
+  /*
   SET_BOOL_TAB(CONNECTION_TAB, BIG_PACKETS);
   SET_BOOL_TAB(CONNECTION_TAB, COMPRESSED_PROTO);
   SET_BOOL_TAB(CONNECTION_TAB, NO_PROMPT);
@@ -417,8 +426,9 @@ void syncTabs(HWND hwnd, DataSource *params)
     SET_STRING_TAB(CONNECTION_TAB, INITSTMT);
     SET_STRING_TAB(CONNECTION_TAB, PLUGIN_DIR);
   }
-
+  */
   /* 2 - Authentication */
+  /*
   SET_BOOL_TAB(AUTH_TAB, ENABLE_CLEARTEXT_PLUGIN);
 #ifdef _WIN32
   SET_STRING_TAB(AUTH_TAB, AUTHENTICATION_KERBEROS_MODE);
@@ -430,16 +440,18 @@ void syncTabs(HWND hwnd, DataSource *params)
 #endif
   SET_STRING_TAB(AUTH_TAB, OCI_CONFIG_FILE);
   SET_STRING_TAB(AUTH_TAB, OCI_CONFIG_PROFILE);
-
+  */
   /* 3 - Metadata*/
+  /*
   SET_BOOL_TAB(METADATA_TAB, NO_BIGINT);
   SET_BOOL_TAB(METADATA_TAB, NO_BINARY_RESULT);
   SET_BOOL_TAB(METADATA_TAB, FULL_COLUMN_NAMES);
   SET_BOOL_TAB(METADATA_TAB, NO_CATALOG);
   SET_BOOL_TAB(METADATA_TAB, NO_SCHEMA);
   SET_BOOL_TAB(METADATA_TAB, COLUMN_SIZE_S32);
-
+  */
   /* 4 - Cursors/Results */
+  /*
   SET_BOOL_TAB(CURSORS_TAB, FOUND_ROWS);
   SET_BOOL_TAB(CURSORS_TAB, AUTO_IS_NULL);
   SET_BOOL_TAB(CURSORS_TAB, DYNAMIC_CURSOR);
@@ -457,11 +469,13 @@ void syncTabs(HWND hwnd, DataSource *params)
     SET_CHECKED_TAB(CURSORS_TAB, cursor_prefetch_active, TRUE);
     SET_UNSIGNED_TAB(CURSORS_TAB, PREFETCH);
   }
-
+  */
   /* 5 - debug*/
+  /*
   SET_BOOL_TAB(DEBUG_TAB,LOG_QUERY);
-
+  */
   /* 6 - ssl related */
+  /*
 #ifdef _WIN32
   if ( getTabCtrlTabPages(SSL_TAB-1) )
 #endif
@@ -498,8 +512,9 @@ void syncTabs(HWND hwnd, DataSource *params)
 
     SET_STRING_TAB(SSL_TAB, TLS_VERSIONS);
   }
-
+  */
   /* 7 - Misc*/
+  /*
   SET_BOOL_TAB(MISC_TAB, SAFE);
   SET_BOOL_TAB(MISC_TAB, NO_LOCALE);
   SET_BOOL_TAB(MISC_TAB, IGNORE_SPACE);
@@ -511,6 +526,7 @@ void syncTabs(HWND hwnd, DataSource *params)
   SET_BOOL_TAB(MISC_TAB, NO_DATE_OVERFLOW);
   SET_BOOL_TAB(MISC_TAB, ENABLE_LOCAL_INFILE);
   SET_STRING_TAB(MISC_TAB, LOAD_DATA_LOCAL_DIR);
+  */
 }
 
 void FillParameters(HWND hwnd, DataSource *params)

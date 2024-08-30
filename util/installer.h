@@ -282,7 +282,7 @@ class Driver {
 
 #define STR_OPTIONS_LIST(X)                                                \
   X(DSN)                                                                   \
-  X(DRIVER) X(DESCRIPTION) X(SERVER) X(UID) X(PWD) MFA_OPTS(X) X(DATABASE) \
+  X(DRIVER) X(DESCRIPTION) X(DES_EXEC) X(UID) X(PWD) MFA_OPTS(X) X(DATABASE) \
       X(SOCKET) X(INITSTMT) X(CHARSET) X(SSL_KEY) X(SSL_CERT) X(SSL_CA)    \
           X(SSL_CAPATH) X(SSL_CIPHER) X(SSL_MODE) X(RSAKEY) X(SAVEFILE)    \
               X(PLUGIN_DIR) X(DEFAULT_AUTH) X(LOAD_DATA_LOCAL_DIR)         \

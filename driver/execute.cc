@@ -41,6 +41,67 @@
 */
 DBC *dbc_global_var;
 
+const int BUFFER_SIZE = 4096;
+const long long TIMEOUT = 1000;
+
+/*
+
+    This function tries to read from a reading pipe.
+    If we get an error or there are no bytes left
+    to read, we return false; else, we return true.
+
+    This implies that, until we investigate the consequences of getting a reading error,
+    we will asume that an error means that the message is finished.
+
+    TODO: research
+
+*/
+bool try_to_read_pipe(HANDLE rpipe, CHAR buffer[BUFFER_SIZE], DWORD &bytes_read) {
+
+  BOOL peek_success, read_success;
+  DWORD left_to_read_bytes = 0;
+
+/*
+
+  In DES sometimes the output is not written straightly or in
+  one piece (for example, when executing /process). Therefore,
+  we read the output and wait some timeout time to further try
+  to read more output, and if there are none left, we consider
+  that the output is finished.
+
+  (For now, we have not found any other solution more intelligent
+  and less time-consuming) TODO: re-think
+
+*/
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT));
+
+  /*
+      The PeakNamedPipe function allows us to look into a pipe and see if there are
+      any bytes left to read. This is necessary because when executing ReadFile, if
+      there are no bytes left to read, it hangs on indefinitely until there are
+      available data to read.
+  */
+  peek_success = PeekNamedPipe(rpipe, NULL, 0, NULL, &left_to_read_bytes, NULL);
+  if (!peek_success) {
+    return false;
+  } else {
+
+    if (left_to_read_bytes) {
+      read_success = ReadFile(rpipe, buffer,
+                              BUFFER_SIZE - sizeof(CHAR), &bytes_read, NULL);
+
+      if (!read_success)
+        return false;
+      else
+        return (bytes_read > 0);
+
+    } else
+      return false;
+  }
+}
+
+
 /*
     Function that executes a query into the DES executable (through its
     STDIN pipe), and loads its result into a internal table, structure held by the stmt.
@@ -65,28 +126,23 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
 
   std::string tapi_output;
 
-  //Same considerations as those we took when reading the startup DES message.
+  /*
+      Same considerations as those we took when reading the startup DES message.
+      However, that output message had a fixed length and behavior. We introduce
+      some new logic when treating a command output.
+  */
   bool finished_reading = false;
-  CHAR buffer[4096];
+  CHAR buffer[BUFFER_SIZE];
   DWORD bytes_read;
 
   while (!finished_reading) {
-     BOOL success =
-         ReadFile(dbc_global_var->driver_to_des_out_rpipe, buffer,
-             sizeof(buffer) - sizeof(char), &bytes_read, NULL);
-    if (!success)
-      return SQL_ERROR;
-    else if (bytes_read == 0)
+    if (!try_to_read_pipe(dbc_global_var->driver_to_des_out_rpipe, buffer,
+                          bytes_read)) {
       finished_reading = true;
-    else {
+    } else {
       buffer[bytes_read] = '\0';
       std::string buffer_str = buffer;
-
       tapi_output += buffer_str;
-
-      if (bytes_read < sizeof(buffer) - sizeof(char)) {
-        finished_reading = true;
-      }
     }
   }
 
@@ -1962,7 +2018,7 @@ SQLRETURN SQL_API SQLCancel(SQLHSTMT hstmt)
 
   /** @todo need to preserve and use ssl params */
 
-  if (!mysql_real_connect(second, dbc->ds.opt_SERVER, dbc->ds.opt_UID,
+  if (!mysql_real_connect(second, dbc->ds.opt_DES_EXEC, dbc->ds.opt_UID,
                           dbc->ds.opt_PWD, NULL, dbc->ds.opt_PORT,
                           dbc->ds.opt_SOCKET, 0))
   {

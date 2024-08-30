@@ -689,12 +689,12 @@ void STMT::free_reset_params()
 
 void STMT::free_fake_result(bool clear_all_results)
 {
+    //TODO: remove
+  /*
   if (!fake_result)
   {
     if (clear_all_results)
     {
-      /* We seiously CLOSEing statement for preparing handle object for
-         new query */
       while (!next_result(this))
       {
         get_result_metadata(this, TRUE);
@@ -703,12 +703,10 @@ void STMT::free_fake_result(bool clear_all_results)
   }
   else
   {
-    // Result array must be reset for fake resultset.
-    // Otherwise the data in the next resultset might be corrupted.
     reset_result_array();
     stmt_result_free(this);
   }
-
+  */
 }
 
 

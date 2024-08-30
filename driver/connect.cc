@@ -275,7 +275,7 @@ class dbc_guard
   ~dbc_guard() { if (!m_success) m_dbc->close(); }
 };
 
-SQLRETURN DBC::createDESProcess() {
+SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
 
     /*
     
@@ -346,11 +346,6 @@ SQLRETURN DBC::createDESProcess() {
   this->startup_info_unicode.hStdOutput = this->driver_to_des_out_wpipe;
   this->startup_info_unicode.hStdInput = this->driver_to_des_in_rpipe;
   this->startup_info_unicode.dwFlags |= STARTF_USESTDHANDLES;
-  
-
-  //Path to the DES executable in Unicode format (wchars)
-  wchar_t unicode_path[500] =
-      L"C:\\Users\\sergi\\Desktop\\Todo\\Portables\\des\\des.exe"; //TODO: read it from the Windows registry key, once we have developed the installer.
 
   /* Now, we will call the function CreateProcessW (processthreadsapi.h).
   *
@@ -384,7 +379,7 @@ SQLRETURN DBC::createDESProcess() {
 
   */
   if (!CreateProcessW(NULL,
-                      unicode_path,
+                      des_path,
                       NULL,
                       NULL,
                       TRUE,
@@ -827,7 +822,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 
   std::vector<Srv_host_detail> hosts;
   try {
-    hosts = parse_host_list(dsrc->opt_SERVER, dsrc->opt_PORT);
+    hosts = parse_host_list(dsrc->opt_DES_EXEC, dsrc->opt_PORT);
 
   } catch (std::string &e)
   {
@@ -865,7 +860,8 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     if(hosts.empty())
     {
       std::stringstream err;
-      err << "Unable to locate any hosts for " << (const char*)dsrc->opt_SERVER;
+      err << "Unable to locate any hosts for "
+          << (const char *)dsrc->opt_DES_EXEC;
       return set_error("HY000", err.str().c_str(), 0);
     }
 
@@ -923,7 +919,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
     mysql_options(des, DES_OPT_PROTOCOL, &protocol);
 
     //Setting server and port
-    dsrc->opt_SERVER = host;
+    dsrc->opt_DES_EXEC = host;
     dsrc->opt_PORT = port;
 
     DES *connect_result = dsrc->opt_ENABLE_DNS_SRV ?
@@ -1031,7 +1027,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
       {
         std::string err =
           std::string("Unable to connect to any of the hosts of ") +
-          (const char*)dsrc->opt_SERVER + " SRV";
+            (const char *)dsrc->opt_DES_EXEC + " SRV";
         set_error("HY000", err.c_str(), 0);
       }
       else if (dsrc->opt_MULTI_HOST && hosts.size() > 1) {
@@ -1544,8 +1540,18 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
 
   }
 
-  rc = dbc->connect(&ds);
-  rc = dbc->createDESProcess();
+  //rc = dbc->connect(&ds);
+
+  //TODO: solution for only UTF-8, expand it to ANSI also.
+  dbc->cxn_charset_info = desodbc::get_charset(255, DESF(0));
+
+    /* We now save the path to the DES executable in Unicode format (wchars). It
+   reads the DES executable field from the Data Source (loaded previously with
+   data from the Windows Registries).
+   TODO: expand it to ANSI also. */
+  const SQLWSTRING &x = static_cast<const SQLWSTRING &>(ds.opt_DES_EXEC);
+  SQLWCHAR *unicode_path = const_cast<SQLWCHAR *>(x.c_str());
+  rc = dbc->createDESProcess(unicode_path);
 
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO)
   {

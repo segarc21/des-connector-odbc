@@ -82,7 +82,7 @@ void SwitchTcpOrPipe(HWND hwnd, BOOL usePipe)
 {
   /* groups of fields to enable/disable*/
   const int switchedFields[SWITCHED_GROUPS][MAX_GROUP_COTROLS]=
-                                    {{IDC_EDIT_SERVER, IDC_EDIT_PORT},
+                                    {{IDC_EDIT_DES_EXEC, IDC_EDIT_PORT},
                                      {IDC_EDIT_SOCKET, 0}};
 
   /* Default value for enabled empty field */
@@ -360,6 +360,7 @@ void FormMain_OnClose(HWND hwnd)
  ****************************************************************************/
 void btnDetails_Click (HWND hwnd)
 {
+  /*
   RECT rect;
   GetWindowRect( hwnd, &rect );
   mod *= -1;
@@ -415,6 +416,7 @@ void btnDetails_Click (HWND hwnd)
   MoveWindow( hwnd, rect.left, rect.top, rect.right - rect.left, new_height, TRUE );
   // Then change the height for IDD_DIALOG1 and SysTabControl32 inside
   // odbcdialogparams.rc
+  */
 }
 
 
@@ -437,11 +439,37 @@ void btnCancel_Click (HWND hwnd)
 }
 
 
-void btnTest_Click (HWND hwnd)
+void btnBrowse_Click (HWND hwnd)
 {
-  FillParameters(hwnd, pParams);
-  SQLWSTRING msg = mytest(hwnd, pParams);
-  MessageBoxW(hwnd, msg.c_str(), L"Test Result", MB_OK);
+  /*I work with unicode since definitions expand
+  to the unicode version. However, this code compiles
+  into the ANSI .dll. Nevertheless, other functions in
+  this .cpp comes with the also works with unicode. TODO: check*/
+  
+  //This function will be practically identical to the chooseFile function in this code.
+
+  OPENFILENAMEW dialog;
+  wchar_t file_path_unicode[MAX_PATH];
+  //zero-terminating the string, as warned by GetOpenFileNameW.
+  file_path_unicode[0] = '\0';
+
+  ZeroMemory(&dialog, sizeof(dialog));
+
+  dialog.lStructSize = sizeof(dialog);
+  dialog.lpstrFile = file_path_unicode;
+  dialog.lpstrTitle = L"Select DES executable...";
+  dialog.nMaxFile = sizeof(file_path_unicode);
+  dialog.lpstrFileTitle = NULL;
+  dialog.nMaxFileTitle = 0;
+  dialog.lpstrInitialDir = NULL;
+  dialog.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+  dialog.hwndOwner = hwnd;
+  dialog.lpstrFilter = L"All Files\0*.*\0Executable files\0*.EXE\0";
+  dialog.nFilterIndex = 2; //selecting .exe by default 
+  
+  if (GetOpenFileNameW(&dialog)) {
+    SetDlgItemTextW(hwnd, IDC_EDIT_PATH, dialog.lpstrFile); //(winuser.h) sets the text in the specified control
+  }
 }
 
 
@@ -626,56 +654,15 @@ void FormMain_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       btnDetails_Click(hwnd); break;
     case IDC_BUTTON_HELP:
       btnHelp_Click(hwnd); break;
-    case IDC_BUTTON_TEST:
-      btnTest_Click(hwnd); break;
-    case IDC_SSLKEYCHOOSER:
-      chooseFile(hwnd, IDC_EDIT_SSL_KEY); break;
-    case IDC_SSLCERTCHOOSER:
-      chooseFile(hwnd, IDC_EDIT_SSL_CERT); break;
-    case IDC_SSLCACHOOSER:
-      chooseFile(hwnd, IDC_EDIT_SSL_CA); break;
-    case IDC_SSLCAPATHCHOOSER:
-      choosePath(hwnd, IDC_EDIT_SSL_CAPATH); break;
-    case IDC_RSAKEYCHOOSER:
-      chooseFile(hwnd, IDC_EDIT_RSAKEY); break;
-    case IDC_SSLCRLCHOOSER:
-      chooseFile(hwnd, IDC_EDIT_SSL_CRL); break;
-    case IDC_SSLCRLPATHCHOOSER:
-      choosePath(hwnd, IDC_EDIT_SSL_CRLPATH); break;
-    case IDC_CHOOSER_PLUGIN_DIR:
-      choosePath(hwnd, IDC_EDIT_PLUGIN_DIR); break;
-    case IDC_CHOOSER_LOAD_DATA_LOCAL_DIR:
-      choosePath(hwnd, IDC_EDIT_LOAD_DATA_LOCAL_DIR); break;
-    case IDC_CHOOSER_OCI_CONFIG_FILE:
-      chooseFile(hwnd, IDC_EDIT_OCI_CONFIG_FILE); break;
-    case IDC_RADIO_tcp:
-    case IDC_RADIO_NAMED_PIPE:
-      SwitchTcpOrPipe(hwnd, !!Button_GetCheck(GetDlgItem(hwnd, IDC_RADIO_NAMED_PIPE)));
-      break;
-    case IDC_CHECK_cursor_prefetch_active:
-      {
-        HWND cursorTab= TabCtrl_1.hTabPages[CURSORS_TAB-1];
-        assert(cursorTab);
-        HWND prefetch= GetDlgItem(cursorTab, IDC_EDIT_PREFETCH);
-        assert(prefetch);
-
-        EnableWindow(prefetch, !!Button_GetCheck(GetDlgItem(cursorTab,
-                                            IDC_CHECK_cursor_prefetch_active)));
-
-        if (Edit_GetTextLength(prefetch) == 0)
-        {
-          setUnsignedFieldData(cursorTab, default_cursor_prefetch,
-                              IDC_EDIT_PREFETCH);
-        }
-      }
-      break;
+    case IDC_BUTTON_BROWSE:
+      btnBrowse_Click(hwnd); break;
     case IDC_EDIT_DSN:
     {
       if (codeNotify==EN_CHANGE)
       {
         int len = Edit_GetTextLength(GetDlgItem(hwnd,IDC_EDIT_DSN));
         Button_Enable(GetDlgItem(hwnd,IDOK), len > 0);
-        Button_Enable(GetDlgItem(hwnd,IDC_BUTTON_TEST), len > 0);
+        Button_Enable(GetDlgItem(hwnd,IDC_BUTTON_BROWSE), len > 0);
         RedrawWindow(hwnd,NULL,NULL,RDW_INVALIDATE);
       }
       break;
@@ -684,9 +671,10 @@ void FormMain_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     case IDC_EDIT_dbname:
       processDbCombobox(hwnd, hwndCtl, codeNotify);
     break;
-
+    /* For later in the development.
     case IDC_EDIT_CHARSET:
       processCharsetCombobox(hwnd, hwndCtl, codeNotify);
+      */
   }
 
   return;
@@ -827,7 +815,7 @@ BOOL FormMain_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
   if (g_isPrompt == (!pParams->opt_DSN))
   {
     Button_Enable(GetDlgItem(hwnd,IDOK), 1);
-    Button_Enable(GetDlgItem(hwnd,IDC_BUTTON_TEST), 1);
+    Button_Enable(GetDlgItem(hwnd,IDC_BUTTON_BROWSE), 1);
     RedrawWindow(hwnd,NULL,NULL,RDW_INVALIDATE);
   }
 

@@ -94,12 +94,14 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild></MinimalRebuild>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode></SupportJustMyCode>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="Debug";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -142,12 +144,14 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild></MinimalRebuild>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode></SupportJustMyCode>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="Release";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -192,12 +196,14 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild></MinimalRebuild>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <Optimization>MinSpace</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode></SupportJustMyCode>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="MinSizeRel";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -243,12 +249,14 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild></MinimalRebuild>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode></SupportJustMyCode>
+      <SupportJustMyCode>
+      </SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="RelWithDebInfo";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -409,8 +417,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\TabCtrl.cpp" />
     <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\TabCtrl.h" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\tooltip.cpp" />
-    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\connector_odbc_header.bmp">
-    </None>
+    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\connector_odbc_header.bmp" />
     <ResourceCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\myodbc-setup_version_info.rc" />
   </ItemGroup>
   <ItemGroup>
