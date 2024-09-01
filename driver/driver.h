@@ -1057,25 +1057,28 @@ class Column {
       *StrLen_or_IndPtr = SQL_NULL_DATA;
       return SQL_SUCCESS;
     }
-
+    
     std::wstring unicode_str(std_str.begin(), std_str.end());
     int int_value;
     int x;
+    size_t size;
+    size_t unit_size;
     switch (TargetType) {
       case SQL_C_CHAR:
-        std::memcpy(
-            TargetValuePtr, std_str.c_str(),
-            (std_str.size() + 1) * sizeof(char));  // +1 for the '\0' character
-        *StrLen_or_IndPtr = (std_str.size() + 1) * sizeof(char);
+        unit_size = sizeof(char);
+        return copy(TargetValuePtr, StrLen_or_IndPtr, BufferLength,
+             BufferLength * unit_size, std_str,
+             (std_str.size() + 1) * unit_size);
         break;
       case SQL_C_BINARY:
         x = 0;  // for debugging purposes
         break;
+      case SQL_WVARCHAR:
       case SQL_C_WCHAR:
-        std::memcpy(TargetValuePtr, unicode_str.c_str(),
-                    (unicode_str.size() + 1) *
-                        sizeof(SQLWCHAR));  // +1 for the '\0' character
-        *StrLen_or_IndPtr = (unicode_str.size() + 1) * sizeof(SQLWCHAR);
+        unit_size = sizeof(SQLWCHAR);
+        return copy(TargetValuePtr, StrLen_or_IndPtr, BufferLength,
+             BufferLength * unit_size, unicode_str,
+             (unicode_str.size() + 1) * unit_size);
         break;
       case SQL_C_BIT:
         x = 0;  // for debugging purposes
@@ -1159,6 +1162,24 @@ class Column {
         copy_result_in_memory(row, type, target_value_binding, buffer_length_binding, str_len_or_ind_binding);
     }
   
+  }
+
+private:
+  template <typename GenericString>
+ SQLRETURN copy(SQLPOINTER TargetValuePtr,
+           SQLLEN *StrLen_or_IndPtr, SQLLEN BufferLength,
+           SQLLEN BufferSize, GenericString str, size_t str_size) {
+   SQLRETURN rc = SQL_SUCCESS;
+   size_t size = min(BufferSize, str_size);
+    if (str.size() >= BufferLength) {
+      rc = SQL_SUCCESS_WITH_INFO; //there is a partial success: an informational message has to be generated.
+                                  //TODO: implement the consequences
+   }
+    std::memcpy(TargetValuePtr, str.c_str(),
+                size);  // +1 for the '\0' character
+   *StrLen_or_IndPtr = str.size();
+
+   return rc;
   }
 
 };
