@@ -38,6 +38,8 @@
 
 #define SQL_MY_PRIMARY_KEY 1212
 
+
+
 /* Verifies if C type is suitable for copying SQL_BINARY data
    http://msdn.microsoft.com/en-us/library/ms713559%28VS.85%29.aspx */
 des_bool is_binary_ctype( SQLSMALLINT cType)
@@ -1364,76 +1366,16 @@ SQLRETURN SQL_API SQLBindCol(SQLHSTMT      StatementHandle,
 {
   SQLRETURN rc;
   STMT *stmt= (STMT *) StatementHandle;
-  DESCREC *arrec;
-  /* TODO if this function fails, the SQL_DESC_COUNT should be unchanged in ard */
 
   LOCK_STMT(stmt);
   CLEAR_STMT_ERROR(stmt);
 
-  if (!TargetValuePtr && !StrLen_or_IndPtr) /* Handling unbinding */
-  {
-    /*
-       If unbinding the last bound column, we reduce the
-       ARD records until the highest remaining bound column.
-    */
-    if (ColumnNumber == stmt->ard->rcount())
-    {
-      stmt->ard->records2.pop_back(); // Remove the last
-      while (stmt->ard->rcount())
-      {
-        arrec= desc_get_rec(stmt->ard, (int)stmt->ard->rcount() - 1, FALSE);
-        if (ARD_IS_BOUND(arrec))
-          break;
-        else
-          stmt->ard->records2.pop_back();  // TODO: do it more gracefully
-      }
-    }
-    else
-    {
-      arrec= desc_get_rec(stmt->ard, ColumnNumber - 1, FALSE);
-      if (arrec)
-      {
-        arrec->data_ptr= NULL;
-        arrec->octet_length_ptr= NULL;
-      }
-    }
-    return SQL_SUCCESS;
-  }
+  //TODO: check integrity
 
-  if ((ColumnNumber == 0 && stmt->stmt_options.bookmarks == SQL_UB_OFF) ||
-      (stmt->state == ST_EXECUTED && ColumnNumber > stmt->ird->rcount()))
-  {
-    return stmt->set_error("07009", "Invalid descriptor index",
-                          DESERR_07009);
-  }
-
-  arrec= desc_get_rec(stmt->ard, ColumnNumber - 1, TRUE);
-
-  if ((rc= stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
-                                SQL_DESC_CONCISE_TYPE,
-                                (SQLPOINTER)(size_t) TargetType,
-                                SQL_IS_SMALLINT)) != SQL_SUCCESS)
-    return rc;
-  if ((rc= stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
-                                SQL_DESC_OCTET_LENGTH,
-                                (SQLPOINTER)(size_t)bind_length(TargetType,
-                                                         (ulong)BufferLength),
-                                SQL_IS_LEN)) != SQL_SUCCESS)
-    return rc;
-  if ((rc= stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
-                                SQL_DESC_DATA_PTR, TargetValuePtr,
-                                SQL_IS_POINTER)) != SQL_SUCCESS)
-    return rc;
-  if ((rc= stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
-                                SQL_DESC_INDICATOR_PTR, StrLen_or_IndPtr,
-                                SQL_IS_POINTER)) != SQL_SUCCESS)
-    return rc;
-  if ((rc= stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
-                                SQL_DESC_OCTET_LENGTH_PTR, StrLen_or_IndPtr,
-                                SQL_IS_POINTER)) != SQL_SUCCESS)
-    return rc;
+  stmt->table->col_binding(ColumnNumber, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
 
   return SQL_SUCCESS;
+
 }
 
 
@@ -1478,194 +1420,9 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
     SQLRETURN result = SQL_SUCCESS;
     ulong length= 0;
     DESCREC *irrec, *arrec;
-    SQLSMALLINT sColNum= ColumnNumber;
-    sColNum--;
     LOCK_STMT(stmt);
 
-    //TODO: Check if the given pointers are null or not
-    std::string std_str =
-        stmt->table->get_value_row_col(stmt->current_row_des, sColNum);
-
-    if (std_str == "null") { //temporal debugging solution. null values must be taken into account before this
-        //(right now, if a varchar is called literally "null", it is recognized as null) TODO: fix
-      *StrLen_or_IndPtr = SQL_NULL_DATA;
-      return SQL_SUCCESS;
-    }
-
-    std::wstring unicode_str(std_str.begin(), std_str.end());
-    int int_value;
-    int x;
-    switch (TargetType) {
-        case SQL_C_CHAR:
-        std::memcpy(TargetValuePtr, std_str.c_str(),
-                    (std_str.size() + 1) *
-                        sizeof(char));  // +1 for the '\0' character
-        *StrLen_or_IndPtr = (std_str.size() + 1) * sizeof(char);
-            break;
-        case SQL_C_BINARY:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_WCHAR:
-          std::memcpy(TargetValuePtr, unicode_str.c_str(),
-                      (unicode_str.size() + 1) * sizeof(SQLWCHAR)); // +1 for the '\0' character
-          *StrLen_or_IndPtr = (unicode_str.size() + 1) * sizeof(SQLWCHAR);
-            break;
-        case SQL_C_BIT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_TINYINT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_STINYINT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_UTINYINT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_SHORT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_SSHORT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_USHORT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_LONG:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_SLONG:
-            int_value = std::stoi(std_str);
-          *static_cast<int *>(TargetValuePtr) = int_value;
-          *StrLen_or_IndPtr = sizeof(int);
-            break;
-        case SQL_C_ULONG:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_FLOAT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_DOUBLE:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_DATE:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_TYPE_DATE:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_INTERVAL_HOUR_TO_SECOND:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_INTERVAL_HOUR_TO_MINUTE:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_TIME:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_TYPE_TIME:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_TIMESTAMP:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_TYPE_TIMESTAMP:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_SBIGINT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_UBIGINT:
-            x = 0;  // for debugging purposes
-            break;
-        case SQL_C_NUMERIC:
-            x = 0;  // for debugging purposes
-            break;
-    }
-
-    return SQL_SUCCESS;
-    /*
-
-    if (!stmt->result || (!stmt->current_values && stmt->out_params_state != OPS_STREAMS_PENDING))
-    {
-      stmt->set_error("24000","SQLGetData without a preceding SELECT",0);
-      return SQL_ERROR;
-    }
-
-    if ((sColNum < 1
-         && stmt->stmt_options.bookmarks == (SQLUINTEGER) SQL_UB_OFF)
-        || ColumnNumber > stmt->ird->rcount() )
-    {
-      return stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
-    }
-
-    if (sColNum == 0 && TargetType != SQL_C_BOOKMARK
-        && TargetType != SQL_C_VARBOOKMARK)
-    {
-      return stmt->set_error("HY003", "Program type out of range", 0);
-    }
-
-    --sColNum;
-
-    if (stmt->out_params_state == OPS_STREAMS_PENDING)
-    {
-
-      if (sColNum != stmt->current_param)
-      {
-        return stmt->set_error("07009", "The parameter number value was not equal to \
-                                            the ordinal of the parameter that is available.",
-                              DESERR_07009);
-      }
-      else
-      {
-        sColNum= stmt->getdata.column;
-      }
-
-      if (TargetType != SQL_C_BINARY)
-      {
-        return stmt->set_error("HYC00", "Stream output parameters supported for SQL_C_BINARY"
-                                      " only", 0);
-      }
-    }
-
-    if (sColNum != stmt->getdata.column)
-    {
-      stmt->reset_getdata_position();
-      stmt->getdata.column= sColNum;
-    }
-    irrec= desc_get_rec(stmt->ird, sColNum, FALSE);
-
-    assert(irrec);
-
-    if ((sColNum == -1 && stmt->stmt_options.bookmarks == SQL_UB_VARIABLE))
-    {
-      std::string _value;
-      _value = std::to_string((stmt->cursor_row > 0) ? stmt->cursor_row : 0);
-      arrec= desc_get_rec(stmt->ard, sColNum, FALSE);
-      result= sql_get_bookmark_data(stmt, TargetType, sColNum,
-                                    TargetValuePtr, BufferLength, StrLen_or_IndPtr,
-                                    (char*)_value.data(),
-                                    (ulong)_value.length(), arrec);
-    }
-    else
-    {
-      length= irrec->row.datalen;
-      if (!length && stmt->current_values[sColNum])
-        length = (ulong)strlen(stmt->current_values[sColNum]);
-
-      arrec= desc_get_rec(stmt->ard, sColNum, FALSE);
-
-      std::string temp_str;
-      char *value = fix_padding(stmt, TargetType, stmt->current_values[sColNum],
-                                      temp_str, BufferLength, length, irrec);
-
-      result= sql_get_data(stmt, TargetType, sColNum,
-                          TargetValuePtr, BufferLength, StrLen_or_IndPtr,
-                          value, length, arrec);
-    }
-
-    return result;
-    */
+    return stmt->table->copy_result_in_memory(stmt->current_row_des, ColumnNumber, TargetType, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
 }
 
 
@@ -2756,29 +2513,20 @@ SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle) {
       stmt->current_values_des = std::to_string(stmt->current_row_des+1);
     }
 
-    if (stmt->current_row_des == stmt->table->row_count())
-      return SQL_NO_DATA;
-    else
-      return SQL_SUCCESS;
+    if (stmt->current_row_des == stmt->table->row_count()) {
 
-    /*
-    return DES_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
-                                stmt->ird->rows_processed_ptr,
-                                stmt->ird->array_status_ptr, 0);
-    */
+        //We now reset row indexes
+        stmt->reset_row_indexes();
+
+        return SQL_NO_DATA;
+    }
+      
+    else {
+        stmt->table->update_bound_cols(stmt->current_row_des);
+        return SQL_SUCCESS;
+    }
   }
   else {
     return SQL_NO_DATA;
-    /*
-    
-    options = &stmt->stmt_options;
-    options->rowStatusPtr_ex = NULL;
-
-    return DES_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
-                                stmt->ird->rows_processed_ptr,
-                                stmt->ird->array_status_ptr, 0);
-    
-    */
-
   }
 }

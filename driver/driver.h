@@ -1009,6 +1009,10 @@ class Column {
   SQLSMALLINT nullable;
   std::vector<std::string> values;
 
+  SQLPOINTER target_value_binding = NULL;
+  SQLLEN buffer_length_binding = 0;
+  SQLLEN* str_len_or_ind_binding = NULL;
+
   Column() {}
 
   Column(const std::string &col_name, const std::string &col_type_str,
@@ -1029,7 +1033,137 @@ class Column {
   void insert_value(const std::string &value) { values.push_back(value); }
   std::string get_value(int index) const { return values[index]; }
 
+  void set_binding(SQLPOINTER TargetValuePtr, SQLLEN BufferLength,
+                   SQLLEN *StrLen_or_IndPtr) {
+
+      target_value_binding = TargetValuePtr;
+      buffer_length_binding = BufferLength;
+      str_len_or_ind_binding = StrLen_or_IndPtr;
+    
+  }
+
+  SQLRETURN copy_result_in_memory(size_t RowNumber, SQLSMALLINT TargetType,
+                                  SQLPOINTER TargetValuePtr,
+                                  SQLLEN BufferLength,
+                                  SQLLEN *StrLen_or_IndPtr) {
+
+      // TODO: Check if the given pointers are null or not
+    std::string std_str = get_value(RowNumber);
+
+    if (std_str == "null") {  // temporal debugging solution. null values must
+                              // be taken into account before this
+      //(right now, if a varchar is called literally "null", it is recognized as
+      // null) TODO: fix
+      *StrLen_or_IndPtr = SQL_NULL_DATA;
+      return SQL_SUCCESS;
+    }
+
+    std::wstring unicode_str(std_str.begin(), std_str.end());
+    int int_value;
+    int x;
+    switch (TargetType) {
+      case SQL_C_CHAR:
+        std::memcpy(
+            TargetValuePtr, std_str.c_str(),
+            (std_str.size() + 1) * sizeof(char));  // +1 for the '\0' character
+        *StrLen_or_IndPtr = (std_str.size() + 1) * sizeof(char);
+        break;
+      case SQL_C_BINARY:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_WCHAR:
+        std::memcpy(TargetValuePtr, unicode_str.c_str(),
+                    (unicode_str.size() + 1) *
+                        sizeof(SQLWCHAR));  // +1 for the '\0' character
+        *StrLen_or_IndPtr = (unicode_str.size() + 1) * sizeof(SQLWCHAR);
+        break;
+      case SQL_C_BIT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_TINYINT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_STINYINT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_UTINYINT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_SHORT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_SSHORT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_USHORT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_LONG:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_SLONG:
+        int_value = std::stoi(std_str);
+        *static_cast<int *>(TargetValuePtr) = int_value;
+        *StrLen_or_IndPtr = sizeof(int);
+        break;
+      case SQL_C_ULONG:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_FLOAT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_DOUBLE:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_DATE:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_TYPE_DATE:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_INTERVAL_HOUR_TO_SECOND:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_INTERVAL_HOUR_TO_MINUTE:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_TIME:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_TYPE_TIME:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_TIMESTAMP:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_TYPE_TIMESTAMP:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_SBIGINT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_UBIGINT:
+        x = 0;  // for debugging purposes
+        break;
+      case SQL_C_NUMERIC:
+        x = 0;  // for debugging purposes
+        break;
+    }
+
+    return SQL_SUCCESS;
+  
+  }
+
+  void update_binding(SQLUSMALLINT row) {
+    if (target_value_binding && str_len_or_ind_binding) {
+        copy_result_in_memory(row, type, target_value_binding, buffer_length_binding, str_len_or_ind_binding);
+    }
+  
+  }
+
 };
+
+//TODO: guarantee encapsulation.
 
 //Internal representation of a result view.
 class Table {
@@ -1144,6 +1278,22 @@ class Table {
     return names_ordered[index - 1];
   }
 
+  void col_binding(size_t index, SQLPOINTER TargetValuePtr, SQLLEN BufferLength,
+                   SQLLEN *StrLen_or_IndPtr) {
+    index--; //calls to ODBC API assumes the col numeration starts from 1
+    columns[names_ordered[index]].set_binding(TargetValuePtr, BufferLength,
+                                              StrLen_or_IndPtr);
+  }
+
+  void update_bound_cols(SQLUSMALLINT row) {
+    for (auto pair : columns) {
+        Column col = pair.second;
+        col.update_binding(row);
+    
+    }
+  
+  }
+
   void insert_col(const std::string &columnName,
                  const std::string &columnTypeStr,
                  const SQLSMALLINT &columnType, const SQLULEN &columnSize,
@@ -1158,11 +1308,15 @@ class Table {
     columns[columnName].insert_value(value);
   }
 
-  std::string get_value_row_col(size_t row, size_t column) const {
-    if (columns.find(names_ordered[column]) != columns.end()) {
-      return columns.at(names_ordered[column]).values[row];
-    } else
-      return "null";
+  SQLRETURN copy_result_in_memory(size_t RowNumber, size_t ColumnNumber,
+                                  SQLSMALLINT TargetType,
+                                  SQLPOINTER TargetValuePtr,
+                                  SQLLEN BufferLength,
+                                  SQLLEN *StrLen_or_IndPtr) {
+    
+    ColumnNumber--;
+    return columns[names_ordered[ColumnNumber]].copy_result_in_memory(RowNumber, TargetType, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
+    
   }
 };
 
@@ -1182,6 +1336,7 @@ struct STMT
 
   //Adding the DES structures over the MySQL STMT. Temporal changes
   Table *table = new Table(); //TODO review
+
   bool new_row_des = true;
   int current_row_des = 0;
   std::string current_values_des = "1";
@@ -1325,6 +1480,12 @@ struct STMT
 
   void clear_param_bind();
   void reset_result_array();
+
+  void reset_row_indexes() {
+    new_row_des = true;
+    current_row_des = 0;
+    current_values_des = "1";
+  }
 
   private:
 
