@@ -56,16 +56,17 @@
   @param[in] dupe   Set to @c TRUE if query is already a duplicate, and
                     freeing the value is now up to the driver
 */
-SQLRETURN SQL_API DESPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
+SQLRETURN SQL_API SQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
                                bool reset_select_limit, bool force_prepare)
 {
-  STMT *stmt= (STMT *)hstmt;
-  /*
-    We free orig_query here, instead of DES_SQLPrepare, because
-    DES_SQLPrepare is used by my_pos_update() when a statement requires
-    additional parameters.
-  */
+  return DES_SQLPrepare(hstmt, query, len, reset_select_limit, force_prepare);
+  }
 
+
+
+
+
+  /*
   if (GET_QUERY(&stmt->orig_query) != NULL)
   {
     stmt->orig_query.reset(NULL, NULL, NULL);
@@ -73,36 +74,52 @@ SQLRETURN SQL_API DESPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
 
   return DES_SQLPrepare(hstmt, query, len, reset_select_limit,
                        force_prepare);
-}
+                       */
 
 
 /*
   @type    : myodbc3 internal
   @purpose : prepares an SQL string for execution
 */
-SQLRETURN DES_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr, SQLINTEGER cbSqlStr,
-                        bool reset_select_limit, bool force_prepare)
-{
-  STMT *stmt= (STMT *) hstmt;
+  SQLRETURN DES_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr,
+                           SQLINTEGER cbSqlStr, bool reset_select_limit,
+                           bool force_prepare) {
+    STMT *stmt = (STMT *)hstmt;
 
-  CLEAR_STMT_ERROR(stmt);
+    // TODO: temporal changes.
+    // TODO: consider the other parameters.
 
-  stmt->query.reset(NULL, NULL, NULL);
-  stmt->telemetry.span_start(stmt, "SQL prepare");
+    if (szSqlStr == NULL) return SQL_ERROR;
 
-  auto res = prepare(stmt, (char*)szSqlStr, cbSqlStr, reset_select_limit,
-               force_prepare);
-  if (!SQL_SUCCEEDED(res))
-  {
-    stmt->telemetry.set_error(stmt, stmt->error);
+    stmt->des_query = (SQLCHAR *)malloc(cbSqlStr + 1);
+
+    if (stmt->des_query ==
+        NULL) {  // we have to check this, as suggested by memcpy
+      return SQL_ERROR;
+    } else {
+      memcpy(stmt->des_query, szSqlStr, cbSqlStr);
+      stmt->des_query[cbSqlStr] = '\0';
+
+      std::string str_query(reinterpret_cast<char *>(stmt->des_query));
+      std::transform(str_query.begin(), str_query.end(), str_query.begin(),
+                     [](unsigned char c) {
+        return std::tolower(c);
+      });  // to lower characters
+      std::string select_str = "select";
+      std::string process_str = "/process";
+      std::string dbschema_str = "/dbschema";
+
+      if (str_query.substr(0, select_str.size()) == select_str) {
+        stmt->type = SELECT;
+      } else if (str_query.substr(0, process_str.size()) == process_str) {
+        stmt->type = PROCESS;
+      } else if (str_query.substr(0, dbschema_str.size()) == dbschema_str) {
+        stmt->type = DBSCHEMA;
+      }
+
+      return SQL_SUCCESS;
+    }
   }
-  else
-  {
-    stmt->telemetry.span_end(stmt);
-  }
-
-  return res;
-}
 
 
 /*
@@ -264,8 +281,29 @@ SQLRETURN SQL_API SQLBindParameter( SQLHSTMT        hstmt,
 {
   LOCK_STMT(hstmt);
 
+  //TODO: temporal solution
+
+  STMT *stmt = (STMT *)hstmt;
+
+  DES_PARAM param;
+
+  stmt->parameters[ipar].InputOutputType = fParamType;
+  stmt->parameters[ipar].ValueType = fCType;
+  stmt->parameters[ipar].ParameterType = fSqlType;
+  stmt->parameters[ipar].ColumnSize = cbColDef;
+  stmt->parameters[ipar].DecimalDigits = ibScale;
+  stmt->parameters[ipar].ParameterValuePtr = rgbValue;
+  stmt->parameters[ipar].BufferLength = cbValueMax;
+  stmt->parameters[ipar].StrLen_or_IndPtr = pcbValue;
+
+  return SQL_SUCCESS; //TODO: put restrictions
+
+  /*
   return DES_SQLBindParameter(hstmt, ipar, fParamType, fCType, fSqlType,
                              cbColDef, ibScale, rgbValue, cbValueMax, pcbValue);
+  */
+
+  
 }
 
 

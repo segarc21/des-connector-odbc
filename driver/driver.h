@@ -1176,7 +1176,7 @@ private:
                                   //TODO: implement the consequences
    }
     std::memcpy(TargetValuePtr, str.c_str(),
-                size);  // +1 for the '\0' character
+                size);
    *StrLen_or_IndPtr = str.size();
 
    return rc;
@@ -1185,6 +1185,12 @@ private:
 };
 
 //TODO: guarantee encapsulation.
+
+enum COMMAND_TYPE {
+    SELECT,
+    DBSCHEMA,
+    PROCESS,
+};
 
 //Internal representation of a result view.
 class Table {
@@ -1212,8 +1218,69 @@ class Table {
 
   Table() { insert_metadata_cols(); }
 
+  Table(COMMAND_TYPE command, const std::string& str) {
+    switch (command) {
+      case SELECT:
+        parse_select(str);
+        break;
+      case DBSCHEMA:
+        parse_dbschema(str);
+        break;
+      case PROCESS:
+        insert_metadata_cols();
+        break;
+    }
+  }
+
+  void parse_dbschema(const std::string &str) {
+
+    insert_metadata_cols();
+
+    std::vector<std::vector<std::string>> results;
+
+    // First, we separate the TAPI str into lines.
+    std::vector<std::string> lines;
+    std::stringstream ss(str);
+    std::string line;
+
+    while (std::getline(ss, line, '\n')) {
+      lines.push_back(line.substr(
+          0, line.size() - 1));  //to remove the char '/r' of each line
+    }
+
+    int i = 0;
+
+    while (i < lines.size()) {
+      if (lines[i] == "$eot") break;
+      std::string TABLE_CAT = "";  // TODO: check
+      std::string TABLE_SCHEM = "";  // TODO: check
+      std::string TABLE_NAME = "";
+      std::string TABLE_TYPE = "";
+      std::string REMARKS = "";  // TODO: consider adding additional info.
+
+      if (lines[i] == "$table") {
+        TABLE_TYPE = "TABLE";
+      } else if (lines[i] == "$view") {
+        TABLE_TYPE = "VIEW";
+      }
+
+      i++;
+
+      TABLE_NAME = lines[i];
+
+      insert_value("TABLE_CAT", TABLE_CAT);
+      insert_value("TABLE_SCHEM", TABLE_SCHEM);
+      insert_value("TABLE_NAME", TABLE_NAME);
+      insert_value("TABLE_TYPE", TABLE_TYPE);
+      insert_value("REMARKS", REMARKS);
+
+      while (lines[i].size() <= 1 || lines[i][0] != '$') i++;
+
+    }
+  }
+
   //Constructor of table from the parsing a TAPI-codified DES result.
-  Table(std::string str) {
+  void parse_select(const std::string& str) {
 
     //First, we separate the TAPI str into lines.
     std::vector<std::string> lines;
@@ -1227,8 +1294,10 @@ class Table {
     //We ignore the first line, that contains the keywords success/answer.
     int i = 1;
 
-    //If lines.size()<=1, it is a TAPI message and not a table.
-    if (lines.size() > 1 && lines[0].substr(0, lines[0].size() - 1) != "$error") {
+    // If the first message is not answer, we can be sure that the output
+    // originates from a non-select query. We then create the default
+    // metadata table on the else clause.
+    if (lines.size() >= 1 && lines[0].substr(0, lines[0].size() - 1) == "answer") {
       bool checked_cols = false;
 
       while (!checked_cols) {
@@ -1341,6 +1410,17 @@ class Table {
   }
 };
 
+struct DES_PARAM { //temporal solution to the parameter problem
+    SQLSMALLINT InputOutputType;
+    SQLSMALLINT ValueType;
+    SQLSMALLINT ParameterType;
+    SQLULEN ColumnSize;
+    SQLSMALLINT DecimalDigits;
+    SQLPOINTER ParameterValuePtr;
+    SQLLEN BufferLength;
+    SQLLEN *StrLen_or_IndPtr;
+};
+
 struct STMT
 {
   DBC               *dbc;
@@ -1357,6 +1437,16 @@ struct STMT
 
   //Adding the DES structures over the MySQL STMT. Temporal changes
   Table *table = new Table(); //TODO review
+
+  //Adding the query (SQLPrepare). Temporal changes
+  SQLCHAR* des_query = NULL;
+
+  std::string last_output = "";
+
+  COMMAND_TYPE type = SELECT; //select by default
+
+  //Adding the parameters (SQLBindParameter). Temporal changes
+  std::unordered_map<SQLUSMALLINT, DES_PARAM> parameters;
 
   bool new_row_des = true;
   int current_row_des = 0;
@@ -1714,7 +1804,7 @@ SQLRETURN SQL_API DESGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute,
                                      __attribute__((unused)),
                                   SQLINTEGER *StringLengthPtr);
 SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType);
-SQLRETURN SQL_API DESPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
+SQLRETURN SQL_API SQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
                                bool reset_select_limit,
                                bool force_prepare);
 SQLRETURN SQL_API DESPrimaryKeys(SQLHSTMT hstmt,

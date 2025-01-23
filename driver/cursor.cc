@@ -1901,6 +1901,19 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
 
   CLEAR_STMT_ERROR(stmt);
 
+  switch (Operation) {
+    case SQL_ADD:
+      break;
+    case SQL_UPDATE_BY_BOOKMARK:
+      break;
+    case SQL_DELETE_BY_BOOKMARK:
+      break;
+    case SQL_FETCH_BY_BOOKMARK:
+      break;
+
+  }
+  /*
+
   if ( !result )
       return stmt->set_error(DESERR_S1010,NULL,0);
 
@@ -1913,13 +1926,11 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
 
   case SQL_UPDATE_BY_BOOKMARK:
     {
-      /* If no rows provided for update return with SQL_SUCCESS. */
       if (stmt->rows_found_in_set == 0)
       {
         return SQL_SUCCESS;
       }
 
-      /* IF dynamic cursor THEN rerun query to refresh resultset */
       if (!stmt->dae_type && stmt->is_dynamic_cursor() &&
           set_dynamic_result(stmt))
       {
@@ -1941,11 +1952,9 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
   case SQL_DELETE_BY_BOOKMARK:
     {
 
-      /* IF dynamic cursor THEN rerun query to refresh resultset */
       if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
           return stmt->set_error(DESERR_S1000, alloc_error, 0);
 
-      /* start building our DELETE statement */
       std::string del_query("DELETE FROM ");
       del_query.reserve(1024);
 
@@ -1960,6 +1969,7 @@ SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
   default:
     return ((STMT*)(Handle))->set_error(DESERR_S1C00,NULL,0);
   }
+  */
 
   return sqlRet;
 }

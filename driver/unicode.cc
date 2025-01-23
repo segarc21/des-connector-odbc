@@ -850,7 +850,7 @@ SQLPrepareWImpl(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len,
     return stmt->set_error("22018", NULL, 0);
   }
 
-  SQLRETURN rc = DESPrepare(hstmt, conv, str_len, false, force_prepare);
+  SQLRETURN rc = SQLPrepare(hstmt, conv, str_len, false, force_prepare);
   x_free(conv);
   return rc;
 }
@@ -1232,11 +1232,9 @@ SQLTablesW(SQLHSTMT hstmt,
   type8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, type, &len, &errors);
   type_len= (SQLSMALLINT)len;
 
-  //TODO: remove
-  /*
   rc= DESTables(hstmt, catalog8, catalog_len, schema8, schema_len,
                   table8, table_len, type8, type_len);
-  */
+
   rc = SQL_SUCCESS;
 
   if (catalog_len)

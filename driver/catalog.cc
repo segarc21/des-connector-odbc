@@ -579,6 +579,8 @@ DESTables(SQLHSTMT hstmt,
             SQLCHAR *table_name, SQLSMALLINT table_len,
             SQLCHAR *type_name, SQLSMALLINT type_len)
 {
+
+  SQLRETURN rc = SQL_SUCCESS;
   STMT *stmt= (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
@@ -592,8 +594,21 @@ DESTables(SQLHSTMT hstmt,
   CHECK_CATALOG_SCHEMA(stmt, catalog_name, catalog_len,
                        schema_name, schema_len);
 
+  const char dbschema_str[10] = "/dbschema";
+  SQLINTEGER dbschema_len = 10;
+  SQLCHAR *dbschema_sqlchar = (SQLCHAR *)dbschema_str;
+  
+  rc = DES_SQLPrepare(hstmt, dbschema_sqlchar, dbschema_len, false, false);
+
+  rc = DES_SQLExecute(stmt);
+
+
+  return rc;
+
+  /*
   return tables_i_s(hstmt, catalog_name, catalog_len, schema_name, schema_len,
                     table_name, table_len, type_name, type_len);
+  */
 }
 
 
@@ -1168,7 +1183,7 @@ SQLRETURN list_table_priv_i_s(SQLHSTMT    hstmt,
   /* TABLE_CAT is always NULL in des I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, PRIVILEGE, GRANTEE");
 
-  if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(),
+  if( !SQL_SUCCEEDED(rc= SQLPrepare(hstmt, (SQLCHAR *)query.c_str(),
                           (SQLINTEGER)(query.length()), true, false)))
     return rc;
 
@@ -1250,7 +1265,7 @@ static SQLRETURN list_column_priv_i_s(HSTMT       hstmt,
   /* TABLE_CAT is always NULL in des I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, PRIVILEGE");
 
-  if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(), SQL_NTS,
+  if( !SQL_SUCCEEDED(rc= SQLPrepare(hstmt, (SQLCHAR *)query.c_str(), SQL_NTS,
                                       true, false)))
     return rc;
 
@@ -1732,7 +1747,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
   }
 
   query.append(order_by);
-  rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(), (SQLINTEGER)(query.length()),
+  rc= SQLPrepare(hstmt, (SQLCHAR *)query.c_str(), (SQLINTEGER)(query.length()),
                    true, false);
 
   if (!SQL_SUCCEEDED(rc))
@@ -1884,7 +1899,7 @@ DESProcedures(SQLHSTMT hstmt,
                  " FROM INFORMATION_SCHEMA.ROUTINES"
                  " WHERE ROUTINE_SCHEMA = DATABASE()");
 
-  rc= DESPrepare(hstmt, (SQLCHAR*)query.c_str(), SQL_NTS,
+  rc= SQLPrepare(hstmt, (SQLCHAR*)query.c_str(), SQL_NTS,
                    true, false);
 
   if (!SQL_SUCCEEDED(rc))
