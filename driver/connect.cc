@@ -275,124 +275,135 @@ class dbc_guard
   ~dbc_guard() { if (!m_success) m_dbc->close(); }
 };
 
-SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
-
+SQLRETURN DBC::createPipes() {
     /*
-    
-    We will create anonymous pipes so
-    the driver can communicate with a new DES process.
-    The idea is that the driver can read and write onto
-    an exclusive instance of DES, as its executable provides
-    a CLI.
-    
-    For creating the pipes, we will follow this Microsoft article that shows how to
-    create a child process with redirected input and output:
-    https://learn.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
+
+        We will create anonymous pipes so
+        the driver can communicate with a new DES process.
+        The idea is that the driver can read and write onto
+        an exclusive instance of DES, as its executable provides
+        a CLI.
+
+        For creating the pipes, we will follow this Microsoft article that shows
+        how to create a child process with redirected input and output:
+        https://learn.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
 
     */
 
-  //We specify the security attributes of the pipe.
+  ENV *env = this->env;
+
+  // We specify the security attributes of the pipe.
   SECURITY_ATTRIBUTES des_pipe_sec_attr;
-  des_pipe_sec_attr.nLength = sizeof(SECURITY_ATTRIBUTES); //the manual specifies to initialize this as this size
-  des_pipe_sec_attr.lpSecurityDescriptor = NULL;  // if NULL, the pipe has the default security configuration
-  des_pipe_sec_attr.bInheritHandle = TRUE; //we need this process to inherit the handle
-  
+  des_pipe_sec_attr.nLength =
+      sizeof(SECURITY_ATTRIBUTES);  // the manual specifies to initialize this
+                                    // as this size
+  des_pipe_sec_attr.lpSecurityDescriptor =
+      NULL;  // if NULL, the pipe has the default security configuration
+  des_pipe_sec_attr.bInheritHandle =
+      TRUE;  // we need this process to inherit the handle
 
-  DWORD des_pipe_buf_size = 0; //if 0, the system uses the default buffer size.
+  DWORD des_pipe_buf_size = 0;  // if 0, the system uses the default buffer
+                                // size.
 
-  //We create the pipe
-  if (!CreatePipe(&this->driver_to_des_out_rpipe, &this->driver_to_des_out_wpipe, &des_pipe_sec_attr, des_pipe_buf_size)) {
-    CloseHandle(this->driver_to_des_out_rpipe);
-    CloseHandle(this->driver_to_des_out_wpipe);
+  // We create the pipe
+  if (!CreatePipe(&env->driver_to_des_out_rpipe, &env->driver_to_des_out_wpipe,
+                  &des_pipe_sec_attr,
+                  des_pipe_buf_size)) {
+    CloseHandle(env->driver_to_des_out_rpipe);
+    CloseHandle(env->driver_to_des_out_wpipe);
     return SQL_ERROR;
   }
 
- /* Now we need to specify to the read handle for STDOUT
-  * that it cannot be inherited. The problem with the children
-  * having access to it is that the parent process (the driver)
-  * doesn't have full control over it.*/ 
+  /* Now we need to specify to the read handle for STDOUT
+   * that it cannot be inherited. The problem with the children
+   * having access to it is that the parent process (the driver)
+   * doesn't have full control over it.*/
 
-  if (!SetHandleInformation(this->driver_to_des_out_rpipe, HANDLE_FLAG_INHERIT,
+  if (!SetHandleInformation(env->driver_to_des_out_rpipe, HANDLE_FLAG_INHERIT,
                             0)) {
-    CloseHandle(this->driver_to_des_out_rpipe);
-    CloseHandle(this->driver_to_des_out_wpipe);
+    CloseHandle(env->driver_to_des_out_rpipe);
+    CloseHandle(env->driver_to_des_out_wpipe);
     return SQL_ERROR;
   }
 
-  //Now, we do the same for the STDIN.
-  if (!CreatePipe(&this->driver_to_des_in_rpipe, &this->driver_to_des_in_wpipe,
+  // Now, we do the same for the STDIN.
+  if (!CreatePipe(&env->driver_to_des_in_rpipe, &env->driver_to_des_in_wpipe,
                   &des_pipe_sec_attr, des_pipe_buf_size)) {
-    CloseHandle(this->driver_to_des_in_rpipe);
-    CloseHandle(this->driver_to_des_out_wpipe);
+    CloseHandle(env->driver_to_des_in_rpipe);
+    CloseHandle(env->driver_to_des_out_wpipe);
     return SQL_ERROR;
   }
 
-  if (!SetHandleInformation(this->driver_to_des_in_wpipe, HANDLE_FLAG_INHERIT,
+  if (!SetHandleInformation(env->driver_to_des_in_wpipe,
+                            HANDLE_FLAG_INHERIT,
                             0)) {
-    CloseHandle(this->driver_to_des_out_rpipe);
-    CloseHandle(this->driver_to_des_out_wpipe);
-    CloseHandle(this->driver_to_des_in_rpipe);
-    CloseHandle(this->driver_to_des_in_wpipe);
+    CloseHandle(env->driver_to_des_out_rpipe);
+    CloseHandle(env->driver_to_des_out_wpipe);
+    CloseHandle(env->driver_to_des_in_rpipe);
+    CloseHandle(env->driver_to_des_in_wpipe);
     return SQL_ERROR;
   }
 
- 
-  //Before creating the process, we need to create STARTUPINFO and PROCESS_INFORMATION structures.
-  //Piece of code extracted from the Microsoft's child process creating tutorial
-  ZeroMemory(&this->startup_info_unicode, sizeof(this->startup_info_unicode));
-  ZeroMemory(&this->process_info, sizeof(this->process_info));
-  this->startup_info_unicode.cb = sizeof(this->startup_info_unicode);
-  this->startup_info_unicode.hStdError = this->driver_to_des_out_wpipe;
-  this->startup_info_unicode.hStdOutput = this->driver_to_des_out_wpipe;
-  this->startup_info_unicode.hStdInput = this->driver_to_des_in_rpipe;
-  this->startup_info_unicode.dwFlags |= STARTF_USESTDHANDLES;
 
-  /* Now, we will call the function CreateProcessW (processthreadsapi.h).
-  *
-  * From the win32 api manual:
-  *
-  * BOOL CreateProcessW(
-      [in, optional]      LPCWSTR               lpApplicationName,
-      [in, out, optional] LPWSTR                lpCommandLine,
-      [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
-      [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
-      [in]                BOOL                  bInheritHandles,
-      [in]                DWORD                 dwCreationFlags,
-      [in, optional]      LPVOID                lpEnvironment,
-      [in, optional]      LPCWSTR               lpCurrentDirectory,
-      [in]                LPSTARTUPINFOW        lpStartupInfo,
-      [out]               LPPROCESS_INFORMATION lpProcessInformation
-    );
+  return SQL_SUCCESS;
+}
 
-    - lpApplicationName: if NULL, it justs go for lpApplicationName (simpler).
-    - lpCommandLine: route of the DES executable.
-    - lpProcessAttributes: if NULL, the identifier of the new process cannot
-        be inherited (preferrable, as we have explained before)
-    - lpThreadAttributes: if NULL, it is not inheritable either.
-    - bInheritHandles: if TRUE, handlers are inheritable.
-    - dwCreationFlags: if 0, it has the default creation flags. We do not need
-  any special flags.
-    - lpEnvironment: if NULL, we use parent's environment block
-    - lpCurrentDirectory: if NULL, we use parent's starting directory
-    - lpStartupInfo: the pointer to a STARTUPINFO structure
-    - lpProcessInformation: the pointer to a PROCESS_INFORMATION structure
+SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
 
-  */
-  if (!CreateProcessW(NULL,
-                      des_path,
-                      NULL,
-                      NULL,
+  ENV *env = this->env;
+
+  // Before creating the process, we need to create STARTUPINFO and
+  // PROCESS_INFORMATION structures. Piece of code extracted from the
+  // Microsoft's child process creating tutorial
+  ZeroMemory(&env->startup_info_unicode, sizeof(env->startup_info_unicode));
+  ZeroMemory(&env->process_info, sizeof(env->process_info));
+  env->startup_info_unicode.cb = sizeof(env->startup_info_unicode);
+  env->startup_info_unicode.hStdError = env->driver_to_des_out_wpipe;
+  env->startup_info_unicode.hStdOutput = env->driver_to_des_out_wpipe;
+  env->startup_info_unicode.hStdInput = env->driver_to_des_in_rpipe;
+  env->startup_info_unicode.dwFlags |= STARTF_USESTDHANDLES;
+
+    /* Now, we will call the function CreateProcessW (processthreadsapi.h).
+*
+* From the win32 api manual:
+*
+* BOOL CreateProcessW(
+    [in, optional]      LPCWSTR               lpApplicationName,
+    [in, out, optional] LPWSTR                lpCommandLine,
+    [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
+    [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
+    [in]                BOOL                  bInheritHandles,
+    [in]                DWORD                 dwCreationFlags,
+    [in, optional]      LPVOID                lpEnvironment,
+    [in, optional]      LPCWSTR               lpCurrentDirectory,
+    [in]                LPSTARTUPINFOW        lpStartupInfo,
+    [out]               LPPROCESS_INFORMATION lpProcessInformation
+  );
+
+  - lpApplicationName: if NULL, it justs go for lpApplicationName (simpler).
+  - lpCommandLine: route of the DES executable.
+  - lpProcessAttributes: if NULL, the identifier of the new process cannot
+      be inherited (preferrable, as we have explained before)
+  - lpThreadAttributes: if NULL, it is not inheritable either.
+  - bInheritHandles: if TRUE, handlers are inheritable.
+  - dwCreationFlags: if 0, it has the default creation flags. We do not need
+any special flags.
+  - lpEnvironment: if NULL, we use parent's environment block
+  - lpCurrentDirectory: if NULL, we use parent's starting directory
+  - lpStartupInfo: the pointer to a STARTUPINFO structure
+  - lpProcessInformation: the pointer to a PROCESS_INFORMATION structure
+
+*/
+
+  if (!CreateProcessW(NULL, des_path, NULL, NULL,
                       TRUE,
-                      0,
-                      NULL,
-                      NULL,
-                      &this->startup_info_unicode,
-                      &this->process_info)) {
-    CloseHandle(this->driver_to_des_out_rpipe);
-    CloseHandle(this->driver_to_des_out_wpipe);
-    CloseHandle(this->driver_to_des_in_rpipe);
-    CloseHandle(this->driver_to_des_in_wpipe);
-    return SQL_ERROR;
+                      0, NULL, NULL, &env->startup_info_unicode,
+                      &env->process_info)) {
+    CloseHandle(env->driver_to_des_out_rpipe);
+    CloseHandle(env->driver_to_des_out_wpipe);
+    CloseHandle(env->driver_to_des_in_rpipe);
+    CloseHandle(env->driver_to_des_in_wpipe);
+    return ERROR;
   }
 
   /* Now, the DES process has just been created. However, we need to remove all the startup messages
@@ -406,7 +417,8 @@ SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
   bool finished_reading = false;
   std::string complete_reading_str = "";
   while (!finished_reading) {
-    BOOL success = ReadFile(this->driver_to_des_out_rpipe, buffer,
+    BOOL success =
+        ReadFile(env->driver_to_des_out_rpipe, buffer,
                             sizeof(buffer) - sizeof(CHAR), &bytes_read, NULL);/* we don't write the final CHAR so as to put the '\0'
                                                                                  char, like we will see.
                                                                                  the final argument must be not null only when
@@ -422,6 +434,8 @@ SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
       finished_reading = true;
     }
   }
+
+  env->shmem->des_process_created = true;
 
   return SQL_SUCCESS;
 }
@@ -1270,6 +1284,96 @@ SQLRETURN SQL_API DESConnect(SQLHDBC   hdbc,
 #endif
 }
 
+void shareHandles() {
+
+  ENV* env = dbc_global_var->env;
+  SharedMemory *shmem = env->shmem;
+
+  while (true) {
+
+    DWORD wait_event = WaitForSingleObject(env->request_handle_event, INFINITE);
+    //TODO: handle errors for wait_event != WAIT_OBJECT_0
+    if (wait_event == WAIT_OBJECT_0 &&
+        shmem->handle_sharing_info.pid_handle_petitioner != 0 &&
+        shmem->handle_sharing_info.pid_handle_petitionee ==
+            GetCurrentProcessId()) {
+
+        HANDLE petitioner_process_handle =
+          OpenProcess(PROCESS_DUP_HANDLE, TRUE,
+                      shmem->handle_sharing_info.pid_handle_petitioner);
+
+      DuplicateHandle(GetCurrentProcess(), env->driver_to_des_out_rpipe,
+                        petitioner_process_handle,
+                      &shmem->handle_sharing_info.out_handle,
+                      0,
+                      TRUE,
+                      DUPLICATE_SAME_ACCESS);
+
+      DuplicateHandle(
+          GetCurrentProcess(), env->driver_to_des_in_wpipe,
+          petitioner_process_handle,
+          &shmem->handle_sharing_info.in_handle,
+          0,
+          TRUE,
+          DUPLICATE_SAME_ACCESS);
+
+
+        ResetEvent(env->request_handle_event);
+        SetEvent(env->handle_sent_event);  //we notify the petitioner
+    }
+    
+
+        
+  }
+
+}
+
+void getDESProcessPipes() {
+
+  bool finished = false;
+
+  ENV *env = dbc_global_var->env;
+
+  WaitForSingleObject(env->shared_memory_mutex, INFINITE);
+  WaitForSingleObject(env->request_handle_mutex, INFINITE);
+
+  env->shmem->handle_sharing_info.pid_handle_petitioner = GetCurrentProcessId();
+
+  while (!finished) {
+    DWORD random_pid =
+        env->shmem->pids_connected_struct.pids_connected
+            [rand() %
+             (env->shmem->pids_connected_struct.size - 1)]; //we request the handles to a random peer
+                                                            //TODO: impleemnt better criteria
+    if (random_pid != GetCurrentProcessId()) {
+
+        env->shmem->handle_sharing_info.pid_handle_petitionee = random_pid;
+
+        SetEvent(env->request_handle_event);
+        WaitForSingleObject(env->handle_sent_event, INFINITE); //TODO: handle errors
+        
+        env->driver_to_des_out_rpipe =
+            env->shmem->handle_sharing_info.out_handle;
+        env->driver_to_des_in_wpipe =
+            env->shmem->handle_sharing_info.in_handle;
+
+        //we reset the structure once we have saved the handles
+        env->shmem->handle_sharing_info.in_handle = NULL;
+        env->shmem->handle_sharing_info.out_handle = NULL;
+        env->shmem->handle_sharing_info.pid_handle_petitionee = 0;
+        env->shmem->handle_sharing_info.pid_handle_petitioner = 0;
+
+        finished = true;
+    
+    }
+  
+  }
+
+  ReleaseMutex(env->request_handle_mutex);
+  ReleaseMutex(env->shared_memory_mutex);
+
+}
+
 
 /**
   An alternative to SQLConnect that allows specifying more of the connection
@@ -1540,6 +1644,15 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
 
   }
 
+  WaitForSingleObject(dbc->env->shared_memory_mutex, INFINITE);
+  SharedMemory* shmem = dbc->env->shmem;
+
+  shmem->pids_connected_struct
+      .pids_connected[shmem->pids_connected_struct.size] = GetCurrentProcessId();
+  
+  shmem->pids_connected_struct.size += 1;
+
+  ReleaseMutex(dbc->env->shared_memory_mutex);
   //rc = dbc->connect(&ds);
 
   //TODO: solution for only UTF-8, expand it to ANSI also.
@@ -1551,7 +1664,19 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
    TODO: expand it to ANSI also. */
   const SQLWSTRING &x = static_cast<const SQLWSTRING &>(ds.opt_DES_EXEC);
   SQLWCHAR *unicode_path = const_cast<SQLWCHAR *>(x.c_str());
-  rc = dbc->createDESProcess(unicode_path);
+  
+  if (!dbc->env->shmem->des_process_created) {
+    rc = dbc->createPipes();
+    rc = dbc->createDESProcess(unicode_path);
+  } else {
+    getDESProcessPipes();
+    rc = SQL_SUCCESS;
+  }
+   
+  dbc->env->share_handle_thread =
+      std::unique_ptr<std::thread>(new std::thread(shareHandles));
+
+  
 
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO)
   {

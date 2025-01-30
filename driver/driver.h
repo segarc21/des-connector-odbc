@@ -551,38 +551,135 @@ struct STMT_OPTIONS
   bool            bookmark_insert = false;
 };
 
+#define SHARED_MEMORY_NAME "Global\\DESODBC_SHMEM"
+#define SHARED_MEMORY_MUTEX_NAME "Global\\DESODBC_SHMEM_MUTEX"
+#define QUERY_MUTEX_NAME "Global\\DESODBC_QUERY_MUTEX"
+#define REQUEST_HANDLE_EVENT_NAME "Global\\DESODBC_REQUEST_HANDLE_EVENT"
+#define REQUEST_HANDLE_MUTEX_NAME "Global\\DESODBC_REQUEST_MUTEX_EVENT"
+#define HANDLE_SENT_EVENT_NAME "Global\\DESODBC_HANDLE_SENT_EVENT"
+
+#define MAX_CLIENTS 256
+
+struct PidsConnected {
+  DWORD pids_connected[MAX_CLIENTS];
+  int size = 0;
+};
+
+struct HandleSharingInfo {
+  DWORD pid_handle_petitioner = 0;
+  DWORD pid_handle_petitionee = 0;
+  HANDLE in_handle = NULL;
+  HANDLE out_handle = NULL;
+};
+
+struct SharedMemory {
+  PidsConnected pids_connected_struct;
+
+  HandleSharingInfo handle_sharing_info;
+
+  bool des_process_created = false;
+};
 
 /* Environment handler */
 
-struct	ENV
+struct ENV
 {
+  HANDLE query_mutex;
+  HANDLE shared_memory_mutex;
+  HANDLE request_handle_mutex;
+
+  HANDLE request_handle_event;
+  HANDLE handle_sent_event;
+
+  std::unique_ptr<std::thread> share_handle_thread;
+
+  PROCESS_INFORMATION process_info;
+  STARTUPINFOW startup_info_unicode;
+  HANDLE driver_to_des_out_rpipe = NULL;
+  HANDLE driver_to_des_out_wpipe = NULL;
+  HANDLE driver_to_des_in_rpipe = NULL;
+  HANDLE driver_to_des_in_wpipe = NULL;
+
+  bool initialized = false;
+
+  int number_of_connections = 0;
+
+  SharedMemory *shmem = NULL;
+
   SQLINTEGER   odbc_ver;
   std::list<DBC*> conn_list;
   DESERROR      error;
   std::mutex lock;
 
   ENV(SQLINTEGER ver) : odbc_ver(ver)
-  {}
+  {
+    HANDLE handle_map_file_shmem = CreateFileMappingA(
+        INVALID_HANDLE_VALUE,
+        nullptr,
+        PAGE_READWRITE,
+        0,
+        sizeof(SharedMemory),
+        SHARED_MEMORY_NAME
+    );
+
+    if (handle_map_file_shmem == nullptr) {
+      exit(1);  // TODO: handle this with SQL errors
+    }
+
+    shmem = (SharedMemory *)MapViewOfFile(
+        handle_map_file_shmem,
+        FILE_MAP_ALL_ACCESS,
+        0,
+        0,
+        sizeof(SharedMemory)
+    );
+
+    if (shmem == nullptr) {
+      exit(1);  // TODO: handle this with SQL errors
+    }
+
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+
+
+    this->query_mutex = CreateMutexExA(&sa, QUERY_MUTEX_NAME, 0, SYNCHRONIZE);
+    this->shared_memory_mutex = CreateMutexExA(&sa, SHARED_MEMORY_MUTEX_NAME, 0, SYNCHRONIZE);
+    this->request_handle_mutex = CreateMutexExA(&sa, REQUEST_HANDLE_MUTEX_NAME, 0, SYNCHRONIZE);
+
+    if (this->query_mutex == nullptr) {
+      exit(1);  // TODO: handle this with SQL errors
+    }
+
+    this->request_handle_event =
+        CreateEventA(NULL,
+                    TRUE,
+                    FALSE,
+                    REQUEST_HANDLE_EVENT_NAME
+        );
+
+    this->handle_sent_event =
+        CreateEventA(NULL,
+                     TRUE,
+                     FALSE,
+                     HANDLE_SENT_EVENT_NAME
+        );
+
+  }
 
   void add_dbc(DBC* dbc);
   void remove_dbc(DBC* dbc);
   bool has_connections();
 
-  ~ENV()
-  {}
+  ~ENV() {
+      share_handle_thread->join();
+  }
 };
-
 
 /* Connection handler */
 struct DBC
 {
-  PROCESS_INFORMATION process_info;
-  STARTUPINFOW startup_info_unicode;
-  HANDLE driver_to_des_out_rpipe;
-  HANDLE driver_to_des_out_wpipe;
-  HANDLE driver_to_des_in_rpipe;
-  HANDLE driver_to_des_in_wpipe;
-
   ENV           *env;
   DES         *des;
   std::list<STMT*> stmt_list;
@@ -618,6 +715,8 @@ struct DBC
   telemetry::Telemetry<DBC> telemetry;
 
   DBC(ENV *p_env);
+  SQLRETURN createPipes();
+  SQLRETURN openPipes();
   SQLRETURN createDESProcess(SQLWCHAR* des_path);
   void free_explicit_descriptors();
   void free_connection_stmts();

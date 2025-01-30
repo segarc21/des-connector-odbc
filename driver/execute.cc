@@ -110,6 +110,7 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
 
   // Write the command to the child's STDIN
   DWORD bytes_written;
+  ENV *env = dbc_global_var->env;
   std::string full_query = "/tapi " + query + '\n'; //query for the launched DES process
 
   //We convert the string to a char*.
@@ -117,8 +118,15 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
   std::copy(full_query.begin(), full_query.end(), full_query_arr);
   full_query_arr[full_query.size()] = '\0';
 
+  DWORD wait_event = WaitForSingleObject(env->query_mutex, INFINITE);
 
-  if (!WriteFile(dbc_global_var->driver_to_des_in_wpipe, full_query_arr, strlen(full_query_arr),
+  if (wait_event != WAIT_OBJECT_0) {
+    exit(1); //TODO: handle errors correctly
+  }
+
+
+  if (!WriteFile(env->driver_to_des_in_wpipe, full_query_arr,
+                 strlen(full_query_arr),
                  &bytes_written, NULL)) { //as we explained in the connection part,
                                           //the final argument must be not null only when the pipe was created with overlapping
     return SQL_ERROR;
@@ -136,7 +144,7 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
   DWORD bytes_read;
 
   while (!finished_reading) {
-    if (!try_to_read_pipe(dbc_global_var->driver_to_des_out_rpipe, buffer,
+    if (!try_to_read_pipe(env->driver_to_des_out_rpipe, buffer,
                           bytes_read)) {
       finished_reading = true;
     } else {
@@ -145,6 +153,7 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
       tapi_output += buffer_str;
     }
   }
+  ReleaseMutex(env->query_mutex);
 
   //We parse the TAPI output and create an internal table from the result view
   stmt->table = new Table(stmt->type, tapi_output);
