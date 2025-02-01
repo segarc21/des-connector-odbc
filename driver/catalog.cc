@@ -597,6 +597,8 @@ DESTables(SQLHSTMT hstmt,
   const char dbschema_str[10] = "/dbschema";
   SQLINTEGER dbschema_len = 10;
   SQLCHAR *dbschema_sqlchar = (SQLCHAR *)dbschema_str;
+
+  stmt->type = SQLTABLES;
   
   rc = DES_SQLPrepare(hstmt, dbschema_sqlchar, dbschema_len, false, false);
 

@@ -97,24 +97,24 @@ SQLRETURN SQL_API SQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
         NULL) {  // we have to check this, as suggested by memcpy
       return SQL_ERROR;
     } else {
+
       memcpy(stmt->des_query, szSqlStr, cbSqlStr);
       stmt->des_query[cbSqlStr] = '\0';
 
-      std::string str_query(reinterpret_cast<char *>(stmt->des_query));
-      std::transform(str_query.begin(), str_query.end(), str_query.begin(),
-                     [](unsigned char c) {
-        return std::tolower(c);
-      });  // to lower characters
-      std::string select_str = "select";
-      std::string process_str = "/process";
-      std::string dbschema_str = "/dbschema";
+      if (stmt->type == UNKNOWN) {
+        std::string str_query(reinterpret_cast<char *>(stmt->des_query));
+        std::transform(str_query.begin(), str_query.end(), str_query.begin(),
+                       [](unsigned char c) {
+                         return std::tolower(c);
+                       });  // to lower characters
+        std::string select_str = "select";
+        std::string process_str = "/process";
 
-      if (str_query.substr(0, select_str.size()) == select_str) {
-        stmt->type = SELECT;
-      } else if (str_query.substr(0, process_str.size()) == process_str) {
-        stmt->type = PROCESS;
-      } else if (str_query.substr(0, dbschema_str.size()) == dbschema_str) {
-        stmt->type = DBSCHEMA;
+        if (str_query.substr(0, select_str.size()) == select_str) {
+          stmt->type = SELECT;
+        } else if (str_query.substr(0, process_str.size()) == process_str) {
+          stmt->type = PROCESS;
+        }
       }
 
       return SQL_SUCCESS;

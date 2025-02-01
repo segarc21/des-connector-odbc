@@ -1286,9 +1286,11 @@ private:
 //TODO: guarantee encapsulation.
 
 enum COMMAND_TYPE {
+    UNKNOWN,
     SELECT,
-    DBSCHEMA,
     PROCESS,
+    SQLTABLES,
+    SQLPRIMARYKEYS
 };
 
 //Internal representation of a result view.
@@ -1308,11 +1310,11 @@ class Table {
       We replicated the returned columns of the default table
       and each of its characteristics.
   */
-    insert_col("TABLE_CAT", "", -9, 64, 0, 1);
-    insert_col("TABLE_SCHEM", "", -9, 64, 0, 1);
-    insert_col("TABLE_NAME", "", -9, 64, 0, 1);
-    insert_col("TABLE_TYPE", "", -9, 64, 0, 1);
-    insert_col("REMARKS", "", -9, 80, 0, 1);
+    insert_col("TABLE_CAT", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("TABLE_SCHEM", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("TABLE_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("TABLE_TYPE", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("REMARKS", "", SQL_WVARCHAR, 80, 0, 1);
   }
 
   Table() { insert_metadata_cols(); }
@@ -1322,30 +1324,110 @@ class Table {
       case SELECT:
         parse_select(str);
         break;
-      case DBSCHEMA:
-        parse_dbschema(str);
+      case SQLTABLES:
+        parse_sqltables(str);
         break;
       case PROCESS:
         insert_metadata_cols();
         break;
+      case SQLPRIMARYKEYS:
+        parse_sqlprimarykeys(str);
+        break;
+
     }
   }
 
-  void parse_dbschema(const std::string &str) {
-
-    insert_metadata_cols();
-
-    std::vector<std::vector<std::string>> results;
-
-    // First, we separate the TAPI str into lines.
+  std::vector<std::string> getLines(const std::string &str) {
     std::vector<std::string> lines;
     std::stringstream ss(str);
     std::string line;
 
     while (std::getline(ss, line, '\n')) {
       lines.push_back(line.substr(
-          0, line.size() - 1));  //to remove the char '/r' of each line
+          0, line.size() - 1));  // to remove the char '/r' of each line
     }
+    return lines;
+  }
+
+  void parse_sqlprimarykeys(const std::string &str) {
+      //TODO: handle errors
+    insert_col("TABLE_CAT", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("TABLE_SCHEM", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("TABLE_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("COLUMN_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("KEY_SEQ", "", SQL_C_SHORT, 64, 0, 1);
+    insert_col("PK_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+
+    // First, we separate the TAPI str into lines.
+    std::vector<std::string> lines = getLines(str);
+
+    std::unordered_map<std::string, int> column_to_index;
+    int i = 2; //we skip '$tables' and the table name
+    int index = 1;
+    while (lines[i] != "$" && i < lines.size()) {
+      column_to_index.insert({lines[i], index});
+      index++;
+      i += 2; //in each iteration we are fetching name and type of each column
+    }
+
+
+    // The entry after the second '$' characters corresponds
+    // to the primary keys, if existing.
+    i++;
+    int dollar_count = 1;
+    while (dollar_count != 2 && i < lines.size()) {
+      if (lines[i] == "$") dollar_count++;
+      i++;
+    }
+    if (lines[i] == "$")  // the entry for the primary keys is empty
+      return;
+
+    std::string primary_keys_str = lines[i];
+
+    std::vector<std::string> primary_keys;
+
+    primary_keys_str.erase(
+        std::remove(primary_keys_str.begin(), primary_keys_str.end(), '['),
+        primary_keys_str.end());
+    primary_keys_str.erase(
+        std::remove(primary_keys_str.begin(), primary_keys_str.end(), ']'),
+        primary_keys_str.end());
+
+    std::stringstream ss(primary_keys_str);
+    std::string primary_key_str;
+
+    while (std::getline(ss, primary_key_str, ',')) {
+      primary_keys.push_back(
+          primary_key_str.substr(0, primary_key_str.size()));
+    }
+    if (primary_keys.size() == 0) return;
+
+    for (int i = 0; i < primary_keys.size(); ++i) {
+      std::string TABLE_CAT = "";
+      std::string TABLE_SCHEM = "";
+      std::string TABLE_NAME = "";
+      std::string COLUMN_NAME = primary_keys[i];
+      int KEY_SEQ = column_to_index[primary_keys[i]];
+      std::string PK_NAME = "";
+
+      insert_value("TABLE_CAT", TABLE_CAT);
+      insert_value("TABLE_SCHEM", TABLE_SCHEM);
+      insert_value("TABLE_NAME", TABLE_NAME);
+      insert_value("COLUMN_NAME", COLUMN_NAME);
+      insert_value("KEY_SEQ", std::to_string(KEY_SEQ)); //check if this is correct
+      insert_value("PK_NAME", PK_NAME);
+    }
+
+  }
+
+  void parse_sqltables(const std::string &str) {
+
+    insert_metadata_cols();
+
+    std::vector<std::vector<std::string>> results;
+
+    // First, we separate the TAPI str into lines.
+    std::vector<std::string> lines = getLines(str);
 
     int i = 0;
 
@@ -1381,14 +1463,8 @@ class Table {
   //Constructor of table from the parsing a TAPI-codified DES result.
   void parse_select(const std::string& str) {
 
-    //First, we separate the TAPI str into lines.
-    std::vector<std::string> lines;
-    std::stringstream ss(str);
-    std::string line;
-
-    while (std::getline(ss, line, '\n')) {
-      lines.push_back(line);
-    }
+    // First, we separate the TAPI str into lines.
+    std::vector<std::string> lines = getLines(str);
 
     //We ignore the first line, that contains the keywords success/answer.
     int i = 1;
@@ -1542,7 +1618,7 @@ struct STMT
 
   std::string last_output = "";
 
-  COMMAND_TYPE type = SELECT; //select by default
+  COMMAND_TYPE type = UNKNOWN; //unknown by default
 
   //Adding the parameters (SQLBindParameter). Temporal changes
   std::unordered_map<SQLUSMALLINT, DES_PARAM> parameters;
@@ -1845,7 +1921,7 @@ DES_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *quer
 #include "myutil.h"
 #include "stringutil.h"
 
-
+//TODO: it is obvious that we commited renaming errors.
 SQLRETURN SQL_API DESColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
                                     SQLUSMALLINT attrib, SQLCHAR **char_attr,
                                     SQLLEN *num_attr);

@@ -667,17 +667,7 @@ SQLPrimaryKeys(SQLHSTMT hstmt,
                SQLCHAR *schema, SQLSMALLINT schema_len,
                SQLCHAR *table, SQLSMALLINT table_len)
 {
-  SQLRETURN rc;
-  DBC *dbc;
-
-  LOCK_STMT(hstmt);
-
-  dbc= ((STMT *)hstmt)->dbc;
-
-  rc= DESPrimaryKeys(hstmt, catalog, catalog_len, schema, schema_len,
-                       table, table_len);
-
-  return rc;
+  return SQL_SUCCESS; // For now, we will work only with SQLPrimaryKeysW. TODO
 }
 
 

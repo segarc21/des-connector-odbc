@@ -358,6 +358,8 @@ SQLExecDirectW(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len)
     return error;
   error= DES_SQLExecute((STMT *)hstmt);
 
+  SQLFreeStmt(hstmt, SQL_CLOSE);
+
   return error;
   //return SQL_SUCCESS;
 }
@@ -860,37 +862,38 @@ SQLRETURN SQL_API
 SQLPrimaryKeysW(SQLHSTMT hstmt,
                 SQLWCHAR *catalog, SQLSMALLINT catalog_len,
                 SQLWCHAR *schema, SQLSMALLINT schema_len,
-                SQLWCHAR *table, SQLSMALLINT table_len)
-{
+                SQLWCHAR *table, SQLSMALLINT table_len) {
   SQLRETURN rc;
-  SQLCHAR *catalog8, *schema8, *table8;
-  SQLINTEGER len;
-  uint errors= 0;
   DBC *dbc;
 
   LOCK_STMT(hstmt);
 
-  dbc= ((STMT *)hstmt)->dbc;
-  len= catalog_len;
-  catalog8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, catalog, &len, &errors);
-  catalog_len= (SQLSMALLINT)len;
+  dbc = ((STMT *)hstmt)->dbc;
+  /*
+   * In this preliminar version we will ignore the catalog and schema inputs.
+   */
 
-  len= schema_len;
-  schema8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, schema, &len, &errors);
-  schema_len= (SQLSMALLINT)len;
+  STMT *stmt = (STMT *)hstmt;
+  stmt->type = SQLPRIMARYKEYS;
 
-  len= table_len;
-  table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
-  table_len= (SQLSMALLINT)len;
+  // Now, we construct the query "/dbschema table"
+  const char dbschema_str[11] = "/dbschema ";
+  SQLINTEGER dbschema_len = 11;
+  SQLCHAR *dbschema_sqlchar = (SQLCHAR *)dbschema_str;
 
-  rc= DESPrimaryKeys(hstmt, catalog8, catalog_len, schema8, schema_len,
-                       table8, table_len);
+  SQLCHAR *query = new SQLCHAR[dbschema_len + table_len + 1];
+  SQLINTEGER query_length = dbschema_len + table_len + 1;
+  memcpy(query, dbschema_str, dbschema_len);
+  memcpy(query + dbschema_len, table, table_len);
 
-  x_free(catalog8);
-  x_free(schema8);
-  x_free(table8);
+  query[dbschema_len + table_len] = '/0';
+
+  rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
+
+  rc = DES_SQLExecute(stmt);
 
   return rc;
+
 }
 
 

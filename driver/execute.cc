@@ -1471,6 +1471,8 @@ SQLRETURN DES_SQLExecute( STMT *pStmt )
   
   rc = DES_do_query(pStmt, query);
 
+  pStmt->type = UNKNOWN; //we restart the type for future querys. TODO: put it in an orthodox place
+
   return rc;
 }
 
