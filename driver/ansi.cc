@@ -319,19 +319,7 @@ SQLForeignKeys(SQLHSTMT hstmt,
                SQLCHAR *fk_schema, SQLSMALLINT fk_schema_len,
                SQLCHAR *fk_table, SQLSMALLINT fk_table_len)
 {
-  SQLRETURN rc;
-  DBC *dbc;
-
-  LOCK_STMT(hstmt);
-
-  dbc= ((STMT *)hstmt)->dbc;
-
-  rc= DESForeignKeys(hstmt, pk_catalog, pk_catalog_len,
-                       pk_schema, pk_schema_len, pk_table, pk_table_len,
-                       fk_catalog, fk_catalog_len, fk_schema, fk_schema_len,
-                       fk_table, fk_table_len);
-
-  return rc;
+  return SQL_SUCCESS;  // For now, we will work only with SQLForeignKeysW. TODO
 }
 
 

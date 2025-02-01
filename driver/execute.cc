@@ -156,7 +156,7 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
   ReleaseMutex(env->query_mutex);
 
   //We parse the TAPI output and create an internal table from the result view
-  stmt->table = new Table(stmt->type, tapi_output);
+  stmt->table = new ResultTable(stmt, tapi_output);
   stmt->last_output = tapi_output;
 
   return SQL_SUCCESS;

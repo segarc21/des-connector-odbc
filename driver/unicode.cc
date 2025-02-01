@@ -375,57 +375,88 @@ SQLForeignKeysW(SQLHSTMT hstmt,
                 SQLWCHAR *fk_table, SQLSMALLINT fk_table_len)
 {
   SQLRETURN rc;
-  SQLCHAR *pk_catalog8, *pk_schema8, *pk_table8,
-          *fk_catalog8, *fk_schema8, *fk_table8;
-  SQLINTEGER len;
-  uint errors= 0;
   DBC *dbc;
 
   LOCK_STMT(hstmt);
+  
 
-  dbc= ((STMT *)hstmt)->dbc;
 
-  len= pk_catalog_len;
-  pk_catalog8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, pk_catalog, &len,
-                                   &errors);
-  pk_catalog_len= (SQLSMALLINT)len;
+  dbc = ((STMT *)hstmt)->dbc;
+  /*
+   * In this preliminar version we will ignore the catalog and schema inputs.
+   */
 
-  len= pk_schema_len;
-  pk_schema8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, pk_schema, &len,
-                                  &errors);
-  pk_schema_len= (SQLSMALLINT)len;
+  STMT *stmt = (STMT *)hstmt;
 
-  len= pk_table_len;
-  pk_table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, pk_table, &len,
-                                 &errors);
-  pk_table_len= (SQLSMALLINT)len;
+  /*
+    Important comments for the implementation of this function:
+    (source: https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlforeignkeys-function?view=sql-server-ver16)
 
-  len= fk_catalog_len;
-  fk_catalog8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, fk_catalog, &len,
-                                   &errors);
-  fk_catalog_len= (SQLSMALLINT)len;
+    "
+        If *PKTableName contains a table name, SQLForeignKeys returns a result set
+        that contains the primary key of the specified table and all the foreign keys
+        that refer to it. The list of foreign keys in other tables does not include
+        foreign keys that point to unique constraints in the specified table.
 
-  len= fk_schema_len;
-  fk_schema8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, fk_schema, &len,
-                                  &errors);
-  fk_schema_len= (SQLSMALLINT)len;
+        If *FKTableName contains a table name, SQLForeignKeys returns a result set that
+        contains all the foreign keys in the specified table that point to primary keys
+        in other tables, and the primary keys in the other tables to which they refer.
+        The list of foreign keys in the specified table does not contain foreign keys
+        that refer to unique constraints in other tables.
 
-  len= fk_table_len;
-  fk_table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, fk_table, &len,
-                                 &errors);
-  fk_table_len= (SQLSMALLINT)len;
+        If both *PKTableName and *FKTableName contain table names, SQLForeignKeys
+        returns the foreign keys in the table specified in *FKTableName that refer to
+        the primary key of the table specified in *PKTableName. This should be one key
+        at most.
+    "
 
-  rc= DESForeignKeys(hstmt, pk_catalog8, pk_catalog_len,
-                       pk_schema8, pk_schema_len, pk_table8, pk_table_len,
-                       fk_catalog8, fk_catalog_len, fk_schema8, fk_schema_len,
-                       fk_table8, fk_table_len);
+  */
 
-  x_free(pk_catalog8);
-  x_free(pk_schema8);
-  x_free(pk_table8);
-  x_free(fk_catalog8);
-  x_free(fk_schema8);
-  x_free(fk_table8);
+  //TODO: check whether "contain table names" is equivalent to the field being non-null.
+  //TODO: check possible loss of data if converting to string (as warned by the compiler).
+  if (pk_table != NULL && fk_table != NULL) {
+
+    std::wstring pk_table_wstr(pk_table);
+    std::string pk_table_str(pk_table_wstr.begin(), pk_table_wstr.end());
+
+    std::wstring fk_table_wstr(fk_table);
+    std::string fk_table_str(fk_table_wstr.begin(), fk_table_wstr.end());
+
+    stmt->pk_table_name = pk_table_str;
+    stmt->fk_table_name = fk_table_str;
+    stmt->type = SQLFOREIGNKEYS_PKFK;
+
+  } else if (pk_table != NULL) {
+
+    std::wstring pk_table_wstr(pk_table);
+    std::string pk_table_str(pk_table_wstr.begin(), pk_table_wstr.end());
+
+    stmt->pk_table_name = pk_table_str;
+  
+    stmt->type = SQLFOREIGNKEYS_PK;
+  }
+    
+  else if (fk_table != NULL) {
+
+    std::wstring fk_table_wstr(fk_table);
+    std::string fk_table_str(fk_table_wstr.begin(), fk_table_wstr.end());
+
+    stmt->fk_table_name = fk_table_str;
+  
+    stmt->type = SQLFOREIGNKEYS_FK;
+
+  }
+  else
+    return SQL_ERROR;
+
+  // Now, we construct the query "/dbschema"
+  const char dbschema_str[10] = "/dbschema";
+  SQLINTEGER dbschema_len = 10;
+  SQLCHAR *dbschema_sqlchar = (SQLCHAR *)dbschema_str;
+
+  rc = DES_SQLPrepare(hstmt, dbschema_sqlchar, dbschema_len, false, false);
+
+  rc = DES_SQLExecute(stmt);
 
   return rc;
 }

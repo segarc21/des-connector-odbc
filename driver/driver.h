@@ -1290,18 +1290,167 @@ enum COMMAND_TYPE {
     SELECT,
     PROCESS,
     SQLTABLES,
-    SQLPRIMARYKEYS
+    SQLPRIMARYKEYS,
+    SQLFOREIGNKEYS_PK,
+    SQLFOREIGNKEYS_FK,
+    SQLFOREIGNKEYS_PKFK
 };
 
-//Internal representation of a result view.
-class Table {
+struct ForeignKeyInfo {
+  std::string key;
+  std::string foreign_table;
+  std::string foreign_key;
+};
+
+struct DBSchemaTableInfo {
+    //Unordered maps name -> column index
+  std::unordered_map<std::string, int> columns_index_map;
+  std::unordered_map<std::string, int> columns_type_map;
+  std::vector<std::string> primary_keys;
+  std::vector<ForeignKeyInfo> foreign_keys;
+  std::vector<std::string> not_nulls;
+
+  std::string name;
+};
+
+struct STMT; //Forward declaration to let ResultTable have a STMT attribute
+//(there is a cyclic dependence)
+//Warning: the functions that use fields of STMT in ResultTable
+//are forward-declared. Then, STMT is defined, and then,
+//the functions are defined.
+class ResultTable { //Internal representation of a result view.
  public:
+
+  STMT *stmt = NULL; //the info saved by the stmt structure may contain useful info for constructing the table.
+
   //Vector of column names, ordered by insertion time.
   std::vector<std::string> names_ordered;
     
   //Some calls are given to the driver using only the
   //column name. We need therefore to search the column given its name.
   std::unordered_map<std::string, Column> columns;
+
+  std::vector<ForeignKeyInfo> getForeignKeysFromTAPI(
+      const std::vector<std::string> &lines, int &index) {
+    std::vector<ForeignKeyInfo> result;
+
+    while (lines[index] != "$") {
+      std::string str = lines[index];
+
+      // We erase these brackets for easer the parsing
+      str.erase(std::remove(str.begin(), str.end(), '['), str.end());
+      str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
+      ForeignKeyInfo fki;
+      // We skip the "non foreign" table name
+      int i = 0;
+      while (str[i] != '.') i++;
+      i++;  // we skip '.'
+      std::string key = "";
+      while (str[i] != ' ') {
+        key += str[i];
+        i++;
+      }
+      i += 4;  // we skip " -> "
+      std::string foreign_table = "";
+      while (str[i] != '.') {
+        foreign_table += str[i];
+        i++;
+      }
+      i++;  // we skip '.'
+      std::string foreign_key = "";
+      while (i < str.size()) {
+        foreign_key += str[i];
+        i++;
+      }
+
+      fki.key = key;
+      fki.foreign_table = foreign_table;
+      fki.foreign_key = foreign_key;
+
+      result.push_back(fki);
+
+      index++;
+    }
+
+    return result;
+  }
+
+  DBSchemaTableInfo getTableInfo(const std::vector<std::string> &lines,
+                                 int& index) {
+      //We asume that the first given line by index is "$table".
+      //Leaves the index to the position when all we are
+      //interested in has been already fetched.
+
+      DBSchemaTableInfo table_info;
+
+      index++;
+
+      std::string table_name = lines[index];
+      table_info.name = table_name;
+
+      index++;
+      int col_index = 1;
+      while (index < lines.size() && lines[index] != "$") {
+        std::string column_name = lines[index];
+        table_info.columns_index_map.insert({column_name, col_index});
+
+        std::string varchar_str = "varchar";
+        std::string int_str = "int";
+        if (lines[index + 1].substr(0, varchar_str.size()) == varchar_str) {
+          table_info.columns_type_map.insert({column_name, SQL_WVARCHAR});
+        } else if (lines[index + 1].substr(0, int_str.size()) == int_str) {
+          table_info.columns_type_map.insert({column_name, SQL_C_SHORT});
+        } else {
+          table_info.columns_type_map.insert(
+              {column_name,
+               SQL_C_DEFAULT});  // TODO: research every possible type
+        }
+
+        col_index++;
+        index += 2;  // in each iteration we are fetching name and type of each
+                 // column
+      }
+      index++;
+      if (lines[index] != "$")
+        table_info.not_nulls = convertArrayNotationToStringVector(lines[index]);
+      index += 2;
+      if (lines[index] != "$")
+        table_info.primary_keys =
+            convertArrayNotationToStringVector(lines[index]);
+      index += 3;
+      if (lines[index] != "$")
+        table_info.foreign_keys = getForeignKeysFromTAPI(lines, index);
+
+      return table_info;
+
+  }
+
+  std::unordered_map<std::string, DBSchemaTableInfo> getAllTablesInfo(const std::string &str) {
+      //Table name -> DBSchemaTableInfo structure
+    std::unordered_map<std::string, DBSchemaTableInfo> main_map;
+
+    std::vector<std::string> lines = getLines(str);
+    //Table name -> its TAPI output
+    std::unordered_map<std::string, std::string> table_str_map;
+
+    int i = 0;
+    DBSchemaTableInfo table_info;
+    while (true) {
+
+      while (i < lines.size() && lines[i] != "$table") {
+        i++;
+      }
+      if (i == lines.size()) break;
+
+      table_info = getTableInfo(lines, i);      
+
+      main_map.insert({table_info.name, table_info});
+
+    }
+
+    return main_map;
+
+  }
 
   void insert_metadata_cols() {
     /*
@@ -1317,25 +1466,35 @@ class Table {
     insert_col("REMARKS", "", SQL_WVARCHAR, 80, 0, 1);
   }
 
-  Table() { insert_metadata_cols(); }
+  void insert_SQLPrimaryKeys_cols() {
+    insert_col("TABLE_CAT", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("TABLE_SCHEM", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("TABLE_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("COLUMN_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("KEY_SEQ", "", SQL_C_SHORT, 64, 0, 1);
+    insert_col("PK_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+  };
 
-  Table(COMMAND_TYPE command, const std::string& str) {
-    switch (command) {
-      case SELECT:
-        parse_select(str);
-        break;
-      case SQLTABLES:
-        parse_sqltables(str);
-        break;
-      case PROCESS:
-        insert_metadata_cols();
-        break;
-      case SQLPRIMARYKEYS:
-        parse_sqlprimarykeys(str);
-        break;
+  void insert_SQLForeignKeys_cols() {
+    insert_col("PKTABLE_CAT", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("PKTABLE_SCHEM", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("PKTABLE_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("PKCOLUMN_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("FKTABLE_CAT", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("FKTABLE_SCHEM", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("FKTABLE_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("FKCOLUMN_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("KEY_SEQ", "", SQL_C_SHORT, 64, 0, 1);
+    insert_col("UPDATE_RULE", "", SQL_C_SHORT, 64, 0, 1);
+    insert_col("DELETE_RULE", "", SQL_C_SHORT, 64, 0, 1);
+    insert_col("FK_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("PK_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_col("DEFERRABILITY", "", SQL_C_SHORT, 64, 0, 1);
+  };
 
-    }
-  }
+  ResultTable(STMT *stmt);
+
+  ResultTable(STMT *stmt, const std::string &str);
 
   std::vector<std::string> getLines(const std::string &str) {
     std::vector<std::string> lines;
@@ -1349,65 +1508,48 @@ class Table {
     return lines;
   }
 
-  void parse_sqlprimarykeys(const std::string &str) {
+  std::vector<std::string> convertArrayNotationToStringVector(std::string str) {
+
+    std::vector<std::string> str_vector;
+
+    str.erase(std::remove(str.begin(), str.end(), '['), str.end());
+    str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
+
+    std::stringstream ss(str);
+    std::string element_str;
+
+    while (std::getline(ss, element_str, ',')) {
+      str_vector.push_back(element_str.substr(0, element_str.size()));
+    }
+
+    return str_vector;
+
+  }
+
+  void parse_SQLForeignKeys_PK(const std::string &str);
+
+  void parse_SQLForeignKeys_FK(const std::string &str);
+
+  void parse_SQLForeignKeys_PKFK(const std::string &str);
+
+  void parse_SQLPrimaryKeys(const std::string &str) {
       //TODO: handle errors
-    insert_col("TABLE_CAT", "", SQL_WVARCHAR, 64, 0, 1);
-    insert_col("TABLE_SCHEM", "", SQL_WVARCHAR, 64, 0, 1);
-    insert_col("TABLE_NAME", "", SQL_WVARCHAR, 64, 0, 1);
-    insert_col("COLUMN_NAME", "", SQL_WVARCHAR, 64, 0, 1);
-    insert_col("KEY_SEQ", "", SQL_C_SHORT, 64, 0, 1);
-    insert_col("PK_NAME", "", SQL_WVARCHAR, 64, 0, 1);
+    insert_SQLPrimaryKeys_cols();
 
     // First, we separate the TAPI str into lines.
     std::vector<std::string> lines = getLines(str);
 
-    std::unordered_map<std::string, int> column_to_index;
-    int i = 2; //we skip '$tables' and the table name
-    int index = 1;
-    while (lines[i] != "$" && i < lines.size()) {
-      column_to_index.insert({lines[i], index});
-      index++;
-      i += 2; //in each iteration we are fetching name and type of each column
-    }
+    int i = 0;
+    DBSchemaTableInfo table_info = getTableInfo(lines, i);
 
+    if (table_info.primary_keys.size() == 0) return;
 
-    // The entry after the second '$' characters corresponds
-    // to the primary keys, if existing.
-    i++;
-    int dollar_count = 1;
-    while (dollar_count != 2 && i < lines.size()) {
-      if (lines[i] == "$") dollar_count++;
-      i++;
-    }
-    if (lines[i] == "$")  // the entry for the primary keys is empty
-      return;
-
-    std::string primary_keys_str = lines[i];
-
-    std::vector<std::string> primary_keys;
-
-    primary_keys_str.erase(
-        std::remove(primary_keys_str.begin(), primary_keys_str.end(), '['),
-        primary_keys_str.end());
-    primary_keys_str.erase(
-        std::remove(primary_keys_str.begin(), primary_keys_str.end(), ']'),
-        primary_keys_str.end());
-
-    std::stringstream ss(primary_keys_str);
-    std::string primary_key_str;
-
-    while (std::getline(ss, primary_key_str, ',')) {
-      primary_keys.push_back(
-          primary_key_str.substr(0, primary_key_str.size()));
-    }
-    if (primary_keys.size() == 0) return;
-
-    for (int i = 0; i < primary_keys.size(); ++i) {
+    for (int i = 0; i < table_info.primary_keys.size(); ++i) {
       std::string TABLE_CAT = "";
       std::string TABLE_SCHEM = "";
       std::string TABLE_NAME = "";
-      std::string COLUMN_NAME = primary_keys[i];
-      int KEY_SEQ = column_to_index[primary_keys[i]];
+      std::string COLUMN_NAME = table_info.primary_keys[i];
+      int KEY_SEQ = table_info.columns_index_map[table_info.primary_keys[i]];
       std::string PK_NAME = "";
 
       insert_value("TABLE_CAT", TABLE_CAT);
@@ -1420,7 +1562,7 @@ class Table {
 
   }
 
-  void parse_sqltables(const std::string &str) {
+  void parse_SQLTables(const std::string &str) {
 
     insert_metadata_cols();
 
@@ -1585,6 +1727,8 @@ class Table {
   }
 };
 
+
+
 struct DES_PARAM { //temporal solution to the parameter problem
     SQLSMALLINT InputOutputType;
     SQLSMALLINT ValueType;
@@ -1611,14 +1755,18 @@ struct STMT
   ROW_STORAGE       m_row_storage;
 
   //Adding the DES structures over the MySQL STMT. Temporal changes
-  Table *table = new Table(); //TODO review
+  ResultTable *table = new ResultTable(this); //TODO review
 
   //Adding the query (SQLPrepare). Temporal changes
   SQLCHAR* des_query = NULL;
 
   std::string last_output = "";
 
-  COMMAND_TYPE type = UNKNOWN; //unknown by default
+  // Some of these values may be empty. Useful for SQLForeignKeys calls
+  std::string pk_table_name = "";
+  std::string fk_table_name = "";
+
+  COMMAND_TYPE type = UNKNOWN;  // unknown by default
 
   //Adding the parameters (SQLBindParameter). Temporal changes
   std::unordered_map<SQLUSMALLINT, DES_PARAM> parameters;
@@ -1793,6 +1941,170 @@ struct STMT
 
   friend DBC;
 };
+
+//Defining the following ResultTable functions in a header file with the
+//inline keyword prevents us from having linking errors
+
+inline ResultTable::ResultTable(STMT *stmt, const std::string &str) {
+  this->stmt = stmt;
+  switch (this->stmt->type) {
+    case SELECT:
+      parse_select(str);
+      break;
+    case SQLTABLES:
+      parse_SQLTables(str);
+      break;
+    case PROCESS:
+      insert_metadata_cols();
+      break;
+    case SQLPRIMARYKEYS:
+      parse_SQLPrimaryKeys(str);
+      break;
+    case SQLFOREIGNKEYS_FK:
+      parse_SQLForeignKeys_FK(str);
+      break;
+    case SQLFOREIGNKEYS_PK:
+      parse_SQLForeignKeys_PK(str);
+      break;
+    case SQLFOREIGNKEYS_PKFK:
+      parse_SQLForeignKeys_PKFK(str);
+      break;
+  }
+}
+
+inline ResultTable::ResultTable(STMT *stmt) {
+  this->stmt = stmt;
+  insert_metadata_cols();
+}
+
+inline void ResultTable::parse_SQLForeignKeys_PK(const std::string &str) {
+  insert_SQLForeignKeys_cols();
+
+  std::string pk_table_name = this->stmt->pk_table_name;
+
+  std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
+      getAllTablesInfo(str);
+
+  for (auto pair_name_table_info : tables_info) {
+    std::string fk_table_name = pair_name_table_info.first;
+    DBSchemaTableInfo fk_table_info = pair_name_table_info.second;
+
+    std::vector<std::string> keysReferringToPkTable;
+    for (int i = 0; i < fk_table_info.foreign_keys.size(); ++i) {
+      if (fk_table_info.foreign_keys[i].foreign_table == pk_table_name) {
+        insert_value("PKTABLE_CAT", "");
+        insert_value("PKTABLE_SCHEM", "");
+        insert_value("PKTABLE_NAME", pk_table_name);
+        insert_value("PKCOLUMN_NAME",
+                     fk_table_info.foreign_keys[i].foreign_key);
+        insert_value("FKTABLE_CAT", "");
+        insert_value("FKTABLE_SCHEM", "");
+        insert_value("FKTABLE_NAME", fk_table_name);
+        insert_value("FKCOLUMN_NAME", fk_table_info.foreign_keys[i].key);
+        insert_value(
+            "KEY_SEQ",
+            std::to_string(fk_table_info.columns_index_map
+                               [fk_table_info.foreign_keys[i]
+                                    .key]));  // I assume that KEY_SEQ refers
+                                              // to the foreign key in every
+                                              // case. TODO: check
+        // We will leave these unspecified until further development.
+        insert_value("UPDATE_RULE", "");
+        insert_value("DELETE_RULE", "");
+        insert_value("FK_NAME", "");
+        insert_value("PK_NAME", "");
+        insert_value("DEFERRABILITY", "");
+      }
+    }
+  }
+}
+
+inline void ResultTable::parse_SQLForeignKeys_FK(const std::string &str) {
+  insert_SQLForeignKeys_cols();
+
+  std::string table_name = this->stmt->fk_table_name;
+
+  std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
+      getAllTablesInfo(str);
+
+  DBSchemaTableInfo table_info = tables_info[table_name];
+  std::vector<ForeignKeyInfo> foreign_keys = table_info.foreign_keys;
+
+  for (int i = 0; i < foreign_keys.size(); ++i) {
+    insert_value("PKTABLE_CAT", "");
+    insert_value("PKTABLE_SCHEM", "");
+    insert_value("PKTABLE_NAME", foreign_keys[i].foreign_table);
+    insert_value("PKCOLUMN_NAME", foreign_keys[i].foreign_key);
+    insert_value("FKTABLE_CAT", "");
+    insert_value("FKTABLE_SCHEM", "");
+    insert_value("FKTABLE_NAME", this->stmt->fk_table_name);
+    insert_value("FKCOLUMN_NAME", foreign_keys[i].key);
+    insert_value("KEY_SEQ",
+                 std::to_string(
+                     table_info.columns_index_map
+                         [foreign_keys[i].key]));  // I assume that KEY_SEQ
+                                                   // refers to the foreign key
+                                                   // in every case. TODO: check
+    // We will leave these unspecified until further development.
+    insert_value("UPDATE_RULE", "");
+    insert_value("DELETE_RULE", "");
+    insert_value("FK_NAME", "");
+    insert_value("PK_NAME", "");
+    insert_value("DEFERRABILITY", "");
+  }
+}
+
+inline void ResultTable::parse_SQLForeignKeys_PKFK(const std::string &str) {
+  insert_SQLForeignKeys_cols();
+
+  std::string pk_table_name = this->stmt->pk_table_name;
+  std::string fk_table_name = this->stmt->fk_table_name;
+
+  std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
+      getAllTablesInfo(str);
+
+  for (auto pair_name_table_info : tables_info) {
+    std::string local_fk_table_name = pair_name_table_info.first;
+    DBSchemaTableInfo local_fk_table_info = pair_name_table_info.second;
+
+    std::vector<std::string> keysReferringToPkTable;
+    if (local_fk_table_name ==
+        fk_table_name) { /* this if condition is the only
+                            difference with the
+                            parse_sqlforeign_pk
+                            function. TODO: consider refactoring
+                            */
+      for (int i = 0; i < local_fk_table_info.foreign_keys.size(); ++i) {
+        if (local_fk_table_info.foreign_keys[i].foreign_table ==
+            pk_table_name) {
+          insert_value("PKTABLE_CAT", "");
+          insert_value("PKTABLE_SCHEM", "");
+          insert_value("PKTABLE_NAME", pk_table_name);
+          insert_value("PKCOLUMN_NAME",
+                       local_fk_table_info.foreign_keys[i].foreign_key);
+          insert_value("FKTABLE_CAT", "");
+          insert_value("FKTABLE_SCHEM", "");
+          insert_value("FKTABLE_NAME", local_fk_table_name);
+          insert_value("FKCOLUMN_NAME",
+                       local_fk_table_info.foreign_keys[i].key);
+          insert_value(
+              "KEY_SEQ",
+              std::to_string(local_fk_table_info.columns_index_map
+                                 [local_fk_table_info.foreign_keys[i]
+                                      .key]));  // I assume that KEY_SEQ
+                                                // refers to the foreign key
+                                                // in every case. TODO: check
+          // We will leave these unspecified until further development.
+          insert_value("UPDATE_RULE", "");
+          insert_value("DELETE_RULE", "");
+          insert_value("FK_NAME", "");
+          insert_value("PK_NAME", "");
+          insert_value("DEFERRABILITY", "");
+        }
+      }
+    }
+  }
+}
 
 
 namespace desodbc {
