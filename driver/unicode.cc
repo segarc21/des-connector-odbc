@@ -254,7 +254,7 @@ SQLDriverConnectW(SQLHDBC hdbc, SQLHWND hwnd,
 SQLRETURN SQL_API
 SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
                 SQLWCHAR *name, SQLSMALLINT name_max, SQLSMALLINT *name_len,
-                SQLSMALLINT *type, SQLULEN *size, SQLSMALLINT *scale,
+                SQLSMALLINT *type, SQLULEN *size, SQLSMALLINT *scale, //TODO: scale has been renamed to decimal_digits in a newer ODBC version. Change haders.
                 SQLSMALLINT *nullable)
 {
   STMT *stmt= (STMT *)hstmt;
@@ -286,7 +286,7 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
   if (size)
     *size = stmt->table->col_size(name_str);
   if (scale)
-    *scale = stmt->table->col_scale(name_str);
+    *scale = stmt->table->col_decimal_digits(name_str); //TODO: update header to new ODBC version
   if (nullable)
     *nullable = stmt->table->col_nullable(name_str);
 

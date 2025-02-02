@@ -1091,60 +1091,11 @@ Return information about data types supported by the server.
 SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType)
 {
   STMT *stmt = (STMT *)hstmt;
-  uint i;
 
-  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
-
-  /* use ODBC2 types if called with ODBC3 types on an ODBC2 handle */
-  if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC2)
-  {
-    switch (fSqlType)
-    {
-    case SQL_TYPE_DATE:
-      fSqlType = SQL_DATE;
-      break;
-    case SQL_TYPE_TIME:
-      fSqlType = SQL_TIME;
-      break;
-    case SQL_TYPE_TIMESTAMP:
-      fSqlType = SQL_TIMESTAMP;
-      break;
-    }
-  }
-
-  /* Set up result Data dictionary. */
-  stmt->result = (DES_RES *)desodbc_malloc(sizeof(DES_RES), DESF(DES_ZEROFILL));
-  stmt->fake_result = 1;
-
-  if (!stmt->result) {
-    stmt_result_free(stmt);
-    return stmt->set_error("S1001", "Not enough memory", 4001);
-  }
-  stmt->result_array.set_size(sizeof(SQL_GET_TYPE_INFO_values));
-
-  if (fSqlType == SQL_ALL_TYPES)
-  {
-    memcpy(stmt->result_array,
-           SQL_GET_TYPE_INFO_values,
-           sizeof(SQL_GET_TYPE_INFO_values));
-    stmt->result->row_count = DES_DATA_TYPES;
-  }
-  else
-  {
-    stmt->result->row_count= 0;
-    for (i = 0; i < DES_DATA_TYPES; ++i)
-    {
-      if (atoi(SQL_GET_TYPE_INFO_values[i][1]) == fSqlType ||
-          atoi(SQL_GET_TYPE_INFO_values[i][15]) == fSqlType)
-      {
-        memcpy(&stmt->result_array[stmt->result->row_count++ *
-               SQL_GET_TYPE_INFO_FIELDS],
-               &SQL_GET_TYPE_INFO_values[i][0],
-               sizeof(char *) * SQL_GET_TYPE_INFO_FIELDS);
-      }
-    }
-  }
-  desodbc_link_fields(stmt, SQL_GET_TYPE_INFO_fields, SQL_GET_TYPE_INFO_FIELDS);
+  stmt->type_requested = fSqlType;
+  stmt->type = SQLGETTYPEINFO;
+  std::string placeholder_str = ""; //so we don't get warnings
+  stmt->table = new ResultTable(stmt, placeholder_str);
 
   return SQL_SUCCESS;
 }
