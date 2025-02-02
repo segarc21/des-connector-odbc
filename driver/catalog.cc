@@ -594,9 +594,10 @@ DESTables(SQLHSTMT hstmt,
   CHECK_CATALOG_SCHEMA(stmt, catalog_name, catalog_len,
                        schema_name, schema_len);
 
-  const char dbschema_str[10] = "/dbschema";
-  SQLINTEGER dbschema_len = 10;
-  SQLCHAR *dbschema_sqlchar = (SQLCHAR *)dbschema_str;
+  std::string dbschema_str = "/dbschema";
+  SQLCHAR *dbschema_sqlchar = reinterpret_cast<unsigned char *>(
+      const_cast<char *>(dbschema_str.c_str()));
+  SQLINTEGER dbschema_len = dbschema_str.size();
 
   stmt->type = SQLTABLES;
   
@@ -1130,17 +1131,25 @@ DESStatistics(SQLHSTMT hstmt,
 {
   STMT *stmt= (STMT *)hstmt;
 
-  CLEAR_STMT_ERROR(hstmt);
-  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  /*
+    In DES, we cannot check statistics relative to indexes nor pages.
+    We may only return the row relative to the cardinality of the table
+    if requested.
+  */
 
-  GET_NAME_LEN(stmt, catalog_name, catalog_len);
-  GET_NAME_LEN(stmt, schema_name, schema_len);
-  GET_NAME_LEN(stmt, table_name, table_len);
-  CHECK_CATALOG_SCHEMA(stmt, catalog_name, catalog_len,
-                       schema_name, schema_len);
+  stmt->type = SQLSTATISTICS;
 
-  return statistics_i_s(hstmt, catalog_name, catalog_len, schema_name, schema_len,
-                        table_name, table_len, fUnique, fAccuracy);
+  stmt->table_name = std::string(reinterpret_cast<char *>(table_name));
+
+  std::string query_str = "select * from " + stmt->table_name + ";";
+  SQLCHAR *query = reinterpret_cast<unsigned char*>(const_cast<char*>(query_str.c_str()));
+  SQLINTEGER query_length = query_str.size();
+
+  SQLRETURN rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
+
+  rc = DES_SQLExecute(stmt);
+
+  return rc;
 }
 
 /*

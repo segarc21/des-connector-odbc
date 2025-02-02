@@ -1365,7 +1365,8 @@ enum COMMAND_TYPE {
     SQLFOREIGNKEYS_PK,
     SQLFOREIGNKEYS_FK,
     SQLFOREIGNKEYS_PKFK,
-    SQLGETTYPEINFO
+    SQLGETTYPEINFO,
+    SQLSTATISTICS
 };
 
 struct ForeignKeyInfo {
@@ -1587,6 +1588,22 @@ class ResultTable { //Internal representation of a result view.
     insert_col("INTERVAL_PRECISION", SQL_SMALLINT, SQL_NULLABLE);
   }
 
+  void insert_SQLStatistics_cols() {
+    insert_col("TABLE_CAT", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("TABLE_SCHEM", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("TABLE_NAME", SQL_VARCHAR, SQL_NO_NULLS);
+    insert_col("NON_UNIQUE", SQL_SMALLINT, SQL_NULLABLE);
+    insert_col("INDEX_QUALIFIER", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("INDEX_NAME", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("TYPE", SQL_SMALLINT, SQL_NO_NULLS);
+    insert_col("ORDINAL_POSITION", SQL_SMALLINT, SQL_NULLABLE);
+    insert_col("COLUMN_NAME", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("ASC_OR_DESC", SQL_CHAR, SQL_NULLABLE); //TODO: in fact is CHAR(1)
+    insert_col("CARDINALITY", SQL_INTEGER, SQL_NULLABLE);
+    insert_col("PAGES", SQL_INTEGER, SQL_NULLABLE);
+    insert_col("FILTER_CONDITION", SQL_VARCHAR, SQL_NULLABLE);
+  }
+
   ResultTable(STMT *stmt);
 
   ResultTable(STMT *stmt, const std::string &str);
@@ -1628,6 +1645,8 @@ class ResultTable { //Internal representation of a result view.
   void parse_SQLForeignKeys_FK(const std::string &str);
 
   void parse_SQLForeignKeys_PKFK(const std::string &str);
+
+  void create_results_SQLStatistics(const std::string &str);
 
   void parse_SQLPrimaryKeys(const std::string &str) {
       //TODO: handle errors
@@ -1700,10 +1719,15 @@ class ResultTable { //Internal representation of a result view.
   }
 
   //Constructor of table from the parsing a TAPI-codified DES result.
-  void parse_select(const std::string& str) {
+  //Returns the number of rows of the result (valuable for SQLStatistics)
+  int parse_select(const std::string& str, bool fetch_values) {
+
+    int n_rows = 0;
 
     // First, we separate the TAPI str into lines.
     std::vector<std::string> lines = getLines(str);
+
+    std::vector<std::string> column_names;
 
     //We ignore the first line, that contains the keywords success/answer.
     int i = 1;
@@ -1740,43 +1764,49 @@ class ResultTable { //Internal representation of a result view.
 
         // I have put SQL_NULLABLE_UNKNOWN because I do not know
         // if a result table from select may have an attribute "nullable"
-        if (str_size != -1)
-          insert_col(name, type, str_size, SQL_NULLABLE_UNKNOWN);
-        else
-          insert_col(name, type, SQL_NULLABLE_UNKNOWN);
+        if (fetch_values) {
+          if (str_size != -1)
+            insert_col(name, type, str_size, SQL_NULLABLE_UNKNOWN);
+          else
+            insert_col(name, type, SQL_NULLABLE_UNKNOWN);
+        }
+
+        column_names.push_back(name);
 
         i += 2;
 
         if (lines[i] == "$")
             checked_cols = true;
       }
-      if (lines[i] == "$eot") return;
+      if (lines[i] == "$eot") return n_rows;
 
       i++;  //We skip the final $
-
       std::string aux = lines[i];
       while (aux != "$eot") {
-        for (int j = 0; j < names_ordered.size(); ++j) {
-
-          std::string name_col = names_ordered[j];
+        for (int j = 0; j < column_names.size(); ++j) {
+          std::string name_col = column_names[j];
           std::string value = lines[i];
 
           //When we reach a varchar value, we remove the " ' " characters provided by the TAPI.
           if (value.size() > 0 && value[0] == '\'') {
             value = value.substr(1, value.size() - 2);
           }
+          if (fetch_values)
+            insert_value(name_col, value);
 
-          insert_value(name_col, value);
+
           i++;
         }
         aux = lines[i];
         i++; //to skip $ or $eot
       }
-    
-    } else { //if it is not possible, we create the default metadata table.
+      n_rows++;
+    }
+    else { //if it is not possible, we create the default metadata table.
       insert_metadata_cols();
     }
 
+    return n_rows;
   }
 
   SQLSMALLINT col_type(const std::string &name) { return columns[name].get_type(); }
@@ -1900,7 +1930,7 @@ struct STMT
   DESCURSOR          cursor;
   DESERROR           error;
   STMT_OPTIONS      stmt_options;
-  std::string       table_name;
+  std::string       table_name; // This value may be empty. Useful for SQLStatistics calls
   std::string       catalog_name;
 
   DES_PARSED_QUERY	query, orig_query;
@@ -2071,7 +2101,7 @@ inline ResultTable::ResultTable(STMT *stmt, const std::string &str) {
   this->stmt = stmt;
   switch (this->stmt->type) {
     case SELECT:
-      parse_select(str);
+      parse_select(str, true);
       break;
     case SQLTABLES:
       parse_SQLTables(str);
@@ -2093,6 +2123,9 @@ inline ResultTable::ResultTable(STMT *stmt, const std::string &str) {
       break;
     case SQLGETTYPEINFO:
       create_results_SQLGetTypeInfo();
+      break;
+    case SQLSTATISTICS:
+      create_results_SQLStatistics(str);
       break;
   }
 }
@@ -2244,6 +2277,27 @@ inline void ResultTable::create_results_SQLGetTypeInfo() {
     }
   }
 
+}
+
+inline void ResultTable::create_results_SQLStatistics(const std::string &str)
+{
+  insert_SQLStatistics_cols();
+
+  int n_rows = parse_select(str, false);
+
+  insert_value("TABLE_CAT", NULL_STR);
+  insert_value("TABLE_SCHEM", NULL_STR);
+  insert_value("TABLE_NAME", this->stmt->table_name);
+  insert_value("NON_UNIQUE", NULL_STR);
+  insert_value("INDEX_QUALIFIER", NULL_STR);
+  insert_value("INDEX_NAME", NULL_STR);
+  insert_value("TYPE", std::to_string(SQL_TABLE_STAT));
+  insert_value("ORDINAL_POSITION", NULL_STR);
+  insert_value("COLUMN_NAME", NULL_STR);
+  insert_value("ASC_OR_DESC", NULL_STR);
+  insert_value("CARDINALITY", std::to_string(n_rows));
+  insert_value("PAGES", NULL_STR);
+  insert_value("FILTER_CONDITION", NULL_STR);
 }
 
 inline void ResultTable::parse_SQLForeignKeys_PK(const std::string &str) {

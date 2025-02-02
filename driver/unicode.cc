@@ -254,7 +254,7 @@ SQLDriverConnectW(SQLHDBC hdbc, SQLHWND hwnd,
 SQLRETURN SQL_API
 SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
                 SQLWCHAR *name, SQLSMALLINT name_max, SQLSMALLINT *name_len,
-                SQLSMALLINT *type, SQLULEN *size, SQLSMALLINT *scale, //TODO: scale has been renamed to decimal_digits in a newer ODBC version. Change haders.
+                SQLSMALLINT *type, SQLULEN *size, SQLSMALLINT *scale, //TODO: scale has been renamed to decimal_digits in a newer ODBC version. Change headers.
                 SQLSMALLINT *nullable)
 {
   STMT *stmt= (STMT *)hstmt;
@@ -450,9 +450,10 @@ SQLForeignKeysW(SQLHSTMT hstmt,
     return SQL_ERROR;
 
   // Now, we construct the query "/dbschema"
-  const char dbschema_str[10] = "/dbschema";
-  SQLINTEGER dbschema_len = 10;
-  SQLCHAR *dbschema_sqlchar = (SQLCHAR *)dbschema_str;
+  std::string dbschema_str = "/dbschema";
+  SQLCHAR *dbschema_sqlchar = reinterpret_cast<unsigned char *>(
+      const_cast<char *>(dbschema_str.c_str()));
+  SQLINTEGER dbschema_len = dbschema_str.size();
 
   rc = DES_SQLPrepare(hstmt, dbschema_sqlchar, dbschema_len, false, false);
 
@@ -907,17 +908,13 @@ SQLPrimaryKeysW(SQLHSTMT hstmt,
   STMT *stmt = (STMT *)hstmt;
   stmt->type = SQLPRIMARYKEYS;
 
-  // Now, we construct the query "/dbschema table"
-  const char dbschema_str[11] = "/dbschema ";
-  SQLINTEGER dbschema_len = 11;
-  SQLCHAR *dbschema_sqlchar = (SQLCHAR *)dbschema_str;
-
-  SQLCHAR *query = new SQLCHAR[dbschema_len + table_len + 1];
-  SQLINTEGER query_length = dbschema_len + table_len + 1;
-  memcpy(query, dbschema_str, dbschema_len);
-  memcpy(query + dbschema_len, table, table_len);
-
-  query[dbschema_len + table_len] = '/0';
+  // Now, we construct the query "/dbschema table_name"
+  std::wstring table_name_wstr = std::wstring(table);
+  std::string query_str =
+      "/dbschema " + std::string(table_name_wstr.begin(), table_name_wstr.end());
+  SQLCHAR *query =
+      reinterpret_cast<unsigned char *>(const_cast<char *>(query_str.c_str()));
+  SQLINTEGER query_length = query_str.size();
 
   rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
 
