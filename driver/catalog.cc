@@ -1540,19 +1540,33 @@ DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
                     SQLUSMALLINT fNullable)
 {
   STMT        *stmt=(STMT *) hstmt;
+  /*
+   * In this preliminar version we will ignore the catalog and schema inputs.
+   */
 
-  CLEAR_STMT_ERROR(hstmt);
-  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  stmt->type = SQLSPECIALCOLUMNS;
 
-  GET_NAME_LEN(stmt, catalog, catalog_len);
-  GET_NAME_LEN(stmt, schema, schema_len);
-  GET_NAME_LEN(stmt, table_name, table_len);
-  CHECK_CATALOG_SCHEMA(stmt, catalog, catalog_len,
-                       schema, schema_len);
+  /*
+    As DES does not support indexing nor pseudocolumns, we will only return
+    the primary keys when dealing with the SQLSPECIALCOLUMNS statement type.
+    It will be necesary to call /dbschema table_name to do so.
+  */ 
+  std::string dbschema_str = "/dbschema";
+  SQLCHAR *dbschema_sqlchar = reinterpret_cast<unsigned char *>(
+      const_cast<char *>(dbschema_str.c_str()));
+  SQLINTEGER dbschema_len = dbschema_str.size();
+  // Now, we construct the query "/dbschema table_name"
+  std::string table_name_str = std::string(reinterpret_cast<char *>(table_name));
+  std::string query_str = "/dbschema " + table_name_str;
+  SQLCHAR *query =
+      reinterpret_cast<unsigned char *>(const_cast<char *>(query_str.c_str()));
+  SQLINTEGER query_length = query_str.size();
 
-  return special_columns_i_s(hstmt, fColType, catalog,
-                             catalog_len, schema, schema_len,
-                             table_name, table_len, fScope, fNullable);
+  SQLRETURN rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
+
+  rc = DES_SQLExecute(stmt);
+
+  return rc;
 }
 
 

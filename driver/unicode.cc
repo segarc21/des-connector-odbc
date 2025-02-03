@@ -282,7 +282,7 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
   }
 
   if (type)
-    *type = stmt->table->col_type(name_str);
+    *type = stmt->table->col_type(name_str).simple_type;
   if (size)
     *size = stmt->table->col_size(name_str);
   if (scale)

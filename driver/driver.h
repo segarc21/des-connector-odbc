@@ -1099,12 +1099,15 @@ class charPtrBuf {
 
 #define NULL_STR "null"
 
+inline const SQLULEN DEFAULT_DATA_CHARACTER_SIZE = 255;  // This seems to be a standard, along with
+                                                        // 8000. TODO: research
+
 inline const std::vector<SQLSMALLINT> supported_types = {
     SQL_VARCHAR,   SQL_LONGVARCHAR,   SQL_CHAR, SQL_INTEGER,
     SQL_SMALLINT,  SQL_FLOAT,         SQL_REAL, SQL_TYPE_DATE,
     SQL_TYPE_TIME, SQL_TYPE_TIMESTAMP};
 
-inline const std::unordered_map<std::string, SQLSMALLINT> typestr_type_map = {
+inline const std::unordered_map<std::string, SQLSMALLINT> typestr_simpletype_map = {
     {"varchar()", SQL_VARCHAR},
     {"string", SQL_LONGVARCHAR},
     {"varchar", SQL_LONGVARCHAR},
@@ -1118,6 +1121,11 @@ inline const std::unordered_map<std::string, SQLSMALLINT> typestr_type_map = {
     {"time", SQL_TYPE_TIME},
     {"datetime", SQL_TYPE_TIMESTAMP},
     {"timestamp", SQL_TYPE_TIMESTAMP}};
+
+struct Type {
+  SQLSMALLINT simple_type;
+  SQLULEN size = -1; //useful for character data types
+};
 
 inline SQLULEN get_type_size(SQLSMALLINT type) {
   switch (type) {
@@ -1142,18 +1150,19 @@ inline SQLULEN get_type_size(SQLSMALLINT type) {
     case SQL_LONGVARCHAR:  // theorically, it is infinite. Which value do I return?
     case SQL_CHAR:
     case SQL_VARCHAR:
-      return 255;  // This seems to be a standard, along with 8000. TODO: research
+      return DEFAULT_DATA_CHARACTER_SIZE;  
     default:
       return 0;
   }
 }
 
+inline Type get_Type(SQLSMALLINT type) { return {type, get_type_size(type)}; }
+
 //Internal representation of a column from a result view.
 class Column {
  public:
   std::string name;
-  SQLSMALLINT type;
-  SQLULEN str_size = -1; //size of the fixed length string/varchar/char, if appliable (-1 if not)
+  Type type;
   SQLSMALLINT nullable;
   std::vector<std::string> values;
 
@@ -1163,21 +1172,12 @@ class Column {
 
   Column() {}
 
-  Column(const std::string &col_name, const SQLSMALLINT &col_type, const SQLSMALLINT &col_nullable)
+  Column(const std::string &col_name, const Type &col_type, const SQLSMALLINT &col_nullable)
       : name(col_name),
         type(col_type),
         nullable(col_nullable) {}
 
-  //Constructor when creating a column that holds a "string" type with fixed length
-  Column(const std::string &col_name, const SQLSMALLINT &col_type,
-         const SQLSMALLINT &str_size,
-         const SQLSMALLINT &col_nullable)
-      : name(col_name),
-        type(col_type),
-        str_size(str_size),
-        nullable(col_nullable) {}
-
-  SQLSMALLINT get_type() { return type; }
+  Type get_type() { return type; }
   SQLULEN get_size() {
     // Values fetched from:
     // https://learn.microsoft.com/en-us/sql/odbc/reference/appendixes/column-size?view=sql-server-ver16
@@ -1186,10 +1186,7 @@ class Column {
       //or only the types that DES support (which I am currently
       //doing)? what about the size of these, which are dependent
       //on the underlying Prolog system of DES?
-    if (str_size != -1)
-      return str_size;
-    else
-      return get_type_size(type);
+    return type.size;
 
   }
   SQLSMALLINT get_decimal_digits() {
@@ -1329,7 +1326,7 @@ class Column {
 
   void update_binding(SQLUSMALLINT row) {
     if (target_value_binding && str_len_or_ind_binding) {
-        copy_result_in_memory(row, type, target_value_binding, buffer_length_binding, str_len_or_ind_binding);
+        copy_result_in_memory(row, type.simple_type, target_value_binding, buffer_length_binding, str_len_or_ind_binding);
     }
   
   }
@@ -1354,6 +1351,8 @@ private:
 
 };
 
+
+
 //TODO: guarantee encapsulation.
 
 enum COMMAND_TYPE {
@@ -1366,7 +1365,8 @@ enum COMMAND_TYPE {
     SQLFOREIGNKEYS_FK,
     SQLFOREIGNKEYS_PKFK,
     SQLGETTYPEINFO,
-    SQLSTATISTICS
+    SQLSTATISTICS,
+    SQLSPECIALCOLUMNS
 };
 
 struct ForeignKeyInfo {
@@ -1378,7 +1378,7 @@ struct ForeignKeyInfo {
 struct DBSchemaTableInfo {
     //Unordered maps name -> column index
   std::unordered_map<std::string, int> columns_index_map;
-  std::unordered_map<std::string, int> columns_type_map;
+  std::unordered_map<std::string, Type> columns_type_map;
   std::vector<std::string> primary_keys;
   std::vector<ForeignKeyInfo> foreign_keys;
   std::vector<std::string> not_nulls;
@@ -1466,19 +1466,10 @@ class ResultTable { //Internal representation of a result view.
       int col_index = 1;
       while (index < lines.size() && lines[index] != "$") {
         std::string column_name = lines[index];
+        Type type = get_Type_from_str(lines[index + 1]);
+        
         table_info.columns_index_map.insert({column_name, col_index});
-
-        std::string varchar_str = "varchar";
-        std::string int_str = "int";
-        if (lines[index + 1].substr(0, varchar_str.size()) == varchar_str) {
-          table_info.columns_type_map.insert({column_name, SQL_WVARCHAR});
-        } else if (lines[index + 1].substr(0, int_str.size()) == int_str) {
-          table_info.columns_type_map.insert({column_name, SQL_C_SHORT});
-        } else {
-          table_info.columns_type_map.insert(
-              {column_name,
-               SQL_C_DEFAULT});  // TODO: research every possible type
-        }
+        table_info.columns_type_map.insert({column_name, type});
 
         col_index++;
         index += 2;  // in each iteration we are fetching name and type of each
@@ -1533,75 +1524,87 @@ class ResultTable { //Internal representation of a result view.
       We replicated the returned columns of the default table
       and each of its characteristics.
   */
-    insert_col("TABLE_CAT", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TABLE_SCHEM", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TABLE_NAME", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TABLE_TYPE", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("REMARKS", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("TABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TABLE_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TABLE_TYPE", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("REMARKS", get_Type(SQL_VARCHAR), SQL_NULLABLE);
   }
 
   void insert_SQLPrimaryKeys_cols() {
-    insert_col("TABLE_CAT", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TABLE_SCHEM", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TABLE_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("COLUMN_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("KEY_SEQ", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("PK_NAME", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("TABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("COLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("KEY_SEQ", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("PK_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
   };
 
   void insert_SQLForeignKeys_cols() {
-    insert_col("PKTABLE_CAT", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("PKTABLE_SCHEM", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("PKTABLE_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("PKCOLUMN_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("FKTABLE_CAT", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("FKTABLE_SCHEM", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("FKTABLE_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("FKCOLUMN_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("KEY_SEQ", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("UPDATE_RULE", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("DELETE_RULE", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("FK_NAME", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("PK_NAME", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("DEFERRABILITY", SQL_SMALLINT, SQL_NULLABLE);
+    insert_col("PKTABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("PKTABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("PKTABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("PKCOLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("FKTABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("FKTABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("FKTABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("FKCOLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("KEY_SEQ", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("UPDATE_RULE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("DELETE_RULE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("FK_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("PK_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("DEFERRABILITY", get_Type(SQL_SMALLINT), SQL_NULLABLE);
   };
 
   void insert_SQLGetTypeInfo_cols() {
-    insert_col("TYPE_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("DATA_TYPE", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("COLUMN_SIZE", SQL_INTEGER, SQL_NULLABLE);
-    insert_col("LITERAL_PREFIX", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("LITERAL_SUFFIX", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("CREATE_PARAMS", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("NULLABLE", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("CASE_SENSITIVE", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("SEARCHABLE", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("UNSIGNED_ATTRIBUTE", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("FIXED_PREC_SCALE", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("AUTO_UNIQUE_VALUE", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("LOCAL_TYPE_NAME", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("MINIMUM_SCALE", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("MAXIMUM_SCALE", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("SQL_DATA_TYPE", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("SQL_DATETIME_SUB", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("NUM_PREC_RADIX", SQL_INTEGER, SQL_NULLABLE);
-    insert_col("INTERVAL_PRECISION", SQL_SMALLINT, SQL_NULLABLE);
+    insert_col("TYPE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("DATA_TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("COLUMN_SIZE", get_Type(SQL_INTEGER), SQL_NULLABLE);
+    insert_col("LITERAL_PREFIX", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("LITERAL_SUFFIX", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("CREATE_PARAMS", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("NULLABLE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("CASE_SENSITIVE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("SEARCHABLE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("UNSIGNED_ATTRIBUTE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("FIXED_PREC_SCALE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("AUTO_UNIQUE_VALUE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("LOCAL_TYPE_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("MINIMUM_SCALE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("MAXIMUM_SCALE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("SQL_DATA_TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("SQL_DATETIME_SUB", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("NUM_PREC_RADIX", get_Type(SQL_INTEGER), SQL_NULLABLE);
+    insert_col("INTERVAL_PRECISION", get_Type(SQL_SMALLINT), SQL_NULLABLE);
   }
 
   void insert_SQLStatistics_cols() {
-    insert_col("TABLE_CAT", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TABLE_SCHEM", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TABLE_NAME", SQL_VARCHAR, SQL_NO_NULLS);
-    insert_col("NON_UNIQUE", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("INDEX_QUALIFIER", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("INDEX_NAME", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("TYPE", SQL_SMALLINT, SQL_NO_NULLS);
-    insert_col("ORDINAL_POSITION", SQL_SMALLINT, SQL_NULLABLE);
-    insert_col("COLUMN_NAME", SQL_VARCHAR, SQL_NULLABLE);
-    insert_col("ASC_OR_DESC", SQL_CHAR, SQL_NULLABLE); //TODO: in fact is CHAR(1)
-    insert_col("CARDINALITY", SQL_INTEGER, SQL_NULLABLE);
-    insert_col("PAGES", SQL_INTEGER, SQL_NULLABLE);
-    insert_col("FILTER_CONDITION", SQL_VARCHAR, SQL_NULLABLE);
+    insert_col("TABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("NON_UNIQUE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("INDEX_QUALIFIER", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("INDEX_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("ORDINAL_POSITION", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("COLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_col("ASC_OR_DESC", {SQL_CHAR, 1}, SQL_NULLABLE);  // CHAR(1)
+    insert_col("CARDINALITY", get_Type(SQL_INTEGER), SQL_NULLABLE);
+    insert_col("PAGES", get_Type(SQL_INTEGER), SQL_NULLABLE);
+    insert_col("FILTER_CONDITION", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+  }
+
+  void insert_SQLSpecialColumns_cols(){
+    insert_col("SCOPE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("COLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("DATA_TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
+    insert_col("TYPE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
+    insert_col("COLUMN_SIZE", get_Type(SQL_INTEGER), SQL_NULLABLE);
+    insert_col("BUFFER_LENGTH", get_Type(SQL_INTEGER), SQL_NULLABLE);
+    insert_col("DECIMAL_DIGITS", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_col("PSEUDO_COLUMN", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+
   }
 
   ResultTable(STMT *stmt);
@@ -1647,6 +1650,8 @@ class ResultTable { //Internal representation of a result view.
   void parse_SQLForeignKeys_PKFK(const std::string &str);
 
   void create_results_SQLStatistics(const std::string &str);
+
+  void create_results_SQLSpecialColumns(const std::string &str);
 
   void parse_SQLPrimaryKeys(const std::string &str) {
       //TODO: handle errors
@@ -1718,6 +1723,33 @@ class ResultTable { //Internal representation of a result view.
     }
   }
 
+  Type get_Type_from_str(const std::string& str){
+    std::string type_str = str;
+    SQLULEN size = -1;
+
+    size_t first_parenthesis_pos = type_str.find('(', 0);
+    size_t pos = first_parenthesis_pos;
+    if (pos != std::string::npos) {
+      std::string size_str = "";
+
+      pos++;
+      while (pos < type_str.size() && type_str[pos] != ')') {
+        size_str += type_str[pos];
+        pos++;
+      }
+
+      size = stoi(size_str);
+
+      type_str = type_str.substr(0, first_parenthesis_pos + 1) + ')';
+    } else
+      size = get_type_size(typestr_simpletype_map.at(type_str));
+
+    SQLSMALLINT simple_type = typestr_simpletype_map.at(type_str);
+
+    return {simple_type, size};
+  
+  };
+
   //Constructor of table from the parsing a TAPI-codified DES result.
   //Returns the number of rows of the result (valuable for SQLStatistics)
   int parse_select(const std::string& str, bool fetch_values) {
@@ -1741,34 +1773,12 @@ class ResultTable { //Internal representation of a result view.
       while (!checked_cols && lines[i] != "$eot") {
         //For each column, TAPI gives in a line its name and then its type.
         std::string name = lines[i];
-        std::string type_str = lines[i + 1];
-        SQLULEN str_size = -1;
-
-        size_t first_parenthesis_pos = type_str.find('(', 0);
-        size_t pos = first_parenthesis_pos;
-        if (pos != std::string::npos) {
-          std::string size_str = "";
-
-          pos++;
-          while (pos < type_str.size() && type_str[pos] != ')') {
-            size_str += type_str[pos];
-            pos++;
-          }
-
-          str_size = stoi(size_str);
-
-          type_str = type_str.substr(0, first_parenthesis_pos + 1) + ')';
-        }
-
-        SQLSMALLINT type = typestr_type_map.at(type_str);
+        Type type = get_Type_from_str(lines[i + 1]);
 
         // I have put SQL_NULLABLE_UNKNOWN because I do not know
         // if a result table from select may have an attribute "nullable"
         if (fetch_values) {
-          if (str_size != -1)
-            insert_col(name, type, str_size, SQL_NULLABLE_UNKNOWN);
-          else
-            insert_col(name, type, SQL_NULLABLE_UNKNOWN);
+          insert_col(name, type, SQL_NULLABLE_UNKNOWN);
         }
 
         column_names.push_back(name);
@@ -1809,7 +1819,7 @@ class ResultTable { //Internal representation of a result view.
     return n_rows;
   }
 
-  SQLSMALLINT col_type(const std::string &name) { return columns[name].get_type(); }
+  Type col_type(const std::string &name) { return columns[name].get_type(); }
   SQLULEN col_size(const std::string &name) { return columns[name].get_size(); }
   SQLSMALLINT col_decimal_digits(const std::string &name) { return columns[name].get_decimal_digits(); }
   SQLSMALLINT col_nullable(const std::string &name) { return columns[name].get_nullable(); }
@@ -1843,20 +1853,11 @@ class ResultTable { //Internal representation of a result view.
   
   }
 
-    void insert_col(const std::string &columnName, const SQLSMALLINT &columnType,
+    void insert_col(const std::string &columnName, const Type &columnType,
                   const SQLSMALLINT &columnNullable) {
     names_ordered.push_back(columnName);
     columns[columnName] =
         Column(columnName, columnType, columnNullable);
-  }
-
-    //Case when we insert a column whose type is a fixed-length string/varchar/char
-  void insert_col(const std::string &columnName,
-                 const SQLSMALLINT &columnType, const SQLULEN &columnSizeStr,
-                 const SQLSMALLINT &columnNullable) {
-    names_ordered.push_back(columnName);
-    columns[columnName] = Column(columnName, columnType, columnSizeStr, columnNullable);
-    
   }
 
   void insert_value(const std::string &columnName, const std::string &value) {
@@ -2127,6 +2128,9 @@ inline ResultTable::ResultTable(STMT *stmt, const std::string &str) {
     case SQLSTATISTICS:
       create_results_SQLStatistics(str);
       break;
+    case SQLSPECIALCOLUMNS:
+      create_results_SQLSpecialColumns(str);
+      break;
   }
 }
 
@@ -2160,6 +2164,37 @@ inline bool is_time_data_type(SQLSMALLINT type) {
   }
 }
 
+inline std::string Type_to_type_str(Type type) {
+
+
+  for (auto pair : typestr_simpletype_map) {
+    std::string type_str = pair.first;
+    SQLSMALLINT simple_type = pair.second;
+
+    type_str.erase(std::remove(type_str.begin(), type_str.end(), '('),
+                   type_str.end());
+    type_str.erase(std::remove(type_str.begin(), type_str.end(), ')'),
+                   type_str.end());
+
+    if (type.simple_type == simple_type) {
+      if (is_character_data_type(simple_type) && !is_time_data_type(simple_type)) {
+
+        if (type.size != DEFAULT_DATA_CHARACTER_SIZE) { //TODO: study policies for considering varchar() or varchar depending on size.
+          return type_str + "(" + std::to_string(type.size) + ")"; //i'm not sure if I should return varchar() or varchar(46), for example, given that
+                                                                   //typestr_simpletype_map holds varchar(). TODO: check
+        } else {
+          return type_str;
+        }
+      } else
+        return type_str;
+    }
+
+  }
+
+  return "";
+
+}
+
 inline void ResultTable::create_results_SQLGetTypeInfo() {
   insert_SQLGetTypeInfo_cols();
   SQLSMALLINT type_requested = this->stmt->type_requested;
@@ -2167,7 +2202,7 @@ inline void ResultTable::create_results_SQLGetTypeInfo() {
   for (int i = 0; i < supported_types.size(); i++) {
     if (type_requested == supported_types[i] || type_requested == SQL_ALL_TYPES) {
 
-      for (auto pair : typestr_type_map) {
+      for (auto pair : typestr_simpletype_map) {
         std::string des_type_name = pair.first;
         SQLSMALLINT sql_data_type = pair.second;
         if (sql_data_type == type_requested ||
@@ -2276,6 +2311,29 @@ inline void ResultTable::create_results_SQLGetTypeInfo() {
       }
     }
   }
+
+}
+
+inline void ResultTable::create_results_SQLSpecialColumns(
+    const std::string& str) {
+
+    insert_SQLSpecialColumns_cols();
+    std::vector<std::string> lines = getLines(str);
+    int index = 0;
+    DBSchemaTableInfo table_info = getTableInfo(lines, index);
+
+    for (int i = 0; i < table_info.primary_keys.size(); ++i) {
+      std::string primary_key = table_info.primary_keys[i];
+      Type type = table_info.columns_type_map.at(primary_key);
+      insert_value("SCOPE", std::to_string(SQL_SCOPE_SESSION));
+      insert_value("COLUMN_NAME", primary_key);
+      insert_value("DATA_TYPE", std::to_string(type.simple_type));
+      insert_value("TYPE_NAME", Type_to_type_str(type));
+      insert_value("COLUMN_SIZE", std::to_string(type.size));
+      insert_value("BUFFER_LENGTH", NULL_STR); //TODO: implement
+      insert_value("DECIMAL_DIGITS", NULL_STR);
+      insert_value("PSEUDO_COLUMN", std::to_string(SQL_PC_NOT_PSEUDO));
+    }
 
 }
 
