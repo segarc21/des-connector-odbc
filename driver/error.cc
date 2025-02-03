@@ -32,8 +32,6 @@
 */
 
 #include "driver.h"
-#include "mysqld_error.h"
-#include "errmsg.h"
 
 /*
   @type    : myodbc3 internal error structure
@@ -290,23 +288,11 @@ void set_mem_error(DES *des)
 */
 SQLRETURN handle_connection_error(STMT *stmt)
 {
-  unsigned int err= mysql_errno(stmt->dbc->des);
-  switch (err) {
-  case 0:  /* no error */
-    return SQL_SUCCESS;
-  case CR_SERVER_GONE_ERROR:
-  case CR_SERVER_LOST:
-#if DES_VERSION_ID > 80023
-  case ER_CLIENT_INTERACTION_TIMEOUT:
-#endif
-    return stmt->set_error("08S01", mysql_error(stmt->dbc->des), err);
-  case CR_OUT_OF_MEMORY:
-    return stmt->set_error("HY001", mysql_error(stmt->dbc->des), err);
-  case CR_COMMANDS_OUT_OF_SYNC:
-  case CR_UNKNOWN_ERROR:
-  default:
-    return stmt->set_error("HY000", mysql_error(stmt->dbc->des), err);
-  }
+    /*
+    TODO: depending on the error, we should return, for example
+    return stmt->set_error("08S01", "placeholder text", err);
+    */
+  return SQL_SUCCESS; //placeholder return
 }
 
 
@@ -478,9 +464,9 @@ DESGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
     if (handle_type != SQL_HANDLE_STMT)
       return SQL_ERROR;
     if (!stmt->result)
-      *(SQLLEN *)num_value= 0;
+      *(SQLLEN *)num_value = 0;
     else
-      *(SQLLEN *)num_value= (SQLLEN) mysql_num_rows(stmt->result);
+      *(SQLLEN *)num_value = (SQLLEN)stmt->table->row_count();
     return SQL_SUCCESS;
 
   case SQL_DIAG_DYNAMIC_FUNCTION:

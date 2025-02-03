@@ -98,7 +98,7 @@ void DBC::set_charset(std::string charset)
   std::string query = "SET NAMES " + charset;
   if (execute_query(query.c_str(), query.length(), true))
   {
-    throw DESERROR("HY000", des);
+    //throw DESERROR("HY000", des); //TODO: remove this entire function.
   }
 }
 
