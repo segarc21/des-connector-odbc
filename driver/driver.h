@@ -441,6 +441,32 @@ struct DESCREC{
 
 };
 
+
+inline bool is_character_data_type(SQLSMALLINT type) {
+  switch (type) {
+    case SQL_LONGVARCHAR:
+    case SQL_CHAR:
+    case SQL_VARCHAR:
+    case SQL_TYPE_DATE:
+    case SQL_TYPE_TIME:
+    case SQL_TYPE_TIMESTAMP:
+      return true;
+    default:
+      return false;
+  }
+}
+
+inline bool is_time_data_type(SQLSMALLINT type) {
+  switch (type) {
+    case SQL_TYPE_DATE:
+    case SQL_TYPE_TIME:
+    case SQL_TYPE_TIMESTAMP:
+      return true;
+    default:
+      return false;
+  }
+}
+
 struct STMT;
 struct DBC;
 
@@ -559,6 +585,11 @@ struct STMT_OPTIONS
 #define HANDLE_SENT_EVENT_NAME "Global\\DESODBC_HANDLE_SENT_EVENT"
 
 #define MAX_CLIENTS 256
+
+class Cursor {
+  int row; //starts by 1. 0 means: every row
+
+};
 
 struct PidsConnected {
   DWORD pids_connected[MAX_CLIENTS];
@@ -1127,6 +1158,38 @@ struct Type {
   SQLULEN size = -1; //useful for character data types
 };
 
+inline std::string Type_to_type_str(Type type) {
+  for (auto pair : typestr_simpletype_map) {
+    std::string type_str = pair.first;
+    SQLSMALLINT simple_type = pair.second;
+
+    type_str.erase(std::remove(type_str.begin(), type_str.end(), '('),
+                   type_str.end());
+    type_str.erase(std::remove(type_str.begin(), type_str.end(), ')'),
+                   type_str.end());
+
+    if (type.simple_type == simple_type) {
+      if (is_character_data_type(simple_type) &&
+          !is_time_data_type(simple_type)) {
+        if (type.size !=
+            DEFAULT_DATA_CHARACTER_SIZE) {  // TODO: study policies for
+                                            // considering varchar() or varchar
+                                            // depending on size.
+          return type_str + "(" + std::to_string(type.size) +
+                 ")";  // i'm not sure if I should return varchar() or
+                       // varchar(46), for example, given that
+                       // typestr_simpletype_map holds varchar(). TODO: check
+        } else {
+          return type_str;
+        }
+      } else
+        return type_str;
+    }
+  }
+
+  return "";
+}
+
 inline SQLULEN get_type_size(SQLSMALLINT type) {
   switch (type) {
     case SQL_SMALLINT:
@@ -1156,6 +1219,11 @@ inline SQLULEN get_type_size(SQLSMALLINT type) {
   }
 }
 
+inline void string_to_char_pointer(const std::string &str, char *ptr) {
+  ptr = new char[str.size() + 1];
+  std::strcpy(ptr, str.c_str());
+}
+
 inline Type get_Type(SQLSMALLINT type) { return {type, get_type_size(type)}; }
 
 //Internal representation of a column from a result view.
@@ -1166,6 +1234,7 @@ class Column {
   SQLSMALLINT nullable;
   std::vector<std::string> values;
 
+  SQLSMALLINT target_type_binding = 0;
   SQLPOINTER target_value_binding = NULL;
   SQLLEN buffer_length_binding = 0;
   SQLLEN* str_len_or_ind_binding = NULL;
@@ -1189,6 +1258,14 @@ class Column {
     return type.size;
 
   }
+  void refresh_row(const int row_index) {
+    string_to_char_pointer(values[row_index], (char *)target_value_binding);
+    *str_len_or_ind_binding = values[row_index].size();
+  }
+  void update_row(const int row_index, std::string value) {
+    values[row_index] = value;
+  }
+  void remove_row(const int row_index) { values.erase(values.begin() + row_index);}
   SQLSMALLINT get_decimal_digits() {
       //It seems that there is no type in DES that has this attribute.
       //Consequently, we should always return zero.
@@ -1198,11 +1275,12 @@ class Column {
   SQLSMALLINT get_nullable() { return nullable; }
 
   void insert_value(const std::string &value) { values.push_back(value); }
-  std::string get_value(int index) const { return values[index]; }
+  std::string get_value(int index) const { return values[index-1]; }
 
-  void set_binding(SQLPOINTER TargetValuePtr, SQLLEN BufferLength,
+  void set_binding(SQLSMALLINT TargetType, SQLPOINTER TargetValuePtr, SQLLEN BufferLength,
                    SQLLEN *StrLen_or_IndPtr) {
 
+      target_type_binding = TargetType;
       target_value_binding = TargetValuePtr;
       buffer_length_binding = BufferLength;
       str_len_or_ind_binding = StrLen_or_IndPtr;
@@ -1837,10 +1915,11 @@ class ResultTable { //Internal representation of a result view.
     return names_ordered[index - 1];
   }
 
-  void col_binding(size_t index, SQLPOINTER TargetValuePtr, SQLLEN BufferLength,
+  void col_binding(size_t index, SQLSMALLINT TargetType, SQLPOINTER TargetValuePtr, SQLLEN BufferLength,
                    SQLLEN *StrLen_or_IndPtr) {
     index--; //calls to ODBC API assumes the col numeration starts from 1
-    columns[names_ordered[index]].set_binding(TargetValuePtr, BufferLength,
+    columns[names_ordered[index]].set_binding(TargetType, TargetValuePtr,
+                                              BufferLength,
                                               StrLen_or_IndPtr);
   }
 
@@ -1852,6 +1931,18 @@ class ResultTable { //Internal representation of a result view.
     }
   
   }
+
+  void refresh_row(const int row_index) {
+    for (auto pair : columns) {
+        Column col = pair.second;
+      col.refresh_row(row_index);
+    }
+  
+  }
+
+  void add_row();
+  void update_row(const int row_index);
+  void remove_row(const int row_index);
 
     void insert_col(const std::string &columnName, const Type &columnType,
                   const SQLSMALLINT &columnNullable) {
@@ -1875,8 +1966,6 @@ class ResultTable { //Internal representation of a result view.
     
   }
 };
-
-
 
 struct DES_PARAM { //temporal solution to the parameter problem
     SQLSMALLINT InputOutputType;
@@ -1906,6 +1995,8 @@ struct STMT
   //Adding the DES structures over the MySQL STMT. Temporal changes
   ResultTable *table = new ResultTable(this); //TODO review
 
+  std::vector<SQLCHAR*> bookmarks;
+
   //Adding the query (SQLPrepare). Temporal changes
   SQLCHAR* des_query = NULL;
 
@@ -1925,8 +2016,13 @@ struct STMT
   std::unordered_map<SQLUSMALLINT, DES_PARAM> parameters;
 
   bool new_row_des = true;
-  int current_row_des = 0;
-  std::string current_values_des = "1";
+  int current_row_des = 1;
+
+ /* ApplicationParameterDescriptor des_apd;
+  ImplementationParameterDescriptor des_ipd;
+  ApplicationRowDescriptor des_ard;
+  ImplementationRowDescriptor des_ird;
+   */
 
   DESCURSOR          cursor;
   DESERROR           error;
@@ -2070,8 +2166,7 @@ struct STMT
 
   void reset_row_indexes() {
     new_row_des = true;
-    current_row_des = 0;
-    current_values_des = "1";
+    current_row_des = 1; //what if there were no rows? TODO
   }
 
   private:
@@ -2094,9 +2189,129 @@ struct STMT
 
   friend DBC;
 };
-
 //Defining the following ResultTable functions in a header file with the
 //inline keyword prevents us from having linking errors
+
+SQLRETURN do_quiet_internal_query(std::string query);
+
+inline void ResultTable::add_row() {
+
+  std::vector<std::string> new_values;
+  std::vector<bool> is_character_data;
+  for (int i = 0; i < names_ordered.size(); ++i) {
+    Column col = columns[names_ordered[i]];
+    is_character_data.push_back(
+        is_character_data_type(col.get_type().simple_type));
+    new_values.push_back(std::string((char *)col.target_value_binding,
+                                     *col.str_len_or_ind_binding));
+  }
+
+  std::string query = "insert into " + this->stmt->table_name + " values(";
+  for (int i = 0; i < new_values.size(); ++i) {
+    if (is_character_data[i])
+      query += '\'' + new_values[i] + '\'';
+    else
+      query += new_values[i];
+    if (i != new_values.size() - 1) {
+      query += ",";
+    }
+  }
+
+  query += ')';
+
+  if (do_quiet_internal_query(query) == SQL_SUCCESS) {
+    for (int i = 0; i < names_ordered.size(); ++i) {
+      insert_value(names_ordered[i], new_values[i]);
+    }
+  } else
+    exit(1);  // TODO: handle error
+
+
+}
+
+inline void ResultTable::update_row(int row_index) {
+
+  std::vector<std::string> names;
+  std::vector<std::string> values;
+  std::vector<std::string> new_values;
+  std::vector<bool> is_character_data;
+  for (int i = 0; i < names_ordered.size(); ++i) {
+    names.push_back(names_ordered[i]);
+    Column col = columns[names_ordered[i]];
+    values.push_back(col.get_value(row_index));
+    is_character_data.push_back(
+        is_character_data_type(col.get_type().simple_type));
+    new_values.push_back(std::string((char *)col.target_value_binding, *col.str_len_or_ind_binding));
+  }
+
+  std::string query = "UPDATE " + this->stmt->table_name + " SET ";
+  for (int i = 0; i < names.size(); ++i) {
+    query += names[i] + "=";
+    if (is_character_data[i])
+      query += '\'' + new_values[i] + '\'';
+    else
+      query += values[i];
+    if (i != names.size() - 1) {
+      query += ',';
+    }
+  }
+  query += " WHERE "; //PROBLEM: multiple rows can be deleted if there are duplicates. TODO
+  for (int i = 0; i < names.size(); ++i) {
+    query += names[i] + "=";
+    if (is_character_data[i])
+      query += '\'' + values[i] + '\'';
+    else
+      query += values[i];
+    if (i != names.size() - 1) {
+      query += " AND ";
+    }
+  }
+
+  if (do_quiet_internal_query(query) == SQL_SUCCESS) {
+    for (int i = 0; i < names_ordered.size(); ++i) {
+      names.push_back(names_ordered[i]);
+      Column col = columns[names_ordered[i]];
+      col.update_row(row_index, new_values[i]);
+    }
+  } else
+    exit(1);  // TODO: handle error
+
+}
+
+inline void ResultTable::remove_row(int row_index) {
+  std::vector<std::string> names;
+  std::vector<std::string> values;
+  std::vector<bool> is_character_data;
+  for (int i = 0; i < names_ordered.size(); ++i) {
+    names.push_back(names_ordered[i]);
+    Column col = columns[names_ordered[i]];
+    values.push_back(col.get_value(row_index));
+    is_character_data.push_back(
+        is_character_data_type(col.get_type().simple_type));
+  }
+
+  std::string query = "DELETE FROM " + this->stmt->table_name + " WHERE ";
+  for (int i = 0; i < names.size(); ++i) {
+    query += names[i] + "=";
+    if (is_character_data[i])
+      query += '\'' + values[i] + '\'';
+    else
+      query += values[i];
+    if (i != names.size() - 1) {
+      query += " AND ";
+    }
+  }
+
+  if (do_quiet_internal_query(query) == SQL_SUCCESS) {
+    for (int i = 0; i < names_ordered.size(); ++i) {
+      names.push_back(names_ordered[i]);
+      Column col = columns[names_ordered[i]];
+      col.remove_row(row_index);
+    }
+  }
+  else
+      exit(1); //TODO: handle error
+}
 
 inline ResultTable::ResultTable(STMT *stmt, const std::string &str) {
   this->stmt = stmt;
@@ -2139,61 +2354,6 @@ inline ResultTable::ResultTable(STMT *stmt) {
   insert_metadata_cols();
 }
 
-inline bool is_character_data_type(SQLSMALLINT type) {
-  switch (type) {
-    case SQL_LONGVARCHAR:
-    case SQL_CHAR:
-    case SQL_VARCHAR:
-    case SQL_TYPE_DATE:
-    case SQL_TYPE_TIME:
-    case SQL_TYPE_TIMESTAMP:
-      return true;
-    default:
-      return false;
-  }
-}
-
-inline bool is_time_data_type(SQLSMALLINT type) {
-  switch (type) {
-    case SQL_TYPE_DATE:
-    case SQL_TYPE_TIME:
-    case SQL_TYPE_TIMESTAMP:
-      return true;
-    default:
-      return false;
-  }
-}
-
-inline std::string Type_to_type_str(Type type) {
-
-
-  for (auto pair : typestr_simpletype_map) {
-    std::string type_str = pair.first;
-    SQLSMALLINT simple_type = pair.second;
-
-    type_str.erase(std::remove(type_str.begin(), type_str.end(), '('),
-                   type_str.end());
-    type_str.erase(std::remove(type_str.begin(), type_str.end(), ')'),
-                   type_str.end());
-
-    if (type.simple_type == simple_type) {
-      if (is_character_data_type(simple_type) && !is_time_data_type(simple_type)) {
-
-        if (type.size != DEFAULT_DATA_CHARACTER_SIZE) { //TODO: study policies for considering varchar() or varchar depending on size.
-          return type_str + "(" + std::to_string(type.size) + ")"; //i'm not sure if I should return varchar() or varchar(46), for example, given that
-                                                                   //typestr_simpletype_map holds varchar(). TODO: check
-        } else {
-          return type_str;
-        }
-      } else
-        return type_str;
-    }
-
-  }
-
-  return "";
-
-}
 
 inline void ResultTable::create_results_SQLGetTypeInfo() {
   insert_SQLGetTypeInfo_cols();

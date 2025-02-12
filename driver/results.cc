@@ -1372,7 +1372,7 @@ SQLRETURN SQL_API SQLBindCol(SQLHSTMT      StatementHandle,
 
   //TODO: check integrity
 
-  stmt->table->col_binding(ColumnNumber, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
+  stmt->table->col_binding(ColumnNumber, TargetType, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
 
   return SQL_SUCCESS;
 
@@ -2510,10 +2510,9 @@ SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle) {
       stmt->new_row_des = false;
     } else {
       stmt->current_row_des++;
-      stmt->current_values_des = std::to_string(stmt->current_row_des+1);
     }
 
-    if (stmt->current_row_des == stmt->table->row_count()) {
+    if (stmt->current_row_des == stmt->table->row_count() + 1) {
 
         //We now reset row indexes
         stmt->reset_row_indexes();

@@ -102,7 +102,54 @@ bool try_to_read_pipe(HANDLE rpipe, CHAR buffer[BUFFER_SIZE], DWORD &bytes_read)
 }
 
 
-/*
+SQLRETURN do_quiet_internal_query(std::string query) {
+  DWORD bytes_written;
+  ENV *env = dbc_global_var->env;
+  std::string full_query =
+      "/tapi " + query + '\n';  // query for the launched DES process
+
+  // We convert the string to a char*.
+  char *full_query_arr =
+      new char[full_query.size() +
+               sizeof(char)];  // we hold a final char for the delimiter '\0'
+  std::copy(full_query.begin(), full_query.end(), full_query_arr);
+  full_query_arr[full_query.size()] = '\0';
+
+  if (!WriteFile(env->driver_to_des_in_wpipe, full_query_arr,
+                 strlen(full_query_arr), &bytes_written,
+                 NULL)) {  // as we explained in the connection part,
+                           // the final argument must be not null only when the
+                           // pipe was created with overlapping
+    return SQL_ERROR;
+  }
+
+  std::string tapi_output;
+
+  /*
+      Same considerations as those we took when reading the startup DES message.
+      However, that output message had a fixed length and behavior. We introduce
+      some new logic when treating a command output.
+  */
+  bool finished_reading = false;
+  CHAR buffer[BUFFER_SIZE];
+  DWORD bytes_read;
+
+  while (!finished_reading) {
+    if (!try_to_read_pipe(env->driver_to_des_out_rpipe, buffer, bytes_read)) {
+      finished_reading = true;
+    } else {
+      buffer[bytes_read] = '\0';
+      std::string buffer_str = buffer;
+      tapi_output += buffer_str;
+    }
+  }
+
+  if (tapi_output == "1")
+    return SQL_SUCCESS;
+  else
+    return SQL_ERROR;
+}
+    /*
     Function that executes a query into the DES executable (through its
     STDIN pipe), and loads its result into a internal table, structure held by the stmt.
 */
