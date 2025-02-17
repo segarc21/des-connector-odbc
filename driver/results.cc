@@ -381,7 +381,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
              SQLPOINTER rgbValue, SQLLEN cbValueMax, SQLLEN *pcbValue,
              char *value, ulong length, DESCREC *arrec)
 {
-  DES_FIELD *field= mysql_fetch_field_direct(stmt->result, column_number);
+  DES_FIELD *field= des_fetch_field_direct(stmt->result, column_number);
   SQLLEN    tmp;
   long long numeric_value = 0;
   unsigned long long u_numeric_value = 0;
@@ -1028,42 +1028,24 @@ SQLRETURN do_dummy_parambind(SQLHSTMT hstmt)
 SQLRETURN SQL_API SQLNumResultCols(SQLHSTMT  hstmt, SQLSMALLINT *pccol)
 {
   SQLRETURN error;
-  STMT *stmt = (STMT *)hstmt;
-
-  CHECK_HANDLE(hstmt);
-  CHECK_DATA_OUTPUT(hstmt, pccol);
-
-  *pccol = (SQLSMALLINT)stmt->table->col_count();
-
-  return SQL_SUCCESS;  
-
-    /*
-  SQLRETURN error;
   STMT *stmt= (STMT *) hstmt;
 
   CHECK_HANDLE(hstmt);
   CHECK_DATA_OUTPUT(hstmt, pccol);
 
-  if (!ssps_used(stmt))
-  {
-    if (stmt->param_count > 0 && stmt->dummy_state == ST_DUMMY_UNKNOWN &&
-      (stmt->state != ST_PRE_EXECUTED || stmt->state != ST_EXECUTED))
-    {
-      if ( do_dummy_parambind(hstmt) != SQL_SUCCESS )
-      {
-        return SQL_ERROR;
-      }
+  if (stmt->param_count > 0 && stmt->dummy_state == ST_DUMMY_UNKNOWN &&
+      (stmt->state != ST_PRE_EXECUTED || stmt->state != ST_EXECUTED)) {
+    if (do_dummy_parambind(hstmt) != SQL_SUCCESS) {
+      return SQL_ERROR;
     }
-    if ((error= check_result(stmt)) != SQL_SUCCESS)
-    {
-      return error;
-    }
+  }
+  if ((error = check_result(stmt)) != SQL_SUCCESS) {
+    return error;
   }
 
   *pccol= (SQLSMALLINT) stmt->ird->rcount();
 
   return SQL_SUCCESS;
-*/
 }
 
 
@@ -1082,70 +1064,52 @@ SQLRETURN SQL_API SQLNumResultCols(SQLHSTMT  hstmt, SQLSMALLINT *pccol)
 SQLRETURN SQL_API
 DESDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
                  SQLCHAR **name, SQLSMALLINT *need_free, SQLSMALLINT *type,
-                 SQLULEN *size, SQLSMALLINT *scale, SQLSMALLINT *nullable)
-{
+                 SQLULEN *size, SQLSMALLINT *scale, SQLSMALLINT *nullable) {
   SQLRETURN error;
-  STMT *stmt= (STMT *)hstmt;
-  DESCREC* irrec;
+  STMT *stmt = (STMT *)hstmt;
+  DESCREC *irrec;
 
-  *need_free= 0;
+  *need_free = 0;
 
   /* SQLDescribeCol can be called before SQLExecute. Thus we need make sure that
      all parameters have been bound */
-  if (!ssps_used(stmt))
-  {
-    if ( stmt->param_count > 0 && stmt->dummy_state == ST_DUMMY_UNKNOWN &&
-      (stmt->state != ST_PRE_EXECUTED || stmt->state != ST_EXECUTED) )
-    {
-      if ( do_dummy_parambind(hstmt) != SQL_SUCCESS )
-        return SQL_ERROR;
-    }
-
-    if ((error= check_result(stmt)) != SQL_SUCCESS)
-      return error;
-    if (!stmt->result)
-      return stmt->set_error("07005", "No result set", 0);
+  if (stmt->param_count > 0 && stmt->dummy_state == ST_DUMMY_UNKNOWN &&
+      (stmt->state != ST_PRE_EXECUTED || stmt->state != ST_EXECUTED)) {
+    if (do_dummy_parambind(hstmt) != SQL_SUCCESS) return SQL_ERROR;
   }
 
-  if (column == 0 || column > stmt->ird->rcount())
-  {
+  if ((error = check_result(stmt)) != SQL_SUCCESS) return error;
+  if (!stmt->result) return stmt->set_error("07005", "No result set", 0);
+
+  if (column == 0 || column > stmt->ird->rcount()) {
     return stmt->set_error("07009", "Invalid descriptor index", 0);
   }
 
-  irrec= desc_get_rec(stmt->ird, column - 1, FALSE);
-  if (!irrec)
-  {
-    return SQL_ERROR; // The error info is already set inside desc_get_rec()
+  irrec = desc_get_rec(stmt->ird, column - 1, FALSE);
+  if (!irrec) {
+    return SQL_ERROR;  // The error info is already set inside desc_get_rec()
   }
 
-  if (type)
-    *type= irrec->concise_type;
-  if (size)
-    *size= irrec->length;
-  if (scale)
-    *scale= irrec->scale;
-  if (nullable)
-    *nullable= irrec->nullable;
+  if (type) *type = irrec->concise_type;
+  if (size) *size = irrec->length;
+  if (scale) *scale = irrec->scale;
+  if (nullable) *nullable = irrec->nullable;
 
-  if (stmt->dbc->ds.opt_FULL_COLUMN_NAMES && irrec->table_name)
-  {
-    char *tmp= (char*)desodbc_malloc(strlen((char *)irrec->name) +
-                         strlen((char *)irrec->table_name) + 2,
-                         DESF(0));
-    if (!tmp)
-    {
-      *need_free= -1;
-      *name= NULL;
+  if (stmt->dbc->ds.opt_FULL_COLUMN_NAMES && irrec->table_name) {
+    char *tmp = (char *)desodbc_malloc(
+        strlen((char *)irrec->name) + strlen((char *)irrec->table_name) + 2,
+        DESF(0));
+    if (!tmp) {
+      *need_free = -1;
+      *name = NULL;
+    } else {
+      desodbc::strxmov(tmp, (char *)irrec->table_name, ".", (char *)irrec->name,
+                      NullS);
+      *name = (SQLCHAR *)tmp;
+      *need_free = 1;
     }
-    else
-    {
-      desodbc::strxmov(tmp, (char *)irrec->table_name, ".", (char *)irrec->name, NullS);
-      *name= (SQLCHAR *)tmp;
-      *need_free= 1;
-    }
-  }
-  else
-    *name= (SQLCHAR *)irrec->name;
+  } else
+    *name = (SQLCHAR *)irrec->name;
 
   return SQL_SUCCESS;
 }
@@ -1365,14 +1329,67 @@ SQLRETURN SQL_API SQLBindCol(SQLHSTMT      StatementHandle,
                              SQLLEN *      StrLen_or_IndPtr)
 {
   SQLRETURN rc;
-  STMT *stmt= (STMT *) StatementHandle;
+  STMT *stmt = (STMT *)StatementHandle;
+  DESCREC *arrec;
+  /* TODO if this function fails, the SQL_DESC_COUNT should be unchanged in ard
+   */
 
   LOCK_STMT(stmt);
   CLEAR_STMT_ERROR(stmt);
 
-  //TODO: check integrity
+  if (!TargetValuePtr && !StrLen_or_IndPtr) /* Handling unbinding */
+  {
+    /*
+       If unbinding the last bound column, we reduce the
+       ARD records until the highest remaining bound column.
+    */
+    if (ColumnNumber == stmt->ard->rcount()) {
+      stmt->ard->records2.pop_back();  // Remove the last
+      while (stmt->ard->rcount()) {
+        arrec = desc_get_rec(stmt->ard, (int)stmt->ard->rcount() - 1, FALSE);
+        if (ARD_IS_BOUND(arrec))
+          break;
+        else
+          stmt->ard->records2.pop_back();  // TODO: do it more gracefully
+      }
+    } else {
+      arrec = desc_get_rec(stmt->ard, ColumnNumber - 1, FALSE);
+      if (arrec) {
+        arrec->data_ptr = NULL;
+        arrec->octet_length_ptr = NULL;
+      }
+    }
+    return SQL_SUCCESS;
+  }
 
-  stmt->table->col_binding(ColumnNumber, TargetType, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
+  if ((ColumnNumber == 0 && stmt->stmt_options.bookmarks == SQL_UB_OFF) ||
+      (stmt->state == ST_EXECUTED && ColumnNumber > stmt->ird->rcount())) {
+    return stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
+  }
+
+  arrec = desc_get_rec(stmt->ard, ColumnNumber - 1, TRUE);
+
+  if ((rc = stmt_SQLSetDescField(
+           stmt, stmt->ard, ColumnNumber, SQL_DESC_CONCISE_TYPE,
+           (SQLPOINTER)(size_t)TargetType, SQL_IS_SMALLINT)) != SQL_SUCCESS)
+    return rc;
+  if ((rc = stmt_SQLSetDescField(
+           stmt, stmt->ard, ColumnNumber, SQL_DESC_OCTET_LENGTH,
+           (SQLPOINTER)(size_t)bind_length(TargetType, (ulong)BufferLength),
+           SQL_IS_LEN)) != SQL_SUCCESS)
+    return rc;
+  if ((rc = stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
+                                 SQL_DESC_DATA_PTR, TargetValuePtr,
+                                 SQL_IS_POINTER)) != SQL_SUCCESS)
+    return rc;
+  if ((rc = stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
+                                 SQL_DESC_INDICATOR_PTR, StrLen_or_IndPtr,
+                                 SQL_IS_POINTER)) != SQL_SUCCESS)
+    return rc;
+  if ((rc = stmt_SQLSetDescField(stmt, stmt->ard, ColumnNumber,
+                                 SQL_DESC_OCTET_LENGTH_PTR, StrLen_or_IndPtr,
+                                 SQL_IS_POINTER)) != SQL_SUCCESS)
+    return rc;
 
   return SQL_SUCCESS;
 
@@ -1416,13 +1433,99 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
                              SQLLEN        BufferLength,
                              SQLLEN *      StrLen_or_IndPtr)
 {
-    STMT *stmt= (STMT *) StatementHandle;
-    SQLRETURN result = SQL_SUCCESS;
-    ulong length= 0;
-    DESCREC *irrec, *arrec;
-    LOCK_STMT(stmt);
+  STMT *stmt = (STMT *)StatementHandle;
+  SQLRETURN result = SQL_SUCCESS;
+  ulong length = 0;
+  DESCREC *irrec, *arrec;
+  /*
+    Signed column number required for bookmark column 0,
+    which will become -1 when decremented later.
+  */
+  SQLSMALLINT sColNum = ColumnNumber;
 
-    return stmt->table->copy_result_in_memory(stmt->current_row_des, ColumnNumber, TargetType, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
+  LOCK_STMT(stmt);
+
+  if (!stmt->result || (!stmt->current_values &&
+                        stmt->out_params_state != OPS_STREAMS_PENDING)) {
+    stmt->set_error("24000", "SQLGetData without a preceding SELECT", 0);
+    return SQL_ERROR;
+  }
+
+  if ((sColNum < 1 &&
+       stmt->stmt_options.bookmarks == (SQLUINTEGER)SQL_UB_OFF) ||
+      ColumnNumber > stmt->ird->rcount()) {
+    return stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
+  }
+
+  if (sColNum == 0 && TargetType != SQL_C_BOOKMARK &&
+      TargetType != SQL_C_VARBOOKMARK) {
+    return stmt->set_error("HY003", "Program type out of range", 0);
+  }
+
+  --sColNum; /* Easier code if start from 0 which will make bookmark column -1
+              */
+
+  if (stmt->out_params_state == OPS_STREAMS_PENDING) {
+    /* http://msdn.microsoft.com/en-us/library/windows/desktop/ms715441%28v=vs.85%29.aspx
+        "07009 Invalid descriptor index ...The Col_or_Param_Num value was not
+       equal to the ordinal of the parameter that is available." Returning error
+       if requested parameter number is different from the last call to
+        SQLParamData */
+    if (sColNum != stmt->current_param) {
+      return stmt->set_error("07009",
+                             "The parameter number value was not equal to \
+                                            the ordinal of the parameter that is available.",
+                             DESERR_07009);
+    } else {
+      /* In getdatat column we keep out parameter column number in the result */
+      sColNum = stmt->getdata.column;
+    }
+
+    if (TargetType != SQL_C_BINARY) {
+      return stmt->set_error(
+          "HYC00",
+          "Stream output parameters supported for SQL_C_BINARY"
+          " only",
+          0);
+    }
+  }
+
+  if (sColNum != stmt->getdata.column) {
+    /* New column. Reset old offset */
+    stmt->reset_getdata_position();
+    stmt->getdata.column = sColNum;
+  }
+  irrec = desc_get_rec(stmt->ird, sColNum, FALSE);
+
+  assert(irrec);
+
+  if ((sColNum == -1 && stmt->stmt_options.bookmarks == SQL_UB_VARIABLE)) {
+    std::string _value;
+    /* save position set using SQLSetPos in buffer */
+    _value = std::to_string((stmt->cursor_row > 0) ? stmt->cursor_row : 0);
+    arrec = desc_get_rec(stmt->ard, sColNum, FALSE);
+    result = sql_get_bookmark_data(
+        stmt, TargetType, sColNum, TargetValuePtr, BufferLength,
+        StrLen_or_IndPtr, (char *)_value.data(), (ulong)_value.length(), arrec);
+  } else {
+    /* catalog functions with "fake" results won't have lengths */
+    length = irrec->row.datalen;
+    if (!length && stmt->current_values[sColNum])
+      length = (ulong)strlen(stmt->current_values[sColNum]);
+
+    arrec = desc_get_rec(stmt->ard, sColNum, FALSE);
+
+    /* String will be used as a temporary storage which frees itself
+     * automatically */
+    std::string temp_str;
+    char *value = fix_padding(stmt, TargetType, stmt->current_values[sColNum],
+                              temp_str, BufferLength, length, irrec);
+
+    result = sql_get_data(stmt, TargetType, sColNum, TargetValuePtr,
+                          BufferLength, StrLen_or_IndPtr, value, length, arrec);
+  }
+
+  return result;
 }
 
 
@@ -1522,32 +1625,16 @@ SQLRETURN SQL_API SQLMoreResults( SQLHSTMT hstmt )
   }
   fix_result_types(stmt);
 
-  /* checking if next result is SP OUT params and fetch them if needed */
-  if (IS_PS_OUT_PARAMS(stmt))
-  {
-    int out_params= got_out_parameters(stmt);
-
-    /* We prefetch out params row even if application did not specify any out parameter.
-       In this way we can do the "magical" fetch safely right after that */
-      /* This server status(SERVER_PS_OUT_PARAMS) can be only if we used PS
-        - thus calling ssps_ without check */
-    ssps_get_out_params(stmt);
-
-    if (out_params & GOT_OUT_STREAM_PARAMETERS)
-    {
-      nReturn= SQL_PARAM_DATA_AVAILABLE;
-    }
-  }
 
 exitSQLMoreResults:
 
   switch(nReturn)
   {
     case SQL_NO_DATA:
-      stmt->telemetry.span_end(stmt);
+      //stmt->telemetry.span_end(stmt); //TODO: put custom DES error
       break;
     case SQL_ERROR:
-      stmt->telemetry.set_error(stmt, stmt->error);
+      //stmt->telemetry.set_error(stmt, stmt->error); //TODO: put custom DES error
       break;
     default:
       // do nothing with the telemetry
@@ -1569,16 +1656,6 @@ exitSQLMoreResults:
 SQLRETURN SQL_API SQLRowCount( SQLHSTMT hstmt,
                                SQLLEN * pcrow )
 {
-    STMT *stmt = (STMT *)hstmt;
-
-  CHECK_HANDLE(hstmt);
-  CHECK_DATA_OUTPUT(hstmt, pcrow);
-
-  *pcrow = (SQLLEN)stmt->table->row_count();
-
-  return SQL_SUCCESS;  
-
-    /*
     STMT *stmt= (STMT *) hstmt;
 
     CHECK_HANDLE(hstmt);
@@ -1597,7 +1674,6 @@ SQLRETURN SQL_API SQLRowCount( SQLHSTMT hstmt,
         *pcrow= (SQLLEN) stmt->affected_rows;
     }
     return SQL_SUCCESS;
-  */
 }
 
 
@@ -2125,127 +2201,114 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
                                        SQLUSMALLINT        *rgfRowStatus,
                                        des_bool              upd_status )
 {
-  SQLULEN           rows_to_fetch;
-  long              cur_row, max_row;
-  SQLULEN           i;
-  SQLRETURN         row_res, res, row_book= SQL_SUCCESS;
-  STMT              *stmt= (STMT *) hstmt;
-  DES_ROW         values= 0;
-  DES_ROW_OFFSET  save_position= 0;
-  SQLULEN           dummy_pcrow;
-  BOOL              disconnected= FALSE;
-  long              brow= 0;
+    SQLULEN           rows_to_fetch;
+    long              cur_row, max_row;
+    SQLULEN           i;
+    SQLRETURN         row_res, res, row_book= SQL_SUCCESS;
+    STMT              *stmt= (STMT *) hstmt;
+    DES_ROW         values= 0;
+    DES_ROW_OFFSET  save_position= 0;
+    SQLULEN           dummy_pcrow;
+    BOOL              disconnected= FALSE;
+    long              brow= 0;
 
-  auto span_stop_if_no_data = [](STMT *stmt) {
-    if (!mysql_more_results(stmt->dbc->des))
-    {
-      stmt->telemetry.span_end(stmt);
-    }
-    return;
-  };
-
-  try
-  {
     if ( !stmt->result )
     {
-      res = stmt->set_error("24000", "Fetch without a SELECT", 0);
-      throw stmt->error;
+        res = stmt->set_error("24000", "Fetch without a SELECT", 0);
+        throw stmt->error;
     }
 
     if (stmt->out_params_state != OPS_UNKNOWN)
     {
-      switch(stmt->out_params_state)
-      {
-      case OPS_BEING_FETCHED:
-        /* Smth weird */
-        span_stop_if_no_data(stmt);
-        return SQL_NO_DATA_FOUND;
-      case OPS_STREAMS_PENDING:
-        /* Magical out params fetch */
-        mysql_stmt_fetch(stmt->ssps);
-      default:
-        /* TODO: Need to remember real fetch' result */
-        /* just in case... */
-        stmt->out_params_state= OPS_BEING_FETCHED;
-      }
+        switch(stmt->out_params_state)
+        {
+        case OPS_BEING_FETCHED:
+            return SQL_NO_DATA_FOUND;
+        case OPS_STREAMS_PENDING:
+            /* Magical out params fetch */
+            des_stmt_fetch(stmt->ssps);
+        default:
+            /* TODO: Need to remember real fetch' result */
+            /* just in case... */
+            stmt->out_params_state= OPS_BEING_FETCHED;
+        }
     }
 
     cur_row = stmt->current_row;
 
     if ( stmt->stmt_options.cursor_type == SQL_CURSOR_FORWARD_ONLY )
     {
-      if ( fFetchType != SQL_FETCH_NEXT && !stmt->dbc->ds.opt_SAFE )
-      {
+        if ( fFetchType != SQL_FETCH_NEXT && !stmt->dbc->ds.opt_SAFE )
+        {
         res = stmt->set_error(DESERR_S1106,
-              "Wrong fetchtype with FORWARD ONLY cursor", 0);
+                "Wrong fetchtype with FORWARD ONLY cursor", 0);
         throw stmt->error;
-      }
+        }
     }
 
     if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
     {
-      res = stmt->set_error(DESERR_S1000,
+        res = stmt->set_error(DESERR_S1000,
             "Driver Failed to set the internal dynamic result", 0);
-      throw stmt->error;
+        throw stmt->error;
     }
 
     if ( !pcrow )
-      pcrow= &dummy_pcrow;
+        pcrow= &dummy_pcrow;
 
     /* for scrollable cursor("scroller") max_row is max row for currently
-       fetched part of resultset */
+        fetched part of resultset */
     max_row= (long) num_rows(stmt);
     stmt->reset_getdata_position();
     stmt->current_values= 0;          /* For SQLGetData */
     cur_row = stmt->compute_cur_row(fFetchType, irow);
 
     if (scroller_exists(stmt)
-      || (if_forward_cache(stmt) && !stmt->result_array)
-      || (fFetchType == SQL_FETCH_BOOKMARK && stmt->stmt_options.bookmark_insert))
+        || (if_forward_cache(stmt) && !stmt->result_array)
+        || (fFetchType == SQL_FETCH_BOOKMARK && stmt->stmt_options.bookmark_insert))
     {
-      rows_to_fetch= stmt->ard->array_size;
+        rows_to_fetch= stmt->ard->array_size;
     }
     else
     {
-      rows_to_fetch= desodbc_min(max_row-cur_row,
+        rows_to_fetch= desodbc_min(max_row-cur_row,
                                 (long)stmt->ard->array_size);
     }
 
     /* out params has been silently fetched */
     if (rows_to_fetch == 0)
     {
-      if (stmt->out_params_state != OPS_UNKNOWN)
-      {
+        if (stmt->out_params_state != OPS_UNKNOWN)
+        {
         rows_to_fetch= 1;
-      }
-      else
-      {
+        }
+        else
+        {
         *pcrow= 0;
         stmt->rows_found_in_set= 0;
         if ( upd_status && stmt->ird->rows_processed_ptr )
         {
-          *stmt->ird->rows_processed_ptr= 0;
+            *stmt->ird->rows_processed_ptr= 0;
         }
-        span_stop_if_no_data(stmt);
         return SQL_NO_DATA_FOUND;
-      }
+        }
     }
 
     res= SQL_SUCCESS;
     for (i= 0 ; i < rows_to_fetch ; ++i)
     {
-      values = nullptr;
+        values = nullptr;
 
-      if ( stmt->result_array )
-      {
+        if ( stmt->result_array )
+        {
         values= stmt->result_array + cur_row*stmt->result->field_count;
         if ( i == 0 )
         {
-          stmt->current_values= values;
+            stmt->current_values= values;
         }
-      }
-      else
-      {
+        }
+        else
+        {
         /* This code will ensure that values is always set */
         if ( i == 0 )
         {
@@ -2253,169 +2316,163 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
         }
         /* - Actual fetching happens here - */
         if ( stmt->out_params_state == OPS_UNKNOWN
-          && !(values = stmt->fetch_row()) )
+            && !(values = stmt->fetch_row()) )
         {
-          if (scroller_exists(stmt))
-          {
+            if (scroller_exists(stmt))
+            {
             scroller_move(stmt);
 
             row_res= scroller_prefetch(stmt);
 
             if (row_res != SQL_SUCCESS)
             {
-              break;
+                break;
             }
 
             if ( !(values = stmt->fetch_row()) )
             {
-              break;
+                break;
             }
 
             /* Not sure that is right, but see it better than nothing */
             save_position= row_tell(stmt);
-          }
-          else
-          {
+            }
+            else
+            {
             break;
-          }
+            }
         }
 
         if (stmt->out_params_state != OPS_UNKNOWN)
         {
-          values= stmt->array;
+            values= stmt->array;
         }
 
         if (stmt->fix_fields)
         {
-          values= (*stmt->fix_fields)(stmt,values);
+            values= (*stmt->fix_fields)(stmt,values);
         }
 
         stmt->current_values= values;
-      }
+        }
 
-      if (!stmt->fix_fields)
-      {
+        if (!stmt->fix_fields)
+        {
         /* lengths contains lengths for all rows. Alternate use could be
-           filling ird buffers in the (fix_fields) function. In this case
-           lengths could contain just one array with rules for lengths
-           calculating(it can work out in many cases like in catalog functions
-           there some fields from results of auxiliary query are simply mixed
-           somehow and constant fields added ).
-           Another approach could be using of "array" and "order" arrays
-           and special fix_fields callback, that will fix array and set
-           lengths in ird*/
+            filling ird buffers in the (fix_fields) function. In this case
+            lengths could contain just one array with rules for lengths
+            calculating(it can work out in many cases like in catalog functions
+            there some fields from results of auxiliary query are simply mixed
+            somehow and constant fields added ).
+            Another approach could be using of "array" and "order" arrays
+            and special fix_fields callback, that will fix array and set
+            lengths in ird*/
         if (stmt->lengths)
         {
-          fill_ird_data_lengths(stmt->ird, stmt->lengths.get() + cur_row*stmt->result->field_count,
+            fill_ird_data_lengths(stmt->ird, stmt->lengths.get() + cur_row*stmt->result->field_count,
                                 stmt->result->field_count);
         }
         else
         {
-          fill_ird_data_lengths(stmt->ird, fetch_lengths(stmt),
+            fill_ird_data_lengths(stmt->ird, fetch_lengths(stmt),
                                 stmt->result->field_count);
         }
-      }
+        }
 
-      if (fFetchType == SQL_FETCH_BOOKMARK &&
-           stmt->stmt_options.bookmarks == SQL_UB_VARIABLE)
-      {
+        if (fFetchType == SQL_FETCH_BOOKMARK &&
+            stmt->stmt_options.bookmarks == SQL_UB_VARIABLE)
+        {
         row_book= fill_fetch_bookmark_buffers(stmt, (ulong)(irow + i + 1), (uint)i);
-      }
-      row_res= fill_fetch_buffers(stmt, values, (uint)i);
+        }
+        row_res= fill_fetch_buffers(stmt, values, (uint)i);
 
-      /* For SQL_SUCCESS we need all rows to be SQL_SUCCESS */
-      if (res != row_res || res != row_book)
-      {
+        /* For SQL_SUCCESS we need all rows to be SQL_SUCCESS */
+        if (res != row_res || res != row_book)
+        {
         /* Any successful row makes overall result SQL_SUCCESS_WITH_INFO */
         if (SQL_SUCCEEDED(row_res) && SQL_SUCCEEDED(row_res))
         {
-          res= SQL_SUCCESS_WITH_INFO;
+            res= SQL_SUCCESS_WITH_INFO;
         }
         /* Else error */
         else if (i == 0)
         {
-          /* SQL_ERROR only if all rows fail */
-          res= SQL_ERROR;
+            /* SQL_ERROR only if all rows fail */
+            res= SQL_ERROR;
         }
         else
         {
-          res= SQL_SUCCESS_WITH_INFO;
+            res= SQL_SUCCESS_WITH_INFO;
         }
-      }
+        }
 
-      /* "Fetching" includes buffers filling. I think errors in that
-         have to affect row status */
+        /* "Fetching" includes buffers filling. I think errors in that
+            have to affect row status */
 
-      if (rgfRowStatus)
-      {
+        if (rgfRowStatus)
+        {
         rgfRowStatus[i]= sqlreturn2row_status(row_res);
-      }
-      /*
+        }
+        /*
         No need to update rowStatusPtr_ex, it's the same as rgfRowStatus.
-      */
-      if (upd_status && stmt->ird->array_status_ptr)
-      {
+        */
+        if (upd_status && stmt->ird->array_status_ptr)
+        {
         stmt->ird->array_status_ptr[i]= sqlreturn2row_status(row_res);
-      }
+        }
 
-      ++cur_row;
+        ++cur_row;
     }   /* fetching cycle end*/
 
     stmt->rows_found_in_set = (uint)i;
     *pcrow= i;
 
     disconnected= is_connection_lost(mysql_errno(stmt->dbc->des))
-      && handle_connection_error(stmt);
+        && handle_connection_error(stmt);
 
     if ( upd_status && stmt->ird->rows_processed_ptr )
     {
-      *stmt->ird->rows_processed_ptr= i;
+        *stmt->ird->rows_processed_ptr= i;
     }
 
     /* It is possible that both rgfRowStatus and array_status_ptr are set
     (and upp_status is TRUE) */
     for ( ; i < stmt->ard->array_size ; ++i )
     {
-      if ( rgfRowStatus )
-      {
+        if ( rgfRowStatus )
+        {
         rgfRowStatus[i]= disconnected ? SQL_ROW_ERROR : SQL_ROW_NOROW;
-      }
-      /*
+        }
+        /*
         No need to update rowStatusPtr_ex, it's the same as rgfRowStatus.
-      */
-      if ( upd_status && stmt->ird->array_status_ptr )
-      {
+        */
+        if ( upd_status && stmt->ird->array_status_ptr )
+        {
         stmt->ird->array_status_ptr[i]= disconnected? SQL_ROW_ERROR
                                                     : SQL_ROW_NOROW;
-      }
+        }
     }
 
     if (SQL_SUCCEEDED(res) && !stmt->result_array && !if_forward_cache(stmt))
     {
-      /* reset result position */
-      stmt->end_of_set= row_seek(stmt, save_position);
+        /* reset result position */
+        stmt->end_of_set= row_seek(stmt, save_position);
     }
 
     if (SQL_SUCCEEDED(res)
-      && stmt->rows_found_in_set < stmt->ard->array_size)
+        && stmt->rows_found_in_set < stmt->ard->array_size)
     {
-      if (disconnected)
-      {
+        if (disconnected)
+        {
         res = SQL_ERROR;
         throw stmt->error;
-      }
-      else if (stmt->rows_found_in_set == 0)
-      {
-        span_stop_if_no_data(stmt);
+        }
+        else if (stmt->rows_found_in_set == 0)
+        {
         return SQL_NO_DATA_FOUND;
-      }
+        }
     }
-  }
-  catch(const DESERROR &e)
-  {
-    res = e.retcode;
-    stmt->telemetry.set_error(stmt, e.message);
-  }
+
   return res;
 }
 
@@ -2502,30 +2559,10 @@ SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle) {
 
   LOCK_STMT(stmt);
 
-  if (!stmt->fake_result) {
-    options = &stmt->stmt_options;
-    options->rowStatusPtr_ex = NULL;
+  options = &stmt->stmt_options;
+  options->rowStatusPtr_ex = NULL;
 
-    if (stmt->new_row_des) {
-      stmt->new_row_des = false;
-    } else {
-      stmt->current_row_des++;
-    }
-
-    if (stmt->current_row_des == stmt->table->row_count() + 1) {
-
-        //We now reset row indexes
-        stmt->reset_row_indexes();
-
-        return SQL_NO_DATA;
-    }
-      
-    else {
-        stmt->table->update_bound_cols(stmt->current_row_des);
-        return SQL_SUCCESS;
-    }
-  }
-  else {
-    return SQL_NO_DATA;
-  }
+  return DES_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
+                             stmt->ird->rows_processed_ptr,
+                             stmt->ird->array_status_ptr, 0);
 }

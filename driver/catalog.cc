@@ -207,13 +207,14 @@ create_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
   else
   {
     if (stmt->result)
-      mysql_free_result(stmt->result);
+      delete(stmt->result);
   }
 
   // Free if result data was not in row storage.
   stmt->reset_result_array();
 
-  stmt->result= (DES_RES*) desodbc_malloc(sizeof(DES_RES), DESF(DES_ZEROFILL));
+  stmt->result = new DES_RESULT();
+
   if (!stmt->result) {
     set_mem_error(stmt->dbc->des);
     return handle_connection_error(stmt);
@@ -265,7 +266,7 @@ create_empty_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
           or empty result (check mysql_errno(stmt->dbc->des) != 0)
           It contains the same set of result columns as table_status_i_s()
 */
-DES_RES *db_status(STMT *stmt, std::string &db)
+DES_RESULT *db_status(STMT *stmt, std::string &db)
 {
   DES *des= stmt->dbc->des;
   /** the buffer size should count possible escapes */
@@ -298,7 +299,7 @@ DES_RES *db_status(STMT *stmt, std::string &db)
     return NULL;
   }
 
-  return mysql_store_result(des);
+  return des_store_result(des);
 }
 
 
@@ -317,7 +318,7 @@ DES_RES *db_status(STMT *stmt, std::string &db)
   @return Result of SELECT ... FROM I_S.TABLES, or NULL if there is an error
           or empty result (check mysql_errno(stmt->dbc->des) != 0)
 */
-static DES_RES *table_status_i_s(STMT    *stmt,
+static DES_RESULT *table_status_i_s(STMT    *stmt,
                                    SQLCHAR     *db_name,
                                    SQLSMALLINT  db_len,
                                    SQLCHAR     *table_name,
@@ -404,7 +405,7 @@ static DES_RES *table_status_i_s(STMT    *stmt,
     return NULL;
   }
 
-  return mysql_store_result(des);
+  return des_store_result(des);
 }
 
 
@@ -421,7 +422,7 @@ static DES_RES *table_status_i_s(STMT    *stmt,
   @return Result of SHOW TABLE STATUS, or NULL if there is an error
           or empty result (check mysql_errno(stmt->dbc->des) != 0)
 */
-DES_RES *table_status(STMT        *stmt,
+DES_RESULT *table_status(STMT        *stmt,
                         SQLCHAR     *db_name,
                         SQLSMALLINT  db_len,
                         SQLCHAR     *table_name,
@@ -701,7 +702,7 @@ ODBC_CATALOG::ODBC_CATALOG(STMT *s, size_t ccnt,
 ODBC_CATALOG::~ODBC_CATALOG()
 {
   if (des_res)
-    mysql_free_result(des_res);
+    des_free_result(des_res);
 }
 
 /*
@@ -780,7 +781,7 @@ void ODBC_CATALOG::execute()
     // Throwing the error for NO_SSPS case.
     throw stmt->dbc->error;
   }
-  des_res = mysql_store_result(stmt->dbc->des);
+  des_res = des_store_result(stmt->dbc->des);
 
   // Free if result data was not in row storage.
   stmt->reset_result_array();
@@ -790,14 +791,14 @@ void ODBC_CATALOG::execute()
   Get the number of rows in the resultset.
 */
 size_t ODBC_CATALOG::num_rows() {
-  return mysql_num_rows(des_res);
+  return des_num_rows(des_res);
 }
 
 /*
   Fetch one result row.
 */
 DES_ROW ODBC_CATALOG::fetch_row() {
-  current_row = mysql_fetch_row(des_res);
+  current_row = des_fetch_row(des_res);
   return current_row;
 }
 
@@ -806,14 +807,16 @@ DES_ROW ODBC_CATALOG::fetch_row() {
   a particular row number.
 */
 void ODBC_CATALOG::data_seek(unsigned int rownum) {
-  mysql_data_seek(des_res, rownum);
+  des_data_seek(des_res, rownum);
 }
 
 /*
   Get lenghts.
 */
 unsigned long * ODBC_CATALOG::get_lengths() {
-  current_lengths = mysql_fetch_lengths(des_res);
+  current_lengths = des_fetch_lengths(stmt); /* TODO: I have put stmt instead of the DES_RESULT.
+                                               Is the DES_RESULT* in ODBC_CATALOG the same as
+                                               the contained in stmt?*/
   return current_lengths;
 }
 
@@ -1194,7 +1197,7 @@ SQLRETURN list_table_priv_i_s(SQLHSTMT    hstmt,
   /* TABLE_CAT is always NULL in des I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, PRIVILEGE, GRANTEE");
 
-  if( !SQL_SUCCEEDED(rc= SQLPrepare(hstmt, (SQLCHAR *)query.c_str(),
+  if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(),
                           (SQLINTEGER)(query.length()), true, false)))
     return rc;
 
@@ -1276,7 +1279,7 @@ static SQLRETURN list_column_priv_i_s(HSTMT       hstmt,
   /* TABLE_CAT is always NULL in des I_S */
   query.append(" ORDER BY TABLE_CAT, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, PRIVILEGE");
 
-  if( !SQL_SUCCEEDED(rc= SQLPrepare(hstmt, (SQLCHAR *)query.c_str(), SQL_NTS,
+  if( !SQL_SUCCEEDED(rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(), SQL_NTS,
                                       true, false)))
     return rc;
 
@@ -1772,7 +1775,7 @@ SQLRETURN foreign_keys_i_s(SQLHSTMT hstmt,
   }
 
   query.append(order_by);
-  rc= SQLPrepare(hstmt, (SQLCHAR *)query.c_str(), (SQLINTEGER)(query.length()),
+  rc= DESPrepare(hstmt, (SQLCHAR *)query.c_str(), (SQLINTEGER)(query.length()),
                    true, false);
 
   if (!SQL_SUCCEEDED(rc))
@@ -1924,7 +1927,7 @@ DESProcedures(SQLHSTMT hstmt,
                  " FROM INFORMATION_SCHEMA.ROUTINES"
                  " WHERE ROUTINE_SCHEMA = DATABASE()");
 
-  rc= SQLPrepare(hstmt, (SQLCHAR*)query.c_str(), SQL_NTS,
+  rc= DESPrepare(hstmt, (SQLCHAR*)query.c_str(), SQL_NTS,
                    true, false);
 
   if (!SQL_SUCCEEDED(rc))

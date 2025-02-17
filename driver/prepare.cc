@@ -56,70 +56,43 @@
   @param[in] dupe   Set to @c TRUE if query is already a duplicate, and
                     freeing the value is now up to the driver
 */
-SQLRETURN SQL_API SQLPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
+SQLRETURN SQL_API DESPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
                                bool reset_select_limit, bool force_prepare)
 {
-  return DES_SQLPrepare(hstmt, query, len, reset_select_limit, force_prepare);
-  }
-
-
-
-
-
+  STMT *stmt = (STMT *)hstmt;
   /*
-  if (GET_QUERY(&stmt->orig_query) != NULL)
-  {
+    We free orig_query here, instead of my_SQLPrepare, because
+    my_SQLPrepare is used by my_pos_update() when a statement requires
+    additional parameters.
+  */
+
+  if (GET_QUERY(&stmt->orig_query) != NULL) {
     stmt->orig_query.reset(NULL, NULL, NULL);
   }
 
-  return DES_SQLPrepare(hstmt, query, len, reset_select_limit,
-                       force_prepare);
-                       */
-
+  return DES_SQLPrepare(hstmt, query, len, reset_select_limit, force_prepare);
+}
 
 /*
   @type    : myodbc3 internal
   @purpose : prepares an SQL string for execution
 */
-  SQLRETURN DES_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr,
-                           SQLINTEGER cbSqlStr, bool reset_select_limit,
-                           bool force_prepare) {
+SQLRETURN DES_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr,
+                        SQLINTEGER cbSqlStr, bool reset_select_limit,
+                        bool force_prepare) {
     STMT *stmt = (STMT *)hstmt;
 
-    // TODO: temporal changes.
-    // TODO: consider the other parameters.
+    CLEAR_STMT_ERROR(stmt);
 
-    if (szSqlStr == NULL) return SQL_ERROR;
+    stmt->query.reset(NULL, NULL, NULL);
 
-    stmt->des_query = (SQLCHAR *)malloc(cbSqlStr + 1);
+    auto res = prepare(stmt, (char *)szSqlStr, cbSqlStr, reset_select_limit,
+                        force_prepare);
 
-    if (stmt->des_query ==
-        NULL) {  // we have to check this, as suggested by memcpy
-      return SQL_ERROR;
-    } else {
+    //TODO: handle res errors.
 
-      memcpy(stmt->des_query, szSqlStr, cbSqlStr);
-      stmt->des_query[cbSqlStr] = '\0';
-
-      if (stmt->type == UNKNOWN) {
-        std::string str_query(reinterpret_cast<char *>(stmt->des_query));
-        std::transform(str_query.begin(), str_query.end(), str_query.begin(),
-                       [](unsigned char c) {
-                         return std::tolower(c);
-                       });  // to lower characters
-        std::string select_str = "select";
-        std::string process_str = "/process";
-
-        if (str_query.substr(0, select_str.size()) == select_str) {
-          stmt->type = SELECT;
-        } else if (str_query.substr(0, process_str.size()) == process_str) {
-          stmt->type = PROCESS;
-        }
-      }
-
-      return SQL_SUCCESS;
-    }
-  }
+    return res;
+}
 
 
 /*
@@ -138,18 +111,18 @@ SQLRETURN SQL_API DES_SQLBindParameter( SQLHSTMT     StatementHandle,
                                        SQLLEN       BufferLength,
                                        SQLLEN *     StrLen_or_IndPtr )
 {
-    STMT *stmt= (STMT *)StatementHandle;
-    DESCREC *aprec= desc_get_rec(stmt->apd, ParameterNumber - 1, TRUE);
-    DESCREC *iprec= desc_get_rec(stmt->ipd, ParameterNumber - 1, TRUE);
+    STMT *stmt = (STMT *)StatementHandle;
+    DESCREC *aprec = desc_get_rec(stmt->apd, ParameterNumber - 1, TRUE);
+    DESCREC *iprec = desc_get_rec(stmt->ipd, ParameterNumber - 1, TRUE);
     SQLRETURN rc;
-    /* TODO if this function fails, the SQL_DESC_COUNT should be unchanged in apd, ipd */
+    /* TODO if this function fails, the SQL_DESC_COUNT should be unchanged in
+     * apd, ipd */
 
     CLEAR_STMT_ERROR(stmt);
 
-    if (ParameterNumber < 1)
-    {
-        stmt->set_error(DESERR_S1093,NULL,0);
-        return SQL_ERROR;
+    if (ParameterNumber < 1) {
+      stmt->set_error(DESERR_S1093, NULL, 0);
+      return SQL_ERROR;
     }
 
     aprec->par.reset();
@@ -160,107 +133,93 @@ SQLRETURN SQL_API DES_SQLBindParameter( SQLHSTMT     StatementHandle,
 
     /* first, set apd fields */
     if (ValueType == SQL_C_DEFAULT)
-    {
-      ValueType= default_c_type(ParameterType);
-      /*
-        Access treats BIGINT as a string on linked tables.
-        The value is read correctly, but bound as a string.
-      */
-      if (ParameterType == SQL_BIGINT && stmt->dbc->ds.opt_DFLT_BIGINT_BIND_STR)
-        ValueType= SQL_C_CHAR;
-    }
-    if (!SQL_SUCCEEDED(rc = stmt_SQLSetDescField(stmt, stmt->apd,
-                                                 ParameterNumber,
-                                                 SQL_DESC_CONCISE_TYPE,
-                                                 (SQLPOINTER)(SQLLEN)ValueType,
-                                                 SQL_IS_SMALLINT)))
-        return rc;
+      ValueType = default_c_type(ParameterType);
 
-    if (!SQL_SUCCEEDED(rc= stmt_SQLSetDescField(stmt, stmt->apd, ParameterNumber,
-                                                SQL_DESC_OCTET_LENGTH,
-                                                (SQLPOINTER)BufferLength,
-                                                SQL_IS_INTEGER)))
-        return rc;
+    if (!SQL_SUCCEEDED(rc = stmt_SQLSetDescField(
+                           stmt, stmt->apd, ParameterNumber,
+                           SQL_DESC_CONCISE_TYPE, (SQLPOINTER)(SQLLEN)ValueType,
+                           SQL_IS_SMALLINT)))
+      return rc;
+
+    if (!SQL_SUCCEEDED(rc = stmt_SQLSetDescField(
+                           stmt, stmt->apd, ParameterNumber,
+                           SQL_DESC_OCTET_LENGTH, (SQLPOINTER)BufferLength,
+                           SQL_IS_INTEGER)))
+      return rc;
     /* these three *must* be the last APD params bound */
-    if (!SQL_SUCCEEDED(rc= stmt_SQLSetDescField(stmt, stmt->apd, ParameterNumber,
-                                                SQL_DESC_DATA_PTR,
-                                                ParameterValuePtr, SQL_IS_POINTER)))
-        return rc;
-    if (!SQL_SUCCEEDED(rc= stmt_SQLSetDescField(stmt, stmt->apd, ParameterNumber,
-                                                SQL_DESC_OCTET_LENGTH_PTR,
-                                                StrLen_or_IndPtr, SQL_IS_POINTER)))
-        return rc;
-    if (!SQL_SUCCEEDED(rc= stmt_SQLSetDescField(stmt, stmt->apd, ParameterNumber,
-                                                SQL_DESC_INDICATOR_PTR,
-                                                StrLen_or_IndPtr, SQL_IS_POINTER)))
-        return rc;
+    if (!SQL_SUCCEEDED(rc = stmt_SQLSetDescField(
+                           stmt, stmt->apd, ParameterNumber, SQL_DESC_DATA_PTR,
+                           ParameterValuePtr, SQL_IS_POINTER)))
+      return rc;
+    if (!SQL_SUCCEEDED(
+            rc = stmt_SQLSetDescField(stmt, stmt->apd, ParameterNumber,
+                                      SQL_DESC_OCTET_LENGTH_PTR,
+                                      StrLen_or_IndPtr, SQL_IS_POINTER)))
+      return rc;
+    if (!SQL_SUCCEEDED(
+            rc = stmt_SQLSetDescField(stmt, stmt->apd, ParameterNumber,
+                                      SQL_DESC_INDICATOR_PTR, StrLen_or_IndPtr,
+                                      SQL_IS_POINTER)))
+      return rc;
 
     /* now the ipd fields */
-    if (!SQL_SUCCEEDED(rc= stmt_SQLSetDescField(stmt, stmt->ipd,
-                                                ParameterNumber,
-                                                SQL_DESC_CONCISE_TYPE,
-                                                (SQLPOINTER)(size_t)ParameterType,
-                                                SQL_IS_SMALLINT)))
-        return rc;
+    if (!SQL_SUCCEEDED(rc = stmt_SQLSetDescField(
+                           stmt, stmt->ipd, ParameterNumber,
+                           SQL_DESC_CONCISE_TYPE,
+                           (SQLPOINTER)(size_t)ParameterType, SQL_IS_SMALLINT)))
+      return rc;
 
-    if (!SQL_SUCCEEDED(rc= stmt_SQLSetDescField(stmt, stmt->ipd,
-                                                ParameterNumber,
-                                                SQL_DESC_PARAMETER_TYPE,
-                                                (SQLPOINTER)(size_t)InputOutputType,
-                                                SQL_IS_SMALLINT)))
-        return rc;
+    if (!SQL_SUCCEEDED(
+            rc = stmt_SQLSetDescField(
+                stmt, stmt->ipd, ParameterNumber, SQL_DESC_PARAMETER_TYPE,
+                (SQLPOINTER)(size_t)InputOutputType, SQL_IS_SMALLINT)))
+      return rc;
 
     /* set fields from ColumnSize and DecimalDigits */
-    switch (ParameterType)
-    {
-    case SQL_TYPE_TIME:
-    case SQL_TYPE_TIMESTAMP:
-    case SQL_INTERVAL_SECOND:
-    case SQL_INTERVAL_DAY_TO_SECOND:
-    case SQL_INTERVAL_HOUR_TO_SECOND:
-    case SQL_INTERVAL_MINUTE_TO_SECOND:
-        rc= stmt_SQLSetDescField(stmt, stmt->ipd, ParameterNumber,
-                                 SQL_DESC_PRECISION,
-                                 (SQLPOINTER)(size_t)DecimalDigits,
-                                 SQL_IS_SMALLINT);
+    switch (ParameterType) {
+      case SQL_TYPE_TIME:
+      case SQL_TYPE_TIMESTAMP:
+      case SQL_INTERVAL_SECOND:
+      case SQL_INTERVAL_DAY_TO_SECOND:
+      case SQL_INTERVAL_HOUR_TO_SECOND:
+      case SQL_INTERVAL_MINUTE_TO_SECOND:
+        rc = stmt_SQLSetDescField(
+            stmt, stmt->ipd, ParameterNumber, SQL_DESC_PRECISION,
+            (SQLPOINTER)(size_t)DecimalDigits, SQL_IS_SMALLINT);
         break;
-    case SQL_CHAR:
-    case SQL_VARCHAR:
-    case SQL_LONGVARCHAR:
-    case SQL_BINARY:
-    case SQL_VARBINARY:
-    case SQL_LONGVARBINARY:
-        rc= stmt_SQLSetDescField(stmt, stmt->ipd, ParameterNumber,
-                                 SQL_DESC_LENGTH, (SQLPOINTER)ColumnSize,
-                                 SQL_IS_ULEN);
+      case SQL_CHAR:
+      case SQL_VARCHAR:
+      case SQL_LONGVARCHAR:
+      case SQL_BINARY:
+      case SQL_VARBINARY:
+      case SQL_LONGVARBINARY:
+        rc = stmt_SQLSetDescField(stmt, stmt->ipd, ParameterNumber,
+                                  SQL_DESC_LENGTH, (SQLPOINTER)ColumnSize,
+                                  SQL_IS_ULEN);
         break;
-    case SQL_NUMERIC:
-    case SQL_DECIMAL:
-        rc= stmt_SQLSetDescField(stmt, stmt->ipd, ParameterNumber,
-                                 SQL_DESC_SCALE,
-                                 (SQLPOINTER)(size_t)DecimalDigits,
-                                 SQL_IS_SMALLINT);
-        if (!SQL_SUCCEEDED(rc))
-            return rc;
+      case SQL_NUMERIC:
+      case SQL_DECIMAL:
+        rc = stmt_SQLSetDescField(
+            stmt, stmt->ipd, ParameterNumber, SQL_DESC_SCALE,
+            (SQLPOINTER)(size_t)DecimalDigits, SQL_IS_SMALLINT);
+        if (!SQL_SUCCEEDED(rc)) return rc;
         /* fall through */
-    case SQL_FLOAT:
-    case SQL_REAL:
-    case SQL_DOUBLE:
-        rc= stmt_SQLSetDescField(stmt, stmt->ipd, ParameterNumber,
-                                 SQL_DESC_PRECISION,
-                                 (SQLPOINTER)ColumnSize,
-                                 SQL_IS_ULEN);
+      case SQL_FLOAT:
+      case SQL_REAL:
+      case SQL_DOUBLE:
+        rc = stmt_SQLSetDescField(stmt, stmt->ipd, ParameterNumber,
+                                  SQL_DESC_PRECISION, (SQLPOINTER)ColumnSize,
+                                  SQL_IS_ULEN);
         break;
-    default:
-        rc= SQL_SUCCESS;
+      default:
+        rc = SQL_SUCCESS;
     }
-    if (!SQL_SUCCEEDED(rc))
-        return rc;
+    if (!SQL_SUCCEEDED(rc)) return rc;
 
-    aprec->par.real_param_done= TRUE;
+    aprec->par.real_param_done = TRUE;
 
     return SQL_SUCCESS;
-}
+  }
 
 
 /*
@@ -281,27 +240,9 @@ SQLRETURN SQL_API SQLBindParameter( SQLHSTMT        hstmt,
 {
   LOCK_STMT(hstmt);
 
-  //TODO: temporal solution
-
-  STMT *stmt = (STMT *)hstmt;
-
-  DES_PARAM param;
-
-  stmt->parameters[ipar].InputOutputType = fParamType;
-  stmt->parameters[ipar].ValueType = fCType;
-  stmt->parameters[ipar].ParameterType = fSqlType;
-  stmt->parameters[ipar].ColumnSize = cbColDef;
-  stmt->parameters[ipar].DecimalDigits = ibScale;
-  stmt->parameters[ipar].ParameterValuePtr = rgbValue;
-  stmt->parameters[ipar].BufferLength = cbValueMax;
-  stmt->parameters[ipar].StrLen_or_IndPtr = pcbValue;
-
-  return SQL_SUCCESS; //TODO: put restrictions
-
-  /*
   return DES_SQLBindParameter(hstmt, ipar, fParamType, fCType, fSqlType,
-                             cbColDef, ibScale, rgbValue, cbValueMax, pcbValue);
-  */
+                              cbColDef, ibScale, rgbValue, cbValueMax,
+                              pcbValue);
 
   
 }
@@ -327,8 +268,7 @@ SQLRETURN SQL_API SQLDescribeParam( SQLHSTMT        hstmt,
 
     if (pfSqlType)
         *pfSqlType= SQL_VARCHAR;
-    if (pcbColDef)
-        *pcbColDef= (stmt->dbc->ds.opt_BIG_PACKETS ? 24*1024*1024L : 255);
+    if (pcbColDef) *pcbColDef = DES_DEFAULT_DATA_CHARACTER_SIZE; //TODO: research what to do
     if (pfNullable)
         *pfNullable= SQL_NULLABLE_UNKNOWN;
 

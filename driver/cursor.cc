@@ -68,7 +68,7 @@ static const char *find_used_table(STMT *stmt)
 {
     DES_FIELD  *field, *end;
     char *table_name = nullptr;
-    DES_RES *result= stmt->result;
+    DES_RESULT *result= stmt->result;
 
     if ( stmt->table_name.size() )
         return stmt->table_name.c_str();
@@ -173,7 +173,7 @@ char *check_if_positioned_cursor_exists(STMT *pStmt, STMT **pStmtCursor)
   @param[in]  name    Name of the field
   @param[in]  result  Result set to check
 */
-static des_bool have_field_in_result(const char *name, DES_RES *result)
+static des_bool have_field_in_result(const char *name, DES_RESULT *result)
 {
   DES_FIELD  *field;
   unsigned int ncol;
@@ -208,7 +208,7 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
 {
   char buff[NAME_LEN * 2 + 18], /* Possibly escaped name, plus text for query */
        *pos, *table;
-  DES_RES *res;
+  DES_RESULT *res;
   DES_ROW row;
   int seq_in_index= 0;
 
@@ -233,13 +233,13 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
   assert(stmt);
   LOCK_DBC(stmt->dbc);
   if (exec_stmt_query(stmt, buff, strlen(buff), FALSE) ||
-      !(res= mysql_store_result(stmt->dbc->des)))
+      !(res= des_store_result(stmt->dbc->des)))
   {
     stmt->set_error(DESERR_S1000);
     return FALSE;
   }
 
-  while ((row= mysql_fetch_row(res)) &&
+  while ((row= des_fetch_row(res)) &&
          stmt->cursor.pk_count < MY_MAX_PK_PARTS)
   {
     int seq= atoi(row[3]);
@@ -267,7 +267,7 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
       /* Forget about any key we had in progress, we didn't have it all. */
       stmt->cursor.pk_count= seq_in_index= 0;
   }
-  mysql_free_result(res);
+  des_free_result(res);
 
   /* Remember that we've figured this out already. */
   stmt->cursor.pk_validated= 1;
@@ -284,7 +284,7 @@ static des_bool check_if_usable_unique_key_exists(STMT *stmt)
 void set_current_cursor_data(STMT *stmt, SQLUINTEGER irow)
 {
   long       nrow, row_pos;
-  DES_RES  *result= stmt->result;
+  DES_RESULT  *result= stmt->result;
 
 
   /*
@@ -440,7 +440,7 @@ static SQLRETURN copy_rowdata(STMT *stmt, DESCREC *aprec,
   @purpose : copies field data to statement
 */
 
-static bool insert_field_std(STMT *stmt, DES_RES *result,
+static bool insert_field_std(STMT *stmt, DES_RESULT *result,
                              std::string &str,
                              SQLUSMALLINT nSrcCol)
 {
@@ -448,7 +448,7 @@ static bool insert_field_std(STMT *stmt, DES_RES *result,
           iprec_(DESC_PARAM, DESC_IMP);
   DESCREC *aprec= &aprec_, *iprec= &iprec_;
 
-  DES_FIELD *field= mysql_fetch_field_direct(result,nSrcCol);
+  DES_FIELD *field= des_fetch_field_direct(result,nSrcCol);
   DES_ROW   row_data;
   SQLLEN      length;
   char as_string[50], *dummy;
@@ -504,7 +504,7 @@ static bool insert_field_std(STMT *stmt, DES_RES *result,
 
 static SQLRETURN insert_pk_fields_std(STMT *stmt, std::string &str)
 {
-    DES_RES    *result= stmt->result;
+    DES_RESULT    *result= stmt->result;
     DES_FIELD  *field;
     SQLUSMALLINT ncol;
     uint      index;
@@ -552,8 +552,8 @@ static SQLRETURN insert_pk_fields_std(STMT *stmt, std::string &str)
 
 static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
 {
-  DES_RES    *result= stmt->result;
-  DES_RES    *presultAllColumns;
+  DES_RESULT    *result= stmt->result;
+  DES_RESULT    *presultAllColumns;
   std::string  select;
   unsigned int  i,j;
   BOOL          found_field;
@@ -576,7 +576,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
   DESLOG_QUERY(stmt, select.c_str());
   LOCK_DBC(stmt->dbc);
   if (exec_stmt_query_std(stmt, select, false) ||
-      !(presultAllColumns= mysql_store_result(stmt->dbc->des)))
+      !(presultAllColumns= des_store_result(stmt->dbc->des)))
   {
     stmt->set_error(DESERR_S1000);
     return SQL_ERROR;
@@ -586,9 +586,9 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     If the number of fields in the underlying table is not the same as
     our result set, we bail out -- we need them all!
   */
-  if (mysql_num_fields(presultAllColumns) != mysql_num_fields(result))
+  if (des_num_fields(presultAllColumns) != des_num_fields(result))
   {
-    mysql_free_result(presultAllColumns);
+    des_free_result(presultAllColumns);
     return SQL_ERROR;
   }
 
@@ -611,7 +611,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     {
       stmt->set_error(DESERR_S1000,
                 "Invalid use of floating point comparision in positioned operations",0);
-      mysql_free_result(presultAllColumns);
+      des_free_result(presultAllColumns);
       return SQL_ERROR;
     }
 
@@ -626,7 +626,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
         str.append("=");
         if (insert_field_std(stmt, result, str, j))
         {
-          mysql_free_result(presultAllColumns);
+          des_free_result(presultAllColumns);
           return SQL_ERROR;
         }
         found_field= TRUE;
@@ -639,12 +639,12 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     */
     if (!found_field)
     {
-      mysql_free_result(presultAllColumns);
+      des_free_result(presultAllColumns);
       return SQL_ERROR;
     }
   }
 
-  mysql_free_result(presultAllColumns);
+  des_free_result(presultAllColumns);
   return SQL_SUCCESS;
 }
 
@@ -715,7 +715,7 @@ static SQLRETURN build_set_clause_std(STMT *stmt, SQLULEN irow,
     SQLLEN        length= 0;
     uint          ncol, ignore_count= 0;
     DES_FIELD *field;
-    DES_RES   *result= stmt->result;
+    DES_RESULT   *result= stmt->result;
     DESCREC *arrec, *irrec;
 
     query.append(" SET ");
@@ -730,7 +730,7 @@ static SQLRETURN build_set_clause_std(STMT *stmt, SQLULEN irow,
         SQLLEN *pcbValue;
         SQLCHAR *to = (SQLCHAR*)stmt->buf();
 
-        field= mysql_fetch_field_direct(result,ncol);
+        field= des_fetch_field_direct(result,ncol);
         arrec= desc_get_rec(stmt->ard, ncol, FALSE);
         irrec= desc_get_rec(stmt->ird, ncol, FALSE);
 
@@ -1338,7 +1338,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
 
 static SQLRETURN batch_insert_std( STMT *stmt, SQLULEN irow, std::string &query )
 {
-    DES_RES    *result= stmt->result;     /* result set we are working with */
+    DES_RESULT    *result= stmt->result;     /* result set we are working with */
     SQLULEN      insert_count= 1;           /* num rows to insert - will be real value when row is 0 (all)  */
     SQLULEN      count= 0;                  /* current row */
     SQLLEN       length;
@@ -1378,7 +1378,7 @@ static SQLRETURN batch_insert_std( STMT *stmt, SQLULEN irow, std::string &query 
             query.append("(");
             for ( ncol= 0; ncol < result->field_count; ++ncol )
             {
-                DES_FIELD *field= mysql_fetch_field_direct(result, ncol);
+                DES_FIELD *field= des_fetch_field_direct(result, ncol);
                 DESCREC     *arrec;
                 SQLLEN       ind_or_len= 0;
 
@@ -1618,29 +1618,182 @@ static const char *alloc_error= "Driver Failed to set the internal dynamic resul
 SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                                SQLUSMALLINT fOption, SQLUSMALLINT fLock)
 {
-  STMT *stmt = (STMT *) hstmt;
+  STMT *stmt = (STMT *)hstmt;
   assert(stmt);
 
   SQLRETURN ret = SQL_SUCCESS;
+  DES_RESULT *result = stmt->result;
 
-  switch (fOption) {
-    case SQL_POSITION:
-      stmt->current_row_des = irow;
-      break;
-    case SQL_DELETE:
-      stmt->table->remove_row(irow);
-      break;
-    case SQL_UPDATE:
-      stmt->table->update_row(irow);
-      break;
-    case SQL_ADD:
-      //TODO: call sqlbulkoperations, as ODBC 3.x says
-      break;
-    case SQL_REFRESH:
-      stmt->table->refresh_row(irow);
-      break;
-    default:
-      return stmt->set_error(DESERR_S1009, NULL, 0);
+  try {
+    CLEAR_STMT_ERROR(stmt);
+
+    if (!result) return stmt->set_error(DESERR_S1010, NULL, 0);
+
+    /* With mysql_use_reslt we cannot do anything but move cursor
+       forward. additional connection?
+       besides
+       http://msdn.microsoft.com/en-us/library/windows/desktop/ms713507%28v=vs.85%29.aspx
+       "The cursor associated with the StatementHandle was defined as
+        forward-only, so the cursor could not be positioned within the rowset.
+        The Operation argument was SQL_UPDATE, SQL_DELETE, or SQL_REFRESH, and
+        the row identified by the RowNumber argument had been deleted or had not
+        been fetched." So error is more or less in accordance with specs */
+    if (if_forward_cache(stmt)) {
+      if (fOption != SQL_POSITION) {
+        /* HY109. Perhaps 24000 Invalid cursor state is a better fit*/
+        return stmt->set_error(DESERR_S1109, NULL, 0);
+      }
+      /* We can't go back with forwrd only cursor */
+      else if (irow < stmt->current_row) {
+        /* Same HY109 Invalid cursor position*/
+        return stmt->set_error(DESERR_S1109, NULL, 0);
+      }
+    }
+
+    /* If irow > maximum rows in the resultset. for forwrd only row_count is 0
+     */
+    if (fOption != SQL_ADD && irow > num_rows(stmt))
+      return stmt->set_error(DESERR_S1107, NULL, 0);
+
+    /* Not a valid lock type ..*/
+    if (fLock != SQL_LOCK_NO_CHANGE)
+      return stmt->set_error(DESERR_S1C00, NULL, 0);
+
+    switch (fOption) {
+      case SQL_POSITION: {
+        if (irow == 0) return stmt->set_error(DESERR_S1109, NULL, 0);
+
+        if (irow > stmt->rows_found_in_set)
+          return stmt->set_error(DESERR_S1107, NULL, 0);
+
+        /* If Dynamic cursor, fetch the latest resultset */
+        if (stmt->is_dynamic_cursor() && set_dynamic_result(stmt)) {
+          return stmt->set_error(DESERR_S1000, alloc_error, 0);
+        }
+
+        LOCK_DBC(stmt->dbc);
+        --irow;
+        ret = SQL_SUCCESS;
+        stmt->cursor_row = (long)(stmt->current_row + irow);
+        data_seek(stmt, (des_ulonglong)stmt->cursor_row);
+        stmt->current_values = stmt->fetch_row();
+
+        // After moving through the resultset the lengths
+        // in IRD must be updated accordingly.
+        fill_ird_data_lengths(stmt->ird, fetch_lengths(stmt),
+                              stmt->result->field_count);
+
+        stmt->reset_getdata_position();
+        if (stmt->fix_fields)
+          stmt->current_values =
+              (*stmt->fix_fields)(stmt, stmt->current_values);
+        /*
+         The call to mysql_fetch_row() moved stmt->result's internal
+         cursor, but we don't want that. We seek back to this row
+         so the MYSQL_RES is in the state we expect.
+        */
+        data_seek(stmt, (des_ulonglong)stmt->cursor_row);
+        break;
+      }
+
+      case SQL_DELETE: {
+        if (irow > stmt->rows_found_in_set)
+          return stmt->set_error(DESERR_S1107, NULL, 0);
+
+        /* IF dynamic cursor THEN rerun query to refresh resultset */
+        if (stmt->is_dynamic_cursor() && set_dynamic_result(stmt))
+          return stmt->set_error(DESERR_S1000, alloc_error, 0);
+
+        /* start building our DELETE statement */
+        std::string del_query("DELETE FROM ");
+        del_query.reserve(1024);
+
+        ret = setpos_delete_std(stmt, (SQLUSMALLINT)irow, del_query);
+        break;
+      }
+
+      case SQL_UPDATE: {
+        if (irow > stmt->rows_found_in_set)
+          return stmt->set_error(DESERR_S1107, NULL, 0);
+
+        /* IF dynamic cursor THEN rerun query to refresh resultset */
+        if (!stmt->dae_type && stmt->is_dynamic_cursor() &&
+            set_dynamic_result(stmt))
+          return stmt->set_error(DESERR_S1000, alloc_error, 0);
+
+        if (ret =
+                setpos_dae_check_and_init(stmt, irow, fLock, DAE_SETPOS_UPDATE))
+          return ret;
+
+        std::string upd_query("UPDATE ");
+        upd_query.reserve(1024);
+
+        ret = setpos_update_std(stmt, (SQLUSMALLINT)irow, upd_query);
+        break;
+      }
+
+      case SQL_ADD: {
+        const char *table_name;
+        unsigned int nCol = 0;
+
+        if (!stmt->dae_type && stmt->is_dynamic_cursor() &&
+            set_dynamic_result(stmt))
+          return stmt->set_error(DESERR_S1000, alloc_error, 0);
+        result = stmt->result;
+
+        if (!(table_name = find_used_table(stmt))) return SQL_ERROR;
+
+        if (ret =
+                setpos_dae_check_and_init(stmt, irow, fLock, DAE_SETPOS_INSERT))
+          return ret;
+
+        std::string ins_query("INSERT INTO ");
+        ins_query.reserve(1024);
+
+        /* Append the table's DB name if exists */
+        if (result->fields && result->fields[0].db_length) {
+          desodbc_append_quoted_name_std(ins_query, result->fields[0].db);
+          ins_query.append(".");
+        }
+
+        desodbc_append_quoted_name_std(ins_query, table_name);
+        ins_query.append("(");
+
+        /* build list of column names */
+        for (nCol = 0; nCol < result->field_count; ++nCol) {
+          DES_FIELD *field = des_fetch_field_direct(result, nCol);
+          desodbc_append_quoted_name_std(ins_query, field->org_name);
+          if (nCol + 1 < result->field_count) ins_query.append(",");
+        }
+
+        ins_query.append(") VALUES ");
+
+        /* process row(s) using our INSERT as base */
+        ret = batch_insert_std(stmt, irow, ins_query);
+
+        break;
+      }
+
+      case SQL_REFRESH: {
+        /*
+          Bug ...SQL_REFRESH is not suppose to fetch any
+          new rows, instead it needs to refresh the positioned
+          buffers
+        */
+        ret = DES_SQLExtendedFetch(hstmt, SQL_FETCH_ABSOLUTE, irow,
+                                  stmt->ird->rows_processed_ptr,
+                                  stmt->stmt_options.rowStatusPtr_ex
+                                      ? stmt->stmt_options.rowStatusPtr_ex
+                                      : stmt->ird->array_status_ptr,
+                                  0);
+        break;
+      }
+
+      default:
+        return stmt->set_error(DESERR_S1009, NULL, 0);
+    }
+  } catch (DESERROR &e) {
+    ret = e.retcode;
   }
   return ret;
 }
@@ -1723,85 +1876,64 @@ SQLRETURN SQL_API SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
 
 SQLRETURN SQL_API SQLBulkOperations(SQLHSTMT  Handle, SQLSMALLINT Operation)
 {
-  STMT *stmt= (STMT *) Handle;
-  SQLRETURN sqlRet= SQL_SUCCESS;
-  DES_RES *result= stmt->result;
+  STMT *stmt = (STMT *)Handle;
+  SQLRETURN sqlRet = SQL_SUCCESS;
+  DES_RESULT *result = stmt->result;
   SQLRETURN rc;
-  SQLSETPOSIROW irow= 0;
+  SQLSETPOSIROW irow = 0;
   LOCK_STMT(stmt);
 
   CLEAR_STMT_ERROR(stmt);
 
+  if (!result) return stmt->set_error(DESERR_S1010, NULL, 0);
+
+  stmt->stmt_options.bookmark_insert = FALSE;
+
   switch (Operation) {
     case SQL_ADD:
-      stmt->table->add_row();
-      break;
-    case SQL_UPDATE_BY_BOOKMARK:
-      break;
-    case SQL_DELETE_BY_BOOKMARK:
-      break;
-    case SQL_FETCH_BY_BOOKMARK:
-      break;
+      return DES_SQLSetPos(Handle, 0, SQL_ADD, SQL_LOCK_NO_CHANGE);
 
-  }
-  /*
-
-  if ( !result )
-      return stmt->set_error(DESERR_S1010,NULL,0);
-
-  stmt->stmt_options.bookmark_insert= FALSE;
-
-  switch (Operation)
-  {
-  case SQL_ADD:
-    return DES_SQLSetPos(Handle, 0, SQL_ADD, SQL_LOCK_NO_CHANGE);
-
-  case SQL_UPDATE_BY_BOOKMARK:
-    {
-      if (stmt->rows_found_in_set == 0)
-      {
+    case SQL_UPDATE_BY_BOOKMARK: {
+      /* If no rows provided for update return with SQL_SUCCESS. */
+      if (stmt->rows_found_in_set == 0) {
         return SQL_SUCCESS;
       }
 
+      /* IF dynamic cursor THEN rerun query to refresh resultset */
       if (!stmt->dae_type && stmt->is_dynamic_cursor() &&
-          set_dynamic_result(stmt))
-      {
+          set_dynamic_result(stmt)) {
         return stmt->set_error(DESERR_S1000, alloc_error, 0);
       }
 
-      if (rc= setpos_dae_check_and_init(stmt, irow, SQL_LOCK_NO_CHANGE,
-                                        DAE_SETPOS_UPDATE))
-      {
+      if (rc = setpos_dae_check_and_init(stmt, irow, SQL_LOCK_NO_CHANGE,
+                                         DAE_SETPOS_UPDATE)) {
         return rc;
       }
 
-
       std::string upd_query("UPDATE ");
       upd_query.reserve(1024);
-      sqlRet= setpos_update_bookmark_std(stmt, upd_query);
+      sqlRet = setpos_update_bookmark_std(stmt, upd_query);
       break;
     }
-  case SQL_DELETE_BY_BOOKMARK:
-    {
+    case SQL_DELETE_BY_BOOKMARK: {
+      /* IF dynamic cursor THEN rerun query to refresh resultset */
+      if (stmt->is_dynamic_cursor() && set_dynamic_result(stmt))
+        return stmt->set_error(DESERR_S1000, alloc_error, 0);
 
-      if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
-          return stmt->set_error(DESERR_S1000, alloc_error, 0);
-
+      /* start building our DELETE statement */
       std::string del_query("DELETE FROM ");
       del_query.reserve(1024);
 
       sqlRet = setpos_delete_bookmark_std(stmt, del_query);
       break;
     }
-  case SQL_FETCH_BY_BOOKMARK:
-    {
-      sqlRet= fetch_bookmark(stmt);
+    case SQL_FETCH_BY_BOOKMARK: {
+      sqlRet = fetch_bookmark(stmt);
       break;
     }
-  default:
-    return ((STMT*)(Handle))->set_error(DESERR_S1C00,NULL,0);
+    default:
+      return ((STMT *)(Handle))->set_error(DESERR_S1C00, NULL, 0);
   }
-  */
 
   return sqlRet;
 }

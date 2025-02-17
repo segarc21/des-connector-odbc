@@ -1095,7 +1095,7 @@ SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType)
   stmt->type_requested = fSqlType;
   stmt->type = SQLGETTYPEINFO;
   std::string placeholder_str = ""; //so we don't get warnings
-  stmt->table = new ResultTable(stmt, placeholder_str);
+  stmt->result = new DES_RESULT(stmt, placeholder_str);
 
   return SQL_SUCCESS;
 }

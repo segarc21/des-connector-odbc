@@ -44,26 +44,7 @@ BOOL ssps_used(STMT *stmt)
 
 /* Errors processing? */
 BOOL returned_result(STMT *stmt)
-{
-  if (ssps_used(stmt))
-  {
-    /* Basically at this point we are supposed to get result already */
-    DES_RES *temp_res= NULL;
-
-    if ((stmt->result != NULL) ||
-        (temp_res= mysql_stmt_result_metadata(stmt->ssps)) != NULL)
-    {
-      /* mysql_free_result checks for NULL, so we can always call it */
-      mysql_free_result(temp_res);
-      return TRUE;
-    }
-    return FALSE;
-  }
-  else
-  {
-    return mysql_field_count(stmt->dbc->des) > 0 ;
-  }
-}
+{ return des_num_fields(stmt->result) > 0; }
 
 
 des_bool free_current_result(STMT *stmt)
@@ -71,12 +52,6 @@ des_bool free_current_result(STMT *stmt)
   des_bool res= 0;
   if (stmt->result)
   {
-    if (ssps_used(stmt))
-    {
-      free_result_bind(stmt);
-      res= mysql_stmt_free_result(stmt->ssps);
-    }
-    /* We need to always free stmt->result because SSPS keep metadata there */
     stmt_result_free(stmt);
     stmt->result= NULL;
   }
@@ -88,35 +63,20 @@ des_bool free_current_result(STMT *stmt)
    i.e using mysql_* part of api, ssps - prepared on server, using mysql_stmt
  */
 static
-DES_RES * stmt_get_result(STMT *stmt, BOOL force_use)
+DES_RESULT * stmt_get_result(STMT *stmt, BOOL force_use)
 {
-  /* We can't use USE_RESULT because SQLRowCount will fail in this case! */
-  if (if_forward_cache(stmt) || force_use)
-  {
-    return mysql_use_result(stmt->dbc->des);
-  }
-  else
-  {
-    return mysql_store_result(stmt->dbc->des);
-  }
+  return des_store_result(stmt);
 }
 
 
 /* For text protocol this get result itself as well. Besides for text protocol
    we need to use/store each resultset of multiple resultsets */
-DES_RES * get_result_metadata(STMT *stmt, BOOL force_use)
+DES_RESULT * get_result_metadata(STMT *stmt, BOOL force_use)
 {
   /* just a precaution, mysql_free_result checks for NULL anywat */
-  mysql_free_result(stmt->result);
+  des_free_result(stmt->result);
 
-  if (ssps_used(stmt))
-  {
-    stmt->result= mysql_stmt_result_metadata(stmt->ssps);
-  }
-  else
-  {
-    stmt->result= stmt_get_result(stmt, force_use);
-  }
+  stmt->result = stmt_get_result(stmt, force_use);
 
   return stmt->result;
 }
@@ -191,94 +151,36 @@ des_ulonglong num_rows(STMT *stmt)
 
   if (ssps_used(stmt))
   {
-    return  offset + mysql_stmt_num_rows(stmt->ssps);
+    return  offset + des_stmt_num_rows(stmt->ssps);
   }
   else
   {
-    return offset + mysql_num_rows(stmt->result);
+    return offset + des_num_rows(stmt->result);
   }
 }
 
 
 DES_ROW STMT::fetch_row(bool read_unbuffered)
 {
-  if (ssps)
-  {
-    if (ssps_bind_result())
-    {
-      return nullptr;
-    }
-    int err = 0;
-
-    if (read_unbuffered || m_row_storage.eof())
-    {
-      /* Reading results from network */
-      err = mysql_stmt_fetch(ssps);
-    }
-    else
-    {
-      /* Row is already buffered in row storage, use the row storage */
-      m_row_storage.fill_data(result_bind);
-    }
-
-    switch (err)
-    {
-      case 1:
-        set_error("HY000", mysql_stmt_error(ssps),
-          mysql_stmt_errno(ssps));
-        throw error;
-      case MYSQL_NO_DATA:
-        return nullptr;
-    }
-
-    if (fix_fields)
-      return fix_fields(this, nullptr); // it returns stmt->array
-
-    return array;
-  }
-  else
-  {
-    return mysql_fetch_row(result);
-  }
+    return des_fetch_row(result);
 }
 
 
 unsigned long* fetch_lengths(STMT *stmt)
 {
-  if (ssps_used(stmt))
-  {
-    return stmt->result_bind[0].length;
-  }
-  else
-  {
-    return mysql_fetch_lengths(stmt->result);
-  }
+  return des_fetch_lengths(stmt);
 }
 
 
 DES_ROW_OFFSET row_seek(STMT *stmt, DES_ROW_OFFSET offset)
 {
-  if (ssps_used(stmt))
-  {
-    return mysql_stmt_row_seek(stmt->ssps, offset);
-  }
-  else
-  {
-    return mysql_row_seek(stmt->result, offset);
-  }
+  return des_row_seek(stmt->result, offset);
 }
 
 
 void data_seek(STMT *stmt, des_ulonglong offset)
 {
-  if (ssps_used(stmt))
-  {
-    mysql_stmt_data_seek(stmt->ssps, offset);
-  }
-  else
-  {
-    mysql_data_seek(stmt->result, offset);
-  }
+  des_data_seek(stmt->result, offset);
 }
 
 
@@ -286,11 +188,11 @@ DES_ROW_OFFSET row_tell(STMT *stmt)
 {
   if (ssps_used(stmt))
   {
-    return mysql_stmt_row_tell(stmt->ssps);
+    return des_stmt_row_tell(stmt->ssps);
   }
   else
   {
-    return mysql_row_tell(stmt->result);
+    return des_row_tell(stmt->result);
   }
 }
 
@@ -299,14 +201,7 @@ int next_result(STMT *stmt)
 {
   free_current_result(stmt);
 
-  if (ssps_used(stmt))
-  {
-    return mysql_stmt_next_result(stmt->ssps);
-  }
-  else
-  {
-    return mysql_next_result(stmt->dbc->des);
-  }
+  return des_next_result(stmt->dbc->des);
 }
 
 
@@ -426,61 +321,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
     return stmt->set_error( DESERR_S1001, NULL, 4001);
   }
 
-  ssps_close(stmt);
   stmt->param_count = (uint)PARAM_COUNT(stmt->query);
-  /* Trusting our parsing we are not using prepared statments unsless there are
-     actually parameter markers in it */
-  if (!stmt->dbc->ds.opt_NO_SSPS && (PARAM_COUNT(stmt->query) || force_prepare)
-    && !IS_BATCH(&stmt->query) &&
-      stmt->query.preparable_on_server(stmt->dbc->des->server_version))
-  {
-    DESLOG_QUERY(stmt, "Using prepared statement");
-    ssps_init(stmt);
-
-    /* If the query is in the form of "WHERE CURRENT OF" - we do not need to prepare
-       it at the moment */
-    if (!stmt->query.get_cursor_name())
-    {
-     LOCK_DBC(stmt->dbc);
-
-     if (reset_sql_limit)
-        set_sql_select_limit(stmt->dbc, 0, false);
-
-     // After the parse and removal of curly brackets from the query
-     // the result string for prepare is inside stmt->query.
-     int prep_res = mysql_stmt_prepare(stmt->ssps, stmt->query.query,
-                                       (unsigned long)stmt->query.length());
-
-     if (prep_res)
-      {
-        DESLOG_QUERY(stmt, mysql_error(stmt->dbc->des));
-
-        stmt->set_error("HY000");
-        translate_error((char*)stmt->error.sqlstate.c_str(), DESERR_S1000,
-                        mysql_errno(stmt->dbc->des));
-
-        return SQL_ERROR;
-      }
-
-      stmt->param_count= mysql_stmt_param_count(stmt->ssps);
-
-      /* make sure we free the result from the previous time */
-      if (stmt->result)
-      {
-        mysql_free_result(stmt->result);
-        stmt->result = NULL;
-      }
-
-      /* Getting result metadata */
-      stmt->fake_result = false;  // reset in case it was set before
-      if ((stmt->result= mysql_stmt_result_metadata(stmt->ssps)))
-      {
-        /*stmt->state= ST_SS_PREPARED;*/
-        fix_result_types(stmt);
-       /*Should we reset stmt->result?*/
-      }
-    }
-  }
 
   {
     /* Creating desc records for each parameter */

@@ -75,7 +75,7 @@ struct ODBC_CATALOG {
   std::vector<std::string> columns;
   DES_ROW current_row = nullptr;
   unsigned long *current_lengths = nullptr;
-  DES_RES *des_res = nullptr;
+  DES_RESULT *des_res = nullptr;
 
   SQLCHAR *m_catalog;
   unsigned long m_catalog_len;
@@ -132,7 +132,7 @@ create_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
 
 /* no_i_s functions */
 
-DES_RES *db_status(STMT *stmt, std::string &db);
+DES_RESULT *db_status(STMT *stmt, std::string &db);
 
 std::string get_database_name(STMT *stmt,
                               SQLCHAR *catalog, SQLINTEGER catalog_len,
@@ -140,7 +140,7 @@ std::string get_database_name(STMT *stmt,
                               bool try_reget = true);
 
 
-DES_RES *table_status(STMT        *stmt,
+DES_RESULT *table_status(STMT        *stmt,
                         SQLCHAR     *db,
                         SQLSMALLINT  db_length,
                         SQLCHAR     *table,

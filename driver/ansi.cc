@@ -645,7 +645,7 @@ SQLPrepareImpl(SQLHSTMT hstmt, SQLCHAR *str, SQLINTEGER str_len,
     we can pass it straight through. Otherwise it needs to be converted to
     the connection character set (probably utf-8).
   */
-  return SQLPrepare(hstmt, str, str_len, false, force_prepare);
+  return DESPrepare(hstmt, str, str_len, false, force_prepare);
 }
 
 

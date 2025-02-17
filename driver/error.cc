@@ -466,7 +466,7 @@ DESGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
     if (!stmt->result)
       *(SQLLEN *)num_value = 0;
     else
-      *(SQLLEN *)num_value = (SQLLEN)stmt->table->row_count();
+      *(SQLLEN *)num_value = (SQLLEN) des_num_rows(stmt->result);
     return SQL_SUCCESS;
 
   case SQL_DIAG_DYNAMIC_FUNCTION:

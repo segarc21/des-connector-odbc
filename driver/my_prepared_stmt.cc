@@ -145,7 +145,7 @@ BOOL ssps_get_out_params(STMT *stmt)
           /* Making bit field look "normally" */
           if (stmt->result_bind[counter].buffer_type == DES_TYPE_BIT)
           {
-            DES_FIELD *field= mysql_fetch_field_direct(stmt->result, counter);
+            DES_FIELD *field= des_fetch_field_direct(stmt->result, counter);
             unsigned long long numeric;
 
             assert(field->type == DES_TYPE_BIT);
@@ -689,24 +689,15 @@ void STMT::free_reset_params()
 
 void STMT::free_fake_result(bool clear_all_results)
 {
-    //TODO: remove
-  /*
   if (!fake_result)
   {
-    if (clear_all_results)
-    {
-      while (!next_result(this))
-      {
-        get_result_metadata(this, TRUE);
-      }
-    }
+    return; //TODO: provisional solution.
   }
   else
   {
     reset_result_array();
     stmt_result_free(this);
   }
-  */
 }
 
 
@@ -726,8 +717,8 @@ void STMT::clear_param_bind()
 // before filling it with the row storage data.
 void STMT::reset_result_array()
 {
-  if (!m_row_storage.is_valid())
-    result_array.reset();
+  if (this->result && this->result->internal_table)
+    x_free(this->result->internal_table);
 }
 
 STMT::~STMT()
@@ -926,7 +917,7 @@ int STMT::ssps_bind_result()
 
     for (i= 0; i < num_fields; ++i)
     {
-      DES_FIELD    *field= mysql_fetch_field_direct(result, i);
+      DES_FIELD    *field= des_fetch_field_direct(result, i);
       st_buffer_size_type p= allocate_buffer_for_field(field,
                                                       IS_PS_OUT_PARAMS(this));
 

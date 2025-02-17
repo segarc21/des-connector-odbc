@@ -93,7 +93,7 @@ SQLRETURN exec_stmt_query_std(STMT *stmt, const std::string &query,
 */
 void desodbc_link_fields(STMT *stmt, DES_FIELD *fields, uint field_count)
 {
-    DES_RES *result;
+    DES_RESULT *result;
     assert(stmt);
     LOCK_DBC(stmt->dbc);
     result= stmt->result;
@@ -125,7 +125,7 @@ void fix_row_lengths(STMT *stmt, const long* fix_rules, uint row, uint field_cou
     return;
 
   row_lengths =  stmt->lengths.get() + row * field_count;
-  orig_lengths= mysql_fetch_lengths(stmt->result);
+  orig_lengths= des_fetch_lengths(stmt);
 
   for (i= 0; i < field_count; ++i)
   {
@@ -145,7 +145,7 @@ void fix_row_lengths(STMT *stmt, const long* fix_rules, uint row, uint field_cou
 void fix_result_types(STMT *stmt)
 {
   uint i;
-  DES_RES *result= stmt->result;
+  DES_RESULT *result= stmt->result;
   DESCREC *irrec;
   DES_FIELD *field;
   int capint32= stmt->dbc->ds.opt_COLUMN_SIZE_S32 ? 1 : 0;

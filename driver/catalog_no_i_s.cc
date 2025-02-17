@@ -129,7 +129,7 @@ static des_bool check_table_type(const SQLCHAR *TableType,
   @type    : internal
   @purpose : returns columns from a particular table, NULL on error
 */
-static DES_RES *server_list_dbkeys(STMT *stmt,
+static DES_RESULT *server_list_dbkeys(STMT *stmt,
                                      SQLCHAR *catalog,
                                      SQLSMALLINT catalog_len,
                                      SQLCHAR *table,
@@ -160,7 +160,7 @@ static DES_RES *server_list_dbkeys(STMT *stmt,
     DESLOG_DBC_QUERY(dbc, query.c_str());
     if (exec_stmt_query(stmt, query.c_str(), query.length(), FALSE))
         return NULL;
-    return mysql_store_result(des);
+    return des_store_result(des);
 }
 
 /*
@@ -503,7 +503,7 @@ primary_keys_no_i_s(SQLHSTMT hstmt,
     }
 
     row_count= 0;
-    while ( (row= mysql_fetch_row(stmt->result)) )
+    while ( (row= des_fetch_row(stmt->result)) )
     {
         if ( row[1][0] == '0' )     /* If unique index */
         {
@@ -584,7 +584,7 @@ const uint SQLPROCEDURECOLUMNS_FIELDS =
   @type    : internal
   @purpose : returns procedure params as resultset
 */
-static DES_RES *server_list_proc_params(STMT *stmt,
+static DES_RESULT *server_list_proc_params(STMT *stmt,
                                           SQLCHAR *catalog,
                                           SQLSMALLINT catalog_len,
                                           SQLCHAR *proc_name,
@@ -662,7 +662,7 @@ static DES_RES *server_list_proc_params(STMT *stmt,
   if (exec_stmt_query(stmt, qbuff.c_str(), qbuff.length(), FALSE))
     return NULL;
 
-  return mysql_store_result(des);
+  return des_store_result(des);
 }
 
 
@@ -683,7 +683,7 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
   STMT *stmt= (STMT *)hstmt;
   SQLRETURN nReturn= SQL_SUCCESS;
   DES_ROW row;
-  DES_RES *proc_list_res;
+  DES_RESULT *proc_list_res;
   int params_num= 0, return_params_num= 0;
   unsigned int total_params_num = 0;
   std::string db;
@@ -713,7 +713,7 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
                                SQLPROCEDURECOLUMNS_FIELDS);
   auto &data = stmt->m_row_storage;
 
-  while ((row= mysql_fetch_row(proc_list_res)))
+  while ((row= des_fetch_row(proc_list_res)))
   {
     char *token;
     char *param_str;
@@ -860,7 +860,7 @@ procedure_columns_no_i_s(SQLHSTMT hstmt,
             sizeof(SQLPROCEDURECOLUMNS_values),
             SQLPROCEDURECOLUMNS_fields,
             SQLPROCEDURECOLUMNS_FIELDS);
-        mysql_free_result(proc_list_res);
+        des_free_result(proc_list_res);
       case EXCEPTION_TYPE::GENERAL:
         break;
     }
@@ -940,14 +940,14 @@ statistics_no_i_s(SQLHSTMT hstmt,
     // Free if result data was not in row storage.
     stmt->reset_result_array();
 
-    size_t rows = mysql_num_rows(des_res);
+    size_t rows = des_num_rows(des_res);
     stmt->m_row_storage.set_size(rows, SQLSTAT_FIELDS);
 
     auto &data = stmt->m_row_storage;
     data.first_row();
     size_t rnum = 0;
 
-    while ((mysql_row = mysql_fetch_row(des_res))) {
+    while ((mysql_row = des_fetch_row(des_res))) {
       SQLSMALLINT non_unique = (mysql_row[1][0] == '1' ? 1 : 0);
 
       // Skip non-unique indexes if only unique are requested
@@ -993,7 +993,7 @@ statistics_no_i_s(SQLHSTMT hstmt,
     }
 
     if (des_res)
-      mysql_free_result(des_res);
+      des_free_result(des_res);
 
     if (rnum) {
       stmt->result_array = (DES_ROW)data.data();
@@ -1180,7 +1180,7 @@ tables_no_i_s(SQLHSTMT hstmt,
           {
             if (stmt->result)
             {
-              mysql_free_result(stmt->result);
+              des_free_result(stmt->result);
               stmt->result = nullptr;
             }
 
@@ -1192,7 +1192,7 @@ tables_no_i_s(SQLHSTMT hstmt,
           stmt->m_row_storage.set_size(row_count, SQLTABLES_FIELDS);
 
           int name_index = 0;
-          while ((row= mysql_fetch_row(stmt->result)))
+          while ((row= des_fetch_row(stmt->result)))
           {
             int type_index = 2;
             int comment_index = 1;

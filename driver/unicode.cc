@@ -255,95 +255,51 @@ SQLRETURN SQL_API
 SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
                 SQLWCHAR *name, SQLSMALLINT name_max, SQLSMALLINT *name_len,
                 SQLSMALLINT *type, SQLULEN *size, SQLSMALLINT *scale, //TODO: scale has been renamed to decimal_digits in a newer ODBC version. Change headers.
-                SQLSMALLINT *nullable)
-{
-  STMT *stmt= (STMT *)hstmt;
-  SQLCHAR *value= NULL;
-  SQLWCHAR *wvalue= NULL;
-  SQLINTEGER len= SQL_NTS;
-  SQLSMALLINT free_value= 0;
-  uint errors;
-
-  std::string name_str = stmt->table->index_to_name_col(column);
-  //We convert the name (in std::string) to an unsigned char vector
-  //in order to use the sqlchar_as_sqlwchar function provided by the MySQL ODBC source.
-  std::vector<unsigned char> name_uchar(name_str.begin(), name_str.end());
-  value = name_uchar.data();
-
-  wvalue =
-      sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value, &len, &errors);
-
-  if (name_len) *name_len = (SQLSMALLINT)len;
-
-  if (name && name_max > 0) {
-    len = desodbc_min(len, name_max - 1);
-    (void)memcpy((char *)name, (const char *)wvalue, len * sizeof(SQLWCHAR));
-    ((SQLWCHAR *)name)[len] = 0;
-  }
-
-  if (type)
-    *type = stmt->table->col_type(name_str).simple_type;
-  if (size)
-    *size = stmt->table->col_size(name_str);
-  if (scale)
-    *scale = stmt->table->col_decimal_digits(name_str); //TODO: update header to new ODBC version
-  if (nullable)
-    *nullable = stmt->table->col_nullable(name_str);
-
-  return SQL_SUCCESS;
-
-  /*
-  STMT *stmt= (STMT *)hstmt;
-  SQLCHAR *value= NULL;
-  SQLWCHAR *wvalue= NULL;
-  SQLINTEGER len= SQL_NTS;
-  SQLSMALLINT free_value= 0;
+                SQLSMALLINT *nullable) {
+  STMT *stmt = (STMT *)hstmt;
+  SQLCHAR *value = NULL;
+  SQLWCHAR *wvalue = NULL;
+  SQLINTEGER len = SQL_NTS;
+  SQLSMALLINT free_value = 0;
   uint errors;
 
   SQLRETURN rc;
 
   LOCK_STMT(hstmt);
 
-  rc= DESDescribeCol(hstmt, column, &value, &free_value, type,
-                                 size, scale, nullable);
+  rc = DESDescribeCol(hstmt, column, &value, &free_value, type, size, scale,
+                        nullable);
 
-  if (free_value == -1)
-  {
+  if (free_value == -1) {
     set_mem_error(stmt->dbc->des);
     return handle_connection_error(stmt);
   }
 
-  if (value)
-  {
-    wvalue= sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value, &len,
-                                &errors);
-    if (len == -1)
-    {
-      if (free_value)
-        x_free(value);
+  if (value) {
+    wvalue =
+        sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value, &len, &errors);
+    if (len == -1) {
+      if (free_value) x_free(value);
       set_mem_error(stmt->dbc->des);
       return handle_connection_error(stmt);
     }
 
-    // We set the error only when the result is intented to be returned
+    /* We set the error only when the result is intented to be returned */
+    if (name && len > name_max - 1) rc = stmt->set_error(DESERR_01004, NULL, 0);
 
-  if (name && len > name_max - 1) rc = stmt->set_error(DESERR_01004, NULL, 0);
+    if (name_len) *name_len = (SQLSMALLINT)len;
 
-  if (name_len) *name_len = (SQLSMALLINT)len;
+    if (name && name_max > 0) {
+      len = desodbc_min(len, name_max - 1);
+      (void)memcpy((char *)name, (const char *)wvalue, len * sizeof(SQLWCHAR));
+      ((SQLWCHAR *)name)[len] = 0;
+    }
 
-  if (name && name_max > 0) {
-    len = desodbc_min(len, name_max - 1);
-    (void)memcpy((char *)name, (const char *)wvalue, len * sizeof(SQLWCHAR));
-    ((SQLWCHAR *)name)[len] = 0;
+    if (free_value) x_free(value);
+    x_free(wvalue);
   }
 
-  if (free_value) x_free(value);
-  x_free(wvalue);
-}
-
-return rc;
-*/
-
+  return rc;
 }
 
 
@@ -358,10 +314,7 @@ SQLExecDirectW(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len)
     return error;
   error= DES_SQLExecute((STMT *)hstmt);
 
-  SQLFreeStmt(hstmt, SQL_CLOSE);
-
   return error;
-  //return SQL_SUCCESS;
 }
 
 
@@ -884,7 +837,7 @@ SQLPrepareWImpl(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len,
     return stmt->set_error("22018", NULL, 0);
   }
 
-  SQLRETURN rc = SQLPrepare(hstmt, conv, str_len, false, force_prepare);
+  SQLRETURN rc = DESPrepare(hstmt, conv, str_len, false, force_prepare);
   x_free(conv);
   return rc;
 }

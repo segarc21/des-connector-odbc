@@ -385,7 +385,7 @@ void fill_ird_data_lengths (DESC *ird, ulong *lengths, uint fields);
 BOOL              ssps_used           (STMT *stmt);
 BOOL              returned_result     (STMT *stmt);
 des_bool           free_current_result (STMT *stmt);
-DES_RES *       get_result_metadata (STMT *stmt, BOOL force_use);
+DES_RESULT *       get_result_metadata (STMT *stmt, BOOL force_use);
 int               bind_result         (STMT *stmt);
 int               get_result          (STMT *stmt);
 des_ulonglong      affected_rows       (STMT *stmt);
@@ -429,7 +429,7 @@ void stmt_result_free(STMT * stmt)
     x_free(stmt->result);
   }
   else
-    mysql_free_result(stmt->result);
+    delete(stmt->result);
 
   stmt->result = NULL;
 }
