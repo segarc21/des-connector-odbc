@@ -49,13 +49,7 @@
 /* Sets affected rows everewhere where SQLRowCOunt could look for */
 void global_set_affected_rows(STMT * stmt, des_ulonglong rows)
 {
-  stmt->affected_rows= stmt->dbc->des->affected_rows= rows;
-
-  /* Dirty hack. But not dirtier than the one above */
-  if (ssps_used(stmt))
-  {
-    stmt->ssps->affected_rows= rows;
-  }
+  stmt->affected_rows= rows;
 }
 
 
@@ -296,26 +290,16 @@ void set_current_cursor_data(STMT *stmt, SQLUINTEGER irow)
 
   if ( stmt->cursor_row != row_pos )
   {
-    if (ssps_used(stmt))
-    {
-       data_seek(stmt, row_pos);
-       IGNORE_THROW(stmt->fetch_row());
-    }
-    else
-    {
-      DES_ROWS *dcursor;
-      dcursor= result->data->data;
+    DES_ROWS *dcursor;
+    dcursor = result->data->data;
 
-      if (dcursor)
-      {
-        for ( nrow= 0; nrow < row_pos; ++nrow )
-        {
-          dcursor= dcursor->next;
-        }
+    if (dcursor) {
+      for (nrow = 0; nrow < row_pos; ++nrow) {
+        dcursor = dcursor->next;
       }
-
-      result->data_cursor= dcursor;
     }
+
+    result->data_cursor = dcursor;
 
     stmt->cursor_row= row_pos;
   }
@@ -372,8 +356,6 @@ static SQLRETURN update_status(STMT *stmt, SQLUSMALLINT status)
 static SQLRETURN update_setpos_status(STMT *stmt, SQLINTEGER irow,
                                       des_ulonglong rows, SQLUSMALLINT status)
 {
-  global_set_affected_rows(stmt, rows);
-
   if (irow && rows > 1)
   {
     return stmt->set_error(DESERR_01S04,NULL,0);
@@ -453,15 +435,7 @@ static bool insert_field_std(STMT *stmt, DES_RESULT *result,
   SQLLEN      length;
   char as_string[50], *dummy;
 
-  if (ssps_used(stmt))
-  {
-    dummy= get_string(stmt, nSrcCol, NULL, (ulong*)&length, as_string);
-    row_data= &dummy;
-  }
-  else
-  {
-    row_data= result->data_cursor->data + nSrcCol;
-  }
+  row_data = result->data_cursor->data + nSrcCol;
 
   /* Copy row buffer data to statement */
   iprec->concise_type= get_sql_data_type(stmt, field, 0);
@@ -571,13 +545,10 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     Get the list of all of the columns of the underlying table by using
     SELECT * FROM <table> LIMIT 0.
   */
+  select = "/sql SELECT * FROM `" + stmt->table_name + "` LIMIT 0";
 
-  select = "SELECT * FROM `" + stmt->table_name + "` LIMIT 0";
-  DESLOG_QUERY(stmt, select.c_str());
-  LOCK_DBC(stmt->dbc);
-  if (exec_stmt_query_std(stmt, select, false) ||
-      !(presultAllColumns= des_store_result(stmt->dbc->des)))
-  {
+  presultAllColumns = do_internal_query(select);
+  if (!presultAllColumns) {
     stmt->set_error(DESERR_S1000);
     return SQL_ERROR;
   }
@@ -586,20 +557,18 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     If the number of fields in the underlying table is not the same as
     our result set, we bail out -- we need them all!
   */
-  if (des_num_fields(presultAllColumns) != des_num_fields(result))
-  {
+  if (des_num_fields(presultAllColumns) != des_num_fields(result)) {
     des_free_result(presultAllColumns);
     return SQL_ERROR;
   }
-
   /*
     Now we walk through the list of columns in the underlying table,
     appending them to the query along with the value from the row at the
     current cursor position.
   */
-  for (i= 0; i < presultAllColumns->field_count; ++i)
+  for (i = 0; i < presultAllColumns->field_count; ++i)
   {
-    DES_FIELD *table_field= presultAllColumns->fields + i;
+    DES_FIELD *table_field = presultAllColumns->fields + i;
 
     /*
       We also can't handle floating-point fields because their comparison
@@ -622,7 +591,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
       if (cursor_field->org_name &&
           !strcmp(cursor_field->org_name, table_field->name))
       {
-        desodbc_append_quoted_name_std(str, table_field->name);
+        str.append(table_field->name);
         str.append("=");
         if (insert_field_std(stmt, result, str, j))
         {
@@ -644,7 +613,6 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     }
   }
 
-  des_free_result(presultAllColumns);
   return SQL_SUCCESS;
 }
 
@@ -664,38 +632,25 @@ static SQLRETURN build_where_clause_std( STMT * pStmt,
     /* simply append WHERE to our statement */
     str.append(" WHERE ");
 
-    /*
-      If a suitable key exists, then we'll use those columns, otherwise
-      we'll try to use all of the columns.
-    */
-    if (check_if_usable_unique_key_exists(pStmt))
-    {
-      if (insert_pk_fields_std(pStmt, str) != SQL_SUCCESS)
-        return SQL_ERROR;
-    }
-    else
-    {
-      if (append_all_fields_std(pStmt, str) != SQL_SUCCESS)
-        return pStmt->set_error("HY000",
-                              "Build WHERE -> insert_fields() failed.",
+    if (append_all_fields_std(pStmt, str) != SQL_SUCCESS)
+      return pStmt->set_error("HY000", "Build WHERE -> insert_fields() failed.",
                               0);
-    }
 
     /* Remove the trailing ' AND ' */
     size_t sz = str.size();
     if (sz > 5)
       str.erase(sz - 5);
 
-    /* IF irow = 0 THEN delete all rows in the rowset ELSE specific (as in one) row */
-    if ( irow == 0 )
-    {
-        str.append(" LIMIT ").append(std::to_string((size_t)pStmt->ard->array_size));
+    //DES doesn't support update with the LIMIT keywords.
+    /*
+    //IF irow = 0 THEN delete all rows in the rowset ELSE specific (as in one) row
+    if (irow == 0) {
+      str.append(" LIMIT ").append(
+          std::to_string((size_t)pStmt->ard->array_size));
+    } else {
+      str.append(" LIMIT 1");
     }
-    else
-    {
-        str.append(" LIMIT 1");
-    }
-
+    */
 
     return SQL_SUCCESS;
 }
@@ -779,9 +734,6 @@ static SQLRETURN build_set_clause_std(STMT *stmt, SQLULEN irow,
             }
         }
 
-        desodbc_append_quoted_name_std(query, field->org_name);
-        query.append("=");
-
         iprec->concise_type= get_sql_data_type(stmt, field, NULL);
         aprec->concise_type= arrec->concise_type;
 	/* copy prec and scale - needed for SQL_NUMERIC values */
@@ -802,12 +754,17 @@ static SQLRETURN build_set_clause_std(STMT *stmt, SQLULEN irow,
 
         aprec->octet_length_ptr= &length;
         aprec->indicator_ptr= &length;
+        if (aprec->data_ptr) {
+          query.append(field->org_name);
+          query.append("=");
 
-        if ( copy_rowdata(stmt,aprec,iprec) != SQL_SUCCESS )
-            return(SQL_ERROR);
+            if (copy_rowdata(stmt, aprec, iprec) != SQL_SUCCESS)
+                return (SQL_ERROR);
 
-        query.append(stmt->buf(), stmt->buf_pos());
-        stmt->buf_set_pos(0); // Buffer is used, can be reset
+          query.append(stmt->buf(), stmt->buf_pos());
+          stmt->buf_set_pos(0);  // Buffer is used, can be reset
+        }
+
     }
 
     if (ignore_count == result->field_count)
@@ -1093,7 +1050,7 @@ static SQLRETURN setpos_delete_std(STMT *stmt, SQLUSMALLINT irow,
   }
 
   /* appened our table name to our DELETE statement */
-  desodbc_append_quoted_name_std(query, table_name);
+  query.append(table_name);
   query_length= query.size();
 
   /* IF irow == 0 THEN delete all rows in the current rowset ELSE specific (as in one) row */
@@ -1120,9 +1077,11 @@ static SQLRETURN setpos_delete_std(STMT *stmt, SQLUSMALLINT irow,
     }
 
     /* execute our DELETE statement */
-    if (!(nReturn= exec_stmt_query_std(stmt, query, false)))
-    {
-      affected_rows+= stmt->dbc->des->affected_rows;
+    if (!(nReturn = do_quiet_internal_query(stmt, query))) {
+      affected_rows += des_affected_rows(stmt);
+    } else if (!SQL_SUCCEEDED(nReturn)) {
+      stmt->error = stmt->dbc->error;
+      return nReturn;
     }
 
   } while ( ++rowset_pos <= rowset_end );
@@ -1250,7 +1209,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
   if ( !(table_name= find_used_table(stmt)) )
       return SQL_ERROR;
 
-  desodbc_append_quoted_name_std(query, table_name);
+  query.append(table_name);
   query_length= query.size();
 
   if ( !irow )
@@ -1295,9 +1254,9 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
       if (!SQL_SUCCEEDED(nReturn))
         return nReturn;
 
-      if (!(nReturn= exec_stmt_query_std(stmt, query, false)))
+      if (!(nReturn = do_quiet_internal_query(stmt, query)))
       {
-        affected+= mysql_affected_rows(stmt->dbc->des);
+        affected+= des_affected_rows(stmt);
       }
       else if (!SQL_SUCCEEDED(nReturn))
       {
@@ -1474,7 +1433,7 @@ static SQLRETURN batch_insert_std( STMT *stmt, SQLULEN irow, std::string &query 
         }  /* END OF while(count < insert_count) */
 
         query.erase(query.size() - 1);
-        if ( exec_stmt_query_std(stmt, query, false) !=
+        if (do_quiet_internal_query(stmt, query) !=
              SQL_SUCCESS )
             return(SQL_ERROR);
 
@@ -1750,23 +1709,27 @@ SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
         std::string ins_query("INSERT INTO ");
         ins_query.reserve(1024);
 
-        /* Append the table's DB name if exists */
+        //TODO: check if the following applies in DES:
+        /*
+        //Append the table's DB name if exists
         if (result->fields && result->fields[0].db_length) {
           desodbc_append_quoted_name_std(ins_query, result->fields[0].db);
           ins_query.append(".");
-        }
+        }*/
+        
 
-        desodbc_append_quoted_name_std(ins_query, table_name);
+        ins_query.append(table_name);
+        /*
         ins_query.append("(");
 
-        /* build list of column names */
+        //build list of column names
         for (nCol = 0; nCol < result->field_count; ++nCol) {
           DES_FIELD *field = des_fetch_field_direct(result, nCol);
-          desodbc_append_quoted_name_std(ins_query, field->org_name);
+          ins_query.append(field->org_name);
           if (nCol + 1 < result->field_count) ins_query.append(",");
         }
-
-        ins_query.append(") VALUES ");
+        */
+        ins_query.append(" VALUES ");
 
         /* process row(s) using our INSERT as base */
         ret = batch_insert_std(stmt, irow, ins_query);

@@ -963,7 +963,7 @@ static SQLRETURN check_result(STMT *stmt)
       break;
     case ST_PREPARED:
       /*TODO: introduce state for statements prepared on the server side */
-      if (!ssps_used(stmt) && stmt_returns_result(&stmt->query))
+      if (stmt_returns_result(&stmt->query))
       {
         SQLULEN real_max_rows= stmt->stmt_options.max_rows;
         stmt->stmt_options.max_rows= 1;
@@ -1137,20 +1137,14 @@ DESColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
   SQLRETURN error= SQL_SUCCESS;
   DESCREC *irrec;
 
-  if (!ssps_used(stmt))
-  {
-    /* DESColAttribute can be called before SQLExecute. Thus we need make sure that
-    all parameters have been bound */
-    if ( stmt->param_count > 0 && stmt->dummy_state == ST_DUMMY_UNKNOWN &&
-      (stmt->state != ST_PRE_EXECUTED || stmt->state != ST_EXECUTED) )
-    {
-      if ( do_dummy_parambind(hstmt) != SQL_SUCCESS )
-        return SQL_ERROR;
-    }
-
-    if (check_result(stmt) != SQL_SUCCESS)
-      return SQL_ERROR;
+  /* DESColAttribute can be called before SQLExecute. Thus we need make sure
+    that all parameters have been bound */
+  if (stmt->param_count > 0 && stmt->dummy_state == ST_DUMMY_UNKNOWN &&
+      (stmt->state != ST_PRE_EXECUTED || stmt->state != ST_EXECUTED)) {
+    if (do_dummy_parambind(hstmt) != SQL_SUCCESS) return SQL_ERROR;
   }
+
+  if (check_result(stmt) != SQL_SUCCESS) return SQL_ERROR;
 
   if (!stmt->result)
   {

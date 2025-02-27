@@ -348,6 +348,27 @@ SQLRETURN DBC::createPipes() {
   return SQL_SUCCESS;
 }
 
+const wchar_t* get_executable_dir(const wchar_t *executable_path) {
+
+  std::wstring executable_path_wstr(executable_path);
+  size_t pos = executable_path_wstr.find_last_of(L"\\/");
+
+  if (pos != std::wstring::npos) {
+    std::wstring dir_wstr = executable_path_wstr.substr(0, pos);
+    size_t dir_size = dir_wstr.size();
+
+    wchar_t *dir = new wchar_t[dir_size + 1]; //TODO: consider making an 'util' function out of this
+    dir_wstr.copy(dir, dir_size);
+    dir[dir_size] = L'\0';
+
+    return dir;
+
+  } else { //Incorrect path. TODO: handle error appropiately.
+    exit(1);
+    return nullptr; //to prevent compiler errors
+  }
+}
+
 SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
 
   ENV *env = this->env;
@@ -362,6 +383,8 @@ SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
   env->startup_info_unicode.hStdOutput = env->driver_to_des_out_wpipe;
   env->startup_info_unicode.hStdInput = env->driver_to_des_in_rpipe;
   env->startup_info_unicode.dwFlags |= STARTF_USESTDHANDLES;
+  env->startup_info_unicode.dwFlags |= STARTF_USESHOWWINDOW;
+  env->startup_info_unicode.wShowWindow = SW_HIDE;
 
     /* Now, we will call the function CreateProcessW (processthreadsapi.h).
 *
@@ -395,9 +418,11 @@ any special flags.
 
 */
 
-  if (!CreateProcessW(NULL, des_path, NULL, NULL,
-                      TRUE,
-                      0, NULL, NULL, &env->startup_info_unicode,
+  //Setting the current directory -the folder in which the des executable is in-.
+  const wchar_t *des_dir = get_executable_dir(des_path);
+  
+  if (!CreateProcessW(NULL, des_path, NULL, NULL, TRUE, 0, NULL, des_dir,
+                      &env->startup_info_unicode,
                       &env->process_info)) {
     CloseHandle(env->driver_to_des_out_rpipe);
     CloseHandle(env->driver_to_des_out_wpipe);
@@ -440,6 +465,79 @@ any special flags.
   return SQL_SUCCESS;
 }
 
+void shareHandles() {
+  ENV *env = dbc_global_var->env;
+  SharedMemory *shmem = env->shmem;
+
+  while (true) {
+    DWORD wait_event = WaitForSingleObject(env->request_handle_event, INFINITE);
+    // TODO: handle errors for wait_event != WAIT_OBJECT_0
+    if (wait_event == WAIT_OBJECT_0 &&
+        shmem->handle_sharing_info.pid_handle_petitioner != 0 &&
+        shmem->handle_sharing_info.pid_handle_petitionee ==
+            GetCurrentProcessId()) {
+      HANDLE petitioner_process_handle =
+          OpenProcess(PROCESS_DUP_HANDLE, TRUE,
+                      shmem->handle_sharing_info.pid_handle_petitioner);
+
+      DuplicateHandle(GetCurrentProcess(), env->driver_to_des_out_rpipe,
+                      petitioner_process_handle,
+                      &shmem->handle_sharing_info.out_handle, 0, TRUE,
+                      DUPLICATE_SAME_ACCESS);
+
+      DuplicateHandle(GetCurrentProcess(), env->driver_to_des_in_wpipe,
+                      petitioner_process_handle,
+                      &shmem->handle_sharing_info.in_handle, 0, TRUE,
+                      DUPLICATE_SAME_ACCESS);
+
+      ResetEvent(env->request_handle_event);
+      SetEvent(env->handle_sent_event);  // we notify the petitioner
+    }
+  }
+}
+
+
+void getDESProcessPipes() {
+  bool finished = false;
+
+  ENV *env = dbc_global_var->env;
+
+  WaitForSingleObject(env->shared_memory_mutex, INFINITE);
+  WaitForSingleObject(env->request_handle_mutex, INFINITE);
+
+  env->shmem->handle_sharing_info.pid_handle_petitioner = GetCurrentProcessId();
+
+  while (!finished) {
+    DWORD random_pid =
+        env->shmem->pids_connected_struct
+            .pids_connected[rand() %
+                            (env->shmem->pids_connected_struct.size -
+                             1)];  // we request the handles to a random peer
+                                   // TODO: impleemnt better criteria
+    if (random_pid != GetCurrentProcessId()) {
+      env->shmem->handle_sharing_info.pid_handle_petitionee = random_pid;
+
+      SetEvent(env->request_handle_event);
+      WaitForSingleObject(env->handle_sent_event,
+                          INFINITE);  // TODO: handle errors
+
+      env->driver_to_des_out_rpipe = env->shmem->handle_sharing_info.out_handle;
+      env->driver_to_des_in_wpipe = env->shmem->handle_sharing_info.in_handle;
+
+      // we reset the structure once we have saved the handles
+      env->shmem->handle_sharing_info.in_handle = NULL;
+      env->shmem->handle_sharing_info.out_handle = NULL;
+      env->shmem->handle_sharing_info.pid_handle_petitionee = 0;
+      env->shmem->handle_sharing_info.pid_handle_petitioner = 0;
+
+      finished = true;
+    }
+  }
+
+  ReleaseMutex(env->request_handle_mutex);
+  ReleaseMutex(env->shared_memory_mutex);
+}
+
 /**
   Try to establish a connection to a MySQL server based on the data source
   configuration.
@@ -452,771 +550,42 @@ any special flags.
 SQLRETURN DBC::connect(DataSource *dsrc)
 {
   SQLRETURN rc = SQL_SUCCESS;
-  unsigned long flags;
-  /* Use 'int' and fill all bits to avoid alignment Bug#25920 */
-  unsigned int opt_ssl_verify_server_cert = ~0;
-  const des_bool on = 1;
-  unsigned int on_int = 1;
-  unsigned long max_long = ~0L;
-  bool initstmt_executed = false;
+  WaitForSingleObject(this->env->shared_memory_mutex, INFINITE);
+  SharedMemory *shmem = this->env->shmem;
 
-  dbc_guard guard(this);
+  shmem->pids_connected_struct
+      .pids_connected[shmem->pids_connected_struct.size] =
+      GetCurrentProcessId();
 
-#ifdef WIN32
-  /*
-   Detect if we are running with ADO present, and force on the
-   FLAG_COLUMN_SIZE_S32 option if we are.
-  */
-  if (GetModuleHandle("msado15.dll") != NULL)
-    dsrc->opt_COLUMN_SIZE_S32 = true;
+  shmem->pids_connected_struct.size += 1;
 
-  /* Detect another problem specific to MS Access */
-  if (GetModuleHandle("msaccess.exe") != NULL)
-    dsrc->opt_DFLT_BIGINT_BIND_STR = true;
+  ReleaseMutex(this->env->shared_memory_mutex);
+  // rc = dbc->connect(&ds);
 
-  /* MS SQL Likes when the CHAR columns are padded */
-  if (GetModuleHandle("sqlservr.exe") != NULL)
-    dsrc->opt_PAD_SPACE = true;
+  // TODO: solution for only UTF-8, expand it to ANSI also.
+  this->cxn_charset_info = desodbc::get_charset(255, DESF(0));
 
-#endif
+  /* We now save the path to the DES executable in Unicode format (wchars). It
+ reads the DES executable field from the Data Source (loaded previously with
+ data from the Windows Registries).
+ TODO: expand it to ANSI also. */
+  const SQLWSTRING &x = static_cast<const SQLWSTRING &>(dsrc->opt_DES_EXEC);
+  SQLWCHAR *unicode_path = const_cast<SQLWCHAR *>(x.c_str());
 
-  des = mysql_init(nullptr);
-
-  flags = get_client_flags(dsrc);
-
-  /* Set other connection options */
-
-  if (dsrc->opt_BIG_PACKETS || dsrc->opt_SAFE)
-#if DES_VERSION_ID >= 50709
-    mysql_options(des, DES_OPT_MAX_ALLOWED_PACKET, &max_long);
-#else
-    /* max_allowed_packet is a magical mysql macro. */
-    max_allowed_packet = ~0L;
-#endif
-
-  if (dsrc->opt_NAMED_PIPE)
-    mysql_options(des, DES_OPT_NAMED_PIPE, NullS);
-
-  if (dsrc->opt_USE_MYCNF)
-    mysql_options(des, DES_READ_DEFAULT_GROUP, "odbc");
-
-  if (login_timeout)
-    mysql_options(des, DES_OPT_CONNECT_TIMEOUT, (char *)&login_timeout);
-
-  if (dsrc->opt_READTIMEOUT) {
-    int timeout = dsrc->opt_READTIMEOUT;
-    mysql_options(des, DES_OPT_READ_TIMEOUT,
-                  &timeout);
+  if (!this->env->shmem->des_process_created) {
+    rc = this->createPipes();
+    rc = this->createDESProcess(unicode_path);
+  } else {
+    getDESProcessPipes();
+    rc = SQL_SUCCESS;
   }
 
-  if (dsrc->opt_WRITETIMEOUT) {
-    int timeout = dsrc->opt_WRITETIMEOUT;
-    mysql_options(des, DES_OPT_WRITE_TIMEOUT,
-                  &timeout);
-  }
+  this->env->share_handle_thread =
+      std::unique_ptr<std::thread>(new std::thread(shareHandles));
 
-/*
-  Pluggable authentication was introduced in mysql 5.5.7
-*/
-#if DES_VERSION_ID >= 50507
-  if (dsrc->opt_PLUGIN_DIR)
-  {
-    mysql_options(des, DES_PLUGIN_DIR,
-                  (const char*)dsrc->opt_PLUGIN_DIR);
-  }
+  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
+      this->connected = true;
 
-#ifdef WIN32
-  else
-  {
-    /*
-      If plugin directory is not set we can use the dll location
-      for a better chance of finding plugins.
-    */
-    mysql_options(des, DES_PLUGIN_DIR, default_plugin_location.c_str());
-  }
-#endif
-
-  if (dsrc->opt_DEFAULT_AUTH)
-  {
-    mysql_options(des, DES_DEFAULT_AUTH,
-                  (const char*)dsrc->opt_DEFAULT_AUTH);
-  }
-
-  /*
-   * If fido callback is used the lock must remain till the end of
-   * the connection process.
-   */
-  std::unique_lock<std::mutex> fido_lock(global_fido_mutex);
-  /*
-  * Set callback even if the value is NULL, but only to reset the previously
-  * installed callback.
-  */
-  fido_callback_func fido_func = fido_callback;
-
-  if(!fido_func && global_fido_callback)
-    fido_func = global_fido_callback;
-
-  if (fido_func || fido_callback_is_set)
-  {
-    std::string plugin_name = "authentication_webauthn_client";
-    struct st_mysql_client_plugin* plugin =
-      mysql_client_find_plugin(des,
-        plugin_name.c_str(),
-        MYSQL_CLIENT_AUTHENTICATION_PLUGIN);
-
-    if (plugin)
-    {
-      std::string opt_name = "plugin_authentication_webauthn_client_messages_callback";
-
-      if (mysql_plugin_options(plugin, opt_name.c_str(),
-            (const void*)fido_func))
-      {
-        // If plugin is loaded, but the callback option fails to set
-        // the error is reported.
-        return set_error("HY000",
-          "Failed to set a WebAuthn authentication callback function", 0);
-      }
-    }
-    else
-    {
-      return set_error("HY000", "Failed to set a WebAuthn authentciation "
-                                "callback beacause the WebAuthn authentication "
-                                "plugin could not be loaded", 0);
-    }
-
-    fido_callback_is_set = fido_func;
-  }
-  else
-  {
-    // No need to keep the lock if callback is not used.
-    fido_lock.unlock();
-  }
-
-  bool oci_config_file_set = dsrc->opt_OCI_CONFIG_FILE;
-  bool oci_config_profile_set = dsrc->opt_OCI_CONFIG_PROFILE;
-
-  if(oci_config_file_set || oci_config_profile_set || oci_plugin_is_loaded)
-  {
-    /* load client authentication plugin if required */
-    struct st_mysql_client_plugin *plugin =
-        mysql_client_find_plugin(des,
-                                 "authentication_oci_client",
-                                 MYSQL_CLIENT_AUTHENTICATION_PLUGIN);
-
-    if(!plugin)
-    {
-      return set_error("HY000", "Couldn't load plugin authentication_oci_client", 0);
-    }
-
-    oci_plugin_is_loaded = true;
-
-    // Set option value or reset by giving nullptr to prevent
-    // re-using the value set by another connect (plugin does not
-    // reset its options automatically).
-    const void *val_to_set = oci_config_file_set ?
-      (const char*)dsrc->opt_OCI_CONFIG_FILE :
-      nullptr;
-
-    if (mysql_plugin_options(plugin, "oci-config-file", val_to_set) &&
-        val_to_set)
-    {
-      // Error should only be returned if setting non-null option value.
-      return set_error("HY000",
-          "Failed to set config file for authentication_oci_client plugin", 0);
-    }
-
-    val_to_set = oci_config_profile_set ?
-      (const char*)dsrc->opt_OCI_CONFIG_PROFILE :
-      nullptr;
-
-    if (mysql_plugin_options(plugin, "authentication-oci-client-config-profile",
-      val_to_set) && val_to_set)
-    {
-      return set_error("HY000",
-          "Failed to set config profile for authentication_oci_client plugin", 0);
-    }
-  }
-
-  if (dsrc->opt_AUTHENTICATION_KERBEROS_MODE)
-  {
-#ifdef WIN32
-    /* load client authentication plugin if required */
-    struct st_mysql_client_plugin* plugin =
-      mysql_client_find_plugin(des,
-        "authentication_kerberos_client",
-        MYSQL_CLIENT_AUTHENTICATION_PLUGIN);
-
-    if (!plugin)
-    {
-      return set_error("HY000", mysql_error(des), 0);
-    }
-
-    if (mysql_plugin_options(plugin, "plugin_authentication_kerberos_client_mode",
-      (const char*)dsrc->opt_AUTHENTICATION_KERBEROS_MODE))
-    {
-      return set_error("HY000",
-        "Failed to set mode for authentication_kerberos_client plugin", 0);
-    }
-#else
-    if (desodbc_strcasecmp("GSSAPI",
-      (const char *)dsrc->opt_AUTHENTICATION_KERBEROS_MODE))
-    {
-      return set_error("HY000",
-        "Invalid value for authentication-kerberos-mode. "
-        "Only GSSAPI is supported.", 0);
-    }
-#endif
-  }
-
-#endif
-
-#define SSL_SET(X, Y) \
-   if (dsrc->opt_##X && mysql_options(des, DES_OPT_##X,         \
-                                      (const char *)dsrc->opt_##X)) \
-     return set_error("HY000", "Failed to set " Y, 0);
-
-#define SSL_OPTIONS_LIST(X) \
-  X(SSL_KEY, "the path name of the client private key file") \
-  X(SSL_CERT, "the path name of the client public key certificate file") \
-  X(SSL_CA, "the path name of the Certificate Authority (CA) certificate file") \
-  X(SSL_CAPATH, "the path name of the directory that contains trusted SSL CA certificate files") \
-  X(SSL_CIPHER, "the list of permissible ciphers for SSL encryption") \
-  X(SSL_CRL, "Failed to set the certificate revocation list file") \
-  X(SSL_CRLPATH, "Failed to set the certificate revocation list path")
-
-  SSL_OPTIONS_LIST(SSL_SET);
-
-#if DES_VERSION_ID < 80003
-  if (dsrc->SSLVERIFY)
-    mysql_options(des, MYSQL_OPT_SSL_VERIFY_SERVER_CERT,
-                  (const char *)&opt_ssl_verify_server_cert);
-#endif
-
-#if DES_VERSION_ID >= 50660
-  if (dsrc->opt_RSAKEY)
-  {
-    /* Read the public key on the client side */
-    mysql_options(des, DES_SERVER_PUBLIC_KEY,
-      (const char*)dsrc->opt_RSAKEY);
-  }
-#endif
-#if DES_VERSION_ID >= 50710
-  {
-    std::string tls_options;
-
-    if (dsrc->opt_TLS_VERSIONS)
-    {
-      // If tls-versions is used the NO_TLS_X options are deactivated
-      tls_options = (const char*)dsrc->opt_TLS_VERSIONS;
-    }
-    else
-    {
-      std::map<std::string, bool> opts = {
-        { "TLSv1.2", !dsrc->opt_NO_TLS_1_2 },
-        { "TLSv1.3", !dsrc->opt_NO_TLS_1_3 },
-      };
-
-      for (auto &opt : opts)
-      {
-        if (!opt.second)
-          continue;
-
-        if (!tls_options.empty())
-           tls_options.append(",");
-        tls_options.append(opt.first);
-      }
-    }
-
-    if (!tls_options.length() ||
-        mysql_options(des, DES_OPT_TLS_VERSION, tls_options.c_str()))
-    {
-      return set_error("HY000",
-        "SSL connection error: No valid TLS version available", 0);
-    }
-  }
-#endif
-
-#if DES_VERSION_ID >= 80004
-  if (dsrc->opt_GET_SERVER_PUBLIC_KEY)
-  {
-    /* Get the server public key */
-    mysql_options(des, DES_OPT_GET_SERVER_PUBLIC_KEY, (const void*)&on);
-  }
-#endif
-
-#if DES_VERSION_ID >= 50610
-  if (dsrc->opt_CAN_HANDLE_EXP_PWD)
-  {
-    mysql_options(des, DES_OPT_CAN_HANDLE_EXPIRED_PASSWORDS, (char *)&on);
-  }
-#endif
-
-#if (DES_VERSION_ID >= 50527 && DES_VERSION_ID < 50600) || DES_VERSION_ID >= 50607
-  if (dsrc->opt_ENABLE_CLEARTEXT_PLUGIN)
-  {
-    mysql_options(des, DES_ENABLE_CLEARTEXT_PLUGIN, (char *)&on);
-  }
-#endif
-
-  if (dsrc->opt_ENABLE_LOCAL_INFILE)
-  {
-    mysql_options(des, DES_OPT_LOCAL_INFILE, &on_int);
-  }
-
-  if (dsrc->opt_LOAD_DATA_LOCAL_DIR)
-  {
-    mysql_options(des, DES_OPT_LOAD_DATA_LOCAL_DIR,
-                  (const char*)dsrc->opt_LOAD_DATA_LOCAL_DIR);
-  }
-
-  // Set the connector identification attributes.
-  std::string attr_list[][2] = {
-    {"_connector_license", DESODBC_LICENSE},
-    {"_connector_name", "des-connector-odbc"},
-    {"_connector_type", DESODBC_STRDRIVERTYPE},
-    {"_connector_version", DESODBC_CONN_ATTR_VER}
-  };
-
-  for (auto &val : attr_list)
-  {
-    mysql_options4(des, DES_OPT_CONNECT_ATTR_ADD,
-      val[0].c_str(), val[1].c_str());
-  }
-
-#if MFA_ENABLED
-  if(dsrc->pwd1 && dsrc->pwd1[0])
-  {
-    ds_get_utf8attr(dsrc->pwd1, &dsrc->pwd18);
-    int fator = 1;
-    mysql_options4(des, DES_OPT_USER_PASSWORD,
-                   &fator,
-                   dsrc->pwd18);
-  }
-
-  if(dsrc->pwd2 && dsrc->pwd2[0])
-  {
-    ds_get_utf8attr(dsrc->pwd2, &dsrc->pwd28);
-    int fator = 2;
-    mysql_options4(des, DES_OPT_USER_PASSWORD,
-                   &fator,
-                   dsrc->pwd28);
-  }
-
-  if(dsrc->pwd3 && dsrc->pwd3[0])
-  {
-    ds_get_utf8attr(dsrc->pwd3, &dsrc->pwd38);
-    int fator = 3;
-    mysql_options4(des, DES_OPT_USER_PASSWORD,
-                   &fator,
-                   dsrc->pwd38);
-  }
-#endif
-#if DES_VERSION_ID >= 50711
-  if (dsrc->opt_SSL_MODE)
-  {
-    unsigned int mode = 0;
-    if (!desodbc_strcasecmp(ODBC_SSL_MODE_DISABLED, dsrc->opt_SSL_MODE))
-      mode = SSL_MODE_DISABLED;
-    if (!desodbc_strcasecmp(ODBC_SSL_MODE_PREFERRED, dsrc->opt_SSL_MODE))
-      mode = SSL_MODE_PREFERRED;
-    if (!desodbc_strcasecmp(ODBC_SSL_MODE_REQUIRED, dsrc->opt_SSL_MODE))
-      mode = SSL_MODE_REQUIRED;
-    if (!desodbc_strcasecmp(ODBC_SSL_MODE_VERIFY_CA, dsrc->opt_SSL_MODE))
-      mode = SSL_MODE_VERIFY_CA;
-    if (!desodbc_strcasecmp(ODBC_SSL_MODE_VERIFY_IDENTITY, dsrc->opt_SSL_MODE))
-      mode = SSL_MODE_VERIFY_IDENTITY;
-
-    // Don't do anything if there is no match with any of the available modes
-    if (mode)
-      mysql_options(des, DES_OPT_SSL_MODE, &mode);
-  }
-#endif
-
-  uint16_t total_weight = 0;
-
-  std::vector<Srv_host_detail> hosts;
-  try {
-    hosts = parse_host_list(dsrc->opt_DES_EXEC, dsrc->opt_PORT);
-
-  } catch (std::string &e)
-  {
-    return set_error("HY000", e.c_str(), 0);
-  }
-
-  if(!dsrc->opt_MULTI_HOST && hosts.size() > 1)
-  {
-    return set_error("HY000", "Missing option MULTI_HOST=1", 0);
-  }
-
-  if(dsrc->opt_ENABLE_DNS_SRV && hosts.size() > 1)
-  {
-    return set_error("HY000", "Specifying multiple hostnames with DNS SRV look up is not allowed.", 0);
-  }
-
-  if(dsrc->opt_ENABLE_DNS_SRV && dsrc->opt_PORT)
-  {
-    return set_error("HY000", "Specifying a port number with DNS SRV lookup is not allowed.", 0);
-  }
-
-  if(dsrc->opt_ENABLE_DNS_SRV)
-  {
-    if(dsrc->opt_SOCKET)
-    {
-      return set_error("HY000",
-#ifdef _WIN32
-                    "Using Named Pipes with DNS SRV lookup is not allowed.",
-#else
-                    "Using Unix domain sockets with DNS SRV lookup is not allowed",
-#endif
-                    0);
-    }
-
-    if(hosts.empty())
-    {
-      std::stringstream err;
-      err << "Unable to locate any hosts for "
-          << (const char *)dsrc->opt_DES_EXEC;
-      return set_error("HY000", err.str().c_str(), 0);
-    }
-
-  }
-
-  // Handle OPENTELEMETRY option.
-
-  // Note: Using while() instead of if() to be able to get out of it with
-  // `break` statement.
-
-  while (dsrc->opt_OPENTELEMETRY)
-  {
-#ifndef TELEMETRY
-
-    return set_error("HY000",
-      "OPENTELEMETRY option is not supported on this platform."
-    ,0);
-
-#else
-
-#define SET_OTEL_MODE(X,N) \
-    if (!desodbc_strcasecmp(#X, dsrc->opt_OPENTELEMETRY)) \
-    { telemetry.set_mode(OTEL_ ## X); break; }
-
-    ODBC_OTEL_MODE(SET_OTEL_MODE)
-
-    // If we are here then option was not recognized above.
-
-    return set_error("HY000",
-      "OPENTELEMETRY option can be set only to DISABLED or PREFERRED"
-    , 0);
-
-#endif
-  }
-
-  telemetry.span_start(this);
-
-  auto do_connect = [this,&dsrc,&flags](
-                    const char *host,
-                    unsigned int port
-                    ) -> short
-  {
-    int protocol;
-    if(dsrc->opt_SOCKET)
-    {
-#ifdef _WIN32
-      protocol = DES_PROTOCOL_PIPE;
-#else
-      protocol = DES_PROTOCOL_SOCKET;
-#endif
-    } else
-    {
-      protocol = DES_PROTOCOL_TCP;
-    }
-    mysql_options(des, DES_OPT_PROTOCOL, &protocol);
-
-    //Setting server and port
-    dsrc->opt_DES_EXEC = host;
-    dsrc->opt_PORT = port;
-
-    DES *connect_result = dsrc->opt_ENABLE_DNS_SRV ?
-                            mysql_real_connect_dns_srv(des,
-                              host,
-                              dsrc->opt_UID,
-                              dsrc->opt_PWD,
-                              dsrc->opt_DATABASE,
-                              flags)
-                            :
-                            mysql_real_connect(des,
-                              host,
-                              dsrc->opt_UID,
-                              dsrc->opt_PWD,
-                              dsrc->opt_DATABASE,
-                              port,
-                              dsrc->opt_SOCKET,
-                              flags);
-    if (!connect_result)
-    {
-      unsigned int native_error= mysql_errno(des);
-
-      /* Before 5.6.11 error returned by server was ER_MUST_CHANGE_PASSWORD(1820).
-       In 5.6.11 it changed to ER_MUST_CHANGE_PASSWORD_LOGIN(1862)
-       We must to change error for old servers in order to set correct sqlstate */
-      if (native_error == 1820 && ER_MUST_CHANGE_PASSWORD_LOGIN != 1820)
-      {
-        native_error= ER_MUST_CHANGE_PASSWORD_LOGIN;
-      }
-
-#if DES_VERSION_ID < 50610
-      /* In that special case when the driver was linked against old version of libmysql*/
-      if (native_error == ER_MUST_CHANGE_PASSWORD_LOGIN
-          && dsrc->CAN_HANDLE_EXP_PWD)
-      {
-        /* The password has expired, application said it knows how to deal with
-         that, but the driver was linked  that
-         does not support this option. Thus we change native error. */
-        /* TODO: enum/defines for driver specific errors */
-        return set_conn_error(dbc, DESERR_08004,
-                              "Your password has expired, but underlying library doesn't support "
-                              "this functionlaity", 0);
-      }
-#endif
-      set_error("HY000", mysql_error(des), native_error);
-
-      translate_error((char*)error.sqlstate.c_str(), DESERR_S1000, native_error);
-
-      return SQL_ERROR;
-    }
-
-    return SQL_SUCCESS;
-  };
-
-  //Connect loop
-  {
-    bool connected = false;
-    std::random_device rd;
-    std::mt19937 generator(rd()); // seed the generator
-
-
-    while(!hosts.empty() && !connected)
-    {
-      std::uniform_int_distribution<int> distribution(
-            0, (int)hosts.size() - 1); // define the range of random numbers
-
-      int pos = distribution(generator);
-      auto el = hosts.begin();
-
-      std::advance(el, pos);
-
-      if(do_connect(el->name.c_str(), el->port) == SQL_SUCCESS)
-      {
-        connected = true;
-        telemetry.set_attribs(this, dsrc);
-        break;
-      }
-      else
-      {
-        switch (mysql_errno(des))
-        {
-        case ER_CON_COUNT_ERROR:
-        case CR_SOCKET_CREATE_ERROR:
-        case CR_CONNECTION_ERROR:
-        case CR_CONN_HOST_ERROR:
-        case CR_IPSOCK_ERROR:
-        case CR_UNKNOWN_HOST:
-          //On Network errors, continue
-          break;
-        default:
-          //If SQLSTATE not 08xxx, which is used for network errors
-          if(strncmp(mysql_sqlstate(des), "08", 2) != 0)
-          {
-            //Return error and do not try another host
-            return SQL_ERROR;
-          }
-        }
-      }
-      hosts.erase(el);
-    }
-
-    if(!connected)
-    {
-      if(dsrc->opt_ENABLE_DNS_SRV)
-      {
-        std::string err =
-          std::string("Unable to connect to any of the hosts of ") +
-            (const char *)dsrc->opt_DES_EXEC + " SRV";
-        set_error("HY000", err.c_str(), 0);
-      }
-      else if (dsrc->opt_MULTI_HOST && hosts.size() > 1) {
-        set_error("HY000", "Unable to connect to any of the hosts", 0);
-      }
-      //The others will retrieve the error from connect
-      return SQL_ERROR;
-    }
-  }
-
-  has_query_attrs = des->server_capabilities & CLIENT_QUERY_ATTRIBUTES;
-
-  if (!is_minimum_version(des->server_version, "4.1.1"))
-  {
-    close();
-    return set_error("08001", "Driver does not support server versions under 4.1.1", 0);
-  }
-
-  rc = set_charset_options(dsrc->opt_CHARSET);
-
-  // It could be an error with expired password in which case we
-  // still try to execute init statements and retry below.
-  if (rc == SQL_ERROR && error.native_error != ER_MUST_CHANGE_PASSWORD)
-    return SQL_ERROR;
-
-  // Try running INITSTMT.
-  if (!SQL_SUCCEEDED(run_initstmt(this, dsrc)))
-    return error.retcode;
-
-  // If we had expired password error at the beginning
-  // try setting charset options again.
-  // NOTE: charset name is converted to a single-byte
-  //       charset by previous call to ds_get_utf8attr().
-  if (rc == SQL_ERROR)
-    rc = set_charset_options((const char*)dsrc->opt_CHARSET);
-
-  if (!SQL_SUCCEEDED(rc))
-  {
-    return SQL_ERROR;
-  }
-
-  /*
-    The MySQL server has a workaround for old versions of Microsoft Access
-    (and possibly other products) that is no longer necessary, but is
-    unfortunately enabled by default. We have to turn it off, or it causes
-    other problems.
-  */
-  if (!dsrc->opt_AUTO_IS_NULL &&
-      execute_query("SET SQL_AUTO_IS_NULL = 0", SQL_NTS, true) != SQL_SUCCESS)
-  {
-    return SQL_ERROR;
-  }
-
-  ds = *dsrc;
-  /* init all needed UTF-8 strings */
-  const char *opt_db = ds.opt_DATABASE;
-  database = opt_db ? opt_db : "";
-
-  if (ds.opt_LOG_QUERY && !query_log)
-    query_log = init_query_log();
-
-  /* Set the statement error prefix based on the server version. */
-  desodbc::strxmov(st_error_prefix, DESODBC_ERROR_PREFIX, "[desd-",
-          des->server_version, "]", NullS);
-
-  /*
-    This variable will be needed later to process possible
-    errors when setting DES_OPT_RECONNECT when client lib
-    used at runtime does not support it.
-  */
-  int set_reconnect_result = 0;
-#if DES_VERSION_ID < 80300
-  /* This needs to be set after connection, or it doesn't stick.  */
-  if (ds.opt_AUTO_RECONNECT)
-  {
-    set_reconnect_result = mysql_options(des,
-      DES_OPT_RECONNECT, (char *)&on);
-  }
-#else
-  /* DES_OPT_RECONNECT doesn't exist at build time, report warning later. */
-  set_reconnect_result = 1;
-#endif
-
-  /* Make sure autocommit is set as configured. */
-  if (commit_flag == CHECK_AUTOCOMMIT_OFF)
-  {
-    if (!transactions_supported() || ds.opt_NO_TRANSACTIONS)
-    {
-      commit_flag = CHECK_AUTOCOMMIT_ON;
-      rc = set_error(DESERR_01S02,
-             "Transactions are not enabled, option value "
-             "SQL_AUTOCOMMIT_OFF changed to SQL_AUTOCOMMIT_ON",
-             SQL_SUCCESS_WITH_INFO);
-    }
-    else if (autocommit_is_on() && mysql_autocommit(des, FALSE))
-    {
-      /** @todo set error */
-      return SQL_ERROR;
-    }
-  }
-  else if ((commit_flag == CHECK_AUTOCOMMIT_ON) &&
-           transactions_supported() && !autocommit_is_on())
-  {
-    if (mysql_autocommit(des, TRUE))
-    {
-      /** @todo set error */
-      return SQL_ERROR;
-    }
-  }
-
-  /* Set transaction isolation as configured. */
-  if (txn_isolation != DEFAULT_TXN_ISOLATION)
-  {
-    char buff[80];
-    const char *level;
-
-    if (txn_isolation & SQL_TXN_SERIALIZABLE)
-      level= "SERIALIZABLE";
-    else if (txn_isolation & SQL_TXN_REPEATABLE_READ)
-      level= "REPEATABLE READ";
-    else if (txn_isolation & SQL_TXN_READ_COMMITTED)
-      level= "READ COMMITTED";
-    else
-      level= "READ UNCOMMITTED";
-
-    if (transactions_supported())
-    {
-      sprintf(buff, "SET SESSION TRANSACTION ISOLATION LEVEL %s", level);
-      if (execute_query(buff, SQL_NTS, true) != SQL_SUCCESS)
-      {
-        return SQL_ERROR;
-      }
-    }
-    else
-    {
-      txn_isolation = SQL_TXN_READ_UNCOMMITTED;
-      rc = set_error(DESERR_01S02,
-             "Transactions are not enabled, so transaction isolation "
-             "was ignored.", SQL_SUCCESS_WITH_INFO);
-    }
-  }
-
-  /*
-    AUTO_RECONNECT option needs to be handled with the following
-    considerations:
-
-    A - version of ODBC driver code
-    B - version of client lib used for building ODBC driver (*)
-    C - version of client lib used at runtime
-
-    Note (*): As given by MYSQL_VERSION_ID  macro.
-
-    The behavior should be like this:
-
-     A     B     C
-    ==== ===== ===== =======================================
-    old    *    old   reconnect option works
-    old    *    new   reconnect option silently ignored
-    new   old   old   reconnect option works
-    new   old   new   reconnect option ignored with warning
-    new   new    *    reconnect option ignored with warning
-  */
-  if (ds.opt_AUTO_RECONNECT && set_reconnect_result)
-  {
-    set_error("HY000",
-      "The option AUTO_RECONNECT is not supported "
-      "by MySQL version 8.3.0 or later. "
-      "Please remove it from the connection string "
-      "or the Data Source", 0);
-    rc = SQL_SUCCESS_WITH_INFO;
-  }
-
-  mysql_get_option(des, DES_OPT_NET_BUFFER_LENGTH, &net_buffer_len);
-
-  guard.set_success(rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO);
   return rc;
 }
 
@@ -1258,120 +627,18 @@ SQLRETURN SQL_API DESConnect(SQLHDBC   hdbc,
   /* Reset error state */
   CLEAR_DBC_ERROR(dbc);
 
-  if (szDSN && !szDSN[0])
-  {
-    return ((DBC*)hdbc)->set_error(DESERR_S1000,
-      "Invalid connection parameters", 0);
-  }
-
   ds.opt_DSN.set_remove_brackets(szDSN, cbDSN);
   ds.lookup();
 
-  // Setting of UID and PWD passed via parameters should
-  // override options in DSN.
-  if (szUID)
-    ds.opt_UID.set_remove_brackets(szUID, cbUID);
-
-  if (szAuth)
-    ds.opt_PWD.set_remove_brackets(szAuth, cbAuth);
-
   rc= dbc->connect(&ds);
 
-  if (!SQL_SUCCEEDED(rc))
-    dbc->telemetry.set_error(dbc, dbc->error.message);
-
+  if (SQL_SUCCEEDED(rc) && (szUID || szAuth)) {
+    dbc->set_error("01000", "The user/password provided was ignored (DES doesn't need it).", 0);
+    rc = SQL_SUCCESS_WITH_INFO;
+  }
+  
   return rc;
 #endif
-}
-
-void shareHandles() {
-
-  ENV* env = dbc_global_var->env;
-  SharedMemory *shmem = env->shmem;
-
-  while (true) {
-
-    DWORD wait_event = WaitForSingleObject(env->request_handle_event, INFINITE);
-    //TODO: handle errors for wait_event != WAIT_OBJECT_0
-    if (wait_event == WAIT_OBJECT_0 &&
-        shmem->handle_sharing_info.pid_handle_petitioner != 0 &&
-        shmem->handle_sharing_info.pid_handle_petitionee ==
-            GetCurrentProcessId()) {
-
-        HANDLE petitioner_process_handle =
-          OpenProcess(PROCESS_DUP_HANDLE, TRUE,
-                      shmem->handle_sharing_info.pid_handle_petitioner);
-
-      DuplicateHandle(GetCurrentProcess(), env->driver_to_des_out_rpipe,
-                        petitioner_process_handle,
-                      &shmem->handle_sharing_info.out_handle,
-                      0,
-                      TRUE,
-                      DUPLICATE_SAME_ACCESS);
-
-      DuplicateHandle(
-          GetCurrentProcess(), env->driver_to_des_in_wpipe,
-          petitioner_process_handle,
-          &shmem->handle_sharing_info.in_handle,
-          0,
-          TRUE,
-          DUPLICATE_SAME_ACCESS);
-
-
-        ResetEvent(env->request_handle_event);
-        SetEvent(env->handle_sent_event);  //we notify the petitioner
-    }
-    
-
-        
-  }
-
-}
-
-void getDESProcessPipes() {
-
-  bool finished = false;
-
-  ENV *env = dbc_global_var->env;
-
-  WaitForSingleObject(env->shared_memory_mutex, INFINITE);
-  WaitForSingleObject(env->request_handle_mutex, INFINITE);
-
-  env->shmem->handle_sharing_info.pid_handle_petitioner = GetCurrentProcessId();
-
-  while (!finished) {
-    DWORD random_pid =
-        env->shmem->pids_connected_struct.pids_connected
-            [rand() %
-             (env->shmem->pids_connected_struct.size - 1)]; //we request the handles to a random peer
-                                                            //TODO: impleemnt better criteria
-    if (random_pid != GetCurrentProcessId()) {
-
-        env->shmem->handle_sharing_info.pid_handle_petitionee = random_pid;
-
-        SetEvent(env->request_handle_event);
-        WaitForSingleObject(env->handle_sent_event, INFINITE); //TODO: handle errors
-        
-        env->driver_to_des_out_rpipe =
-            env->shmem->handle_sharing_info.out_handle;
-        env->driver_to_des_in_wpipe =
-            env->shmem->handle_sharing_info.in_handle;
-
-        //we reset the structure once we have saved the handles
-        env->shmem->handle_sharing_info.in_handle = NULL;
-        env->shmem->handle_sharing_info.out_handle = NULL;
-        env->shmem->handle_sharing_info.pid_handle_petitionee = 0;
-        env->shmem->handle_sharing_info.pid_handle_petitioner = 0;
-
-        finished = true;
-    
-    }
-  
-  }
-
-  ReleaseMutex(env->request_handle_mutex);
-  ReleaseMutex(env->shared_memory_mutex);
-
 }
 
 
@@ -1480,8 +747,15 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
   case SQL_DRIVER_COMPLETE:
   case SQL_DRIVER_COMPLETE_REQUIRED:
     rc = dbc->connect(&ds);
-    if (!SQL_SUCCEEDED(rc))
-      dbc->telemetry.set_error(dbc, dbc->error.message);
+    if (!SQL_SUCCEEDED(rc)) dbc->telemetry.set_error(dbc, dbc->error.message);
+    if (SQL_SUCCEEDED(rc) &&
+        ((conn_str_in.find(L"UID=") != std::wstring::npos) ||
+         (conn_str_in.find(L"PWD=") != std::wstring::npos))) {
+        dbc->set_error(
+            "01000",
+            "The user/password provided was ignored (DES doesn't need it).", 0);
+        rc = SQL_SUCCESS_WITH_INFO;
+    }
 
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
       goto connected;
@@ -1643,40 +917,6 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
     }
 
   }
-
-  WaitForSingleObject(dbc->env->shared_memory_mutex, INFINITE);
-  SharedMemory* shmem = dbc->env->shmem;
-
-  shmem->pids_connected_struct
-      .pids_connected[shmem->pids_connected_struct.size] = GetCurrentProcessId();
-  
-  shmem->pids_connected_struct.size += 1;
-
-  ReleaseMutex(dbc->env->shared_memory_mutex);
-  //rc = dbc->connect(&ds);
-
-  //TODO: solution for only UTF-8, expand it to ANSI also.
-  dbc->cxn_charset_info = desodbc::get_charset(255, DESF(0));
-
-    /* We now save the path to the DES executable in Unicode format (wchars). It
-   reads the DES executable field from the Data Source (loaded previously with
-   data from the Windows Registries).
-   TODO: expand it to ANSI also. */
-  const SQLWSTRING &x = static_cast<const SQLWSTRING &>(ds.opt_DES_EXEC);
-  SQLWCHAR *unicode_path = const_cast<SQLWCHAR *>(x.c_str());
-  
-  if (!dbc->env->shmem->des_process_created) {
-    rc = dbc->createPipes();
-    rc = dbc->createDESProcess(unicode_path);
-  } else {
-    getDESProcessPipes();
-    rc = SQL_SUCCESS;
-  }
-   
-  dbc->env->share_handle_thread =
-      std::unique_ptr<std::thread>(new std::thread(shareHandles));
-
-  
 
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO)
   {

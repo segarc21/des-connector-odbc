@@ -41,7 +41,7 @@ SC_isnull[10];
 static char *SQLCOLUMNS_values[]= {
     (char*)"", (char*)"", NullS, NullS, SC_type, SC_typename,
     SC_precision,
-    SC_length, SC_scale, (char*)"10", SC_nullable, (char*)"DES column",
+    SC_length, SC_scale, (char*)"10", SC_nullable, (char*)"DES column", //TODO: DES column?
     SC_coldef, SC_sqltype, NullS, SC_octlen, NullS, SC_isnull
 };
 
@@ -67,17 +67,6 @@ static DES_FIELD SQLCOLUMNS_fields[] = {
 };
 
 const uint SQLCOLUMNS_FIELDS= (uint)array_elements(SQLCOLUMNS_values);
-
-static DES_FIELD SQLSPECIALCOLUMNS_fields[] = {
-    DESODBC_FIELD_SHORT("SCOPE", 0),
-    DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
-    DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
-    DESODBC_FIELD_STRING("TYPE_NAME", 20, NOT_NULL_FLAG),
-    DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
-    DESODBC_FIELD_LONG("BUFFER_LENGTH", 0),
-    DESODBC_FIELD_LONG("DECIMAL_DIGITS", 0),
-    DESODBC_FIELD_SHORT("PSEUDO_COLUMN", 0),
-};
 
 static char *SQLSPECIALCOLUMNS_values[] = {0, NULL, 0, NULL, 0, 0, 0, 0};
 

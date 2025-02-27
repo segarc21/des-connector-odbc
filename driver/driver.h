@@ -312,6 +312,22 @@ typedef struct {
 /* descriptor */
 struct STMT;
 
+inline bool is_character_data_type(SQLSMALLINT sql_type) {
+  switch (sql_type) {
+    case SQL_NUMERIC:
+    case SQL_DECIMAL:
+    case SQL_INTEGER:
+    case SQL_SMALLINT:
+    case SQL_FLOAT:
+    case SQL_REAL:
+    case SQL_DOUBLE:
+      return false;
+    default:
+    return true;
+  }
+
+}
+
 struct DESCREC{
   /* ODBC spec fields */
   SQLINTEGER  auto_unique_value; /* row only */
@@ -442,25 +458,26 @@ struct DESCREC{
 };
 
 
-inline bool is_character_data_type(SQLSMALLINT type) {
+inline bool is_character_data_type(enum_field_types type) {
   switch (type) {
-    case SQL_LONGVARCHAR:
-    case SQL_CHAR:
-    case SQL_VARCHAR:
-    case SQL_TYPE_DATE:
-    case SQL_TYPE_TIME:
-    case SQL_TYPE_TIMESTAMP:
+    case DES_TYPE_VARCHAR:
+    case DES_TYPE_STRING:
+    case DES_TYPE_DATE:
+    case DES_TYPE_TIME:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
       return true;
     default:
       return false;
   }
 }
 
-inline bool is_time_data_type(SQLSMALLINT type) {
+inline bool is_time_data_type(enum_field_types type) {
   switch (type) {
-    case SQL_TYPE_DATE:
-    case SQL_TYPE_TIME:
-    case SQL_TYPE_TIMESTAMP:
+    case DES_TYPE_DATE:
+    case DES_TYPE_TIME:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
       return true;
     default:
       return false;
@@ -730,6 +747,8 @@ struct DBC
   bool          has_query_attrs = false;
   std::recursive_mutex lock;
 
+  bool connected = false;
+
   // Whether SQL*ConnectW was used
   bool          unicode = false;
   // Connection charset ('ANSI' or utf-8)
@@ -908,11 +927,16 @@ class DES_RESULT {
 
   DES_RESULT();
   DES_RESULT(STMT *stmt);
-  DES_RESULT(STMT *stmt, const std::string &tapi_output);
 };
 
 // Mimicring MySQL extern functions
 // (some of them, extracted from the MySQL Server's source code)
+
+inline static ulong des_real_escape_string(DES* des, char* to, const char* from,
+    ulong length) {
+
+    return 0;
+}
 
 inline static DES_ROW des_fetch_row(DES_RESULT *result) {
   DES_ROW tmp = nullptr;
@@ -1253,40 +1277,56 @@ class charPtrBuf {
   }
 };
 
-#define NULL_STR "null"
+#define NULL_STR nullptr
 
 inline const SQLULEN DES_DEFAULT_DATA_CHARACTER_SIZE = 255;  // This seems to be a standard, along with
                                                         // 8000. TODO: research
 
-inline const std::vector<SQLSMALLINT> supported_types = {
-    SQL_VARCHAR,   SQL_LONGVARCHAR,   SQL_CHAR, SQL_INTEGER,
-    SQL_SMALLINT,  SQL_FLOAT,         SQL_REAL, SQL_TYPE_DATE,
-    SQL_TYPE_TIME, SQL_TYPE_TIMESTAMP};
+inline const std::vector<enum_field_types> supported_types = {
+    DES_TYPE_VARCHAR, DES_TYPE_STRING, DES_TYPE_LONG, DES_TYPE_SHORT,
+    DES_TYPE_FLOAT,   DES_TYPE_DOUBLE,   DES_TYPE_DATE, DES_TYPE_TIME,
+    DES_TYPE_DATETIME, DES_TYPE_TIMESTAMP};
 
-inline const std::unordered_map<std::string, SQLSMALLINT> typestr_simpletype_map = {
-    {"varchar()", SQL_VARCHAR},
-    {"string", SQL_LONGVARCHAR},
-    {"varchar", SQL_LONGVARCHAR},
-    {"char", SQL_CHAR},  // we will use it with size_str=1
-    {"char()", SQL_CHAR},
-    {"integer", SQL_INTEGER},
-    {"int", SQL_SMALLINT},
-    {"float", SQL_FLOAT},
-    {"real", SQL_REAL},
-    {"date", SQL_TYPE_DATE},
-    {"time", SQL_TYPE_TIME},
-    {"datetime", SQL_TYPE_TIMESTAMP},
-    {"timestamp", SQL_TYPE_TIMESTAMP}};
+inline const std::unordered_map<std::string, SQLSMALLINT> typestr_sqltype_map =
+    {{"varchar()", SQL_VARCHAR},
+     {"string", SQL_LONGVARCHAR},
+     {"varchar", SQL_LONGVARCHAR},
+     {"char", SQL_CHAR},  // we will use it with size_str=1
+     {"char()", SQL_CHAR},
+     {"integer", SQL_INTEGER},
+     {"int", SQL_SMALLINT},
+     {"float", SQL_FLOAT},
+     {"real", SQL_REAL},
+     {"date", SQL_TYPE_DATE},
+     {"time", SQL_TYPE_TIME},
+     {"datetime", SQL_TYPE_TIMESTAMP},
+     {"timestamp", SQL_TYPE_TIMESTAMP}};
+
+inline const std::unordered_map<std::string, enum_field_types>
+    typestr_simpletype_map = {
+        {"varchar()", DES_TYPE_VARCHAR},
+        {"string", DES_TYPE_STRING},
+        {"varchar", DES_TYPE_VARCHAR},
+        {"char", DES_TYPE_VARCHAR},  // we will use it with size_str=1
+        {"char()", DES_TYPE_VARCHAR},
+        {"integer", DES_TYPE_LONG},
+        {"int", DES_TYPE_SHORT},
+        {"float", DES_TYPE_FLOAT},
+        {"real", DES_TYPE_DOUBLE},
+        {"date", DES_TYPE_DATE},
+        {"time", DES_TYPE_TIME},
+        {"datetime", DES_TYPE_DATETIME},
+        {"timestamp", DES_TYPE_TIMESTAMP}};
 
 struct Type {
-  SQLSMALLINT simple_type;
-  SQLULEN size = -1; //useful for character data types
+  enum_field_types simple_type;
+  SQLULEN len = -1; //length as in number of characters; do not confuse with length as the DES_FIELD field (width of column)
 };
 
 inline std::string Type_to_type_str(Type type) {
   for (auto pair : typestr_simpletype_map) {
     std::string type_str = pair.first;
-    SQLSMALLINT simple_type = pair.second;
+    enum_field_types simple_type = pair.second;
 
     type_str.erase(std::remove(type_str.begin(), type_str.end(), '('),
                    type_str.end());
@@ -1296,11 +1336,10 @@ inline std::string Type_to_type_str(Type type) {
     if (type.simple_type == simple_type) {
       if (is_character_data_type(simple_type) &&
           !is_time_data_type(simple_type)) {
-        if (type.size !=
-            DES_DEFAULT_DATA_CHARACTER_SIZE) {  // TODO: study policies for
+        if (type.len != -1) {  // TODO: study policies for
                                             // considering varchar() or varchar
                                             // depending on size.
-          return type_str + "(" + std::to_string(type.size) +
+          return type_str + "(" + std::to_string(type.len) +
                  ")";  // i'm not sure if I should return varchar() or
                        // varchar(46), for example, given that
                        // typestr_simpletype_map holds varchar(). TODO: check
@@ -1315,33 +1354,39 @@ inline std::string Type_to_type_str(Type type) {
   return "";
 }
 
-inline SQLULEN get_type_size(SQLSMALLINT type) {
+inline SQLULEN get_type_size(enum_field_types type) {
   switch (type) {
-    case SQL_SMALLINT:
+    case DES_TYPE_SHORT:
       return 5;
-    case SQL_INTEGER:
-      return 10;
-    case SQL_REAL:
+    case DES_TYPE_LONG:
+      return 11;
+    case DES_TYPE_DOUBLE:
       return 7;
-    case SQL_FLOAT:
+    case DES_TYPE_FLOAT:
       return 15;
-    case SQL_DOUBLE:
-      return 15;
-    case SQL_TYPE_DATE:
+    case DES_TYPE_DATE:
       return 10;
-    case SQL_TYPE_TIME:
+    case DES_TYPE_TIME:
       return 8;
-    case SQL_TYPE_TIMESTAMP:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
       return 19;
     // TODO: check the following. I am not sure wgucglimits
     // I should pick.
-    case SQL_LONGVARCHAR:  // theorically, it is infinite. Which value do I return?
-    case SQL_CHAR:
-    case SQL_VARCHAR:
-      return DES_DEFAULT_DATA_CHARACTER_SIZE;  
+    case DES_TYPE_VARCHAR:  // theorically, it is infinite. Which value do I return?
+    case DES_TYPE_STRING:
+      return NAME_LEN;  
     default:
       return 0;
   }
+}
+
+inline SQLULEN get_Type_size(Type type) {
+  SQLULEN small_type_size = get_type_size(type.simple_type);
+  if (type.len != -1) {
+    return small_type_size * SYSTEM_CHARSET_MBMAXLEN;
+  } else
+    return small_type_size;
 }
 
 inline char* string_to_char_pointer(const std::string &str) {
@@ -1350,30 +1395,36 @@ inline char* string_to_char_pointer(const std::string &str) {
   return ptr;
 }
 
-inline Type get_Type(SQLSMALLINT type) { return {type, get_type_size(type)}; }
+inline Type get_Type(enum_field_types type) {
+  return {type, get_type_size(type)};
+}
 
 //Internal representation of a column from a result view.
 class Column {
  public:
-  std::string name;
-  std::string table;
-  std::string db = "$des"; //TODO: we could have load a .ddb
-  std::string catalog = "def"; //TODO: research
-  Type type;
-  SQLSMALLINT nullable;
-  std::vector<std::string> values;
+  DES_FIELD *field;
+  std::vector<char*> values;
 
   Column() {}
 
+  Column(DES_FIELD* field) { this->field = field; }
+
+  enum_field_types get_type() { return field->type;}
+
   unsigned long getLength(int row) {
-      return values[row].size(); //TODO: size() throws a size_t, research what to do to ensure compatibility
+    if (!values.empty() && values[row])
+      return strlen(values[row]);  // TODO: size() throws a size_t, research
+                                   // what to do to ensure compatibility
+    else
+      return 0;
   }
 
   unsigned int getMaxLength() {
       unsigned int max = 0;
 
       for (auto value : values) {
-        if (value.size() > max) max = value.size();
+        if (value && strlen(value) > max)
+            max = strlen(value);
       }
 
       return max;
@@ -1385,7 +1436,7 @@ class Column {
     for (int i = 0; current_row + i < values.size(); ++i) {
 
       ptr->data = new char*;
-      *(ptr->data) = string_to_char_pointer(values[current_row + i]);
+      *(ptr->data) = values[current_row + i];
 
       if (current_row + (i + 1) < values.size()) {
         ptr->next = new DES_ROWS;
@@ -1398,69 +1449,59 @@ class Column {
     return rows;
   }
 
-  DES_FIELD* generate_DES_FIELD() {
-    DES_FIELD *field = new DES_FIELD;
-
-    field->name = string_to_char_pointer(this->name);
-    field->org_name = string_to_char_pointer(this->name);
-    field->name_length = this->name.size();
-    field->org_name_length = this->name.size();
-
-    field->table = string_to_char_pointer(this->table);
-    field->org_table = string_to_char_pointer(this->table);
-    field->table_length = this->table.size();
-    field->org_table_length = this->table.size();
-
-    field->db = string_to_char_pointer(this->db);
-    field->db_length = this->db.size();
-
-    field->catalog = string_to_char_pointer(this->catalog);
-    field->catalog_length = this->catalog.size();
-    
-    field->def = nullptr; //TODO: research
-    field->def_length = 0;
-
-    field->flags = 0; //TODO: research
-
-    field->decimals = 0;
-
-    field->charsetnr = 255; //TODO: research
-
-    field->type = DES_TYPE_VAR_STRING; //TODO: use a map
-
-    field->extension = nullptr;
-
-    field->length = DES_DEFAULT_DATA_CHARACTER_SIZE; //TODO: discriminate by type
-    field->max_length = this->getMaxLength();
-
-    return field;
-    
+  DES_FIELD* get_DES_FIELD() {
+    this->field->max_length = getMaxLength(); //we need to have this value updated right now
+    return this->field;
   }
 
-  Column(const std::string& table_name, const std::string &col_name, const Type &col_type, const SQLSMALLINT &col_nullable)
-      : table(table_name), name(col_name),
-        type(col_type),
-        nullable(col_nullable) {}
+  Column(const std::string& table_name, const std::string &col_name, const Type &col_type, const SQLSMALLINT &col_nullable){
+    this->field = new DES_FIELD;
 
-  Type get_type() { return type; }
-  SQLULEN get_size() {
-    // Values fetched from:
-    // https://learn.microsoft.com/en-us/sql/odbc/reference/appendixes/column-size?view=sql-server-ver16
+    this->field->name = string_to_char_pointer(col_name);
+    this->field->org_name = string_to_char_pointer(col_name);
+    this->field->name_length = col_name.size();
+    this->field->org_name_length = col_name.size();
 
-      //TODO: do I need to define all of these size types,
-      //or only the types that DES support (which I am currently
-      //doing)? what about the size of these, which are dependent
-      //on the underlying Prolog system of DES?
-    return type.size;
+    this->field->table = string_to_char_pointer(table_name);
+    this->field->org_table = string_to_char_pointer(table_name);
+    this->field->table_length = table_name.size();
+    this->field->org_table_length = table_name.size();
 
+    this->field->db = string_to_char_pointer("$des"); //TODO: temporal
+    this->field->db_length = 4; //TODO: temporal
+
+    this->field->catalog = string_to_char_pointer("def"); //TODO: temporal
+    this->field->catalog_length = 3; //TODO: temporal
+
+    this->field->def = nullptr;  // TODO: research
+    this->field->def_length = 0;
+
+    this->field->flags =
+        col_nullable == 1 ? NOT_NULL_FLAG : 0;
+
+    this->field->decimals = 0;
+
+    this->field->charsetnr = 255;  // TODO: research
+
+    this->field->extension = nullptr;
+
+    this->field->type = col_type.simple_type;
+
+    this->field->length = get_Type_size(col_type);
+
+    this->field->max_length = 0; //the column right now is empty.
+                                 //it will update when a function requires to know this value.
   }
+
   void refresh_row(const int row_index) {
       /*
     string_to_char_pointer(values[row_index], (char *)target_value_binding);
     *str_len_or_ind_binding = values[row_index].size();
     */
   }
-  void update_row(const int row_index, std::string value) {
+  void update_row(const int row_index, char* value) {
+    if (values[row_index])
+        delete values[row_index];
     values[row_index] = value;
   }
   void remove_row(const int row_index) { values.erase(values.begin() + row_index);}
@@ -1470,134 +1511,11 @@ class Column {
       //Check https://learn.microsoft.com/en-us/sql/odbc/reference/appendixes/decimal-digits?view=sql-server-ver16
       return 0;
   }
-  SQLSMALLINT get_nullable() { return nullable; }
 
-  void insert_value(const std::string &value) { values.push_back(value); }
+  void insert_value(char* value) { values.push_back(value); }
   std::string get_value(int index) const { return values[index-1]; }
 
-  SQLRETURN copy_result_in_memory(size_t RowNumber, SQLSMALLINT TargetType,
-                                  SQLPOINTER TargetValuePtr,
-                                  SQLLEN BufferLength,
-                                  SQLLEN *StrLen_or_IndPtr) {
-
-      // TODO: Check if the given pointers are null or not
-    std::string std_str = get_value(RowNumber);
-
-    if (std_str == NULL_STR) {  // temporal debugging solution. null values must
-                              // be taken into account before this
-      //(right now, if a varchar is called literally "null", it is recognized as
-      // null) TODO: fix
-      *StrLen_or_IndPtr = SQL_NULL_DATA;
-      return SQL_SUCCESS;
-    }
-    
-    std::wstring unicode_str(std_str.begin(), std_str.end());
-    int int_value;
-    int x;
-    size_t size;
-    size_t unit_size;
-    switch (TargetType) {
-      case SQL_C_CHAR:
-        unit_size = sizeof(char);
-        return copy(TargetValuePtr, StrLen_or_IndPtr, BufferLength,
-             BufferLength * unit_size, std_str,
-             (std_str.size() + 1) * unit_size);
-        break;
-      case SQL_C_BINARY:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_WVARCHAR:
-      case SQL_C_WCHAR:
-        unit_size = sizeof(SQLWCHAR);
-        return copy(TargetValuePtr, StrLen_or_IndPtr, BufferLength,
-             BufferLength * unit_size, unicode_str,
-             (unicode_str.size() + 1) * unit_size);
-        break;
-      case SQL_C_BIT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_TINYINT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_STINYINT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_UTINYINT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_SHORT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_SSHORT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_USHORT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_LONG:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_SLONG:
-        int_value = std::stoi(std_str);
-        *static_cast<int *>(TargetValuePtr) = int_value;
-        *StrLen_or_IndPtr = sizeof(int);
-        break;
-      case SQL_C_ULONG:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_FLOAT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_DOUBLE:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_DATE:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_TYPE_DATE:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_INTERVAL_HOUR_TO_SECOND:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_INTERVAL_HOUR_TO_MINUTE:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_TIME:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_TYPE_TIME:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_TIMESTAMP:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_TYPE_TIMESTAMP:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_SBIGINT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_UBIGINT:
-        x = 0;  // for debugging purposes
-        break;
-      case SQL_C_NUMERIC:
-        x = 0;  // for debugging purposes
-        break;
-    }
-
-    return SQL_SUCCESS;
   
-  }
-
-  void update_binding(SQLUSMALLINT row) {
-    /*
-    if (target_value_binding && str_len_or_ind_binding) {
-        copy_result_in_memory(row, type.simple_type, target_value_binding, buffer_length_binding, str_len_or_ind_binding);
-
-    }
-    */
-  }
 
 private:
   template <typename GenericString>
@@ -1661,11 +1579,151 @@ struct STMT; //Forward declaration to let ResultTable have a STMT attribute
 //are forward-declared. Then, STMT is defined, and then,
 //the functions are defined.
 
+#if LIBMYSQL_VERSION_ID == 80300
+#define DES_FIELD_DEF
+#define DES_FIELD_DEF_LENGTH
+#else
+#define DES_FIELD_DEF NullS,
+#define DES_FIELD_DEF_LENGTH 0,
+#endif
+
+/* A few character sets we care about. */
+#define ASCII_CHARSET_NUMBER 11
+#define BINARY_CHARSET_NUMBER 63
+#define UTF8_CHARSET_NUMBER 33
+
+/* Same us DESODBC_FIELD_STRING(name, NAME_LEN, flags) */
+#define DESODBC_FIELD_NAME(name, flags)                         \
+  {                                                             \
+    (char *)(name), (char *)(name), NullS, NullS, NullS, NullS, \
+        DES_FIELD_DEF NAME_LEN, 0, 0, 0, 0, 0, 0, 0,            \
+        DES_FIELD_DEF_LENGTH(flags), 0, UTF8_CHARSET_NUMBER,    \
+        DES_TYPE_VAR_STRING, NULL                               \
+  }
+
+#define DESODBC_FIELD_STRING(name, len, flags)                            \
+  {                                                                       \
+    (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,           \
+        DES_FIELD_DEF(len *SYSTEM_CHARSET_MBMAXLEN), 0, 0, 0, 0, 0, 0, 0, \
+        DES_FIELD_DEF_LENGTH(flags), 0, UTF8_CHARSET_NUMBER,              \
+        DES_TYPE_VAR_STRING, NULL                                         \
+  }
+
+#define DESODBC_FIELD_SHORT(name, flags)                                      \
+  {                                                                           \
+    (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,               \
+        DES_FIELD_DEF 5, 5, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), 0, \
+        0, DES_TYPE_SHORT, NULL                                               \
+  }
+
+#define DESODBC_FIELD_LONG(name, flags)                                      \
+  {                                                                          \
+    (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,              \
+        DES_FIELD_DEF 11, 11, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), \
+        0, 0, DES_TYPE_LONG, NULL                                            \
+  }
+
+#define DESODBC_FIELD_LONGLONG(name, flags)                                  \
+  {                                                                          \
+    (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,              \
+        DES_FIELD_DEF 20, 20, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), \
+        0, 0, DES_TYPE_LONGLONG, NULL                                        \
+  }
+
+inline static DES_FIELD SQLTABLES_fields[] = {
+    DESODBC_FIELD_NAME("TABLE_CAT", 0),
+    DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("TABLE_NAME", 0),
+    DESODBC_FIELD_NAME("TABLE_TYPE", 0),
+    /*
+      Table remark length is 80 characters
+    */
+    DESODBC_FIELD_STRING("REMARKS", 80, 0),
+};
+
+inline static DES_FIELD SQLPRIM_KEYS_fields[] = {
+    DESODBC_FIELD_NAME("TABLE_CAT", 0),
+    DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
+    DESODBC_FIELD_STRING("PK_NAME", 128, 0),
+};
+
+inline static DES_FIELD SQLFORE_KEYS_fields[] = {
+    DESODBC_FIELD_NAME("PKTABLE_CAT", 0),
+    DESODBC_FIELD_NAME("PKTABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("PKTABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("PKCOLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("FKTABLE_CAT", 0),
+    DESODBC_FIELD_NAME("FKTABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("FKTABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("FKCOLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("UPDATE_RULE", 0),
+    DESODBC_FIELD_SHORT("DELETE_RULE", 0),
+    DESODBC_FIELD_NAME("FK_NAME", 0),
+    DESODBC_FIELD_NAME("PK_NAME", 0),
+    DESODBC_FIELD_SHORT("DEFERRABILITY", 0),
+};
+
+inline static DES_FIELD SQLSTAT_fields[] = {
+    DESODBC_FIELD_NAME("TABLE_CAT", 0),
+    DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("NON_UNIQUE", 0),
+    DESODBC_FIELD_NAME("INDEX_QUALIFIER", 0),
+    DESODBC_FIELD_NAME("INDEX_NAME", 0),
+    DESODBC_FIELD_SHORT("TYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("ORDINAL_POSITION", 0),
+    DESODBC_FIELD_NAME("COLUMN_NAME", 0),
+    DESODBC_FIELD_STRING("ASC_OR_DESC", 1, 0),
+    DESODBC_FIELD_LONG("CARDINALITY", 0),
+    DESODBC_FIELD_LONG("PAGES", 0),
+    DESODBC_FIELD_STRING("FILTER_CONDITION", 10, 0),
+};
+
+inline static DES_FIELD SQLSPECIALCOLUMNS_fields[] = {
+    DESODBC_FIELD_SHORT("SCOPE", 0),
+    DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_STRING("TYPE_NAME", 20, NOT_NULL_FLAG),
+    DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
+    DESODBC_FIELD_LONG("BUFFER_LENGTH", 0),
+    DESODBC_FIELD_LONG("DECIMAL_DIGITS", 0),
+    DESODBC_FIELD_SHORT("PSEUDO_COLUMN", 0),
+};
+
+inline static DES_FIELD SQL_GET_TYPE_INFO_fields[] = {
+    DESODBC_FIELD_STRING("TYPE_NAME", 32, NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
+    DESODBC_FIELD_STRING("LITERAL_PREFIX", 2, 0),
+    DESODBC_FIELD_STRING("LITERAL_SUFFIX", 1, 0),
+    DESODBC_FIELD_STRING("CREATE_PARAMS", 15, 0),
+    DESODBC_FIELD_SHORT("NULLABLE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("CASE_SENSITIVE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("SEARCHABLE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("UNSIGNED_ATTRIBUTE", 0),
+    DESODBC_FIELD_SHORT("FIXED_PREC_SCALE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("AUTO_UNIQUE_VALUE", 0),
+    DESODBC_FIELD_STRING("LOCAL_TYPE_NAME", 60, 0),
+    DESODBC_FIELD_SHORT("MINIMUM_SCALE", 0),
+    DESODBC_FIELD_SHORT("MAXIMUM_SCALE", 0),
+    DESODBC_FIELD_SHORT("SQL_DATATYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("SQL_DATETIME_SUB", 0),
+    DESODBC_FIELD_LONG("NUM_PREC_RADIX", 0),
+    DESODBC_FIELD_SHORT("INTERVAL_PRECISION", 0),
+};
+
 class ResultTable { //Internal representation of a result view.
  public:
-
-  STMT *stmt = NULL; //the info saved by the stmt structure may contain useful info for constructing the table.
-
+  std::string table_name;
+  COMMAND_TYPE command_type;
+  SQLSMALLINT type_requested;
+  std::string pk_table_name;
+  std::string fk_table_name;
+  std::string str = ""; //last TAPI output (from stmt)
   //Vector of column names, ordered by insertion time.
   std::vector<std::string> names_ordered;
     
@@ -1693,7 +1751,7 @@ class ResultTable { //Internal representation of a result view.
     DES_ROW row = new char*[n_cols];
 
     for (int i = 0; i < n_cols; ++i) {
-      row[i] = string_to_char_pointer(columns[names_ordered[i]].values[index]);
+      row[i] = columns[names_ordered[i]].values[index];
     }
 
     return row;
@@ -1702,6 +1760,9 @@ class ResultTable { //Internal representation of a result view.
   DES_ROWS* generate_DES_ROWS(const int current_row) {
 
     DES_ROWS *rows = new DES_ROWS;
+    rows->data = nullptr;
+    rows->next = nullptr;
+
     DES_ROWS *ptr = rows;
     int n_rows = columns[names_ordered[0]].values.size(); //sloppy way to do this. TODO: guarantee encapsulation
     for (int i = 0; current_row + i < n_rows; ++i) {
@@ -1719,8 +1780,8 @@ class ResultTable { //Internal representation of a result view.
     return rows;
   }
 
-  DES_FIELD* generate_DES_FIELD(int col_index) {
-    return columns[names_ordered[col_index]].generate_DES_FIELD();
+  DES_FIELD* get_DES_FIELD(int col_index) {
+    return columns[names_ordered[col_index]].get_DES_FIELD();
   }
 
   std::vector<ForeignKeyInfo> getForeignKeysFromTAPI(
@@ -1836,99 +1897,41 @@ class ResultTable { //Internal representation of a result view.
 
   }
 
+  void insert_cols(DES_FIELD array[], int array_size) {
+    for (int i = 0; i < array_size; ++i) {
+      DES_FIELD *field = new DES_FIELD;
+      memcpy(field, &array[i], sizeof(DES_FIELD));
+      insert_col(field);
+    }
+  }
+
   void insert_metadata_cols() {
-    /*
-      Default table (representation of metadata table).
-      We learnt from this studying calls to the MySQL ODBC.
-      We replicated the returned columns of the default table
-      and each of its characteristics.
-  */
-    insert_col("", "TABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TABLE_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TABLE_TYPE", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "REMARKS", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+      insert_cols(SQLTABLES_fields, array_elements(SQLTABLES_fields));
   }
 
   void insert_SQLPrimaryKeys_cols() {
-    insert_col("", "TABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "COLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "KEY_SEQ", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "PK_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_cols(SQLPRIM_KEYS_fields, array_elements(SQLPRIM_KEYS_fields));
   };
 
-  void insert_SQLForeignKeys_cols() {
-    insert_col("", "PKTABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "PKTABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "PKTABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "PKCOLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "FKTABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "FKTABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "FKTABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "FKCOLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "KEY_SEQ", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "UPDATE_RULE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "DELETE_RULE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "FK_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "PK_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "DEFERRABILITY", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+  void insert_SQLForeignKeys_cols(){
+    insert_cols(SQLFORE_KEYS_fields, array_elements(SQLFORE_KEYS_fields));
   };
 
   void insert_SQLGetTypeInfo_cols() {
-    insert_col("", "TYPE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "DATA_TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "COLUMN_SIZE", get_Type(SQL_INTEGER), SQL_NULLABLE);
-    insert_col("", "LITERAL_PREFIX", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "LITERAL_SUFFIX", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "CREATE_PARAMS", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "NULLABLE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "CASE_SENSITIVE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "SEARCHABLE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "UNSIGNED_ATTRIBUTE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "FIXED_PREC_SCALE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "AUTO_UNIQUE_VALUE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "LOCAL_TYPE_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "MINIMUM_SCALE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "MAXIMUM_SCALE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "SQL_DATA_TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "SQL_DATETIME_SUB", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "NUM_PREC_RADIX", get_Type(SQL_INTEGER), SQL_NULLABLE);
-    insert_col("", "INTERVAL_PRECISION", get_Type(SQL_SMALLINT), SQL_NULLABLE);
+    insert_cols(SQL_GET_TYPE_INFO_fields,
+                array_elements(SQL_GET_TYPE_INFO_fields));
   }
 
   void insert_SQLStatistics_cols() {
-    insert_col("", "TABLE_CAT", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TABLE_SCHEM", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TABLE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "NON_UNIQUE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "INDEX_QUALIFIER", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "INDEX_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "ORDINAL_POSITION", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "COLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NULLABLE);
-    insert_col("", "ASC_OR_DESC", {SQL_CHAR, 1}, SQL_NULLABLE);  // CHAR(1)
-    insert_col("", "CARDINALITY", get_Type(SQL_INTEGER), SQL_NULLABLE);
-    insert_col("", "PAGES", get_Type(SQL_INTEGER), SQL_NULLABLE);
-    insert_col("", "FILTER_CONDITION", get_Type(SQL_VARCHAR), SQL_NULLABLE);
+    insert_cols(SQLSTAT_fields, array_elements(SQLSTAT_fields));
   }
 
-  void insert_SQLSpecialColumns_cols(){
-    insert_col("", "SCOPE", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "COLUMN_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "DATA_TYPE", get_Type(SQL_SMALLINT), SQL_NO_NULLS);
-    insert_col("", "TYPE_NAME", get_Type(SQL_VARCHAR), SQL_NO_NULLS);
-    insert_col("", "COLUMN_SIZE", get_Type(SQL_INTEGER), SQL_NULLABLE);
-    insert_col("", "BUFFER_LENGTH", get_Type(SQL_INTEGER), SQL_NULLABLE);
-    insert_col("", "DECIMAL_DIGITS", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-    insert_col("", "PSEUDO_COLUMN", get_Type(SQL_SMALLINT), SQL_NULLABLE);
-
+  void insert_SQLSpecialColumns_cols() {
+    insert_cols(SQLSPECIALCOLUMNS_fields,
+                array_elements(SQLSPECIALCOLUMNS_fields));
   }
 
   ResultTable(STMT *stmt);
-
-  ResultTable(STMT *stmt, const std::string &str);
 
   std::vector<std::string> getLines(const std::string &str) {
     std::vector<std::string> lines;
@@ -1962,17 +1965,17 @@ class ResultTable { //Internal representation of a result view.
 
   void create_results_SQLGetTypeInfo();
 
-  void parse_SQLForeignKeys_PK(const std::string &str);
+  void parse_SQLForeignKeys_PK();
 
-  void parse_SQLForeignKeys_FK(const std::string &str);
+  void parse_SQLForeignKeys_FK();
 
-  void parse_SQLForeignKeys_PKFK(const std::string &str);
+  void parse_SQLForeignKeys_PKFK();
 
-  void create_results_SQLStatistics(const std::string &str);
+  void create_results_SQLStatistics();
 
-  void create_results_SQLSpecialColumns(const std::string &str);
+  void create_results_SQLSpecialColumns();
 
-  void parse_SQLPrimaryKeys(const std::string &str) {
+  void parse_SQLPrimaryKeys() {
       //TODO: handle errors
     insert_SQLPrimaryKeys_cols();
 
@@ -1992,17 +1995,18 @@ class ResultTable { //Internal representation of a result view.
       int KEY_SEQ = table_info.columns_index_map[table_info.primary_keys[i]];
       std::string PK_NAME = "";
 
-      insert_value("TABLE_CAT", TABLE_CAT);
-      insert_value("TABLE_SCHEM", TABLE_SCHEM);
-      insert_value("TABLE_NAME", TABLE_NAME);
-      insert_value("COLUMN_NAME", COLUMN_NAME);
-      insert_value("KEY_SEQ", std::to_string(KEY_SEQ)); //check if this is correct
-      insert_value("PK_NAME", PK_NAME);
+      insert_value("TABLE_CAT", string_to_char_pointer(TABLE_CAT));
+      insert_value("TABLE_SCHEM", string_to_char_pointer(TABLE_SCHEM));
+      insert_value("TABLE_NAME", string_to_char_pointer(TABLE_NAME));
+      insert_value("COLUMN_NAME", string_to_char_pointer(COLUMN_NAME));
+      insert_value("KEY_SEQ", string_to_char_pointer(std::to_string(
+                                  KEY_SEQ)));  // check if this is correct
+      insert_value("PK_NAME", string_to_char_pointer(PK_NAME));
     }
 
   }
 
-  void parse_SQLTables(const std::string &str) {
+  void parse_SQLTables() {
 
     insert_metadata_cols();
 
@@ -2031,11 +2035,11 @@ class ResultTable { //Internal representation of a result view.
 
       TABLE_NAME = lines[i];
 
-      insert_value("TABLE_CAT", TABLE_CAT);
-      insert_value("TABLE_SCHEM", TABLE_SCHEM);
-      insert_value("TABLE_NAME", TABLE_NAME);
-      insert_value("TABLE_TYPE", TABLE_TYPE);
-      insert_value("REMARKS", REMARKS);
+      insert_value("TABLE_CAT", string_to_char_pointer(TABLE_CAT));
+      insert_value("TABLE_SCHEM", string_to_char_pointer(TABLE_SCHEM));
+      insert_value("TABLE_NAME", string_to_char_pointer(TABLE_NAME));
+      insert_value("TABLE_TYPE", string_to_char_pointer(TABLE_TYPE));
+      insert_value("REMARKS", string_to_char_pointer(REMARKS));
 
       while (lines[i].size() <= 1 || lines[i][0] != '$') i++;
 
@@ -2063,7 +2067,7 @@ class ResultTable { //Internal representation of a result view.
     } else
       size = get_type_size(typestr_simpletype_map.at(type_str));
 
-    SQLSMALLINT simple_type = typestr_simpletype_map.at(type_str);
+    enum_field_types simple_type = typestr_simpletype_map.at(type_str);
 
     return {simple_type, size};
   
@@ -2071,7 +2075,7 @@ class ResultTable { //Internal representation of a result view.
 
   //Constructor of table from the parsing a TAPI-codified DES result.
   //Returns the number of rows of the result (valuable for SQLStatistics)
-  int parse_select(const std::string& str, bool fetch_values) {
+  int parse_select(bool fetch_values) {
 
     int n_rows = 0;
 
@@ -2093,8 +2097,7 @@ class ResultTable { //Internal representation of a result view.
         //For each column, TAPI gives in a line its name and then its type.
         size_t pos_dot = lines[i].find('.', 0);
         std::string table = lines[i].substr(0, pos_dot);
-        std::string name =
-            lines[i].substr(pos_dot + 1, lines[i].size() - (pos_dot + 1));
+        std::string name = lines[i];
         Type type = get_Type_from_str(lines[i + 1]);
 
         // I have put SQL_NULLABLE_UNKNOWN because I do not know
@@ -2119,14 +2122,21 @@ class ResultTable { //Internal representation of a result view.
           std::string name_col = column_names[j];
           std::string value = lines[i];
 
-          //When we reach a varchar value, we remove the " ' " characters provided by the TAPI.
-          if (value.size() > 0 && value[0] == '\'') {
-            value = value.substr(1, value.size() - 2);
+          if (value == "null" && fetch_values)
+              insert_value(name_col, nullptr);
+          else {
+            // When we reach a varchar value, we remove the " ' " characters
+            // provided by the TAPI.
+            if (value.size() > 0 && value[0] == '\'') {
+              value = value.substr(1, value.size() - 2);
+            }
+
+            if (fetch_values) {
+              insert_value(name_col, value);
+            }
+          
           }
-          if (fetch_values)
-            insert_value(name_col, value);
-
-
+            
           i++;
         }
         aux = lines[i];
@@ -2141,11 +2151,6 @@ class ResultTable { //Internal representation of a result view.
     return n_rows;
   }
 
-  Type col_type(const std::string &name) { return columns[name].get_type(); }
-  SQLULEN col_size(const std::string &name) { return columns[name].get_size(); }
-  SQLSMALLINT col_decimal_digits(const std::string &name) { return columns[name].get_decimal_digits(); }
-  SQLSMALLINT col_nullable(const std::string &name) { return columns[name].get_nullable(); }
-
   size_t col_count() { return names_ordered.size(); }
 
   size_t row_count() {
@@ -2157,15 +2162,6 @@ class ResultTable { //Internal representation of a result view.
 
   std::string index_to_name_col(size_t index) {
     return names_ordered[index - 1];
-  }
-
-  void update_bound_cols(SQLUSMALLINT row) {
-    for (auto pair : columns) {
-        Column col = pair.second;
-        col.update_binding(row);
-    
-    }
-  
   }
 
   void refresh_row(const int row_index) {
@@ -2180,27 +2176,27 @@ class ResultTable { //Internal representation of a result view.
   void update_row(const int row_index);
   void remove_row(const int row_index);
 
-    void insert_col(const std::string& tableName, const std::string &columnName, const Type &columnType,
-                  const SQLSMALLINT &columnNullable) {
+  void insert_col(const std::string &tableName, const std::string &columnName,
+                  const Type &columnType, const SQLSMALLINT &columnNullable) {
     names_ordered.push_back(columnName);
     columns[columnName] =
         Column(tableName, columnName, columnType, columnNullable);
   }
 
-  void insert_value(const std::string &columnName, const std::string &value) {
+  void insert_col(DES_FIELD* field) {
+    std::string name = field->name;
+    names_ordered.push_back(name);
+    columns[name] = Column(field);
+  }
+
+  void insert_value(const std::string &columnName, char* value) {
     columns[columnName].insert_value(value);
   }
 
-  SQLRETURN copy_result_in_memory(size_t RowNumber, size_t ColumnNumber,
-                                  SQLSMALLINT TargetType,
-                                  SQLPOINTER TargetValuePtr,
-                                  SQLLEN BufferLength,
-                                  SQLLEN *StrLen_or_IndPtr) {
-    
-    ColumnNumber--;
-    return columns[names_ordered[ColumnNumber]].copy_result_in_memory(RowNumber, TargetType, TargetValuePtr, BufferLength, StrLen_or_IndPtr);
-    
+  void insert_value(const std::string &columnName, const std::string& value) {
+    columns[columnName].insert_value(string_to_char_pointer(value));
   }
+
 };
 
 struct STMT
@@ -2231,7 +2227,7 @@ struct STMT
   std::string fk_table_name = "";
 
   // Useful for SQLGetTypeInfo calls
-  SQLSMALLINT type_requested = SQL_ALL_TYPES;
+  SQLSMALLINT type_requested = SQL_TYPE_NULL;
 
   //Type of this command
   COMMAND_TYPE type = UNKNOWN;  // unknown by default
@@ -2347,6 +2343,8 @@ struct STMT
   */
   SQLRETURN set_error(const char *state);
 
+  SQLRETURN do_local_query();
+
   STMT(DBC *d) : dbc(d), result(NULL), fake_result(false), array(), result_array(),
     current_values(NULL), fields(NULL), end_of_set(NULL),
     tempbuf(),
@@ -2405,14 +2403,20 @@ struct STMT
   friend DBC;
 };
 
+inline static uint64_t des_affected_rows(STMT *stmt) {
+  return stmt->affected_rows;
+}
+
 inline static unsigned long *des_fetch_lengths(STMT *stmt) {
-  return stmt->result->internal_table->fetch_lengths(stmt->current_row);
+  stmt->result->lengths =
+      stmt->result->internal_table->fetch_lengths(stmt->current_row);
+  return stmt->result->lengths;;
 }
 
 inline static DES_RESULT *des_store_result(DES *des) { return nullptr; }
 
 inline static DES_RESULT *des_store_result(STMT *stmt) {
-  DES_RESULT *res = new DES_RESULT(stmt, stmt->last_output);
+  DES_RESULT *res = new DES_RESULT(stmt);
   res->field_count = res->internal_table->col_count();
   if (res->field_count == 0) {
     delete res;  // TODO: consider using the appropiate free function
@@ -2430,11 +2434,8 @@ inline static DES_RESULT *des_store_result(STMT *stmt) {
 
   for (int i = 0; i < res->field_count; ++i) {
     DES_FIELD *field = fields + i;
-    DES_FIELD* generated_DES_FIELD = res->internal_table->generate_DES_FIELD(i);
-    memcpy(field, generated_DES_FIELD,
+    memcpy(field, res->internal_table->get_DES_FIELD(i),
            sizeof(DES_FIELD));
-    delete generated_DES_FIELD;
-   
   }
 
   res->fields = fields;
@@ -2448,25 +2449,32 @@ inline static DES_RESULT *des_store_result(STMT *stmt) {
   res->data = data;
   res->data_cursor = res->data->data;
 
+  res->lengths = res->internal_table->fetch_lengths(0);
+
+  res->current_row = nullptr;
+  res->row = nullptr;
+
   return res;
 }
 //Defining the following ResultTable functions in a header file with the
 //inline keyword prevents us from having linking errors
 
-SQLRETURN do_quiet_internal_query(std::string query);
+SQLRETURN do_quiet_internal_query(STMT* stmt, std::string query);
+DES_RESULT *do_internal_query(std::string query);
 
 inline void ResultTable::add_row() {
 
+  /*
   std::vector<std::string> new_values;
   std::vector<bool> is_character_data;
   for (int i = 0; i < names_ordered.size(); ++i) {
     Column col = columns[names_ordered[i]];
     is_character_data.push_back(
-        is_character_data_type(col.get_type().simple_type));
+        is_character_data_type(col.get_type()));
     //new_values.push_back(std::string((char *)col.target_value_binding, *col.str_len_or_ind_binding));
   }
 
-  std::string query = "insert into " + this->stmt->table_name + " values(";
+  std::string query = "insert into " + this->table_name + " values(";
   for (int i = 0; i < new_values.size(); ++i) {
     if (is_character_data[i])
       query += '\'' + new_values[i] + '\'';
@@ -2485,7 +2493,7 @@ inline void ResultTable::add_row() {
     }
   } else
     exit(1);  // TODO: handle error
-
+    */
 
 }
 
@@ -2545,6 +2553,7 @@ inline void ResultTable::update_row(int row_index) {
 }
 
 inline void ResultTable::remove_row(int row_index) {
+  /*
   std::vector<std::string> names;
   std::vector<std::string> values;
   std::vector<bool> is_character_data;
@@ -2553,10 +2562,10 @@ inline void ResultTable::remove_row(int row_index) {
     Column col = columns[names_ordered[i]];
     values.push_back(col.get_value(row_index));
     is_character_data.push_back(
-        is_character_data_type(col.get_type().simple_type));
+        is_character_data_type(col.get_type()));
   }
 
-  std::string query = "DELETE FROM " + this->stmt->table_name + " WHERE ";
+  std::string query = "DELETE FROM " + this->table_name + " WHERE ";
   for (int i = 0; i < names.size(); ++i) {
     query += names[i] + "=";
     if (is_character_data[i])
@@ -2577,65 +2586,69 @@ inline void ResultTable::remove_row(int row_index) {
   }
   else
       exit(1); //TODO: handle error
+  */
 }
 
-inline ResultTable::ResultTable(STMT *stmt, const std::string &str) {
-  this->stmt = stmt;
-  switch (this->stmt->type) {
+inline ResultTable::ResultTable(STMT *stmt) {
+  this->table_name = stmt->table_name;
+  this->command_type = stmt->type;
+  this->type_requested = stmt->type_requested;
+  this->pk_table_name = stmt->pk_table_name;
+  this->fk_table_name = stmt->fk_table_name;
+  this->str = stmt->last_output;
+  switch (this->command_type) {
     case SELECT:
-      parse_select(str, true);
+      parse_select(true);
       break;
     case SQLTABLES:
-      parse_SQLTables(str);
+      parse_SQLTables();
       break;
     case PROCESS:
       insert_metadata_cols();
       break;
     case SQLPRIMARYKEYS:
-      parse_SQLPrimaryKeys(str);
+      parse_SQLPrimaryKeys();
       break;
     case SQLFOREIGNKEYS_FK:
-      parse_SQLForeignKeys_FK(str);
+      parse_SQLForeignKeys_FK();
       break;
     case SQLFOREIGNKEYS_PK:
-      parse_SQLForeignKeys_PK(str);
+      parse_SQLForeignKeys_PK();
       break;
     case SQLFOREIGNKEYS_PKFK:
-      parse_SQLForeignKeys_PKFK(str);
+      parse_SQLForeignKeys_PKFK();
       break;
     case SQLGETTYPEINFO:
       create_results_SQLGetTypeInfo();
       break;
     case SQLSTATISTICS:
-      create_results_SQLStatistics(str);
+      create_results_SQLStatistics();
       break;
     case SQLSPECIALCOLUMNS:
-      create_results_SQLSpecialColumns(str);
+      create_results_SQLSpecialColumns();
+      break;
+    default:
+      insert_metadata_cols();
       break;
   }
 }
 
-inline ResultTable::ResultTable(STMT *stmt) {
-  this->stmt = stmt;
-  insert_metadata_cols();
-}
-
-
 inline void ResultTable::create_results_SQLGetTypeInfo() {
   insert_SQLGetTypeInfo_cols();
-  SQLSMALLINT type_requested = this->stmt->type_requested;
+  SQLSMALLINT type_requested = this->type_requested;
 
   for (int i = 0; i < supported_types.size(); i++) {
     if (type_requested == supported_types[i] || type_requested == SQL_ALL_TYPES) {
 
-      for (auto pair : typestr_simpletype_map) {
+      for (auto pair : typestr_sqltype_map) {
         std::string des_type_name = pair.first;
+        enum_field_types des_type = typestr_simpletype_map.at(des_type_name);
         SQLSMALLINT sql_data_type = pair.second;
         if (sql_data_type == type_requested ||
             type_requested == SQL_ALL_TYPES) {
 
-          bool type_is_character_data = is_character_data_type(sql_data_type);
-          bool type_is_time_data = is_time_data_type(sql_data_type);
+          bool type_is_character_data = is_character_data_type(des_type);
+          bool type_is_time_data = is_time_data_type(des_type);
 
           insert_value("TYPE_NAME", des_type_name);
           insert_value("DATA_TYPE", std::to_string(sql_data_type));
@@ -2643,7 +2656,7 @@ inline void ResultTable::create_results_SQLGetTypeInfo() {
             insert_value("COLUMN_SIZE", std::to_string(1));
           else
             insert_value("COLUMN_SIZE",
-                         std::to_string(get_type_size(sql_data_type)));
+                         std::to_string(get_type_size(des_type)));
 
           if (type_is_character_data) {
             insert_value("LITERAL_PREFIX", "\'");
@@ -2700,7 +2713,7 @@ inline void ResultTable::create_results_SQLGetTypeInfo() {
           insert_value("MAXIMUM_SCALE",
                        NULL_STR);  // or, is it the minimum and maximum value?
                                  // (i.e. in integers)
-          insert_value("SQL_DATA_TYPE", std::to_string(sql_data_type));
+          insert_value("SQL_DATATYPE", std::to_string(sql_data_type));
 
           //It seems odd that this interpretation of the SQL_DATETIME_SUB column is correct.
           //TODO: research
@@ -2740,8 +2753,7 @@ inline void ResultTable::create_results_SQLGetTypeInfo() {
 
 }
 
-inline void ResultTable::create_results_SQLSpecialColumns(
-    const std::string& str) {
+inline void ResultTable::create_results_SQLSpecialColumns() {
 
     insert_SQLSpecialColumns_cols();
     std::vector<std::string> lines = getLines(str);
@@ -2755,7 +2767,7 @@ inline void ResultTable::create_results_SQLSpecialColumns(
       insert_value("COLUMN_NAME", primary_key);
       insert_value("DATA_TYPE", std::to_string(type.simple_type));
       insert_value("TYPE_NAME", Type_to_type_str(type));
-      insert_value("COLUMN_SIZE", std::to_string(type.size));
+      insert_value("COLUMN_SIZE", std::to_string(get_Type_size(type)));
       insert_value("BUFFER_LENGTH", NULL_STR); //TODO: implement
       insert_value("DECIMAL_DIGITS", NULL_STR);
       insert_value("PSEUDO_COLUMN", std::to_string(SQL_PC_NOT_PSEUDO));
@@ -2763,15 +2775,15 @@ inline void ResultTable::create_results_SQLSpecialColumns(
 
 }
 
-inline void ResultTable::create_results_SQLStatistics(const std::string &str)
+inline void ResultTable::create_results_SQLStatistics()
 {
   insert_SQLStatistics_cols();
 
-  int n_rows = parse_select(str, false);
+  int n_rows = parse_select(false);
 
   insert_value("TABLE_CAT", NULL_STR);
   insert_value("TABLE_SCHEM", NULL_STR);
-  insert_value("TABLE_NAME", this->stmt->table_name);
+  insert_value("TABLE_NAME", this->table_name);
   insert_value("NON_UNIQUE", NULL_STR);
   insert_value("INDEX_QUALIFIER", NULL_STR);
   insert_value("INDEX_NAME", NULL_STR);
@@ -2784,10 +2796,10 @@ inline void ResultTable::create_results_SQLStatistics(const std::string &str)
   insert_value("FILTER_CONDITION", NULL_STR);
 }
 
-inline void ResultTable::parse_SQLForeignKeys_PK(const std::string &str) {
+inline void ResultTable::parse_SQLForeignKeys_PK() {
   insert_SQLForeignKeys_cols();
 
-  std::string pk_table_name = this->stmt->pk_table_name;
+  std::string pk_table_name = this->pk_table_name;
 
   std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
       getAllTablesInfo(str);
@@ -2826,10 +2838,10 @@ inline void ResultTable::parse_SQLForeignKeys_PK(const std::string &str) {
   }
 }
 
-inline void ResultTable::parse_SQLForeignKeys_FK(const std::string &str) {
+inline void ResultTable::parse_SQLForeignKeys_FK() {
   insert_SQLForeignKeys_cols();
 
-  std::string table_name = this->stmt->fk_table_name;
+  std::string table_name = this->fk_table_name;
 
   std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
       getAllTablesInfo(str);
@@ -2844,7 +2856,7 @@ inline void ResultTable::parse_SQLForeignKeys_FK(const std::string &str) {
     insert_value("PKCOLUMN_NAME", foreign_keys[i].foreign_key);
     insert_value("FKTABLE_CAT", "");
     insert_value("FKTABLE_SCHEM", "");
-    insert_value("FKTABLE_NAME", this->stmt->fk_table_name);
+    insert_value("FKTABLE_NAME", this->fk_table_name);
     insert_value("FKCOLUMN_NAME", foreign_keys[i].key);
     insert_value("KEY_SEQ",
                  std::to_string(
@@ -2861,11 +2873,11 @@ inline void ResultTable::parse_SQLForeignKeys_FK(const std::string &str) {
   }
 }
 
-inline void ResultTable::parse_SQLForeignKeys_PKFK(const std::string &str) {
+inline void ResultTable::parse_SQLForeignKeys_PKFK() {
   insert_SQLForeignKeys_cols();
 
-  std::string pk_table_name = this->stmt->pk_table_name;
-  std::string fk_table_name = this->stmt->fk_table_name;
+  std::string pk_table_name = this->pk_table_name;
+  std::string fk_table_name = this->fk_table_name;
 
   std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
       getAllTablesInfo(str);
@@ -2917,8 +2929,138 @@ inline DES_RESULT::DES_RESULT() { this->internal_table = new ResultTable(); }
 
 inline DES_RESULT::DES_RESULT(STMT *stmt) { this->internal_table = new ResultTable(stmt); }
 
-inline DES_RESULT::DES_RESULT(STMT *stmt, const std::string &tapi_output) {
-  this->internal_table = new ResultTable(stmt, tapi_output);
+//TODO: provisional place for copy functions. We need to embed them into its appropriate classes.
+inline static char *copy(char *old) {
+  if (!old) return nullptr;
+  char *cpy = new char[strlen(old)+1];
+  memcpy(cpy, old, strlen(old));
+  cpy[strlen(old)] = '\0';
+  return cpy;
+}
+
+inline static void memcpy(DES_FIELD *cpy, DES_FIELD *old) {
+  cpy->name = copy(old->name);
+  cpy->org_name = copy(old->org_name);
+  cpy->table = copy(old->table);
+  cpy->org_table = copy(old->org_table);
+  cpy->db = copy(old->db);
+  cpy->catalog = copy(old->catalog);
+  cpy->def = copy(old->def);
+  cpy->length = old->length;
+  cpy->max_length = old->max_length;
+  cpy->name_length = old->name_length;
+  cpy->org_name_length = old->org_name_length;
+  cpy->table_length = old->table_length;
+  cpy->org_table_length = old->org_table_length;
+  cpy->db_length = old->db_length;
+  cpy->catalog_length = old->catalog_length;
+  cpy->def_length = old->def_length;
+  cpy->flags = old->flags;
+  cpy->decimals = old->decimals;
+  cpy->charsetnr = old->charsetnr;
+  cpy->type = old->type;
+  cpy->extension = malloc(sizeof(old->extension));
+}
+
+inline static DES_FIELD *copy(DES_FIELD *old) {
+  if (!old) return nullptr;
+  DES_FIELD *cpy = new DES_FIELD;
+  memcpy(cpy, old);
+  return cpy;
+}
+
+inline static char **copy(char **old, int size) {
+  if (!old) return nullptr;
+  char** cpy = (char **)malloc(sizeof(char *) * size);
+  for (int i = 0; i < size; ++i) {
+    char *old_elem = *(old + i);
+    char **cpy_pos = cpy + i;
+    if (!old_elem) *(cpy_pos) = nullptr;
+    else {
+      *(cpy_pos) = (char *)malloc(sizeof(char) * strlen(old_elem));
+      memcpy(cpy_pos, old_elem, sizeof(char) * strlen(old_elem));
+    }
+  }
+  return cpy;
+}
+
+inline static DES_ROWS *copy(DES_ROWS *old, int n_fields) {
+  if (!old) return nullptr;
+  DES_ROWS *cpy = new DES_ROWS;
+  cpy->length = old->length;
+  cpy->data = copy(old->data, n_fields);
+  if (!old->next) cpy->next = nullptr;
+  else {
+    cpy->next = copy(old->next, n_fields);
+  }
+  return cpy;
+}
+
+inline static DES_DATA *copy(DES_DATA *old) {
+  if (!old) return nullptr;
+  DES_DATA *cpy = new DES_DATA;
+  cpy->rows = old->rows;
+  cpy->fields = old->fields;
+  cpy->data = copy(old->data, old->fields);
+
+  return cpy;
+}
+
+inline static ResultTable *copy(ResultTable *old) {
+  if (!old) return nullptr;
+  ResultTable *cpy = new ResultTable;
+  cpy->table_name = old->table_name;
+  cpy->command_type = old->command_type;
+  cpy->type_requested = old->type_requested;
+  cpy->pk_table_name = old->fk_table_name;
+  cpy->str = old->str;
+  cpy->names_ordered = old->names_ordered;
+  cpy->columns = old->columns;
+
+  //Making the undone deep copies
+  for (auto pair : cpy->columns) {
+    Column col = pair.second;
+    col.field = copy(col.field);
+    for (int i = 0; i < col.values.size(); ++i) {
+      char *old_ptr = col.values[i];
+      col.values[i] = new char;
+      memcpy(col.values[i], old_ptr, strlen(old_ptr));
+    }
+  }
+
+  return cpy;
+}
+
+inline static DES_RESULT *copy(DES_RESULT *old) {
+    if (!old) return nullptr;
+    DES_RESULT *cpy = new DES_RESULT;
+    cpy->row_count = old->row_count;
+    cpy->field_count = old->field_count;
+
+    cpy->fields = (DES_FIELD *)malloc(cpy->field_count * sizeof(DES_FIELD));
+    for (int i = 0; i < cpy->field_count; ++i) {
+      DES_FIELD *old_field = old->fields + i;
+      DES_FIELD *new_field = cpy->fields + i;
+      memcpy(new_field, old_field);
+    }
+    cpy->data = copy(old->data);
+    cpy->data_cursor = cpy->data->data; //When copying the result table, we are resetting the cursor. TODO: check if appropriate
+
+    cpy->lengths =
+        (unsigned long *)malloc(sizeof(unsigned long) * cpy->field_count);
+
+    for (int i = 0; i < cpy->field_count; ++i) {
+      unsigned long *old_length = old->lengths + i;
+      unsigned long *new_length = cpy->lengths + i;
+      *new_length = *old_length;
+    }
+
+    cpy->row = copy(old->row, cpy->field_count);
+    cpy->current_row = copy(old->current_row, cpy->field_count);
+
+    cpy->internal_table = copy(old->internal_table);
+
+    return cpy;
 }
 
 

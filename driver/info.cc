@@ -928,28 +928,6 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 Function sets up a result set containing details of the types
 supported by mysql.
 */
-DES_FIELD SQL_GET_TYPE_INFO_fields[] =
-{
-  DESODBC_FIELD_STRING("TYPE_NAME", 32, NOT_NULL_FLAG),
-  DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
-  DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
-  DESODBC_FIELD_STRING("LITERAL_PREFIX", 2, 0),
-  DESODBC_FIELD_STRING("LITERAL_SUFFIX", 1, 0),
-  DESODBC_FIELD_STRING("CREATE_PARAMS", 15, 0),
-  DESODBC_FIELD_SHORT("NULLABLE", NOT_NULL_FLAG),
-  DESODBC_FIELD_SHORT("CASE_SENSITIVE", NOT_NULL_FLAG),
-  DESODBC_FIELD_SHORT("SEARCHABLE", NOT_NULL_FLAG),
-  DESODBC_FIELD_SHORT("UNSIGNED_ATTRIBUTE", 0),
-  DESODBC_FIELD_SHORT("FIXED_PREC_SCALE", NOT_NULL_FLAG),
-  DESODBC_FIELD_SHORT("AUTO_UNIQUE_VALUE", 0),
-  DESODBC_FIELD_STRING("LOCAL_TYPE_NAME", 60, 0),
-  DESODBC_FIELD_SHORT("MINIMUM_SCALE", 0),
-  DESODBC_FIELD_SHORT("MAXIMUM_SCALE", 0),
-  DESODBC_FIELD_SHORT("SQL_DATATYPE", NOT_NULL_FLAG),
-  DESODBC_FIELD_SHORT("SQL_DATETIME_SUB", 0),
-  DESODBC_FIELD_LONG("NUM_PREC_RADIX", 0),
-  DESODBC_FIELD_SHORT("INTERVAL_PRECISION", 0),
-};
 
 const uint SQL_GET_TYPE_INFO_FIELDS = (uint)array_elements(SQL_GET_TYPE_INFO_fields);
 
@@ -1091,13 +1069,33 @@ Return information about data types supported by the server.
 SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType)
 {
   STMT *stmt = (STMT *)hstmt;
+  uint i;
+  SQLRETURN error = SQL_SUCCESS;
+
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+
+  /* use ODBC2 types if called with ODBC3 types on an ODBC2 handle */
+  if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC2) {
+    switch (fSqlType) {
+      case SQL_TYPE_DATE:
+        fSqlType = SQL_DATE;
+        break;
+      case SQL_TYPE_TIME:
+        fSqlType = SQL_TIME;
+        break;
+      case SQL_TYPE_TIMESTAMP:
+        fSqlType = SQL_TIMESTAMP;
+        break;
+    }
+  }
 
   stmt->type_requested = fSqlType;
   stmt->type = SQLGETTYPEINFO;
-  std::string placeholder_str = ""; //so we don't get warnings
-  stmt->result = new DES_RESULT(stmt, placeholder_str);
 
-  return SQL_SUCCESS;
+  error = stmt->do_local_query();
+  stmt->fake_result = 1;
+
+  return error;
 }
 
 

@@ -57,6 +57,7 @@ typedef enum desodbcQueryType
   desqtDropProc,
   desqtDropFunc,   /*10*/
   desqtOptimize,
+  desqtProcess,
   desqtOther       /* Any type of query(including those above) that we do not
                      care about for that or other reason */
 } QUERY_TYPE_ENUM;
@@ -96,6 +97,7 @@ typedef struct syntax_markers
 
   struct des_keywords
   {
+    const DES_STRING *process;
     const DES_STRING * select;
     const DES_STRING * insert;
     const DES_STRING * update;
@@ -173,6 +175,7 @@ struct DES_PARSED_QUERY
   const char *get_cursor_name();
   size_t token_count();
   bool is_select_statement();
+  bool is_process_statement();
   size_t length() { return query_end - query; }
 };
 

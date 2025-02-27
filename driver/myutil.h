@@ -49,7 +49,7 @@
 
 #define if_forward_cache(st) ((st)->stmt_options.cursor_type == SQL_CURSOR_FORWARD_ONLY && \
            (st)->dbc->ds.opt_NO_CACHE)
-#define is_connected(dbc)    ((dbc)->des && (dbc)->des->net.vio)
+#define is_connected(dbc)    ((dbc)->connected)
 #define trans_supported(db) ((db)->des->server_capabilities & CLIENT_TRANSACTIONS)
 #define autocommit_on(db) ((db)->des->server_status & SERVER_STATUS_AUTOCOMMIT)
 #define is_no_backslashes_escape_mode(db) ((db)->des->server_status & SERVER_STATUS_NO_BACKSLASH_ESCAPES)
@@ -61,11 +61,6 @@
 
 #define DESLOG_DBC_QUERY(A,B) {if((A)->ds.opt_LOG_QUERY) \
                query_print((A)->query_log,(char*) B);}
-
-/* A few character sets we care about. */
-#define ASCII_CHARSET_NUMBER  11
-#define BINARY_CHARSET_NUMBER 63
-#define UTF8_CHARSET_NUMBER   33
 
 /* truncation types in SQL_NUMERIC_STRUCT conversions */
 #define SQLNUM_TRUNC_FRAC 1
@@ -92,41 +87,9 @@ typedef char * DYNAMIC_ELEMENT;
 // from DES_FIELD struct in MySQL 8.3.0
 // (see WL#16221 and WL#16383)
 
-#if LIBMYSQL_VERSION_ID == 80300
-#define DES_FIELD_DEF
-#define DES_FIELD_DEF_LENGTH
-#else
-#define DES_FIELD_DEF NullS,
-#define DES_FIELD_DEF_LENGTH 0,
-#endif
+
 
 #include "field_types.h"
-
-/* Same us DESODBC_FIELD_STRING(name, NAME_LEN, flags) */
-# define DESODBC_FIELD_NAME(name, flags) \
-  {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
-    NAME_LEN, 0, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, UTF8_CHARSET_NUMBER, DES_TYPE_VAR_STRING, NULL}
-
-# define DESODBC_FIELD_STRING(name, len, flags) \
-  {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
-    (len*SYSTEM_CHARSET_MBMAXLEN), 0, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, UTF8_CHARSET_NUMBER, DES_TYPE_VAR_STRING, NULL}
-
-# define DESODBC_FIELD_SHORT(name, flags) \
-  {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
-    5, 5, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, 0, DES_TYPE_SHORT, NULL}
-
-# define DESODBC_FIELD_LONG(name, flags) \
-  {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
-    11, 11, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, 0, DES_TYPE_LONG, NULL}
-
-# define DESODBC_FIELD_LONGLONG(name, flags) \
-  {(char*)(name), (char*)(name), NullS, NullS, NullS, NullS, DES_FIELD_DEF \
-    20, 20, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH \
-    (flags), 0, 0, DES_TYPE_LONGLONG, NULL}
 
 /*
   Utility function prototypes that share among files

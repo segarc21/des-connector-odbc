@@ -56,53 +56,106 @@ const long long TIMEOUT = 1000;
     TODO: research
 
 */
-bool try_to_read_pipe(HANDLE rpipe, CHAR buffer[BUFFER_SIZE], DWORD &bytes_read) {
+void clear_pipe(HANDLE rpipe) {
 
+  BOOL finished = false;
   BOOL peek_success, read_success;
   DWORD left_to_read_bytes = 0;
-
-/*
-
-  In DES sometimes the output is not written straightly or in
-  one piece (for example, when executing /process). Therefore,
-  we read the output and wait some timeout time to further try
-  to read more output, and if there are none left, we consider
-  that the output is finished.
-
-  (For now, we have not found any other solution more intelligent
-  and less time-consuming) TODO: re-think
-
-*/
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT));
+  CHAR buffer[BUFFER_SIZE];
+  DWORD bytes_read;
 
   /*
       The PeakNamedPipe function allows us to look into a pipe and see if there are
-      any bytes left to read. This is necessary because when executing ReadFile, if
-      there are no bytes left to read, it hangs on indefinitely until there are
-      available data to read.
+      any bytes left to read.
   */
-  peek_success = PeekNamedPipe(rpipe, NULL, 0, NULL, &left_to_read_bytes, NULL);
-  if (!peek_success) {
-    return false;
-  } else {
+  while (!finished) {
 
-    if (left_to_read_bytes) {
-      read_success = ReadFile(rpipe, buffer,
-                              BUFFER_SIZE - sizeof(CHAR), &bytes_read, NULL);
+      peek_success =
+        PeekNamedPipe(rpipe, NULL, 0, NULL, &left_to_read_bytes, NULL);
+    if (!peek_success) {
+      finished = true;
+    } else {
+      if (left_to_read_bytes) {
+        read_success = ReadFile(rpipe, buffer, BUFFER_SIZE - sizeof(CHAR),
+                                &bytes_read, NULL);
 
-      if (!read_success)
-        return false;
-      else
-        return (bytes_read > 0);
+        if (!read_success || bytes_read == 0)
+          finished = true;
 
-    } else
-      return false;
+      } else
+        finished = true;
+    }
   }
+  
+}
+
+DES_RESULT* do_internal_query(std::string query) {
+  DES_RESULT *res = nullptr;
+  DWORD bytes_written;
+  ENV *env = dbc_global_var->env;
+  std::string full_query =
+      "/tapi " + query + '\n';  // query for the launched DES process
+
+  // We convert the string to a char*.
+  char *full_query_arr =
+      new char[full_query.size() +
+               sizeof(char)];  // we hold a final char for the delimiter '\0'
+  std::copy(full_query.begin(), full_query.end(), full_query_arr);
+  full_query_arr[full_query.size()] = '\0';
+
+  if (!WriteFile(env->driver_to_des_in_wpipe, full_query_arr,
+                 strlen(full_query_arr), &bytes_written,
+                 NULL)) {  // as we explained in the connection part,
+                           // the final argument must be not null only when the
+                           // pipe was created with overlapping
+    return nullptr;
+  }
+
+  std::string tapi_output;
+
+  /*
+      Same considerations as those we took when reading the startup DES message.
+      However, that output message had a fixed length and behavior. We introduce
+      some new logic when treating a command output.
+  */
+  bool finished_reading = false;
+  CHAR buffer[BUFFER_SIZE];
+  DWORD bytes_read;
+
+  while (!finished_reading) {
+    ReadFile(env->driver_to_des_out_rpipe, buffer, BUFFER_SIZE - sizeof(CHAR),
+             &bytes_read, NULL);
+    buffer[bytes_read] = '\0';
+    std::string buffer_str = buffer;
+    tapi_output += buffer_str;
+
+    if (tapi_output.find("$eot") !=
+        std::string::npos) {  // not all querys distinct from process return
+                              // $eot. TODO: research
+      finished_reading = true;
+    }
+  }
+  clear_pipe(env->driver_to_des_out_rpipe);
+
+  STMT *temp_stmt = new STMT(dbc_global_var);
+  temp_stmt->type = SELECT;
+  temp_stmt->last_output = tapi_output;
+  temp_stmt->result = get_result_metadata(temp_stmt, FALSE);
+  if (!temp_stmt->result) {
+    DES_SQLFreeStmt(temp_stmt, SQL_CLOSE);
+    return nullptr;
+  }
+  else {
+    res = copy(temp_stmt->result);
+    des_free_result(temp_stmt->result);
+  }
+
+  DES_SQLFreeStmt(temp_stmt, SQL_CLOSE);
+  return res;
 }
 
 
-SQLRETURN do_quiet_internal_query(std::string query) {
+SQLRETURN do_quiet_internal_query(STMT* stmt, std::string query) {
   DWORD bytes_written;
   ENV *env = dbc_global_var->env;
   std::string full_query =
@@ -133,21 +186,31 @@ SQLRETURN do_quiet_internal_query(std::string query) {
   bool finished_reading = false;
   CHAR buffer[BUFFER_SIZE];
   DWORD bytes_read;
-
+  
   while (!finished_reading) {
-    if (!try_to_read_pipe(env->driver_to_des_out_rpipe, buffer, bytes_read)) {
+    ReadFile(env->driver_to_des_out_rpipe, buffer, BUFFER_SIZE - sizeof(CHAR),
+             &bytes_read, NULL);
+    buffer[bytes_read] = '\0';
+    std::string buffer_str = buffer;
+    tapi_output += buffer_str;
+
+    if (tapi_output.size() > 0 &&
+        tapi_output.size() <
+            BUFFER_SIZE) {  // TODO: coarse solution, but as this function
+      // is called when adding/updating/deleting rows, and DES TAPI throws a
+      // very short message when doing this, we can be sure that we have read
+      // everything inside our buffer.
       finished_reading = true;
-    } else {
-      buffer[bytes_read] = '\0';
-      std::string buffer_str = buffer;
-      tapi_output += buffer_str;
     }
   }
-
-  if (tapi_output == "1")
+  clear_pipe(env->driver_to_des_out_rpipe);
+  if (tapi_output.find("$error") != std::string::npos)
+    return SQL_ERROR;  // TODO: handle errors appropriately, providing DES'
+                       // messages.
+  else {
+    stmt->affected_rows = stoll(tapi_output);
     return SQL_SUCCESS;
-  else
-    return SQL_ERROR;
+  }
 }
     /*
     Function that executes a query into the DES executable (through its
@@ -197,19 +260,30 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
       some new logic when treating a command output.
   */
   bool finished_reading = false;
+  bool read_success = false;
   CHAR buffer[BUFFER_SIZE];
   DWORD bytes_read;
 
   while (!finished_reading) {
-    if (!try_to_read_pipe(env->driver_to_des_out_rpipe, buffer,
-                          bytes_read)) {
-      finished_reading = true;
+    ReadFile(env->driver_to_des_out_rpipe, buffer,
+                            BUFFER_SIZE - sizeof(CHAR), &bytes_read, NULL);
+
+    buffer[bytes_read] = '\0';
+    std::string buffer_str = buffer;
+    tapi_output += buffer_str;
+
+    if (stmt->type == PROCESS) { //TODO: what happens with nested /process commands?
+        if (tapi_output.find("Info: Batch file processed.") !=
+            std::string::npos) {
+            finished_reading = true;
+        }
     } else {
-      buffer[bytes_read] = '\0';
-      std::string buffer_str = buffer;
-      tapi_output += buffer_str;
+      if (tapi_output.find("$eot") != std::string::npos) { //not all querys distinct from process return $eot. TODO: research
+        finished_reading = true;
+      }
     }
   }
+  clear_pipe(env->driver_to_des_out_rpipe);
   ReleaseMutex(env->query_mutex);
 
   //We parse the TAPI output and create an internal table from the result view
@@ -284,8 +358,7 @@ SQLRETURN do_query(STMT *stmt, std::string query)
     if (stmt->dbc->ds.opt_PREFETCH > 0
         && !stmt->dbc->ds.opt_MULTI_STATEMENTS
         && stmt->stmt_options.cursor_type == SQL_CURSOR_FORWARD_ONLY
-        && scrollable(stmt, query.c_str(), query.c_str() + query_length)
-        && !ssps_used(stmt))
+        && scrollable(stmt, query.c_str(), query.c_str() + query_length))
     {
       /* we might want to read primary key info at this point, but then we have to
          know if we have a select from a single table...
@@ -304,21 +377,6 @@ SQLRETURN do_query(STMT *stmt, std::string query)
 
       native_error = mysql_real_query(stmt->dbc->des, stmt->scroller.query,
                                   (unsigned long)stmt->scroller.query_len);
-    }
-      /* Not using ssps for scroller so far. Relaxing a bit condition
-       if MULTI_STATEMENTS option selected by primitive check if
-       this is a batch of queries */
-    else if (ssps_used(stmt))
-    {
-
-      native_error = stmt->bind_query_attrs(true);
-      if (native_error == SQL_ERROR) {
-        error = stmt->error.retcode;
-        goto exit;
-      }
-
-      native_error = mysql_stmt_execute(stmt->ssps);
-      DESLOG_QUERY(stmt, "ssps has been executed");
     }
     else
     {
@@ -456,26 +514,16 @@ SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery)
 
     assert(iprec);
 
-    if (ssps_used(stmt))
-    {
-      bind= get_param_bind(stmt, i, TRUE);
+    pos = stmt->query.get_param_pos(i);
+    length = (uint)(pos - query);
 
-      rc = insert_param(stmt, bind, stmt->apd, aprec, iprec, row);
+    if (stmt->add_to_buffer(query, length) == NULL) {
+      goto memerror;
     }
-    else
-    {
-      pos = stmt->query.get_param_pos(i);
-      length= (uint) (pos-query);
 
-      if (stmt->add_to_buffer(query, length) == NULL)
-      {
-        goto memerror;
-      }
+    query = pos + 1; /* Skip '?' */
 
-      query= pos+1;  /* Skip '?' */
-
-      rc= insert_param(stmt, NULL, stmt->apd, aprec, iprec, row);
-    }
+    rc = insert_param(stmt, NULL, stmt->apd, aprec, iprec, row);
 
     if (!SQL_SUCCEEDED(rc))
     {
@@ -498,17 +546,13 @@ SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery)
     rc= SQL_SUCCESS_WITH_INFO;
   }
 
-  if (!ssps_used(stmt))
-  {
-    length= (uint) (GET_QUERY_END(&stmt->query) - query);
+  length = (uint)(GET_QUERY_END(&stmt->query) - query);
 
-    if (stmt->add_to_buffer(query, length) == NULL)
-    {
-      goto memerror;
-    }
-
-    finalquery = std::string(stmt->buf(), stmt->buf_pos());
+  if (stmt->add_to_buffer(query, length) == NULL) {
+    goto memerror;
   }
+
+  finalquery = std::string(stmt->buf(), stmt->buf_pos());
 
   return rc;
 
@@ -522,29 +566,15 @@ error:
 static
 void put_null_param(STMT *stmt, DES_BIND *bind)
 {
-  if (bind != NULL && ssps_used(stmt))
-  {
-    bind->is_null_value= '\1';
-  }
-  else
-  {
-    stmt->add_to_buffer("NULL", 4);
-  }
+  stmt->add_to_buffer("NULL", 4);
 }
 
 
 static
 void put_default_value(STMT *stmt, DES_BIND *bind)
 {
-  if (bind != NULL && ssps_used(stmt))
-  {
-    /* That is actually wrong, but i can't see a good way */
-    bind->is_null_value= '\1';
-  }
-  else
-  {
-    stmt->add_to_buffer("DEFAULT", 7);
-  }
+  stmt->add_to_buffer("null", 4); //DES doesn't seem to support the "DEFAULT" keyword.
+                                     //In the manual (4.2.5.1) says it is supported, but I get an error. We then substitute by null.
 }
 
 
@@ -875,36 +905,16 @@ SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype, DESCREC *iprec,
 
         if (ctype == SQL_C_INTERVAL_HOUR_TO_MINUTE)
         {
-          /* Dirty-hackish */
-          if (ssps_used(stmt))
-          {
-            *length = desodbc_snprintf(buff, buff_max, "%d:%02d:00",
-                                      interval->intval.day_second.hour,
-                                      interval->intval.day_second.minute);
-          }
-          else
-          {
-            *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:00'",
-                                      interval->intval.day_second.hour,
-                                      interval->intval.day_second.minute);
-          }
+          *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:00'",
+                                     interval->intval.day_second.hour,
+                                     interval->intval.day_second.minute);
         }
         else
         {
-          if (ssps_used(stmt))
-          {
-            *length = desodbc_snprintf(buff, buff_max, "%d:%02d:%02d",
-                                      interval->intval.day_second.hour,
-                                      interval->intval.day_second.minute,
-                                      interval->intval.day_second.second);
-          }
-          else
-          {
-            *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:%02d'",
-                                      interval->intval.day_second.hour,
-                                      interval->intval.day_second.minute,
-                                      interval->intval.day_second.second);
-          }
+          *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:%02d'",
+                                     interval->intval.day_second.hour,
+                                     interval->intval.day_second.minute,
+                                     interval->intval.day_second.second);
         }
 
         *res= buff;
@@ -1367,35 +1377,17 @@ SQLRETURN insert_param(STMT *stmt, DES_BIND *bind, DESC* apd,
     }
     else
     {
-    /* Convert binary data to hex sequence */
-      if(is_no_backslashes_escape_mode(stmt->dbc) &&
-       is_binary_sql_type(iprec->concise_type))
-      {
-        SQLLEN transformed_len = 0;
-        stmt->add_to_buffer(" 0x", 3);
-        /* Make sure we have room for a fully-escaped string. */
-        if (!stmt->extend_buffer(length * 2))
-        {
-          goto memerror;
-        }
-
-        copy_binhex_result(stmt, (SQLCHAR*)stmt->endbuf(),
-          length * 2 + 1, &transformed_len, data, length);
-        stmt->buf_add_pos(transformed_len);
-      }
-      else
-      {
+      bool put_quotes = is_character_data_type(iprec->concise_type); //TODO: temporal solution.
+      if (put_quotes)
         stmt->add_to_buffer("'", 1);
-        /* Make sure we have room for a fully-escaped string. */
-        if (!(stmt->extend_buffer(length * 2)))
-        {
-          goto memerror;
-        }
-
-        size_t added = mysql_real_escape_string(dbc->des, stmt->endbuf(), data, length);
-        stmt->buf_add_pos(added);
-        stmt->add_to_buffer("'", 1);
+      /* Make sure we have room for a fully-escaped string. */
+      if (!(stmt->extend_buffer(length * 2))) {
+        goto memerror;
       }
+
+      stmt->add_to_buffer(data, length);
+      if (put_quotes)
+        stmt->add_to_buffer("'", 1);
     }
 
 out:
@@ -1540,7 +1532,7 @@ SQLRETURN DES_SQLExecute( STMT *pStmt )
     std::string query;
     char *cursor_pos;
     int dae_rec, one_of_params_not_succeded = 0;
-    bool is_select_stmt;
+    bool is_select_stmt, is_process_stmt;
     int connection_failure = 0;
     STMT *pStmtCursor = pStmt;
     SQLRETURN rc = 0;
@@ -1593,9 +1585,14 @@ SQLRETURN DES_SQLExecute( STMT *pStmt )
 
     query = GET_QUERY(&pStmt->query);
 
+    //TODO: do this more elegantly.
     is_select_stmt = pStmt->query.is_select_statement();
+    is_process_stmt = pStmt->query.is_process_statement();
 
-    if (is_select_stmt) pStmt->type = SELECT;
+    if (is_select_stmt)
+        pStmt->type = SELECT;
+    if (is_process_stmt)
+        pStmt->type = PROCESS;
 
     if (pStmt->ipd->rows_processed_ptr) {
         *pStmt->ipd->rows_processed_ptr = (SQLULEN)0;

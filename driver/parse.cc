@@ -33,6 +33,7 @@
 
 #include "driver.h"
 
+//TODO: add process and other types
 static const DES_QUERY_TYPE query_types_array[]=
 {
   /*desqtSelect*/      {'\1', '\1', NULL},
@@ -55,7 +56,7 @@ static const DES_STRING escape=       {"\\" , 1, 1};
 static const DES_STRING odbc_open=    {"{"  , 1, 1};
 static const DES_STRING odbc_close=   {"}"  , 1, 1};
 static const DES_STRING param_marker= {"?"  , 1, 1};
-
+static const DES_STRING process = {"/PROCESS", 8, 8};
 static const DES_STRING select_=    {"SELECT"   , 6, 6};
 static const DES_STRING insert=     {"INSERT"   , 6, 6};
 static const DES_STRING update=     {"UPDATE"   , 6, 6};
@@ -96,7 +97,7 @@ static const DES_SYNTAX_MARKERS ansi_syntax_markers= {/*quote*/
                                               {"\n", 1, 1},
 #endif
                                               {
-                                                &select_, &insert, &update,
+                                                &process, &select_, &insert, &update,
                                                 &call, &show, &use, &create,
                                                 &drop, &table, &procedure,
                                                 &function, &where_, &current,
@@ -118,6 +119,7 @@ static const QUERY_TYPE_RESOLVING crt_table_rule=
 
 static const QUERY_TYPE_RESOLVING rule[]=
 { /*keyword*/ /*pos_from*/ /*pos_thru*/ /*query_type*/ /*and_rule*/ /*or_rule*/
+    {&process, 0, 0, desqtProcess, NULL, NULL},
   { &select_,   0,          0,          desqtSelect,     NULL,       NULL},
   { &call,      0,          0,          desqtCall,       NULL,       NULL},
   { &insert,    0,          0,          desqtInsert,     NULL,       NULL},
@@ -393,6 +395,11 @@ int is_set_names_statement(const char *query)
 /**
 Detect if a statement is a SELECT statement.
 */
+
+bool DES_PARSED_QUERY::is_process_statement() {
+  return query_type == desqtProcess;
+}
+
 bool DES_PARSED_QUERY::is_select_statement()
 {
   return query_type == desqtSelect;

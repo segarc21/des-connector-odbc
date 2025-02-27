@@ -36,12 +36,6 @@
 
 #include "driver.h"
 
-BOOL ssps_used(STMT *stmt)
-{
-  return (stmt->ssps != NULL);
-}
-
-
 /* Errors processing? */
 BOOL returned_result(STMT *stmt)
 { return des_num_fields(stmt->result) > 0; }
@@ -84,22 +78,11 @@ DES_RESULT * get_result_metadata(STMT *stmt, BOOL force_use)
 
 int bind_result(STMT *stmt)
 {
-  if (ssps_used(stmt))
-  {
-    return stmt->ssps_bind_result();
-  }
-
   return 0;
 }
 
 int get_result(STMT *stmt)
 {
-  if (ssps_used(stmt))
-  {
-    return ssps_get_result(stmt);
-  }
-  /* Nothing to do here for text protocol */
-
   return 0;
 }
 
@@ -121,15 +104,7 @@ size_t STMT::field_count()
 
 des_ulonglong affected_rows(STMT *stmt)
 {
-  if (ssps_used(stmt))
-  {
-    return mysql_stmt_affected_rows(stmt->ssps);
-  }
-  else
-  {
-    /* In some cases in c/odbc it cannot be used instead of mysql_num_rows */
-    return mysql_affected_rows(stmt->dbc->des);
-  }
+  return mysql_affected_rows(stmt->dbc->des);
 }
 
 des_ulonglong update_affected_rows(STMT *stmt)
@@ -149,14 +124,7 @@ des_ulonglong num_rows(STMT *stmt)
   des_ulonglong offset= scroller_exists(stmt) && stmt->scroller.next_offset > 0 ?
     stmt->scroller.next_offset - stmt->scroller.row_count : 0;
 
-  if (ssps_used(stmt))
-  {
-    return  offset + des_stmt_num_rows(stmt->ssps);
-  }
-  else
-  {
-    return offset + des_num_rows(stmt->result);
-  }
+  return offset + des_num_rows(stmt->result);
 }
 
 
@@ -186,14 +154,7 @@ void data_seek(STMT *stmt, des_ulonglong offset)
 
 DES_ROW_OFFSET row_tell(STMT *stmt)
 {
-  if (ssps_used(stmt))
-  {
-    return des_stmt_row_tell(stmt->ssps);
-  }
-  else
-  {
     return des_row_tell(stmt->result);
-  }
 }
 
 
@@ -208,94 +169,45 @@ int next_result(STMT *stmt)
 /* --- Data conversion methods --- */
 int get_int(STMT *stmt, ulong column_number, char *value, ulong length)
 {
-  if (ssps_used(stmt))
-  {
-     return (int)ssps_get_int64<long long>(stmt, column_number, value, length);
-  }
-  else
-  {
-    return (int)strtol(value, NULL, 10);
-  }
+  return (int)strtol(value, NULL, 10);
 }
 
 
 unsigned int get_uint(STMT* stmt, ulong column_number, char* value, ulong length)
 {
-  if (ssps_used(stmt))
-  {
-    return (int)ssps_get_int64<unsigned long long>(stmt, column_number, value, length);
-  }
-  else
-  {
-    return (unsigned int)strtoul(value, NULL, 10);
-  }
+  return (unsigned int)strtoul(value, NULL, 10);
 }
 
 
 long long get_int64(STMT *stmt, ulong column_number, char *value, ulong length)
 {
-  if (ssps_used(stmt))
-  {
-     return ssps_get_int64<long long>(stmt, column_number, value, length);
-  }
-  else
-  {
-    return strtoll(value, NULL, 10);
-  }
+  return strtoll(value, NULL, 10);
 }
 
 
 unsigned long long get_uint64(STMT* stmt, ulong column_number, char* value, ulong length)
 {
-  if (ssps_used(stmt))
-  {
-    return ssps_get_int64<unsigned long long>(stmt, column_number, value, length);
-  }
-  else
-  {
-    return strtoull(value, NULL, 10);
-  }
+  return strtoull(value, NULL, 10);
 }
 
 
 char * get_string(STMT *stmt, ulong column_number, char *value, ulong *length,
                   char * buffer)
 {
-  if (ssps_used(stmt))
-  {
-     return ssps_get_string(stmt, column_number, value, length, buffer);
-  }
-  else
-  {
-    return value;
-  }
+  return value;
 }
 
 
 double get_double(STMT *stmt, ulong column_number, char *value,
                   ulong length)
 {
-  if (ssps_used(stmt))
-  {
-    return ssps_get_double(stmt, column_number, value, length);
-  }
-  else
-  {
-    return myodbc_strtod(value, length);
-  }
+  return myodbc_strtod(value, length);
 }
 
 
 BOOL is_null(STMT *stmt, ulong column_number, char *value)
 {
-  if (ssps_used(stmt))
-  {
-    return *stmt->result_bind[column_number].is_null;
-  }
-  else
-  {
-    return value == NULL;
-  }
+  return value == NULL;
 }
 
 /* Prepares statement depending on connection option either on a client or
@@ -343,33 +255,8 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
 SQLRETURN send_long_data (STMT *stmt, unsigned int param_num, DESCREC * aprec, const char *chunk,
                           unsigned long length)
 {
-#ifdef WE_CAN_SEND_LONG_DATA_PROPERLY
-  if (ssps_used(stmt))
-  {
-    /* If we haven't already started to do that on client and parameter is binary */
-    if (aprec->par.value == NULL && aprec->concise_type == SQL_C_BINARY)
-    {
-      SQLRETURN result= ssps_send_long_data(stmt, param_num, chunk, length);
-
-      /* A bit ugly */
-      if (result == SQL_SUCCESS_WITH_INFO)
-      {
-        return append2param_value(stmt, aprec, chunk, length);
-      }
-
-      return result;
-    }
-    else
-    {
-      return append2param_value(stmt, aprec, chunk, length);
-    }
-  }
-  else
-#endif
-  {
-    aprec->par.add_param_data(chunk, length);
-    return SQL_SUCCESS;
-  }
+  aprec->par.add_param_data(chunk, length);
+  return SQL_SUCCESS;
 }
 
 
@@ -555,4 +442,22 @@ bool scrollable(STMT * stmt, const char * query, const char * query_end)
   }
 
   return TRUE;
+}
+
+SQLRETURN STMT::do_local_query() {
+  if (!get_result_metadata(this, FALSE)) {
+    stmt_result_free(this);
+    return this->set_error("S1001", "Not enough memory", 4001);
+  }
+  this->fake_result = 1;
+  this->state = ST_EXECUTED;
+
+  if (bind_result(this) || get_result(this)) {
+    return this->set_error(DESERR_S1000);
+  }
+  /* Caching row counts for queries returning resultset as well */
+  // update_affected_rows(stmt);
+  fix_result_types(this);
+
+  return SQL_SUCCESS;
 }
