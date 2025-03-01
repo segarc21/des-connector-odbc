@@ -29,30 +29,30 @@
 
 ##########################################################################
 
-SET(myodbc-util_SRCS stringutil.cc
+SET(desodbc-util_SRCS stringutil.cc
                   stringutil.h
                   unicode_transcode.cc
                   installer.cc
                   installer.h)
 
 IF(NOT WIN32)
-  SET(myodbc-util_SRCS ${myodbc-util_SRCS}
+  SET(desodbc-util_SRCS ${desodbc-util_SRCS}
                       odbcinstw.cc)
 ENDIF(NOT WIN32)
 
-ADD_LIBRARY(myodbc-util STATIC ${myodbc-util_SRCS})
+ADD_LIBRARY(desodbc-util STATIC ${desodbc-util_SRCS})
 
-TARGET_LINK_LIBRARIES(myodbc-util ${ODBCINSTLIB})
-set_target_properties(myodbc-util PROPERTIES FOLDER "Misc")
+TARGET_LINK_LIBRARIES(desodbc-util ${ODBCINSTLIB})
+set_target_properties(desodbc-util PROPERTIES FOLDER "Misc")
 
 IF(NOT WIN32)
-  SET_TARGET_PROPERTIES(myodbc-util PROPERTIES COMPILE_FLAGS ${CMAKE_SHARED_LIBRARY_C_FLAGS})
+  SET_TARGET_PROPERTIES(desodbc-util PROPERTIES COMPILE_FLAGS ${CMAKE_SHARED_LIBRARY_C_FLAGS})
 
   INCLUDE_DIRECTORIES(${DL_INCLUDES})
 
-  TARGET_LINK_LIBRARIES(myodbc-util ${DL_LIBS})
+  TARGET_LINK_LIBRARIES(desodbc-util ${DL_LIBS})
 
-  SET_TARGET_PROPERTIES(myodbc-util PROPERTIES LINK_FLAGS "${DL_LFLAGS}")
+  SET_TARGET_PROPERTIES(desodbc-util PROPERTIES LINK_FLAGS "${DL_LFLAGS}")
 
-  ADD_COVERAGE(myodbc-util)
+  ADD_COVERAGE(desodbc-util)
 ENDIF(NOT WIN32)

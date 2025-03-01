@@ -105,7 +105,7 @@ SQLColAttributeWImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
 
     /* We set the error only when the result is intented to be returned */
     if ((char_attr || num_attr) && len > char_attr_max - 1)
-      rc= stmt->set_error( DESERR_01004, NULL, 0);
+      rc= stmt->set_error( DESERR_01004, NULL);
 
     if (char_attr_len)
       *char_attr_len= (SQLSMALLINT)len * sizeof(SQLWCHAR);
@@ -271,7 +271,6 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
                         nullable);
 
   if (free_value == -1) {
-    set_mem_error(stmt->dbc->des);
     return handle_connection_error(stmt);
   }
 
@@ -280,12 +279,11 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
         sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value, &len, &errors);
     if (len == -1) {
       if (free_value) x_free(value);
-      set_mem_error(stmt->dbc->des);
       return handle_connection_error(stmt);
     }
 
     /* We set the error only when the result is intented to be returned */
-    if (name && len > name_max - 1) rc = stmt->set_error(DESERR_01004, NULL, 0);
+    if (name && len > name_max - 1) rc = stmt->set_error(DESERR_01004, NULL);
 
     if (name_len) *name_len = (SQLSMALLINT)len;
 
@@ -328,89 +326,57 @@ SQLForeignKeysW(SQLHSTMT hstmt,
                 SQLWCHAR *fk_table, SQLSMALLINT fk_table_len)
 {
   SQLRETURN rc;
+  SQLCHAR *pk_catalog8, *pk_schema8, *pk_table8, *fk_catalog8, *fk_schema8,
+      *fk_table8;
+  SQLINTEGER len;
+  uint errors = 0;
   DBC *dbc;
 
   LOCK_STMT(hstmt);
-  
-
 
   dbc = ((STMT *)hstmt)->dbc;
-  /*
-   * In this preliminar version we will ignore the catalog and schema inputs.
-   */
 
-  STMT *stmt = (STMT *)hstmt;
+  len = pk_catalog_len;
+  pk_catalog8 =
+      sqlwchar_as_sqlchar(dbc->cxn_charset_info, pk_catalog, &len, &errors);
+  pk_catalog_len = (SQLSMALLINT)len;
 
-  /*
-    Important comments for the implementation of this function:
-    (source: https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlforeignkeys-function?view=sql-server-ver16)
+  len = pk_schema_len;
+  pk_schema8 =
+      sqlwchar_as_sqlchar(dbc->cxn_charset_info, pk_schema, &len, &errors);
+  pk_schema_len = (SQLSMALLINT)len;
 
-    "
-        If *PKTableName contains a table name, SQLForeignKeys returns a result set
-        that contains the primary key of the specified table and all the foreign keys
-        that refer to it. The list of foreign keys in other tables does not include
-        foreign keys that point to unique constraints in the specified table.
+  len = pk_table_len;
+  pk_table8 =
+      sqlwchar_as_sqlchar(dbc->cxn_charset_info, pk_table, &len, &errors);
+  pk_table_len = (SQLSMALLINT)len;
 
-        If *FKTableName contains a table name, SQLForeignKeys returns a result set that
-        contains all the foreign keys in the specified table that point to primary keys
-        in other tables, and the primary keys in the other tables to which they refer.
-        The list of foreign keys in the specified table does not contain foreign keys
-        that refer to unique constraints in other tables.
+  len = fk_catalog_len;
+  fk_catalog8 =
+      sqlwchar_as_sqlchar(dbc->cxn_charset_info, fk_catalog, &len, &errors);
+  fk_catalog_len = (SQLSMALLINT)len;
 
-        If both *PKTableName and *FKTableName contain table names, SQLForeignKeys
-        returns the foreign keys in the table specified in *FKTableName that refer to
-        the primary key of the table specified in *PKTableName. This should be one key
-        at most.
-    "
+  len = fk_schema_len;
+  fk_schema8 =
+      sqlwchar_as_sqlchar(dbc->cxn_charset_info, fk_schema, &len, &errors);
+  fk_schema_len = (SQLSMALLINT)len;
 
-  */
+  len = fk_table_len;
+  fk_table8 =
+      sqlwchar_as_sqlchar(dbc->cxn_charset_info, fk_table, &len, &errors);
+  fk_table_len = (SQLSMALLINT)len;
 
-  //TODO: check whether "contain table names" is equivalent to the field being non-null.
-  //TODO: check possible loss of data if converting to string (as warned by the compiler).
-  if (pk_table != NULL && fk_table != NULL) {
+  rc = DESForeignKeys(hstmt, pk_catalog8, pk_catalog_len, pk_schema8,
+                        pk_schema_len, pk_table8, pk_table_len, fk_catalog8,
+                        fk_catalog_len, fk_schema8, fk_schema_len, fk_table8,
+                        fk_table_len);
 
-    std::wstring pk_table_wstr(pk_table);
-    std::string pk_table_str(pk_table_wstr.begin(), pk_table_wstr.end());
-
-    std::wstring fk_table_wstr(fk_table);
-    std::string fk_table_str(fk_table_wstr.begin(), fk_table_wstr.end());
-
-    stmt->pk_table_name = pk_table_str;
-    stmt->fk_table_name = fk_table_str;
-    stmt->type = SQLFOREIGNKEYS_PKFK;
-
-  } else if (pk_table != NULL) {
-
-    std::wstring pk_table_wstr(pk_table);
-    std::string pk_table_str(pk_table_wstr.begin(), pk_table_wstr.end());
-
-    stmt->pk_table_name = pk_table_str;
-  
-    stmt->type = SQLFOREIGNKEYS_PK;
-  }
-    
-  else if (fk_table != NULL) {
-
-    std::wstring fk_table_wstr(fk_table);
-    std::string fk_table_str(fk_table_wstr.begin(), fk_table_wstr.end());
-
-    stmt->fk_table_name = fk_table_str;
-  
-    stmt->type = SQLFOREIGNKEYS_FK;
-
-  }
-  else
-    return SQL_ERROR;
-
-  // Now, we construct the query "/dbschema"
-  std::string dbschema_str = "/dbschema";
-  SQLCHAR *dbschema_sqlchar = reinterpret_cast<unsigned char *>(
-      const_cast<char *>(dbschema_str.c_str()));
-  SQLINTEGER dbschema_len = dbschema_str.size();
-
-  rc = DES_SQLPrepare(hstmt, dbschema_sqlchar, dbschema_len, false, false);
-
-  rc = DES_SQLExecute(stmt);
+  x_free(pk_catalog8);
+  x_free(pk_schema8);
+  x_free(pk_table8);
+  x_free(fk_catalog8);
+  x_free(fk_schema8);
+  x_free(fk_table8);
 
   return rc;
 }
@@ -507,7 +473,7 @@ SQLGetCursorNameW(SQLHSTMT hstmt, SQLWCHAR *cursor, SQLSMALLINT cursor_max,
   CLEAR_STMT_ERROR(stmt);
 
   if (cursor_max < 0)
-    return stmt->set_error( DESERR_S1090, NULL, 0);
+    return stmt->set_error( DESERR_S1090, NULL);
 
   name= sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info,
                             DESGetCursorName(hstmt), &len, &errors);
@@ -517,7 +483,7 @@ SQLGetCursorNameW(SQLHSTMT hstmt, SQLWCHAR *cursor, SQLSMALLINT cursor_max,
 
   /* Warn if name truncated, but buffer is not null */
   if (cursor && len > cursor_max - 1)
-    rc= stmt->set_error( DESERR_01004, NULL, 0);
+    rc= stmt->set_error( DESERR_01004, NULL);
 
   if (cursor_max > 0)
   {
@@ -834,7 +800,7 @@ SQLPrepareWImpl(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len,
   if (errors)
   {
     x_free(conv);
-    return stmt->set_error("22018", NULL, 0);
+    return stmt->set_error("22018", NULL);
   }
 
   SQLRETURN rc = DESPrepare(hstmt, conv, str_len, false, force_prepare);
@@ -849,32 +815,34 @@ SQLPrimaryKeysW(SQLHSTMT hstmt,
                 SQLWCHAR *schema, SQLSMALLINT schema_len,
                 SQLWCHAR *table, SQLSMALLINT table_len) {
   SQLRETURN rc;
+  SQLCHAR *catalog8, *schema8, *table8;
+  SQLINTEGER len;
+  uint errors = 0;
   DBC *dbc;
 
   LOCK_STMT(hstmt);
 
   dbc = ((STMT *)hstmt)->dbc;
-  /*
-   * In this preliminar version we will ignore the catalog and schema inputs.
-   */
+  len = catalog_len;
+  catalog8 = sqlwchar_as_sqlchar(dbc->cxn_charset_info, catalog, &len, &errors);
+  catalog_len = (SQLSMALLINT)len;
 
-  STMT *stmt = (STMT *)hstmt;
-  stmt->type = SQLPRIMARYKEYS;
+  len = schema_len;
+  schema8 = sqlwchar_as_sqlchar(dbc->cxn_charset_info, schema, &len, &errors);
+  schema_len = (SQLSMALLINT)len;
 
-  // Now, we construct the query "/dbschema table_name"
-  std::wstring table_name_wstr = std::wstring(table);
-  std::string query_str =
-      "/dbschema " + std::string(table_name_wstr.begin(), table_name_wstr.end());
-  SQLCHAR *query =
-      reinterpret_cast<unsigned char *>(const_cast<char *>(query_str.c_str()));
-  SQLINTEGER query_length = query_str.size();
+  len = table_len;
+  table8 = sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
+  table_len = (SQLSMALLINT)len;
 
-  rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
+  rc = DESPrimaryKeys(hstmt, catalog8, catalog_len, schema8, schema_len,
+                        table8, table_len);
 
-  rc = DES_SQLExecute(stmt);
+  x_free(catalog8);
+  x_free(schema8);
+  x_free(table8);
 
   return rc;
-
 }
 
 
@@ -1040,7 +1008,7 @@ SQLSetCursorNameW(SQLHSTMT hstmt, SQLWCHAR *name, SQLSMALLINT name_len)
   {
     return ((STMT *)hstmt)->set_error("HY000",
                           "Cursor name included characters that could not "
-                          "be converted to connection character set", 0);
+                          "be converted to connection character set");
   }
 
   return rc;

@@ -12,11 +12,11 @@
 
 set(CPACK_BUILD_SOURCE_DIRS "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0")
 set(CPACK_CMAKE_GENERATOR "Visual Studio 17 2022")
-set(CPACK_COMPONENTS_ALL "ODBCDll;OdbcDll;Readme;Unspecified;tests")
+set(CPACK_COMPONENTS_ALL "Readme;Unspecified;tests")
 set(CPACK_COMPONENT_UNSPECIFIED_HIDDEN "TRUE")
 set(CPACK_COMPONENT_UNSPECIFIED_REQUIRED "TRUE")
 set(CPACK_DEFAULT_PACKAGE_DESCRIPTION_FILE "C:/Program Files/CMake/share/cmake-3.30/Templates/CPack.GenericDescription.txt")
-set(CPACK_DEFAULT_PACKAGE_DESCRIPTION_SUMMARY "MySQL_Connector_ODBC built using CMake")
+set(CPACK_DEFAULT_PACKAGE_DESCRIPTION_SUMMARY "DES_Connector_ODBC built using CMake")
 set(CPACK_DMG_SLA_USE_RESOURCE_FILE_LICENSE "ON")
 set(CPACK_GENERATOR "7Z;ZIP")
 set(CPACK_IGNORE_FILES "\\.bzr/;\\.bzr-mysql;\\.bzrignore;CMakeCache\\.txt;CPackSourceConfig\\.cmake;CPackConfig\\.cmake;VersionInfo\\.h$;postflight$;/cmake_install\\.cmake;/CTestTestfile\\.cmake;/CMakeFiles/;/_CPack_Packages/;Makefile$;cmake/sql.*\\.c$")

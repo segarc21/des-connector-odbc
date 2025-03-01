@@ -50,9 +50,6 @@
 #define if_forward_cache(st) ((st)->stmt_options.cursor_type == SQL_CURSOR_FORWARD_ONLY && \
            (st)->dbc->ds.opt_NO_CACHE)
 #define is_connected(dbc)    ((dbc)->connected)
-#define trans_supported(db) ((db)->des->server_capabilities & CLIENT_TRANSACTIONS)
-#define autocommit_on(db) ((db)->des->server_status & SERVER_STATUS_AUTOCOMMIT)
-#define is_no_backslashes_escape_mode(db) ((db)->des->server_status & SERVER_STATUS_NO_BACKSLASH_ESCAPES)
 #define reset_ptr(x) {if (x) x= 0;}
 #define digit(A) ((int) (A - '0'))
 
@@ -121,11 +118,7 @@ SQLRETURN insert_param  (STMT *stmt, DES_BIND *bind, DESC *apd,
                         DESCREC *aprec, DESCREC *iprec, SQLULEN row);
 
 SQLRETURN set_sql_select_limit(DBC *dbc, SQLULEN new_value, des_bool reqLock);
-SQLRETURN exec_stmt_query(STMT *stmt, const char *query, SQLULEN query_length,
-                           des_bool reqLock);
 
-SQLRETURN exec_stmt_query_std(STMT *stmt, const std::string &str,
-                              bool reqLock);
 
 SQLRETURN
 copy_ansi_result(STMT *stmt,
@@ -152,7 +145,7 @@ SQLRETURN copy_wchar_result(STMT *stmt,
                             long src_length);
 
 SQLRETURN set_desc_error  (DESC *desc, char *state,
-                          const char *message, uint errcode);
+                          const char *message);
 SQLRETURN handle_connection_error (STMT *stmt);
 des_bool   is_connection_lost      (uint errcode);
 void      set_mem_error           (DES *des);
@@ -255,7 +248,6 @@ void    set_current_cursor_data   (STMT *stmt,SQLUINTEGER irow);
 des_bool is_minimum_version        (const char *server_version,const char *version);
 int     desodbc_strcasecmp         (const char *s, const char *t);
 int     desodbc_casecmp            (const char *s, const char *t, uint len);
-int     reget_current_catalog     (DBC *dbc);
 
 ulong   desodbc_escape_string      (STMT *stmt, char *to, ulong to_length,
                                   const char *from, ulong length, int escape_id);
@@ -323,29 +315,18 @@ BOOL            desodbc_isnum        (desodbc::CHARSET_INFO* cs, const char * be
 #define GOT_OUT_STREAM_PARAMETERS 2
 
 int           got_out_parameters  (STMT *stmt);
-const char    get_identifier_quote(STMT *stmt);
-SQLULEN get_query_timeout(STMT *stmt);
-SQLRETURN set_query_timeout(STMT *stmt, SQLULEN new_value);
-int get_session_variable(STMT *stmt, const char *var, char *result,
-                         size_t buf_len);
 
 /* handle.c*/
 int           adjust_param_bind_array (STMT *stmt);
 /* Actions taken when connection is put to the pool. Used in connection freeing as well */
 int           reset_connection        (DBC *dbc);
-/* Actions taken when connection is taken from the pool */
-int           wakeup_connection       (DBC *dbc);
-#define WAKEUP_CONN_IF_NEEDED(dbc) if (dbc->need_to_wakeup && wakeup_connection(dbc)) return SQL_ERROR
 
 long long binary2ll(char* src, uint64 srcLen);
 unsigned long long binary2ull(char* src, uint64 srcLen);
 
 void fill_ird_data_lengths (DESC *ird, ulong *lengths, uint fields);
 
-/* Functions to work with prepared and regular statements  */
-#define IS_PS_OUT_PARAMS(_stmt) ((_stmt)->dbc->des->server_status & SERVER_PS_OUT_PARAMS)
 /* my_stmt.c */
-BOOL              ssps_used           (STMT *stmt);
 BOOL              returned_result     (STMT *stmt);
 des_bool           free_current_result (STMT *stmt);
 DES_RESULT *       get_result_metadata (STMT *stmt, BOOL force_use);
@@ -380,6 +361,7 @@ BOOL          is_null     (STMT *stmt, ulong column_number, char *value);
 SQLRETURN     prepare     (STMT *stmt, char * query, SQLINTEGER query_length,
                            bool reset_sql_limit, bool force_prepare);
 
+void free_result_bind(STMT *stmt);
 
 inline
 void stmt_result_free(STMT * stmt)
@@ -410,30 +392,7 @@ SQLRETURN     scroller_prefetch   (STMT * stmt);
 bool          scrollable          (STMT * stmt, const char * query,
                                   const char * query_end);
 
-/* my_prepared_stmt.c */
-void        ssps_init             (STMT *stmt);
-BOOL        ssps_get_out_params   (STMT *stmt);
-int         ssps_get_result       (STMT *stmt);
-void        ssps_close            (STMT *stmt);
-SQLRETURN   ssps_fetch_chunk      (STMT *stmt, char *dest, unsigned long dest_bytes,
-                                  unsigned long *avail_bytes);
-void        free_result_bind      (STMT *stmt);
-BOOL        ssps_buffers_need_extending(STMT *stmt);
-
-template <typename T>
-T ssps_get_int64 (STMT *stmt, ulong column_number, char *value, ulong length);
-double ssps_get_double            (STMT *stmt, ulong column_number, char *value,
-                                  ulong length);
-char *      ssps_get_string       (STMT *stmt, ulong column_number, char *value,
-                                  ulong *length, char * buffer);
-SQLRETURN   ssps_send_long_data   (STMT *stmt, unsigned int param_num, const char *chunk,
-                                  unsigned long length);
-DES_BIND * get_param_bind       (STMT *stmt, unsigned int param_number, int reset);
-
 bool is_varlen_type(enum enum_field_types type);
-
-/* connect.c */
-void free_connection_stmts(DBC *dbc);
 
 #ifdef __WIN__
 #define cmp_database(A,B) desodbc_strcasecmp((const char *)(A),(const char *)(B))
@@ -493,10 +452,10 @@ void free_connection_stmts(DBC *dbc);
 #define CHECK_HANDLE(h) if (h == NULL) return SQL_INVALID_HANDLE
 
 #define CHECK_DATA_POINTER(S, D, C) if (D == NULL && C != 0 && C != SQL_DEFAULT_PARAM && C != SQL_NULL_DATA) \
-                                   return S->set_error("HY009", "Invalid use of NULL pointer", 0);
+                                   return S->set_error("HY009", "Invalid use of NULL pointer");
 
 #define CHECK_STRLEN_OR_IND(S, D, C) if (D != NULL && C < 0 && C != SQL_NTS && C != SQL_NULL_DATA) \
-                                   return S->set_error("HY090", "Invalid string or buffer length", 0);
+                                   return S->set_error("HY090", "Invalid string or buffer length");
 
 #define CHECK_ENV_OUTPUT(e) if(e == NULL) return SQL_ERROR
 
@@ -506,7 +465,7 @@ void free_connection_stmts(DBC *dbc);
 
 #define CHECK_DESC_OUTPUT(d, s) CHECK_STMT_OUTPUT(d, s)
 
-#define CHECK_DATA_OUTPUT(s, d) if(d == NULL) return ((STMT *)s)->set_error(DESERR_S1000, "Invalid output buffer", 0)
+#define CHECK_DATA_OUTPUT(s, d) if(d == NULL) return ((STMT *)s)->set_error(DESERR_S1000, "Invalid output buffer")
 
 #define IF_NOT_NULL(v, x) if (v != NULL) x
 

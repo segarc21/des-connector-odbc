@@ -37,28 +37,14 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#if (MYSQLCLIENT_STATIC_LINKING)
-#include <des_config.h>
-#include <my_sys.h>
-#include <mysql.h>
-#include <mysqld_error.h>
-#include <my_alloc.h>
-#include <mysql/service_mysql_alloc.h>
-#include <m_ctype.h>
-#include <my_io.h>
-
-#else
-
 #include "include/mysql-8.0/des_config.h"
 #include "include/mysql-8.0/my_sys.h"
-#include <mysql.h>
-#include <mysqld_error.h>
+#include "include/mysql-8.0/mysql.h"
+#include "include/mysql-8.0/mysqld_error.h"
 #include "include/mysql-8.0/my_alloc.h"
 #include "include/mysql-8.0/mysql/service_mysql_alloc.h"
 #include "include/mysql-8.0/m_ctype.h"
 #include "include/mysql-8.0/my_io.h"
-
-#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -68,9 +54,6 @@ extern "C"
 #define PSI_NOT_INSTRUMENTED 0
 
 #define MIN_MYSQL_VERSION 40100L
-#if DES_VERSION_ID < MIN_MYSQL_VERSION
-# error "Connector/ODBC requires v4.1 (or later) of the MySQL client library"
-#endif
 
 #if !MYSQLCLIENT_STATIC_LINKING || DES_VERSION_ID >= 80018
 

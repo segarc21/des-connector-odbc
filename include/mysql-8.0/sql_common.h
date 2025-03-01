@@ -190,7 +190,7 @@ struct MYSQL_METHODS {
                            const unsigned char *header, size_t header_length,
                            const unsigned char *arg, size_t arg_length,
                            bool skip_check, MYSQL_STMT *stmt);
-  MYSQL_DATA *(*read_rows)(MYSQL *mysql, MYSQL_FIELD *mysql_fields,
+  MYSQL_DATA *(*read_rows)(MYSQL *mysql, DES_FIELD *mysql_fields,
                            unsigned int fields);
   MYSQL_RES *(*use_result)(MYSQL *mysql);
   void (*fetch_lengths)(unsigned long *to, MYSQL_ROW column,
@@ -198,7 +198,7 @@ struct MYSQL_METHODS {
   void (*flush_use_result)(MYSQL *mysql, bool flush_all_results);
   int (*read_change_user_result)(MYSQL *mysql);
 #if !defined(MYSQL_SERVER) && !defined(MYSQL_COMPONENT)
-  MYSQL_FIELD *(*list_fields)(MYSQL *mysql);
+  DES_FIELD *(*list_fields)(MYSQL *mysql);
   bool (*read_prepare_result)(MYSQL *mysql, MYSQL_STMT *stmt);
   int (*stmt_execute)(MYSQL_STMT *stmt);
   int (*read_binary_rows)(MYSQL_STMT *stmt);
@@ -215,7 +215,7 @@ struct MYSQL_METHODS {
       const unsigned char *arg, unsigned long arg_length, bool skip_check,
       MYSQL_STMT *stmt, bool *error);
   enum net_async_status (*read_rows_nonblocking)(MYSQL *mysql,
-                                                 MYSQL_FIELD *mysql_fields,
+                                                 DES_FIELD *mysql_fields,
                                                  unsigned int fields,
                                                  MYSQL_DATA **result);
   enum net_async_status (*flush_use_result_nonblocking)(MYSQL *mysql,
@@ -244,13 +244,13 @@ struct MYSQL_METHODS {
           1))
 
 extern CHARSET_INFO *default_client_charset_info;
-MYSQL_FIELD *unpack_fields(MYSQL *mysql, MYSQL_ROWS *data, MEM_ROOT *alloc,
+DES_FIELD *unpack_fields(MYSQL *mysql, MYSQL_ROWS *data, MEM_ROOT *alloc,
                            uint fields, bool default_value,
                            uint server_capabilities);
-MYSQL_FIELD *cli_read_metadata_ex(MYSQL *mysql, MEM_ROOT *alloc,
+DES_FIELD *cli_read_metadata_ex(MYSQL *mysql, MEM_ROOT *alloc,
                                   unsigned long field_count,
                                   unsigned int fields);
-MYSQL_FIELD *cli_read_metadata(MYSQL *mysql, unsigned long field_count,
+DES_FIELD *cli_read_metadata(MYSQL *mysql, unsigned long field_count,
                                unsigned int fields);
 void free_rows(MYSQL_DATA *cur);
 void free_old_query(MYSQL *mysql);

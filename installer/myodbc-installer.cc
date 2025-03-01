@@ -772,8 +772,6 @@ end:
   config_set(config_mode);
   return rc;
 }
-
-
 /*
  * Entry point, parse args and do first set of validation.
  */

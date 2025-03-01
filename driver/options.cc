@@ -139,10 +139,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
 
         case SQL_ATTR_QUERY_TIMEOUT:
             /* Do something only if the handle is STMT */
-            if (HandleType == SQL_HANDLE_STMT)
-            {
-              return set_query_timeout((STMT*)Handle, (SQLULEN)ValuePtr);
-            }
+          return SQL_ERROR; //TODO: handle appropriately
             break;
 
         case SQL_ATTR_KEYSET_SIZE:
@@ -197,17 +194,8 @@ get_constmt_attr(SQLSMALLINT  HandleType,
 
         case SQL_ATTR_QUERY_TIMEOUT:
             /* Do something only if the handle is STMT */
-            if (HandleType == SQL_HANDLE_STMT)
-            {
-              /* Check if the query timeout was requested before */
-              if (options->query_timeout == (SQLULEN)-1)
-              {
-                options->query_timeout= get_query_timeout((STMT*)Handle);
-              }
-              *((SQLULEN *) ValuePtr)= options->query_timeout;
-            }
+          return SQL_ERROR; //TODO: handle appropriately
             break;
-
         case SQL_ATTR_RETRIEVE_DATA:
             *((SQLULEN *) ValuePtr)= (options->retrieve_data ? SQL_RD_ON : SQL_RD_OFF);
             break;
@@ -258,9 +246,6 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
 {
   DBC *dbc= (DBC *) hdbc;
 
-  /* In fact it should be awaken when DM checks whether connection is alive before taking it from pool.
-     Keeping the check here to stay on the safe side */
-  WAKEUP_CONN_IF_NEEDED(dbc);
 
   switch (Attribute)
   {
@@ -268,42 +253,10 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
       break;
 
     case SQL_ATTR_AUTOCOMMIT:
-      if (ValuePtr != (SQLPOINTER) SQL_AUTOCOMMIT_ON)
-      {
-        if (!is_connected(dbc))
-        {
-          dbc->commit_flag= CHECK_AUTOCOMMIT_OFF;
-          return SQL_SUCCESS;
-        }
-        if (!(trans_supported(dbc)) || dbc->ds.opt_NO_TRANSACTIONS)
-          return ((DBC*)hdbc)->set_error(DESERR_S1C00,
-            "Transactions are not enabled", 4000);
-
-        if (autocommit_on(dbc))
-          return dbc->execute_query("SET AUTOCOMMIT=0", SQL_NTS, TRUE);
-      }
-      else if (!is_connected(dbc))
-      {
-        dbc->commit_flag= CHECK_AUTOCOMMIT_ON;
-        return SQL_SUCCESS;
-      }
-      else if (trans_supported(dbc) && !(autocommit_on(dbc)))
-        return dbc->execute_query("SET AUTOCOMMIT=1", SQL_NTS, TRUE);
-      break;
+      return SQL_ERROR; //TODO: handle correctly
 
     case SQL_ATTR_LOGIN_TIMEOUT:
-      {
-        /* we can't change timeout values in post connect state */
-        if (is_connected(dbc))
-        {
-          return dbc->set_error(DESERR_S1011, NULL, 0);
-        }
-        else
-        {
-          dbc->login_timeout= (SQLUINTEGER)(SQLULEN)ValuePtr;
-          return SQL_SUCCESS;
-        }
-      }
+      return SQL_ERROR;  // TODO: handle correctly
       break;
 
     case SQL_ATTR_CONNECTION_TIMEOUT:
@@ -323,33 +276,9 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
         a DSN or connect string.
       */
     case SQL_ATTR_CURRENT_CATALOG:
-      {
-        char ldb[NAME_LEN+1], *db;
-        size_t cat_len= StringLengthPtr == SQL_NTS ?
-                     strlen((char *)ValuePtr) : StringLengthPtr;
-
-        LOCK_DBC(dbc);
-        if (cat_len > NAME_LEN)
-        {
-          return dbc->set_error(DESERR_01004,
-            "Invalid string or buffer length", 0);
-        }
-
-        if (!(db= fix_str((char *)ldb, (char *)ValuePtr, StringLengthPtr)))
-          return dbc->set_error(DESERR_S1009,NULL, 0);
-
-        if (is_connected(dbc))
-        {
-          if (mysql_select_db(dbc->des,(char*) db))
-          {
-            dbc->set_error(DESERR_S1000, mysql_error(dbc->des),
-              mysql_errno(dbc->des));
-            return SQL_ERROR;
-          }
-        }
-        dbc->database = db ? db : "";
-      }
-      break;
+        //TODO: handle correctly
+        return SQL_ERROR;
+        break;
 
 
     case SQL_ATTR_ODBC_CURSORS:
@@ -377,42 +306,7 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
       break;
 
     case SQL_ATTR_TXN_ISOLATION:
-      if (!is_connected(dbc))  /* no connection yet */
-      {
-        dbc->txn_isolation= (SQLINTEGER)(SQLLEN)ValuePtr;
-        return SQL_SUCCESS;
-      }
-      if (trans_supported(dbc))
-      {
-        char buff[80];
-        const char *level= NULL;
-
-        if ((SQLLEN)ValuePtr == SQL_TXN_SERIALIZABLE)
-          level="SERIALIZABLE";
-        else if ((SQLLEN)ValuePtr == SQL_TXN_REPEATABLE_READ)
-          level="REPEATABLE READ";
-        else if ((SQLLEN)ValuePtr == SQL_TXN_READ_COMMITTED)
-          level="READ COMMITTED";
-        else if ((SQLLEN)ValuePtr == SQL_TXN_READ_UNCOMMITTED)
-          level="READ UNCOMMITTED";
-
-        if (level)
-        {
-          SQLRETURN rc;
-          sprintf(buff,"SET SESSION TRANSACTION ISOLATION LEVEL %s",
-                  level);
-          if (SQL_SUCCEEDED(rc = dbc->execute_query(buff, SQL_NTS, TRUE)))
-          {
-            dbc->txn_isolation = (int)((size_t)ValuePtr);
-          }
-
-          return rc;
-        }
-        else
-        {
-          return dbc->set_error("HY024", "Invalid attribute value", 0);
-        }
-      }
+      return SQL_ERROR; //TODO: handle correctly
       break;
 
 #ifndef USE_IODBC
@@ -473,10 +367,6 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
   /* (Windows) DM checks SQL_ATTR_CONNECTION_DEAD before taking it from the pool and returning to the
      application. We can use wake-up procedure for diagnostics of whether connection is alive instead
      of mysql_ping(). But we are leaving this check for other attributes, too */
-  if (attrib != SQL_ATTR_CONNECTION_DEAD)
-  {
-    WAKEUP_CONN_IF_NEEDED(dbc);
-  }
 
   switch (attrib)
   {
@@ -489,20 +379,11 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_AUTOCOMMIT:
-    *((SQLUINTEGER *)num_attr)= (autocommit_on(dbc) ||
-                                 (!(trans_supported(dbc)) ?
-                                  SQL_AUTOCOMMIT_ON :
-                                  SQL_AUTOCOMMIT_OFF));
+    return SQL_ERROR; //TODO: handle correctly
     break;
 
   case SQL_ATTR_CONNECTION_DEAD:
-    /* If waking up fails - we return "connection is dead", no matter what really the reason is */
-    if (dbc->need_to_wakeup != 0 && wakeup_connection(dbc)
-      || dbc->need_to_wakeup == 0 && mysql_ping(dbc->des) &&
-        is_connection_lost(mysql_errno(dbc->des)))
-      *((SQLUINTEGER *)num_attr)= SQL_CD_TRUE;
-    else
-      *((SQLUINTEGER *)num_attr)= SQL_CD_FALSE;
+    return SQL_ERROR; //TODO: handle correctly
     break;
 
   case SQL_ATTR_CONNECTION_TIMEOUT:
@@ -511,21 +392,7 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_CURRENT_CATALOG:
-    if (is_connected(dbc) && reget_current_catalog(dbc))
-    {
-      return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1000,
-                              "Unable to get current catalog", 0);
-    }
-    else if (is_connected(dbc))
-    {
-      *char_attr= (SQLCHAR *)(!dbc->database.empty() ? dbc->database.c_str() : "null");
-    }
-    else
-    {
-      return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1C00,
-                              "Getting catalog name is not supported "\
-                              "before connection is established", 0);
-    }
+    return SQL_ERROR; //TODO: check
     break;
 
   case SQL_ATTR_LOGIN_TIMEOUT:
@@ -540,62 +407,11 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_PACKET_SIZE:
-    *((SQLUINTEGER *)num_attr)= dbc->des->net.max_packet;
+    return SQL_ERROR; //TODO: handle correctly
     break;
 
   case SQL_ATTR_TXN_ISOLATION:
-    /*
-      If we don't know the isolation level already, we need to ask the
-      server.
-    */
-    if (!dbc->txn_isolation)
-    {
-      /*
-        Unless we're not connected yet, then we just assume it will
-        be REPEATABLE READ, which is the server default.
-      */
-      if (!is_connected(dbc))
-      {
-        *((SQLINTEGER *)num_attr)= SQL_TRANSACTION_REPEATABLE_READ;
-        break;
-      }
-
-      if (is_minimum_version(dbc->des->server_version, "8.0"))
-        result = dbc->execute_query("SELECT @@transaction_isolation", SQL_NTS, true);
-      else
-        result = dbc->execute_query("SELECT @@tx_isolation", SQL_NTS, true);
-
-      if (result != SQL_SUCCESS)
-      {
-        return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1000,
-                                "Failed to get isolation level", 0);
-      }
-      else
-      {
-        DES_RES *res;
-        DES_ROW  row;
-
-        if ((res= mysql_store_result(dbc->des)) &&
-            (row= mysql_fetch_row(res)))
-        {
-          if (strncmp(row[0], "READ-UNCOMMITTED", 16) == 0) {
-            dbc->txn_isolation= SQL_TRANSACTION_READ_UNCOMMITTED;
-          }
-          else if (strncmp(row[0], "READ-COMMITTED", 14) == 0) {
-            dbc->txn_isolation= SQL_TRANSACTION_READ_COMMITTED;
-          }
-          else if (strncmp(row[0], "REPEATABLE-READ", 15) == 0) {
-            dbc->txn_isolation= SQL_TRANSACTION_REPEATABLE_READ;
-          }
-          else if (strncmp(row[0], "SERIALIZABLE", 12) == 0) {
-            dbc->txn_isolation= SQL_TRANSACTION_SERIALIZABLE;
-          }
-        }
-        mysql_free_result(res);
-      }
-    }
-
-    *((SQLINTEGER *)num_attr)= dbc->txn_isolation;
+    return SQL_ERROR; //TODO: handle correctly
     break;
 
   default:
@@ -667,18 +483,18 @@ DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
                   desc->stmt != stmt)
                 return ((STMT*)hstmt)->set_error(DESERR_S1017,
                                  "Invalid use of an automatically allocated "
-                                 "descriptor handle",0);
+                                 "descriptor handle");
 
               if (desc->alloc_type == SQL_DESC_ALLOC_USER &&
                   stmt->dbc != desc->dbc)
                 return ((STMT*)hstmt)->set_error(DESERR_S1024,
-                                 "Invalid attribute value",0);
+                                 "Invalid attribute value");
 
               if (desc->desc_type != DESC_UNKNOWN &&
                   desc->desc_type != desc_type)
               {
                 return ((STMT*)hstmt)->set_error(DESERR_S1024,
-                                 "Descriptor type mismatch",0);
+                                 "Descriptor type mismatch");
               }
 
               assert(desc);
@@ -695,13 +511,13 @@ DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
         case SQL_ATTR_ENABLE_AUTO_IPD:
             if (ValuePtr != (SQLPOINTER)SQL_FALSE)
                 return ((STMT*)hstmt)->set_error(DESERR_S1C00,
-                                 "Optional feature not implemented",0);
+                                 "Optional feature not implemented");
             break;
 
         case SQL_ATTR_IMP_PARAM_DESC:
         case SQL_ATTR_IMP_ROW_DESC:
             return ((STMT*)hstmt)->set_error(DESERR_S1024,
-                             "Invalid attribute/option identifier",0);
+                             "Invalid attribute/option identifier");
 
         case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
             return stmt_SQLSetDescField(stmt, stmt->apd, 0,
@@ -752,7 +568,7 @@ DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
 
         case SQL_ATTR_ROW_NUMBER:
             return ((STMT*)hstmt)->set_error(DESERR_S1000,
-                             "Trying to set read-only attribute",0);
+                             "Trying to set read-only attribute");
 
         case SQL_ATTR_ROW_OPERATION_PTR:
             return stmt_SQLSetDescField(stmt, stmt->ard, 0,

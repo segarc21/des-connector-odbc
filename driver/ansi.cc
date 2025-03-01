@@ -95,7 +95,7 @@ SQLColAttributeImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
 
     /* We set the error only when the result is intented to be returned */
     if ((char_attr || num_attr) && len > char_attr_max - 1)
-      rc= stmt->set_error(DESERR_01004, NULL, 0);
+      rc= stmt->set_error(DESERR_01004, NULL);
 
     if (char_attr && char_attr_max > 1)
       desodbc::strmake((char *)char_attr, (char *)value, char_attr_max - 1);
@@ -200,7 +200,6 @@ SQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   if (free_value == -1)
   {
-    set_mem_error(stmt->dbc->des);
     return handle_connection_error(stmt);
   }
 
@@ -211,7 +210,7 @@ SQLDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
 
     /* We set the error only when the result is intented to be returned */
     if (name && len > name_max - 1)
-      rc= stmt->set_error(DESERR_01004, NULL, 0);
+      rc= stmt->set_error(DESERR_01004, NULL);
 
     if (name && name_max > 1)
       desodbc::strmake((char *)name, (char *)value, name_max - 1);
@@ -319,7 +318,19 @@ SQLForeignKeys(SQLHSTMT hstmt,
                SQLCHAR *fk_schema, SQLSMALLINT fk_schema_len,
                SQLCHAR *fk_table, SQLSMALLINT fk_table_len)
 {
-  return SQL_SUCCESS;  // For now, we will work only with SQLForeignKeysW. TODO
+  SQLRETURN rc;
+  DBC *dbc;
+
+  LOCK_STMT(hstmt);
+
+  dbc = ((STMT *)hstmt)->dbc;
+
+  rc = DESForeignKeys(hstmt, pk_catalog, pk_catalog_len, pk_schema,
+                        pk_schema_len, pk_table, pk_table_len, fk_catalog,
+                        fk_catalog_len, fk_schema, fk_schema_len, fk_table,
+                        fk_table_len);
+
+  return rc;
 }
 
 
@@ -383,7 +394,7 @@ SQLGetCursorName(SQLHSTMT hstmt, SQLCHAR *cursor, SQLSMALLINT cursor_max,
   CLEAR_STMT_ERROR(stmt);
 
   if (cursor_max < 0)
-    return stmt->set_error(DESERR_S1090, NULL, 0);
+    return stmt->set_error(DESERR_S1090, NULL);
 
   name= DESGetCursorName(hstmt);
   SQLINTEGER len = (SQLINTEGER)strlen((char *)name);
@@ -396,7 +407,7 @@ SQLGetCursorName(SQLHSTMT hstmt, SQLCHAR *cursor, SQLSMALLINT cursor_max,
 
   /* We set the error only when the result is intented to be returned */
   if (cursor && len > cursor_max - 1)
-    return stmt->set_error(DESERR_01004, NULL, 0);
+    return stmt->set_error(DESERR_01004, NULL);
 
   return SQL_SUCCESS;
 }
@@ -655,7 +666,17 @@ SQLPrimaryKeys(SQLHSTMT hstmt,
                SQLCHAR *schema, SQLSMALLINT schema_len,
                SQLCHAR *table, SQLSMALLINT table_len)
 {
-  return SQL_SUCCESS; // For now, we will work only with SQLPrimaryKeysW. TODO
+  SQLRETURN rc;
+  DBC *dbc;
+
+  LOCK_STMT(hstmt);
+
+  dbc = ((STMT *)hstmt)->dbc;
+
+  rc = DESPrimaryKeys(hstmt, catalog, catalog_len, schema, schema_len, table,
+                        table_len);
+
+  return rc;
 }
 
 
@@ -793,17 +814,7 @@ SQLTablePrivileges(SQLHSTMT hstmt,
                    SQLCHAR *schema, SQLSMALLINT schema_len,
                    SQLCHAR *table, SQLSMALLINT table_len)
 {
-  SQLRETURN rc;
-  DBC *dbc;
-
-  LOCK_STMT(hstmt);
-
-  dbc= ((STMT *)hstmt)->dbc;
-
-  rc= DESTablePrivileges(hstmt, catalog, catalog_len, schema, schema_len,
-                           table, table_len);
-
-  return rc;
+  NOT_IMPLEMENTED;
 }
 
 

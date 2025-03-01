@@ -1,5 +1,5 @@
 # Copyright (c) 2007, 2024, Oracle and/or its affiliates.
-#
+
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License, version 2.0, as
 # published by the Free Software Foundation.
@@ -52,7 +52,7 @@ WHILE(${DRIVER_INDEX} LESS ${DRIVERS_COUNT})
   LIST(GET CONNECTOR_DRIVER_TYPES_SHORT ${DRIVER_INDEX} CONNECTOR_DRIVER_TYPE_SHORT)
   LIST(GET CONNECTOR_DRIVER_TYPE_LIST ${DRIVER_INDEX} DRIVER_TYPE)
 
-  SET(DRIVER_NAME "myodbc-${CONNECTOR_DRIVER_TYPE_SHORT}")
+  SET(DRIVER_NAME "desodbc-${CONNECTOR_DRIVER_TYPE_SHORT}")
 
   SET(DRIVER_SRCS
     catalog.cc catalog_no_i_s.cc connect.cc cursor.cc desc.cc dll.cc error.cc execute.cc
@@ -95,7 +95,7 @@ WHILE(${DRIVER_INDEX} LESS ${DRIVERS_COUNT})
   ADD_LIBRARY(${DRIVER_NAME} MODULE ${DRIVER_SRCS})
 
   add_version_info(${DRIVER_NAME}
-   "MySQL Connector/ODBC ${DRIVER_TYPE} driver."
+   "DES Connector/ODBC ${DRIVER_TYPE} driver."
    "Provides core driver functionality."
   )
 
@@ -142,13 +142,8 @@ WHILE(${DRIVER_INDEX} LESS ${DRIVERS_COUNT})
         LINK_FLAGS_RELEASE "/NODEFAULTLIB:${WITH_NODEFAULTLIB}")
     ENDIF ()
 
-    IF(MYSQL8)
-      TARGET_LINK_LIBRARIES(${DRIVER_NAME} myodbc-util
-            ${MYSQL_CLIENT_LIBS} ws2_32 ${ODBCINSTLIB} ${SECURE32_LIB} legacy_stdio_definitions.lib)
-    ELSE(MYSQL8)
-      TARGET_LINK_LIBRARIES(${DRIVER_NAME} myodbc-util
-            ${MYSQL_CLIENT_LIBS} ws2_32 ${ODBCINSTLIB} ${SECURE32_LIB})
-    ENDIF(MYSQL8)
+    TARGET_LINK_LIBRARIES(${DRIVER_NAME} desodbc-util
+          ${MYSQL_CLIENT_LIBS} ws2_32 ${ODBCINSTLIB} ${SECURE32_LIB} legacy_stdio_definitions.lib)
 
     TARGET_LINK_LIBRARIES(${DRIVER_NAME} Dnsapi)
 
@@ -163,7 +158,7 @@ WHILE(${DRIVER_INDEX} LESS ${DRIVERS_COUNT})
     SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ODBC_DRIVER_LINK_FLAGS}")
     TARGET_LINK_LIBRARIES(${DRIVER_NAME}
                           ${MYSQL_CLIENT_LIBS} ${CMAKE_THREAD_LIBS_INIT} m)
-    TARGET_LINK_LIBRARIES(${DRIVER_NAME} myodbc-util otel_api)
+    TARGET_LINK_LIBRARIES(${DRIVER_NAME} desodbc-util otel_api)
 
     IF(NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
       TARGET_LINK_LIBRARIES(${DRIVER_NAME} resolv)
@@ -202,11 +197,11 @@ ENDWHILE(${DRIVER_INDEX} LESS ${DRIVERS_COUNT})
 
 # Set file names for the targets
 set_property(
-  TARGET myodbc-a
-  PROPERTY OUTPUT_NAME ${MYODBC_ANSI_NAME}
+  TARGET desodbc-a
+  PROPERTY OUTPUT_NAME ${DESODBC_ANSI_NAME}
 )
 
 set_property(
-  TARGET myodbc-w
-  PROPERTY OUTPUT_NAME ${MYODBC_UNICODE_NAME}
+  TARGET desodbc-w
+  PROPERTY OUTPUT_NAME ${DESODBC_UNICODE_NAME}
 )

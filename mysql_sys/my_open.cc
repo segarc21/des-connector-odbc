@@ -73,7 +73,7 @@ File my_open(const char *filename, int Flags, myf MyFlags) {
   fd = my_win_open(filename, Flags);
 #else
   fd = mysys_priv::RetryOnEintr(
-      [&]() { return open(filename, Flags, my_umask); }, -1);
+      [&]() { return open(filename, Flags, des_umask); }, -1);
 #endif
 
   if (fd < 0) {

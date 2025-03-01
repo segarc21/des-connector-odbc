@@ -48,7 +48,7 @@ namespace telemetry
   )
   {
     auto tracer = trace::Provider::GetTracerProvider()->GetTracer(
-      "MySQL Connector/ODBC " MYODBC_STRDRIVERTYPE, MYODBC_CONN_ATTR_VER
+      "MySQL Connector/ODBC " DESODBC_STRDRIVERTYPE, DESODBC_CONN_ATTR_VER
     );
 
     trace::StartSpanOptions opts;
@@ -96,14 +96,6 @@ namespace telemetry
 
     span->SetAttribute("network.transport", transport);
 
-    if (ds->opt_SERVER.is_set())
-    {
-      span->SetAttribute("server.address", (const char*)ds->opt_SERVER);
-    }
-    if (ds->opt_PORT.is_set())
-    {
-      span->SetAttribute("server.port", ds->opt_PORT);
-    }
   }
 
 
@@ -111,7 +103,7 @@ namespace telemetry
   bool
   Telemetry_base<STMT>::disabled(STMT *stmt) const
   {
-    return stmt->conn_telemetry().disabled(stmt->dbc);
+    return true; //TODO: placed by me
   }
 
 
@@ -124,43 +116,8 @@ namespace telemetry
   Span_ptr
   Telemetry_base<STMT>::mk_span(STMT *stmt, const char* name)
   {
-    Span_ptr local_span;
-
-    /*
-      If `name` is not given then this span corresponds to a plain
-      (not prepared) statement. Otherwise this is a span for prepared statement
-      prepare or execute operation and the name should indicate which operation
-      it is.
-    */
-
-    if (!name)
-      name = "SQL statement";
-
-    local_span = telemetry::mk_span(name,
-      stmt->conn_telemetry().span->GetContext()
-    );
-
-    // Add "treaceparent" attribute if not already set by user.
-
-    if (!stmt->query_attr_exists("traceparent"))
-    {
-      char buf[trace::TraceId::kSize * 2];
-      auto ctx = local_span->GetContext();
-
-      ctx.trace_id().ToLowerBase16(buf);
-      std::string trace_id{buf, sizeof(buf)};
-
-      ctx.span_id().ToLowerBase16({buf, trace::SpanId::kSize * 2});
-      std::string span_id{buf, trace::SpanId::kSize * 2};
-
-      stmt->add_query_attr(
-        "traceparent", "00-" + trace_id + "-" + span_id + "-00"
-      );
-    }
-
-    local_span->SetAttribute("db.user", (const char*)stmt->dbc->ds.opt_UID);
-
-    return local_span;
+    Span_ptr null;
+    return null; //TODO: placed by me
   }
 
 }

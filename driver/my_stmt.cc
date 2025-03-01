@@ -75,7 +75,6 @@ DES_RESULT * get_result_metadata(STMT *stmt, BOOL force_use)
   return stmt->result;
 }
 
-
 int bind_result(STMT *stmt)
 {
   return 0;
@@ -89,22 +88,13 @@ int get_result(STMT *stmt)
 
 size_t STMT::field_count()
 {
-  if (ssps)
-  {
-    return mysql_stmt_field_count(ssps);
-  }
-  else
-  {
-    return result && result->field_count > 0 ?
-      result->field_count :
-      mysql_field_count(dbc->des);
-  }
+  return result && result->field_count > 0 ? result->field_count : 0;
 }
 
 
 des_ulonglong affected_rows(STMT *stmt)
 {
-  return mysql_affected_rows(stmt->dbc->des);
+  return stmt->affected_rows;
 }
 
 des_ulonglong update_affected_rows(STMT *stmt)
@@ -159,10 +149,7 @@ DES_ROW_OFFSET row_tell(STMT *stmt)
 
 
 int next_result(STMT *stmt)
-{
-  free_current_result(stmt);
-
-  return des_next_result(stmt->dbc->des);
+{ return -1; //TODO: research
 }
 
 
@@ -230,7 +217,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
      If that changes we will need to make "parse" to set error and return rc */
   if (parse(&stmt->query))
   {
-    return stmt->set_error( DESERR_S1001, NULL, 4001);
+    return stmt->set_error( DESERR_S1001, NULL);
   }
 
   stmt->param_count = (uint)PARAM_COUNT(stmt->query);
@@ -354,6 +341,10 @@ void scroller_create(STMT * stmt, const char *query, SQLULEN query_len)
   *(stmt->scroller.query + stmt->scroller.query_len)= '\0';
 }
 
+SQLRETURN scroller_prefetch(STMT *stmt) {
+  return SQL_SUCCESS; //TODO: research how we should implement this
+}
+
 
 /* Returns next offset/maxrow for current fetch*/
 unsigned long long scroller_move(STMT * stmt)
@@ -366,46 +357,6 @@ unsigned long long scroller_move(STMT * stmt)
 
   return stmt->scroller.next_offset;
 }
-
-
-SQLRETURN scroller_prefetch(STMT * stmt)
-{
-  assert(stmt);
-  if (stmt->scroller.total_rows > 0
-      && stmt->scroller.next_offset >= (stmt->scroller.total_rows + stmt->scroller.start_offset))
-  {
-    /* (stmt->scroller.next_offset - stmt->scroller.row_count) - current offset,
-       0 minimum. scroller initialization makes impossible row_count to be >
-       stmt's max_rows */
-     long long count= stmt->scroller.total_rows -
-      (stmt->scroller.next_offset - stmt->scroller.row_count - stmt->scroller.start_offset);
-
-    if (count > 0)
-    {
-      desodbc_snprintf(stmt->scroller.offset_pos + MAX64_BUFF_SIZE, MAX32_BUFF_SIZE,
-              "%*u", MAX32_BUFF_SIZE - 1, (unsigned long)count);
-      stmt->scroller.offset_pos[MAX64_BUFF_SIZE + MAX32_BUFF_SIZE - 1] = ' ';
-    }
-    else
-    {
-      return SQL_NO_DATA;
-    }
-  }
-
-  DESLOG_QUERY(stmt, stmt->scroller.query);
-
-  LOCK_DBC(stmt->dbc);
-
-  if (exec_stmt_query(stmt, stmt->scroller.query,
-                        (unsigned long)stmt->scroller.query_len, FALSE))
-  {
-    return SQL_ERROR;
-  }
-  get_result_metadata(stmt, FALSE);
-  return SQL_SUCCESS;
-}
-
-
 
 bool scrollable(STMT * stmt, const char * query, const char * query_end)
 {
@@ -447,7 +398,7 @@ bool scrollable(STMT * stmt, const char * query, const char * query_end)
 SQLRETURN STMT::do_local_query() {
   if (!get_result_metadata(this, FALSE)) {
     stmt_result_free(this);
-    return this->set_error("S1001", "Not enough memory", 4001);
+    return this->set_error("S1001", "Not enough memory");
   }
   this->fake_result = 1;
   this->state = ST_EXECUTED;

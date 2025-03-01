@@ -90,88 +90,6 @@ unsigned long get_client_flags(DataSource *ds)
   return flags;
 }
 
-
-void DBC::set_charset(std::string charset)
-{
-  // Use SET NAMES instead of mysql_set_character_set()
-  // because running odbc_stmt() is thread safe.
-  std::string query = "SET NAMES " + charset;
-  if (execute_query(query.c_str(), query.length(), true))
-  {
-    //throw DESERROR("HY000", des); //TODO: remove this entire function.
-  }
-}
-
-/**
- If it was specified, set the character set for the connection and
- other internal charset properties.
-
- @param[in]  dbc      Database connection
- @param[in]  charset  Character set name
-*/
-SQLRETURN DBC::set_charset_options(const char *charset)
-try
-{
-  SQLRETURN rc = SQL_SUCCESS;
-  if (unicode)
-  {
-    if (charset && charset[0])
-    {
-      // Set the warning message, SQL_SUCCESS_WITH_INFO result
-      // and continue as normal.
-      set_error("HY000",
-        "CHARSET option is not supported by UNICODE version "
-        "of MySQL Connector/ODBC", 0);
-      rc = SQL_SUCCESS_WITH_INFO;
-    }
-    // For unicode driver always use UTF8MB4
-    charset = transport_charset;
-  }
-  else if (!charset || !charset[0])
-  {
-    // For ANSI use default charset (latin1) if no chaset
-    // option was specified.
-    charset = ansi_default_charset;
-  }
-
-  set_charset(charset);
-  DES_CHARSET_INFO my_charset;
-  mysql_get_character_set_info(des, &my_charset);
-  cxn_charset_info = desodbc::get_charset(my_charset.number, DESF(0));
-
-  return rc;
-}
-catch(const DESERROR &e)
-{
-  error = e;
-  return e.retcode;
-}
-
-
-SQLRETURN run_initstmt(DBC* dbc, DataSource* dsrc)
-try
-{
-  if (dsrc->opt_INITSTMT)
-  {
-    /* Check for SET NAMES */
-    if (is_set_names_statement(dsrc->opt_INITSTMT))
-    {
-      throw DESERROR("HY000", "SET NAMES not allowed by driver");
-    }
-
-    if (dbc->execute_query(dsrc->opt_INITSTMT, SQL_NTS, true) != SQL_SUCCESS)
-    {
-      return SQL_ERROR;
-    }
-  }
-  return SQL_SUCCESS;
-}
-catch (const DESERROR& e)
-{
-  dbc->error = e;
-  return e.retcode;
-}
-
 /*
   Retrieve DNS+SRV list.
 
@@ -291,6 +209,8 @@ SQLRETURN DBC::createPipes() {
     */
 
   ENV *env = this->env;
+  
+  #ifdef _WIN32
 
   // We specify the security attributes of the pipe.
   SECURITY_ATTRIBUTES des_pipe_sec_attr;
@@ -344,7 +264,7 @@ SQLRETURN DBC::createPipes() {
     return SQL_ERROR;
   }
 
-
+  #endif
   return SQL_SUCCESS;
 }
 
@@ -370,7 +290,7 @@ const wchar_t* get_executable_dir(const wchar_t *executable_path) {
 }
 
 SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
-
+#ifdef _WIN32
   ENV *env = this->env;
 
   // Before creating the process, we need to create STARTUPINFO and
@@ -461,11 +381,12 @@ any special flags.
   }
 
   env->shmem->des_process_created = true;
-
+  #endif
   return SQL_SUCCESS;
 }
 
 void shareHandles() {
+#ifdef _WIN32
   ENV *env = dbc_global_var->env;
   SharedMemory *shmem = env->shmem;
 
@@ -494,10 +415,12 @@ void shareHandles() {
       SetEvent(env->handle_sent_event);  // we notify the petitioner
     }
   }
+  #endif
 }
 
 
 void getDESProcessPipes() {
+#ifdef _WIN32
   bool finished = false;
 
   ENV *env = dbc_global_var->env;
@@ -536,6 +459,7 @@ void getDESProcessPipes() {
 
   ReleaseMutex(env->request_handle_mutex);
   ReleaseMutex(env->shared_memory_mutex);
+  #endif
 }
 
 /**
@@ -550,6 +474,8 @@ void getDESProcessPipes() {
 SQLRETURN DBC::connect(DataSource *dsrc)
 {
   SQLRETURN rc = SQL_SUCCESS;
+
+#ifdef _WIN32
   WaitForSingleObject(this->env->shared_memory_mutex, INFINITE);
   SharedMemory *shmem = this->env->shmem;
 
@@ -585,7 +511,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 
   if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
       this->connected = true;
-
+  #endif
   return rc;
 }
 
@@ -747,7 +673,8 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
   case SQL_DRIVER_COMPLETE:
   case SQL_DRIVER_COMPLETE_REQUIRED:
     rc = dbc->connect(&ds);
-    if (!SQL_SUCCEEDED(rc)) dbc->telemetry.set_error(dbc, dbc->error.message);
+    //TODO: this code I put doesn't compile in linux...
+    /*
     if (SQL_SUCCEEDED(rc) &&
         ((conn_str_in.find(L"UID=") != std::wstring::npos) ||
          (conn_str_in.find(L"PWD=") != std::wstring::npos))) {
@@ -756,7 +683,7 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
             "The user/password provided was ignored (DES doesn't need it).", 0);
         rc = SQL_SUCCESS_WITH_INFO;
     }
-
+    */
     if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
       goto connected;
     bPrompt= TRUE;
@@ -981,8 +908,6 @@ connected:
 
 error:
 
-  if (!SQL_SUCCEEDED(rc))
-    dbc->telemetry.set_error(dbc, dbc->error.message);
   if (hModule)
     FreeLibrary(hModule);
 
@@ -1029,32 +954,4 @@ SQLRETURN SQL_API SQLDisconnect(SQLHDBC hdbc)
 
   dbc->database.clear();
   return SQL_SUCCESS;
-}
-
-
-SQLRETURN DBC::execute_query(const char* query,
-  SQLULEN query_length, des_bool req_lock)
-{
-  SQLRETURN result = SQL_SUCCESS;
-  LOCK_DBC_DEFER(this);
-
-  if (req_lock)
-  {
-    DO_LOCK_DBC();
-  }
-
-  if (query_length == SQL_NTS)
-  {
-    query_length = strlen(query);
-  }
-
-  if (check_if_server_is_alive(this) ||
-    mysql_real_query(des, query, (unsigned long)query_length))
-  {
-    result = set_error(DESERR_S1000, mysql_error(des),
-      mysql_errno(des));
-  }
-
-  return result;
-
 }

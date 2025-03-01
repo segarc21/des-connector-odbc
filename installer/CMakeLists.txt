@@ -35,14 +35,14 @@ IF(DL_INCLUDES)
   INCLUDE_DIRECTORIES(${DL_INCLUDES})
 ENDIF(DL_INCLUDES)
 
-ADD_EXECUTABLE(myodbc-installer myodbc-installer.cc)
+ADD_EXECUTABLE(desodbc-installer myodbc-installer.cc)
 
-add_version_info(myodbc-installer
-  "MySQL Connector/ODBC installer tool."
+add_version_info(desodbc-installer
+  "DES Connector/ODBC installer tool."
   "Provides installer tool functionality."
 )
 
-TARGET_LINK_LIBRARIES(myodbc-installer otel_api)
+TARGET_LINK_LIBRARIES(desodbc-installer otel_api)
 
 IF(WIN32)
   IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -53,59 +53,54 @@ IF(WIN32)
     LINK_DIRECTORIES(${MYSQL_DIR}/lib)
   ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
-  IF(MYSQL8)
-    TARGET_LINK_LIBRARIES(myodbc-installer myodbc-util ${ODBCLIB} ${ODBCINSTLIB}
+  TARGET_LINK_LIBRARIES(desodbc-installer desodbc-util ${ODBCLIB} ${ODBCINSTLIB}
         ${MYSQL_CLIENT_LIBS} legacy_stdio_definitions.lib)
-  ELSE()
-    TARGET_LINK_LIBRARIES(myodbc-installer myodbc-util ${ODBCLIB} ${ODBCINSTLIB}
-        ${MYSQL_CLIENT_LIBS})
-  ENDIF()
 
   IF (WITH_NODEFAULTLIB)
-    SET_TARGET_PROPERTIES(myodbc-installer PROPERTIES
+    SET_TARGET_PROPERTIES(desodbc-installer PROPERTIES
       LINK_FLAGS_DEBUG "/NODEFAULTLIB:${WITH_NODEFAULTLIB}"
       LINK_FLAGS_RELWITHDEBINFO "/NODEFAULTLIB:${WITH_NODEFAULTLIB}"
       LINK_FLAGS_RELEASE "/NODEFAULTLIB:${WITH_NODEFAULTLIB}")
   ENDIF ()
 
-  SET_TARGET_PROPERTIES(myodbc-installer PROPERTIES
+  SET_TARGET_PROPERTIES(desodbc-installer PROPERTIES
         LINK_FLAGS "${MYSQLODBCCONN_LINK_FLAGS_ENV} ${MYSQL_LINK_FLAGS}")
 ELSE(WIN32)
   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ODBC_LINK_FLAGS}")
-  TARGET_LINK_LIBRARIES(myodbc-installer myodbc-util
+  TARGET_LINK_LIBRARIES(desodbc-installer desodbc-util
       ${ODBC_LINK_FLAGS} ${MYSQL_CLIENT_LIBS} ${CMAKE_THREAD_LIBS_INIT} m)
-  SET_TARGET_PROPERTIES(myodbc-installer PROPERTIES
+  SET_TARGET_PROPERTIES(desodbc-installer PROPERTIES
         LINK_FLAGS "${MYSQLODBCCONN_LINK_FLAGS_ENV} ${MYSQL_LINK_FLAGS}")
 ENDIF(WIN32)
 
 if(APPLE)
-  set_property(TARGET myodbc-installer PROPERTY BUILD_WITH_INSTALL_RPATH ON)
-  set_property(TARGET myodbc-installer APPEND PROPERTY INSTALL_RPATH "@loader_path/../lib")
-  set_property(TARGET myodbc-installer APPEND PROPERTY INSTALL_RPATH "@loader_path/../lib/private")
-  set_property(TARGET myodbc-installer APPEND PROPERTY INSTALL_RPATH "/usr/local/iODBC/lib")
-  set_property(TARGET myodbc-installer APPEND PROPERTY INSTALL_RPATH "/usr/local/var/homebrew/linked/libiodbc/lib")
+  set_property(TARGET desodbc-installer PROPERTY BUILD_WITH_INSTALL_RPATH ON)
+  set_property(TARGET desodbc-installer APPEND PROPERTY INSTALL_RPATH "@loader_path/../lib")
+  set_property(TARGET desodbc-installer APPEND PROPERTY INSTALL_RPATH "@loader_path/../lib/private")
+  set_property(TARGET desodbc-installer APPEND PROPERTY INSTALL_RPATH "/usr/local/iODBC/lib")
+  set_property(TARGET desodbc-installer APPEND PROPERTY INSTALL_RPATH "/usr/local/var/homebrew/linked/libiodbc/lib")
 elseif(NOT WIN32)
-  set_property(TARGET myodbc-installer PROPERTY BUILD_WITH_INSTALL_RPATH ON)
-  set_property(TARGET myodbc-installer APPEND PROPERTY INSTALL_RPATH "$ORIGIN/../lib/")
-  set_property(TARGET myodbc-installer APPEND PROPERTY INSTALL_RPATH "$ORIGIN/../lib/private")
+  set_property(TARGET desodbc-installer PROPERTY BUILD_WITH_INSTALL_RPATH ON)
+  set_property(TARGET desodbc-installer APPEND PROPERTY INSTALL_RPATH "$ORIGIN/../lib/")
+  set_property(TARGET desodbc-installer APPEND PROPERTY INSTALL_RPATH "$ORIGIN/../lib/private")
 endif()
 
-mangle_osx_rpaths(myodbc-installer)
+mangle_osx_rpaths(desodbc-installer)
 
 IF(MYSQL_CXX_LINKAGE)
-  SET_TARGET_PROPERTIES(myodbc-installer PROPERTIES
+  SET_TARGET_PROPERTIES(desodbc-installer PROPERTIES
         LINKER_LANGUAGE CXX
         COMPILE_FLAGS "${MYSQLODBCCONN_COMPILE_FLAGS_ENV} ${MYSQL_CXXFLAGS}")
 ENDIF(MYSQL_CXX_LINKAGE)
 
 IF (WIN32)
-  INSTALL(TARGETS myodbc-installer
+  INSTALL(TARGETS desodbc-installer
     CONFIGURATIONS Debug
     DESTINATION bin/Debug)
 
-  INSTALL(TARGETS myodbc-installer
+  INSTALL(TARGETS desodbc-installer
     CONFIGURATIONS Release RelWithDebInfo
     DESTINATION bin)
 ELSE()
-  INSTALL(TARGETS myodbc-installer DESTINATION bin)
+  INSTALL(TARGETS desodbc-installer DESTINATION bin)
 ENDIF()

@@ -151,26 +151,21 @@ void desodbc_sqlstate3_init(void)
     desodbc_stpmov(desodbc3_errors[DESERR_42S22].sqlstate,"42S22");
 }
 
-DESERROR::DESERROR(desodbc_errid errid, const char* errtext, SQLINTEGER errcode,
-  const char* prefix)
+DESERROR::DESERROR(desodbc_errid errid, const char* errtext)
 {
   std::string errmsg;
 
   errmsg = (errtext ? errtext : desodbc3_errors[errid].message);
-  native_error = errcode ? (desodbc_errid)errcode : errid + DESODBC_ERROR_CODE_START;
 
   retcode = desodbc3_errors[errid].retcode;
   sqlstate = desodbc3_errors[errid].sqlstate;
-  message = prefix + errmsg;
+  message = errtext + errmsg;
 }
 
-DESERROR::DESERROR(const char* state, const char* msg, SQLINTEGER errcode,
-  const char* prefix)
+DESERROR::DESERROR(const char* state, const char* msg)
 {
   sqlstate = state ? state : "";
-  message = std::string(prefix ? prefix : DESODBC_ERROR_PREFIX) +
-    (msg ? msg : "");
-  native_error = errcode;
+  message = std::string(msg);
   retcode = SQL_ERROR;
 }
 
@@ -181,10 +176,9 @@ DESERROR::DESERROR(const char* state, const char* msg, SQLINTEGER errcode,
 
 SQLRETURN set_desc_error(DESC *        desc,
                          char *        state,
-                         const char *  message,
-                         uint          errcode)
+                         const char *  message)
 {
-  desc->error = DESERROR(state, message, errcode, DESODBC_ERROR_PREFIX);
+  desc->error = DESERROR(state, message);
   return SQL_ERROR;
 }
 
@@ -235,9 +229,7 @@ void translate_error(char *save_state, desodbc_errid errid, uint mysql_err)
         case ER_BAD_FIELD_ERROR:
             state= desodbc3_errors[DESERR_42S22].sqlstate;
             break;
-        case CR_SERVER_HANDSHAKE_ERR:
         case CR_CONNECTION_ERROR:
-        case CR_SERVER_GONE_ERROR:
         case CR_SERVER_LOST:
 #if DES_VERSION_ID > 80023
         case ER_CLIENT_INTERACTION_TIMEOUT:
@@ -264,7 +256,7 @@ void translate_error(char *save_state, desodbc_errid errid, uint mysql_err)
 SQLRETURN set_env_error(ENV *env, desodbc_errid errid, const char *errtext,
                         SQLINTEGER errcode)
 {
-  env->error = DESERROR(errid, errtext, errcode, DESODBC_ERROR_PREFIX);
+  env->error = DESERROR(errid, errtext);
   return env->error.retcode;
 }
 
@@ -302,7 +294,7 @@ SQLRETURN handle_connection_error(STMT *stmt)
 */
 des_bool is_connection_lost(uint errcode)
 {
-  if (errcode==CR_SERVER_GONE_ERROR || errcode==CR_SERVER_LOST
+  if (errcode==CR_SERVER_LOST
 #if DES_VERSION_ID > 80023
     || errcode==ER_CLIENT_INTERACTION_TIMEOUT
 #endif
@@ -333,13 +325,13 @@ SQLRETURN set_handle_error(SQLSMALLINT HandleType, SQLHANDLE handle,
     case SQL_HANDLE_STMT:
     {
       STMT *stmt = (STMT*)handle;
-      stmt->error = DESERROR(errid, errtext, errcode, stmt->dbc->st_error_prefix);
+      stmt->error = DESERROR(errid, errtext);
       return stmt->error.retcode;
     }
     case SQL_HANDLE_DESC:
     {
       DESC* desc = (DESC*)handle;
-      desc->error = DESERROR(errid, errtext, errcode, desc->stmt->dbc->st_error_prefix);
+      desc->error = DESERROR(errid, errtext);
       return desc->error.retcode;
     }
     default:

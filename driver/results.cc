@@ -173,7 +173,7 @@ sql_get_bookmark_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
 
   if (cbValueMax < sizeof(long))
   {
-    return stmt->set_error("HY090", "Invalid string or buffer length", 0);
+    return stmt->set_error("HY090", "Invalid string or buffer length");
   }
 
   /* get the exact type if we don't already have it */
@@ -190,7 +190,7 @@ sql_get_bookmark_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
   {
     if (!arrec)
     {
-      return stmt->set_error("07009", "Invalid descriptor index", 0);
+      return stmt->set_error("07009", "Invalid descriptor index");
     }
 
     fCType= arrec->concise_type;
@@ -231,7 +231,7 @@ sql_get_bookmark_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
                         (SQLCHAR *)value, length);
         if (!ret)
         {
-          stmt->set_error("01004", NULL, 0);
+          stmt->set_error("01004", NULL);
           return SQL_SUCCESS_WITH_INFO;
         }
       }
@@ -328,7 +328,7 @@ sql_get_bookmark_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
 
   default:
     return stmt->set_error(DESERR_07006,
-                     "Restricted data type attribute violation",0);
+                     "Restricted data type attribute violation");
     break;
   }
 
@@ -404,7 +404,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
   {
     if (!arrec)
     {
-      return stmt->set_error("07009", "Invalid descriptor index", 0);
+      return stmt->set_error("07009", "Invalid descriptor index");
     }
 
     fCType= arrec->concise_type;
@@ -433,7 +433,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
     if (!pcbValue)
     {
       return stmt->set_error("22002",
-                            "Indicator variable required but not supplied",0);
+                            "Indicator variable required but not supplied");
     }
     *pcbValue = SQL_NULL_DATA;
   }
@@ -445,7 +445,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       /*The state 07009 was incorrect
       (http://msdn.microsoft.com/en-us/library/ms715441%28v=VS.85%29.aspx)
       */
-      return stmt->set_error("07006", "Conversion is not possible", 0);
+      return stmt->set_error("07006", "Conversion is not possible");
     }
 
     if (!pcbValue)
@@ -475,14 +475,6 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       default:
         numeric_value = binary2ll(value, length);
         convert= 0;
-      }
-    }
-
-    if  (stmt->out_params_state == OPS_STREAMS_PENDING)
-    {
-      if (value == NULL)
-      {
-        return ssps_fetch_chunk(stmt, (char*)rgbValue, (unsigned long)cbValueMax, (unsigned long*)pcbValue);
       }
     }
 
@@ -709,7 +701,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
             else if(ts.second > 0)
             {
               /* Truncation */
-              stmt->set_error("01S07", NULL, 0);
+              stmt->set_error("01S07", NULL);
               result= SQL_SUCCESS_WITH_INFO;
             }
 
@@ -719,7 +711,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
         else
         {
           return stmt->set_error(DESERR_07006,
-                       "Restricted data type attribute violation",0);
+                       "Restricted data type attribute violation");
         }
 
         break;
@@ -736,7 +728,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
                           TRUE))
         {
         case SQLTS_BAD_DATE:
-          return stmt->set_error("22018", "Data value is not a valid time(stamp) value", 0);
+          return stmt->set_error("22018", "Data value is not a valid time(stamp) value");
         case SQLTS_NULL_DATE:
           *pcbValue= SQL_NULL_DATA;
           break;
@@ -752,7 +744,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
 
               if (ts.fraction > 0)
               {
-                stmt->set_error("01S07", NULL, 0);
+                stmt->set_error("01S07", NULL);
                 result= SQL_SUCCESS_WITH_INFO;
               }
             }
@@ -789,7 +781,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
           if (ts.hour > 23)
           {
             return stmt->set_error("22007",
-                           "Invalid time(hours) format. Use interval types instead", 0);
+                           "Invalid time(hours) format. Use interval types instead");
           }
           if (time_info)
           {
@@ -807,7 +799,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
             /* http://msdn.microsoft.com/en-us/library/ms713346%28v=VS.85%29.aspx
                We are loosing fractional part - thus we have to set correct sqlstate
                and return SQL_SUCCESS_WITH_INFO */
-            stmt->set_error("01S07", NULL, 0);
+            stmt->set_error("01S07", NULL);
             result= SQL_SUCCESS_WITH_INFO;
           }
         }
@@ -860,7 +852,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
                       stmt->dbc->ds.opt_ZERO_DATE_TO_MIN, TRUE))
         {
         case SQLTS_BAD_DATE:
-          return stmt->set_error("22018", "Data value is not a valid date/time(stamp) value", 0);
+          return stmt->set_error("22018", "Data value is not a valid date/time(stamp) value");
 
         case SQLTS_NULL_DATE:
           *pcbValue= SQL_NULL_DATA;
@@ -922,10 +914,10 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
 
         if (overflow == 1)
           return stmt->set_error("22003",
-                                "Numeric value out of range", 0);
+                                "Numeric value out of range");
         else if (overflow == 2)
         {
-          stmt->set_error("01S07", "Fractional truncation", 0);
+          stmt->set_error("01S07", "Fractional truncation");
           result = SQL_SUCCESS_WITH_INFO;
         }
       }
@@ -933,7 +925,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
 
     default:
       return stmt->set_error(DESERR_07006,
-                       "Restricted data type attribute violation",0);
+                       "Restricted data type attribute violation");
       break;
     }
   }
@@ -959,7 +951,7 @@ static SQLRETURN check_result(STMT *stmt)
   switch (stmt->state)
   {
     case ST_UNKNOWN:
-      error= stmt->set_error("24000","Invalid cursor state",0);
+      error= stmt->set_error("24000","Invalid cursor state");
       break;
     case ST_PREPARED:
       /*TODO: introduce state for statements prepared on the server side */
@@ -974,7 +966,7 @@ static SQLRETURN check_result(STMT *stmt)
         }
         else
         {
-          set_sql_select_limit(stmt->dbc, real_max_rows, TRUE);
+          //set_sql_select_limit(stmt->dbc, real_max_rows, TRUE);
         }
         stmt->stmt_options.max_rows= real_max_rows;
       }
@@ -1079,10 +1071,10 @@ DESDescribeCol(SQLHSTMT hstmt, SQLUSMALLINT column,
   }
 
   if ((error = check_result(stmt)) != SQL_SUCCESS) return error;
-  if (!stmt->result) return stmt->set_error("07005", "No result set", 0);
+  if (!stmt->result) return stmt->set_error("07005", "No result set");
 
   if (column == 0 || column > stmt->ird->rcount()) {
-    return stmt->set_error("07009", "Invalid descriptor index", 0);
+    return stmt->set_error("07009", "Invalid descriptor index");
   }
 
   irrec = desc_get_rec(stmt->ird, column - 1, FALSE);
@@ -1148,7 +1140,7 @@ DESColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   if (!stmt->result)
   {
-    return stmt->set_error("07005", "No result set", 0);
+    return stmt->set_error("07005", "No result set");
   }
 
   /* we report bookmark type if requested, nothing else */
@@ -1159,7 +1151,7 @@ DESColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
   }
 
   if (column == 0 || column > stmt->ird->rcount())
-    return ((STMT*)hstmt)->set_error(DESERR_07009, NULL, 0);
+    return ((STMT*)hstmt)->set_error(DESERR_07009, NULL);
 
   if (!num_attr)
     num_attr= &nparam;
@@ -1303,7 +1295,7 @@ DESColAttribute(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   default:
     return stmt->set_error("HY091",
-                          "Invalid descriptor field identifier",0);
+                          "Invalid descriptor field identifier");
   }
 
   return error;
@@ -1358,7 +1350,7 @@ SQLRETURN SQL_API SQLBindCol(SQLHSTMT      StatementHandle,
 
   if ((ColumnNumber == 0 && stmt->stmt_options.bookmarks == SQL_UB_OFF) ||
       (stmt->state == ST_EXECUTED && ColumnNumber > stmt->ird->rcount())) {
-    return stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
+    return stmt->set_error("07009", "Invalid descriptor index");
   }
 
   arrec = desc_get_rec(stmt->ard, ColumnNumber - 1, TRUE);
@@ -1441,19 +1433,19 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
 
   if (!stmt->result || (!stmt->current_values &&
                         stmt->out_params_state != OPS_STREAMS_PENDING)) {
-    stmt->set_error("24000", "SQLGetData without a preceding SELECT", 0);
+    stmt->set_error("24000", "SQLGetData without a preceding SELECT");
     return SQL_ERROR;
   }
 
   if ((sColNum < 1 &&
        stmt->stmt_options.bookmarks == (SQLUINTEGER)SQL_UB_OFF) ||
       ColumnNumber > stmt->ird->rcount()) {
-    return stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
+    return stmt->set_error("07009", "Invalid descriptor index");
   }
 
   if (sColNum == 0 && TargetType != SQL_C_BOOKMARK &&
       TargetType != SQL_C_VARBOOKMARK) {
-    return stmt->set_error("HY003", "Program type out of range", 0);
+    return stmt->set_error("HY003", "Program type out of range");
   }
 
   --sColNum; /* Easier code if start from 0 which will make bookmark column -1
@@ -1468,8 +1460,7 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
     if (sColNum != stmt->current_param) {
       return stmt->set_error("07009",
                              "The parameter number value was not equal to \
-                                            the ordinal of the parameter that is available.",
-                             DESERR_07009);
+                                            the ordinal of the parameter that is available.");
     } else {
       /* In getdatat column we keep out parameter column number in the result */
       sColNum = stmt->getdata.column;
@@ -1479,8 +1470,7 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT      StatementHandle,
       return stmt->set_error(
           "HYC00",
           "Stream output parameters supported for SQL_C_BINARY"
-          " only",
-          0);
+          " only");
     }
   }
 
@@ -1558,28 +1548,28 @@ SQLRETURN SQL_API SQLMoreResults( SQLHSTMT hstmt )
   nRetVal = next_result(stmt);
 
   /* call to mysql_next_result() failed */
+  /*
   if (nRetVal > 0)
   {
     nRetVal= mysql_errno(stmt->dbc->des);
 
     switch ( nRetVal )
     {
-      case CR_SERVER_GONE_ERROR:
       case CR_SERVER_LOST:
 #if DES_VERSION_ID > 80023
       case ER_CLIENT_INTERACTION_TIMEOUT:
 #endif
-        nReturn = stmt->set_error("08S01", mysql_error( stmt->dbc->des ), nRetVal );
+        nReturn = stmt->set_error("08S01");
         goto exitSQLMoreResults;
-      case CR_COMMANDS_OUT_OF_SYNC:
       case CR_UNKNOWN_ERROR:
         nReturn = stmt->set_error("HY000");
         goto exitSQLMoreResults;
       default:
-        nReturn = stmt->set_error("HY000", "unhandled error from mysql_next_result()", nRetVal );
+        nReturn = stmt->set_error("HY000", "unhandled error from mysql_next_result()");
         goto exitSQLMoreResults;
     }
   }
+  */
 
   /* no more resultsets */
   if (nRetVal < 0)
@@ -1621,19 +1611,6 @@ SQLRETURN SQL_API SQLMoreResults( SQLHSTMT hstmt )
 
 
 exitSQLMoreResults:
-
-  switch(nReturn)
-  {
-    case SQL_NO_DATA:
-      //stmt->telemetry.span_end(stmt); //TODO: put custom DES error
-      break;
-    case SQL_ERROR:
-      //stmt->telemetry.set_error(stmt, stmt->error); //TODO: put custom DES error
-      break;
-    default:
-      // do nothing with the telemetry
-      break;
-  }
 
   return nReturn;
 }
@@ -1879,7 +1856,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
   {
 
     if ( !stmt->result )
-      return stmt->set_error("24000", "Fetch without a SELECT", 0);
+      return stmt->set_error("24000", "Fetch without a SELECT");
     cur_row = stmt->current_row;
 
     if ( !pcrow )
@@ -1962,7 +1939,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
         break;
 
       default:
-          return stmt->set_error( DESERR_S1106, "Fetch type out of range", 0);
+          return stmt->set_error( DESERR_S1106, "Fetch type out of range");
     }
 
     if ( cur_row < 0 )
@@ -1970,7 +1947,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
       stmt->current_row= -1;  /* Before first row */
       stmt->rows_found_in_set= 0;
       data_seek(stmt, 0L);
-      stmt->set_error("01S07", "One or more row has error.", 0);
+      stmt->set_error("01S07", "One or more row has error.");
       return SQL_SUCCESS_WITH_INFO; //SQL_NO_DATA_FOUND
     }
     if ( cur_row > max_row )
@@ -1982,10 +1959,9 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
         switch (scroller_prefetch(stmt))
         {
           case SQL_NO_DATA:
-            stmt->set_error("01S07", "One or more row has error.", 0);
+            stmt->set_error("01S07", "One or more row has error.");
             return SQL_SUCCESS_WITH_INFO; //SQL_NO_DATA_FOUND
-          case SQL_ERROR:   return stmt->set_error(DESERR_S1000,
-                                            mysql_error(stmt->dbc->des), 0);
+          case SQL_ERROR:   return stmt->set_error(DESERR_S1000);
         }
       }
       else
@@ -2038,7 +2014,7 @@ SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT             hstmt,
           *stmt->ird->rows_processed_ptr= 0;
         }
 
-        stmt->set_error("01S07", "One or more row has error.", 0);
+        stmt->set_error("01S07", "One or more row has error.");
         return SQL_SUCCESS_WITH_INFO; //SQL_NO_DATA_FOUND
       }
     }
@@ -2129,9 +2105,11 @@ exitSQLSingleFetch:
     stmt->rows_found_in_set= 1;
     *pcrow= cur_row;
 
+    disconnected = FALSE;
+    /*
     disconnected= is_connection_lost(mysql_errno(stmt->dbc->des))
       && handle_connection_error(stmt);
-
+    */
     if ( upd_status && stmt->ird->rows_processed_ptr )
     {
       *stmt->ird->rows_processed_ptr= cur_row;
@@ -2167,7 +2145,7 @@ exitSQLSingleFetch:
       }
       else if (stmt->rows_found_in_set == 0)
       {
-        stmt->set_error("01S07", "One or more row has error.", 0);
+        stmt->set_error("01S07", "One or more row has error.");
         return SQL_SUCCESS_WITH_INFO; //SQL_NO_DATA_FOUND
       }
     }
@@ -2208,7 +2186,7 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
 
     if ( !stmt->result )
     {
-        res = stmt->set_error("24000", "Fetch without a SELECT", 0);
+        res = stmt->set_error("24000", "Fetch without a SELECT");
         throw stmt->error;
     }
 
@@ -2218,9 +2196,6 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
         {
         case OPS_BEING_FETCHED:
             return SQL_NO_DATA_FOUND;
-        case OPS_STREAMS_PENDING:
-            /* Magical out params fetch */
-            des_stmt_fetch(stmt->ssps);
         default:
             /* TODO: Need to remember real fetch' result */
             /* just in case... */
@@ -2235,7 +2210,7 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
         if ( fFetchType != SQL_FETCH_NEXT && !stmt->dbc->ds.opt_SAFE )
         {
         res = stmt->set_error(DESERR_S1106,
-                "Wrong fetchtype with FORWARD ONLY cursor", 0);
+                "Wrong fetchtype with FORWARD ONLY cursor");
         throw stmt->error;
         }
     }
@@ -2243,7 +2218,7 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
     if ( stmt->is_dynamic_cursor() && set_dynamic_result(stmt) )
     {
         res = stmt->set_error(DESERR_S1000,
-            "Driver Failed to set the internal dynamic result", 0);
+            "Driver Failed to set the internal dynamic result");
         throw stmt->error;
     }
 
@@ -2421,8 +2396,10 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
     stmt->rows_found_in_set = (uint)i;
     *pcrow= i;
 
-    disconnected= is_connection_lost(mysql_errno(stmt->dbc->des))
+    disconnected = FALSE;
+    /* disconnected = is_connection_lost(mysql_errno(stmt->dbc->des))
         && handle_connection_error(stmt);
+    */
 
     if ( upd_status && stmt->ird->rows_processed_ptr )
     {

@@ -146,11 +146,9 @@ struct DESERROR
     retcode = rc;
   }
 
-  DESERROR(desodbc_errid errid, const char *errtext, SQLINTEGER errcode,
-    const char *prefix);
+  DESERROR(desodbc_errid errid, const char *errtext);
 
-  DESERROR(const char *state, const char *msg, SQLINTEGER errcode,
-    const char *prefix);
+  DESERROR(const char *state, const char *msg);
 
   DESERROR(SQLSMALLINT htype, SQLHANDLE handle, SQLRETURN rc)
   {
@@ -196,7 +194,7 @@ struct DESERROR
   }
 
   DESERROR(const char* state, std::string errmsg) :
-    DESERROR(state, errmsg.c_str(), 0, DESODBC_ERROR_PREFIX)
+    DESERROR(state, errmsg.c_str())
   {}
 };
 

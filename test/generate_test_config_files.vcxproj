@@ -66,7 +66,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -76,7 +76,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -86,7 +86,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -96,7 +96,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -112,7 +112,7 @@ cd C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test
 if %errorlevel% neq 0 goto :cmEnd
 C:
 if %errorlevel% neq 0 goto :cmEnd
-"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -DDRIVER_LOCATION1=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9w.dll -DCONNECTOR_DRIVER_TYPE1=Unicode -DCONNECTOR_DRIVER_TYPE_SHORT1=w -DDRIVER_LOCATION2=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9a.dll -DCONNECTOR_DRIVER_TYPE2=ANSI -DCONNECTOR_DRIVER_TYPE_SHORT2=a -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -129,7 +129,7 @@ cd C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test
 if %errorlevel% neq 0 goto :cmEnd
 C:
 if %errorlevel% neq 0 goto :cmEnd
-"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -DDRIVER_LOCATION1=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc9w.dll -DCONNECTOR_DRIVER_TYPE1=Unicode -DCONNECTOR_DRIVER_TYPE_SHORT1=w -DDRIVER_LOCATION2=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc9a.dll -DCONNECTOR_DRIVER_TYPE2=ANSI -DCONNECTOR_DRIVER_TYPE_SHORT2=a -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -146,7 +146,7 @@ cd C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test
 if %errorlevel% neq 0 goto :cmEnd
 C:
 if %errorlevel% neq 0 goto :cmEnd
-"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -DDRIVER_LOCATION1=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/myodbc9w.dll -DCONNECTOR_DRIVER_TYPE1=Unicode -DCONNECTOR_DRIVER_TYPE_SHORT1=w -DDRIVER_LOCATION2=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/myodbc9a.dll -DCONNECTOR_DRIVER_TYPE2=ANSI -DCONNECTOR_DRIVER_TYPE_SHORT2=a -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -163,7 +163,7 @@ cd C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test
 if %errorlevel% neq 0 goto :cmEnd
 C:
 if %errorlevel% neq 0 goto :cmEnd
-"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -DDRIVER_LOCATION1=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc9w.dll -DCONNECTOR_DRIVER_TYPE1=Unicode -DCONNECTOR_DRIVER_TYPE_SHORT1=w -DDRIVER_LOCATION2=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc9a.dll -DCONNECTOR_DRIVER_TYPE2=ANSI -DCONNECTOR_DRIVER_TYPE_SHORT2=a -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -DBINARY_DIR=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test -DCONNECTOR_MAJOR=9 -DCONNECTOR_MINOR=0 -DDRIVERS_COUNT=2 -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/cmake/generateinifiles.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -293,18 +293,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\ZERO_CHECK.vcxproj">
       <Project>{62598458-75DA-35AC-89CB-BA1845420AE0}</Project>
       <Name>ZERO_CHECK</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </ProjectReference>
-    <ProjectReference Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\myodbc-a.vcxproj">
-      <Project>{D9859171-23AB-3ED3-B564-CFEC9F59FB31}</Project>
-      <Name>myodbc-a</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </ProjectReference>
-    <ProjectReference Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\myodbc-w.vcxproj">
-      <Project>{250B6E04-23F4-31AC-80FF-646C86C43FCB}</Project>
-      <Name>myodbc-w</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>

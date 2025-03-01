@@ -22,9 +22,7 @@
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\error.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\execute.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\execute.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\handle.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -40,9 +38,7 @@
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\parse.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\prepare.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\prepare.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\results.cc">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -61,7 +61,7 @@
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">myodbc-setup.dir\Debug\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">desodbcS</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">myodbc9S</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
@@ -86,7 +86,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -94,14 +94,12 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="Debug";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -110,10 +108,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR=\"Debug\";myodbc_setup_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -121,8 +119,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Debug\myodbc-util.lib;..\lib\Debug\mysql_sys.lib;..\lib\Debug\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Debug\myodbc-util.lib;..\lib\Debug\mysql_sys.lib;..\lib\Debug\mysql_strings.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -137,21 +135,19 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="Release";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -162,10 +158,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR=\"Release\";myodbc_setup_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -173,8 +169,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Release\myodbc-util.lib;..\lib\Release\mysql_sys.lib;..\lib\Release\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\Release\myodbc-util.lib;..\lib\Release\mysql_sys.lib;..\lib\Release\mysql_strings.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -189,21 +185,19 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MinSpace</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="MinSizeRel";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -214,10 +208,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR=\"MinSizeRel\";myodbc_setup_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -225,8 +219,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\MinSizeRel\myodbc-util.lib;..\lib\MinSizeRel\mysql_sys.lib;..\lib\MinSizeRel\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\MinSizeRel\myodbc-util.lib;..\lib\MinSizeRel\mysql_sys.lib;..\lib\MinSizeRel\mysql_strings.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -241,7 +235,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -249,14 +243,12 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <MinimalRebuild>
-      </MinimalRebuild>
+      <MinimalRebuild></MinimalRebuild>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <SupportJustMyCode>
-      </SupportJustMyCode>
+      <SupportJustMyCode></SupportJustMyCode>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level1</WarningLevel>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR="RelWithDebInfo";myodbc_setup_EXPORTS</PreprocessorDefinitions>
@@ -265,10 +257,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;UNICODE;_UNICODE;DRIVER_UNICODE;CMAKE_INTDIR=\"RelWithDebInfo\";myodbc_setup_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -276,8 +268,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\RelWithDebInfo\myodbc-util.lib;..\lib\RelWithDebInfo\mysql_sys.lib;..\lib\RelWithDebInfo\mysql_strings.lib;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\mysqlclient.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;..\lib\RelWithDebInfo\myodbc-util.lib;..\lib\RelWithDebInfo\mysql_sys.lib;..\lib\RelWithDebInfo\mysql_strings.lib;comctl32.lib;legacy_stdio_definitions.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -294,7 +286,7 @@
     <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\CMakeFiles\958a2ebc195c53718ae22459de31e712\myodbc-setup_version_info.rc.rule">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating myodbc-setup_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=MySQL Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Debug -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Debug -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -307,7 +299,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating myodbc-setup_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=MySQL Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Release -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Release -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -320,7 +312,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating myodbc-setup_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=MySQL Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=MinSizeRel -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=MinSizeRel -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -333,7 +325,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating myodbc-setup_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=MySQL Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=RelWithDebInfo -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/myodbc-setup_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc9S.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC driver setup library." -D "COMMENTS=Provides driver configuration GUI." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=RelWithDebInfo -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -417,7 +409,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\TabCtrl.cpp" />
     <ClInclude Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\TabCtrl.h" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\tooltip.cpp" />
-    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\connector_odbc_header.bmp" />
+    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\connector_odbc_header.bmp">
+    </None>
     <ResourceCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\myodbc-setup_version_info.rc" />
   </ItemGroup>
   <ItemGroup>

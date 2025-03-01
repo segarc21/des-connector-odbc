@@ -65,7 +65,7 @@ bool ENV::has_connections()
   return conn_list.size() > 0;
 }
 
-DBC::DBC(ENV *p_env)  : env(p_env), des(nullptr),
+DBC::DBC(ENV *p_env)  : env(p_env),
                         txn_isolation(DEFAULT_TXN_ISOLATION),
                         last_query_time((time_t) time((time_t*) 0))
 {
@@ -99,9 +99,7 @@ void DBC::free_explicit_descriptors()
 
 void DBC::close()
 {
-  if (des)
-    mysql_close(des);
-  des = nullptr;
+//TODO: research what to do
 }
 
 DBC::~DBC()
@@ -124,14 +122,14 @@ SQLRETURN DBC::set_error(char * state, const char * message, uint errcode)
 
 SQLRETURN DBC::set_error(char * state)
 {
-  return set_error(state, mysql_error(des), mysql_errno(des));
+  return set_error(state, "", 0);
 }
 
 
 SQLRETURN DBC::set_error(desodbc_errid errid, const char* errtext,
   SQLINTEGER errcode)
 {
-  error = DESERROR(errid, errtext, errcode, DESODBC_ERROR_PREFIX);
+  error = DESERROR(errid, errtext);
   return error.retcode;
 }
 
@@ -257,49 +255,6 @@ int reset_connection(DBC *dbc)
   return 0;
 }
 
-
-int wakeup_connection(DBC *dbc)
-{
-  DataSource &ds = dbc->ds;
-
-#if MFA_ENABLED
-  if(ds.opt_PWD1)
-  {
-    int fator = 2;
-    mysql_options4(dbc->des, DES_OPT_USER_PASSWORD,
-                   &fator, (const char*)ds.opt_PWD1);
-  }
-
-  if (ds.opt_PWD2)
-  {
-    ds_get_utf8attr(ds->pwd2, &ds->pwd28);
-    int fator = 2;
-    mysql_options4(dbc->des, DES_OPT_USER_PASSWORD,
-                   &fator,
-                   (const char *)ds.opt_PWD2);
-  }
-
-  if (ds.opt_PWD3)
-  {
-    ds_get_utf8attr(ds->pwd3, &ds->pwd38);
-    int fator = 3;
-    mysql_options4(dbc->des, DES_OPT_USER_PASSWORD,
-                   &fator,
-                   (const char *)ds.opt_PWD3);
-  }
-#endif
-
-  if (mysql_change_user(dbc->des, ds.opt_UID,
-      ds.opt_PWD, ds.opt_DATABASE))
-  {
-    return 1;
-  }
-
-  dbc->need_to_wakeup= 0;
-  return 0;
-}
-
-
 /*
   @type    : myodbc3 internal
   @purpose : to allocate the connection handle and to
@@ -313,9 +268,10 @@ SQLRETURN SQL_API DES_SQLFreeConnect(SQLHDBC hdbc)
 
     if (thread_count)
     {
-      /* Last connection deallocated, supposedly the thread is finishing */
+      /*
       if (--thread_count ==0)
         mysql_thread_end();
+      */
     }
 
     return SQL_SUCCESS;
@@ -355,10 +311,6 @@ SQLRETURN SQL_API DES_SQLAllocStmt(SQLHDBC hdbc, SQLHSTMT *phstmt)
 {
   std::unique_ptr<STMT> stmt;
   DBC   *dbc= (DBC*) hdbc;
-
-  /* In fact it should be awaken when DM checks whether connection is alive before taking it from pool.
-    Keeping the check here to stay on the safe side */
-  WAKEUP_CONN_IF_NEEDED(dbc);
 
   try
   {
@@ -480,20 +432,12 @@ SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
     if (f_extra & FREE_STMT_CLEAR_RESULT)
     {
       stmt->array.reset();
-
-      ssps_close(stmt);
-      if (stmt->ssps != NULL)
-      {
-        free_result_bind(stmt);
-      }
     }
 
     /* At this point, only FREE_STMT_RESET and SQL_DROP left out */
     stmt->orig_query.reset(NULL, NULL, NULL);
     stmt->query.reset(NULL, NULL, NULL);
 
-    // After query reset the span can also be ended.
-    stmt->telemetry.span_end(stmt);
     stmt->param_count= 0;
 
     reset_ptr(stmt->apd->rows_processed_ptr);
@@ -564,7 +508,7 @@ SQLRETURN DES_SQLFreeDesc(SQLHANDLE hdesc)
     return SQL_ERROR;
   if (desc->alloc_type != SQL_DESC_ALLOC_USER)
     return set_desc_error(desc, "HY017", "Invalid use of an automatically "
-                          "allocated descriptor handle.", DESERR_S1017);
+                          "allocated descriptor handle.");
 
   /* remove from DBC */
   dbc->remove_desc(desc);

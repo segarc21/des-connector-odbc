@@ -56,7 +56,7 @@ BEGIN
             VALUE "LegalTrademarks", "Oracle(R), Java, MySQL, and NetSuite are registered trademarks of Oracle and/or its affiliates.\0"
             VALUE "OriginalFilename", "myodbc9w.dll\0"
             VALUE "InternalName", "myodbc9w\0"
-            VALUE "FileDescription", "MySQL Connector/ODBC Unicode driver.\0"
+            VALUE "FileDescription", "DES Connector/ODBC Unicode driver.\0"
             VALUE "Comments", "Provides core driver functionality.\0"
         END
     END

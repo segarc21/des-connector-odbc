@@ -91,11 +91,7 @@ FOREACH(FN my_basics.c my_blob.c my_bulk.c my_catalog1.c my_catalog2.c
   ENDIF(WIN32)
 
   IF(WIN32)
-    IF(MYSQL8)
-      TARGET_LINK_LIBRARIES(${T} ${ODBCLIB} ${ODBCINSTLIB} legacy_stdio_definitions.lib myodbc-util)
-    ELSE(MYSQL8)
-      TARGET_LINK_LIBRARIES(${T} ${ODBCLIB} ${ODBCINSTLIB} myodbc-util)
-    ENDIF(MYSQL8)
+    TARGET_LINK_LIBRARIES(${T} ${ODBCLIB} ${ODBCINSTLIB} legacy_stdio_definitions.lib myodbc-util)
   ELSE(WIN32)
     TARGET_LINK_LIBRARIES(${T} ${ODBC_LINK_FLAGS} ${ODBCINSTLIB} myodbc-util)
   ENDIF(WIN32)

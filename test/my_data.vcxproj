@@ -86,7 +86,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -108,10 +108,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -119,8 +119,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;..\lib\Debug\myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -134,7 +134,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
@@ -157,10 +157,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -168,8 +168,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;..\lib\Release\myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -183,7 +183,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DisableSpecificWarnings>4133;4047;4313;4197</DisableSpecificWarnings>
@@ -206,10 +206,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -217,8 +217,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;..\lib\MinSizeRel\myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -232,7 +232,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -254,10 +254,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;MYSQL8;MYSQLCLIENT_STATIC_LINKING;DISABLE_ALL_PSI;USE_SQLCOLATTRIBUTE_SQLLEN_PTR;THREAD;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;ENGLISH;_USERDLL;_WIN32;__WIN__;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\include\mysql-8.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0;C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -265,8 +265,8 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;..\lib\RelWithDebInfo\myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Program Files/MySQL/MySQL Server 8.0/lib;C:/Program Files/MySQL/MySQL Server 8.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;legacy_stdio_definitions.lib;myodbc-util.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/$(Configuration);C:/Program Files/OpenSSL/lib;C:/Program Files/OpenSSL/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -408,10 +408,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Name>generate_test_config_files</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </ProjectReference>
-    <ProjectReference Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\util\myodbc-util.vcxproj">
-      <Project>{E77C9C84-373F-3923-930B-326CB53E3202}</Project>
-      <Name>myodbc-util</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

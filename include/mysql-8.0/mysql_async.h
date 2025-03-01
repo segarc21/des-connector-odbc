@@ -223,7 +223,7 @@ typedef struct MYSQL_ASYNC {
   enum mysql_async_query_state_enum async_query_state;
   /** context needed to support metadata read operation */
   unsigned long *async_read_metadata_field_len;
-  MYSQL_FIELD *async_read_metadata_fields;
+  DES_FIELD *async_read_metadata_fields;
   MYSQL_ROWS async_read_metadata_data;
   unsigned int async_read_metadata_cur_field;
   /** a pointer to keep track of the result sets */

@@ -115,7 +115,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=MySQL_Connector_ODBC
+CMAKE_PROJECT_NAME:STATIC=DES_Connector_ODBC
 
 //RC compiler
 CMAKE_RC_COMPILER:FILEPATH=rc
@@ -197,6 +197,18 @@ CPACK_SOURCE_ZIP:BOOL=ON
 //Path to a library.
 CRYPTO_LIBRARY:FILEPATH=CRYPTO_LIBRARY-NOTFOUND
 
+//Value Computed by CMake
+DES_Connector_ODBC_BINARY_DIR:STATIC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0
+
+//Value Computed by CMake
+DES_Connector_ODBC_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+DES_Connector_ODBC_SOURCE_DIR:STATIC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0
+
+//Path to a program.
+GIT_FOUND:FILEPATH=C:/Program Files/Git/cmd/git.exe
+
 //Build sources in maintainer mode
 MAINTAINER_MODE:BOOL=OFF
 
@@ -243,6 +255,18 @@ WITH_NODEFAULTLIB:UNINITIALIZED=mysqlclient
 
 //Explicitly set NUMA memory allocation policy
 WITH_NUMA:BOOL=OFF
+
+//Dependencies for the target
+desodbc-a_LIB_DEPENDS:STATIC=general;desodbc-util;general;mysql_sys;general;mysql_strings;general;ws2_32;general;odbccp32;general;legacy_stdio_definitions.lib;general;Dnsapi;
+
+//Dependencies for the target
+desodbc-setup_LIB_DEPENDS:STATIC=general;odbc32;general;odbccp32;general;desodbc-util;general;mysql_sys;general;mysql_strings;general;comctl32;general;legacy_stdio_definitions.lib;
+
+//Dependencies for the target
+desodbc-util_LIB_DEPENDS:STATIC=general;odbccp32;
+
+//Dependencies for the target
+desodbc-w_LIB_DEPENDS:STATIC=general;desodbc-util;general;mysql_sys;general;mysql_strings;general;ws2_32;general;odbccp32;general;legacy_stdio_definitions.lib;general;Dnsapi;
 
 //Dependencies for the target
 myodbc-a_LIB_DEPENDS:STATIC=general;myodbc-util;general;mysql_sys;general;mysql_strings;general;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/mysqlclient.lib;general;ws2_32;general;odbccp32;general;Secur32;general;legacy_stdio_definitions.lib;general;Dnsapi;
@@ -347,7 +371,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_MT
 CMAKE_MT-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=10
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=9
 //Platform information initialized
 CMAKE_PLATFORM_INFO_INITIALIZED:INTERNAL=1
 //noop for ranlib

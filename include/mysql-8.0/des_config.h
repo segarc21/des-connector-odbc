@@ -245,13 +245,13 @@
 /* #undef HAVE_ASAN */
 /* #undef HAVE_UBSAN */
 /* #undef ENABLED_LOCAL_INFILE */
-#define DEFAULT_MYSQL_HOME "C:/Program Files/MySQL/MySQL Server "
-#define SHAREDIR "share"
-#define DEFAULT_BASEDIR "C:/Program Files/MySQL/MySQL Server "
+/* #undef DEFAULT_MYSQL_HOME */
+/* #undef SHAREDIR */
+/* #undef DEFAULT_BASEDIR */
 #define MYSQL_DATADIR "C:/Program Files/MySQL/MySQL Server "
 #define MYSQL_KEYRINGDIR "C:/Program Files/MySQL/MySQL Server "
-#define DEFAULT_CHARSET_HOME "C:/Program Files/MySQL/MySQL Server "
-#define PLUGINDIR "C:/Program Files/MySQL/MySQL Server /"
+/* #undef DEFAULT_CHARSET_HOME */
+/* #undef PLUGINDIR */
 /* #undef DEFAULT_SYSCONFDIR */
 /* #undef DEFAULT_TMPDIR */
 /* #undef INSTALL_SBINDIR */

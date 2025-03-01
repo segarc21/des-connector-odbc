@@ -215,7 +215,7 @@ DESCREC *desc_get_rec(DESC *desc, int recnum, des_bool expand)
   }
   else if (recnum < 0)
   {
-    desc->stmt->set_error("07009", "Invalid descriptor index", DESERR_07009);
+    desc->stmt->set_error("07009", "Invalid descriptor index");
     return NULL;
   }
   else
@@ -540,8 +540,7 @@ DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
     /* TODO if it's prepared is the IRD still ok to access?
      * or must we pre-execute it */
     return set_desc_error(desc, "HY007",
-              "Associated statement is not prepared",
-              DESERR_S1007);
+              "Associated statement is not prepared");
 
   if ((fld == NULL) ||
       /* header permissions check */
@@ -550,8 +549,7 @@ DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
          (desc->ref_type == DESC_IMP && (~fld->perms & P_RI))))
   {
     return set_desc_error(desc, "HY091",
-              "Invalid descriptor field identifier",
-              DESERR_S1091);
+              "Invalid descriptor field identifier");
   }
   else if (fld->loc == DESC_REC)
   {
@@ -569,8 +567,7 @@ DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
 
     if ((~fld->perms & perms) == perms)
       return set_desc_error(desc, "HY091",
-                "Invalid descriptor field identifier",
-                DESERR_S1091);
+                "Invalid descriptor field identifier");
   }
 
   /* get the src struct */
@@ -580,8 +577,7 @@ DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
   {
     if (recnum < 1 || recnum > desc->rcount())
       return set_desc_error(desc, "07009",
-                "Invalid descriptor index",
-                DESERR_07009);
+                "Invalid descriptor index");
     src_struct= desc_get_rec(desc, recnum - 1, FALSE);
     assert(src_struct);
   }
@@ -601,8 +597,7 @@ DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
   if ((fld->data_type == SQL_IS_POINTER && buflen != SQL_IS_POINTER) ||
       (fld->data_type != SQL_IS_POINTER && buflen == SQL_IS_POINTER))
     return set_desc_error(desc, "HY015",
-                          "Invalid parameter type",
-                          DESERR_S1015);
+                          "Invalid parameter type");
 
   switch (buflen)
   {
@@ -939,13 +934,11 @@ SQLRETURN MySQLCopyDesc(SQLHDESC SourceDescHandle, SQLHDESC TargetDescHandle)
 
   if (IS_IRD(dest))
     return set_desc_error(dest, "HY016",
-                          "Cannot modify an implementation row descriptor",
-                          DESERR_S1016);
+                          "Cannot modify an implementation row descriptor");
 
   if (IS_IRD(src) && src->stmt->state < ST_PREPARED)
     return set_desc_error(dest, "HY007",
-              "Associated statement is not prepared",
-              DESERR_S1007);
+              "Associated statement is not prepared");
 
   /* copy the records, copy constructors should take care of everything */
   *dest = *src;

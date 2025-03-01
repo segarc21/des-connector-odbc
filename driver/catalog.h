@@ -59,61 +59,6 @@ enum desodbcProcColumns {des_pcPROCEDURE_CAT= 0, des_pcPROCEDURE_SCHEM,  des_pcP
 
 typedef std::vector<DES_BIND> vec_bind;
 
-/*
- * Helper class to be used with Catalog functions in order to obtain
- * data from Information_Schema.
-*/
-struct ODBC_CATALOG {
-  STMT *stmt;
-  tempBuf temp;
-  std::string query;
-  std::string from;
-  std::string join;
-  std::string where;
-  std::string order_by;
-  size_t col_count;
-  std::vector<std::string> columns;
-  DES_ROW current_row = nullptr;
-  unsigned long *current_lengths = nullptr;
-  DES_RESULT *des_res = nullptr;
-
-  SQLCHAR *m_catalog;
-  unsigned long m_catalog_len;
-  SQLCHAR *m_schema;
-  unsigned long m_schema_len;
-  SQLCHAR *m_table;
-  unsigned long m_table_len;
-  SQLCHAR *m_column;
-  unsigned long m_column_len;
-
-  ODBC_CATALOG(STMT *s, size_t ccnt, std::string from_i_s,
-    SQLCHAR *catalog, unsigned long catalog_len,
-    SQLCHAR *schema, unsigned long schema_len,
-    SQLCHAR *table, unsigned long table_len,
-    SQLCHAR *column, unsigned long column_len);
-
-  ODBC_CATALOG(STMT *s, size_t ccnt, std::string from_i_s,
-    SQLCHAR *catalog, unsigned long catalog_len,
-    SQLCHAR *schema, unsigned long schema_len,
-    SQLCHAR *table, unsigned long table_len);
-
-  ~ODBC_CATALOG();
-
-  void add_param(const char *qstr, SQLCHAR *data, unsigned long &len);
-  void add_column(std::string);
-
-  // The string need to specify the join type such as LEFT JOIN ...
-  void set_join(std::string s) { join = s; }
-  void set_where(std::string s) { where = s; }
-  void set_order_by(std::string s) { order_by = s; }
-  void execute();
-  size_t num_rows();
-  DES_ROW fetch_row();
-  bool is_null_value(int column);
-  unsigned long *get_lengths();
-  void data_seek(unsigned int rownum);
-};
-
 /* Some common(for i_s/no_i_s) helper functions */
 const char *des_next_token(const char *prev_token,
                           const char **token,

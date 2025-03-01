@@ -42,47 +42,6 @@
 const SQLULEN sql_select_unlimited= (SQLULEN)-1;
 
 /**
-  Execute a SQL statement with setting sql_select_limit for each
-  execution as SQL_ATTR_MAX_ROWS applies to all result sets on
-  the statement and not connection.
-
-  @param[in] dbc            The database connection
-  @param[in] query          The query to execute
-  @param[in] query_length   The length of query to execute
-  @param[in] req_lock       The flag if dbc->lock thread lock should be used
-                            when executing a query
-*/
-SQLRETURN exec_stmt_query(STMT *stmt, const char *query,
-                          SQLULEN query_length, des_bool req_lock)
-{
-  SQLRETURN rc;
-  if(!SQL_SUCCEEDED(rc= set_sql_select_limit(stmt->dbc,
-                          stmt->stmt_options.max_rows, req_lock)))
-  {
-    /* if setting sql_select_limit fails, the query will probably fail anyway too */
-    return rc;
-  }
-  stmt->buf_set_pos(0);
-  return stmt->dbc->execute_query(query, query_length, req_lock);
-}
-
-
-SQLRETURN exec_stmt_query_std(STMT *stmt, const std::string &query,
-                              bool req_lock)
-{
-  SQLRETURN rc;
-  if(!SQL_SUCCEEDED(rc= set_sql_select_limit(stmt->dbc,
-                          stmt->stmt_options.max_rows, req_lock)))
-  {
-    /* if setting sql_select_limit fails, the query will probably fail anyway too */
-    return rc;
-  }
-  stmt->buf_set_pos(0);
-  return stmt->dbc->execute_query(query.c_str(), query.size(), req_lock);
-}
-
-
-/**
   Link a list of fields to the current statement result.
 
   @todo This is a terrible idea. We need to purge this.
@@ -411,7 +370,7 @@ copy_binary_result(STMT *stmt,
 
   if (src_bytes > (unsigned long)result_bytes)
   {
-    stmt->set_error("01004", NULL, 0);
+    stmt->set_error("01004", NULL);
     rc= SQL_SUCCESS_WITH_INFO;
   }
 
@@ -450,7 +409,7 @@ copy_ansi_result(STMT *stmt,
   if (!result_bytes && !stmt->getdata.source)
   {
     *avail_bytes= src_bytes;
-    stmt->set_error("01004", NULL, 0);
+    stmt->set_error("01004", NULL);
     return SQL_SUCCESS_WITH_INFO;
   }
 
@@ -564,7 +523,7 @@ copy_wchar_result(STMT *stmt,
     else if (cnvres < 0)
       return stmt->set_error("HY000",
                             "Unknown failure when converting character "
-                            "from server character set.", 0);
+                            "from server character set.");
 
 convert_to_out:
     // SQLWCHAR data should be UTF-16 on all platforms
@@ -634,7 +593,7 @@ convert_to_out:
     else
       return stmt->set_error("HY000",
                             "Unknown failure when converting character "
-                            "to result character set.", 0);
+                            "to result character set.");
   }
 
   if (result && stmt->stmt_options.retrieve_data)
@@ -661,14 +620,14 @@ convert_to_out:
   /* Did we truncate the data? */
   if (!result_len || stmt->getdata.dst_bytes > stmt->getdata.dst_offset)
   {
-    stmt->set_error("01004", NULL, 0);
+    stmt->set_error("01004", NULL);
     rc= SQL_SUCCESS_WITH_INFO;
   }
 
   /* Did we encounter any character conversion problems? */
   if (error_count)
   {
-    stmt->set_error("22018", NULL, 0);
+    stmt->set_error("22018", NULL);
     rc= SQL_SUCCESS_WITH_INFO;
   }
 
@@ -742,7 +701,7 @@ SQLRETURN copy_binhex_result(STMT *stmt,
   if ( *offset * sizeof(T) >= src_length )
       return SQL_SUCCESS;
 
-  stmt->set_error(DESERR_01004, NULL, 0);
+  stmt->set_error(DESERR_01004, NULL);
   return SQL_SUCCESS_WITH_INFO;
 }
 
@@ -2210,33 +2169,8 @@ ulong str_to_time_as_long(const char *str, uint length)
 
 int check_if_server_is_alive( DBC *dbc )
 {
-    time_t seconds= (time_t) time( (time_t*)0 );
+    //TODO: implement
     int result= 0;
-
-    if ( (ulong)(seconds - dbc->last_query_time) >= CHECK_IF_ALIVE )
-    {
-        if ( mysql_ping( dbc->des ) )
-        {
-            /*  BUG: 14639
-
-                A. The 4.1 doc says when mysql_ping() fails we can get one
-                of the following errors from mysql_errno();
-
-                    CR_COMMANDS_OUT_OF_SYNC
-                    CR_SERVER_GONE_ERROR
-                    CR_UNKNOWN_ERROR
-
-                But if you do a mysql_ping() after bringing down the server
-                you get CR_SERVER_LOST.
-
-                PAH - 9.MAR.06
-            */
-
-            if (is_connection_lost(mysql_errno( dbc->des )))
-                result = 1;
-        }
-    }
-    dbc->last_query_time = seconds;
 
     return result;
 }
@@ -2254,43 +2188,6 @@ bool desodbc_append_quoted_name_std(std::string &str, const char *name)
   str.append(1, '`').append(name).append(1, '`');
   return false;
 }
-
-
-/*
-  @type    : myodbc3 internal
-  @purpose : reset the db name to current_database()
-*/
-
-int reget_current_catalog(DBC *dbc)
-{
-    dbc->database.clear();
-
-    if (dbc->execute_query("select database()", SQL_NTS, true))
-    {
-        return 1;
-    }
-    else
-    {
-        DES_RES *res;
-        DES_ROW row;
-
-        if ( (res= mysql_store_result(dbc->des)) &&
-             (row= mysql_fetch_row(res)) )
-        {
-/*            if (cmp_database(row[0], dbc->database)) */
-            {
-                if ( row[0] )
-                {
-                    dbc->database = row[0];
-                }
-            }
-        }
-        mysql_free_result(res);
-    }
-
-    return 0;
-}
-
 
 /*
   @type    : myodbc internal
@@ -2978,44 +2875,6 @@ void *ptr_offset_adjust(void *ptr, SQLULEN *bind_offset_ptr,
 
 
 /**
-  Sets the value of @@sql_select_limit
-
-  @param[in]  dbc         dbc handler
-  @param[in]  new_value   Value to set @@sql_select_limit.
-  @param[in]  req_lock    The flag if dbc->lock thread lock should be used
-                          when executing a query
-
-  Returns new_value if operation was successful, -1 otherwise
- */
-SQLRETURN set_sql_select_limit(DBC *dbc, SQLULEN lim_value, des_bool req_lock)
-{
-  char query[44];
-  SQLRETURN rc;
-
-  /* Both 0 and max(SQLULEN) value mean no limit and sql_select_limit to DEFAULT */
-  if (lim_value == dbc->sql_select_limit
-   || lim_value == sql_select_unlimited && dbc->sql_select_limit == 0)
-    return SQL_SUCCESS;
-
-  if (lim_value > 0 && lim_value < sql_select_unlimited)
-    desodbc_snprintf(query, sizeof(query), "set @@sql_select_limit=%lu",
-                    (unsigned long)lim_value);
-  else
-  {
-    strcpy(query, "set @@sql_select_limit=DEFAULT");
-    lim_value= 0;
-  }
-
-  if (SQL_SUCCEEDED(rc = dbc->execute_query(query, SQL_NTS, req_lock)))
-  {
-    dbc->sql_select_limit= lim_value;
-  }
-
-  return rc;
-}
-
-
-/**
   Detects the parameter type.
 
   @param[in]  proc        procedure parameter string
@@ -3605,21 +3464,6 @@ char *proc_param_next_token(char *str, char *str_end)
   return 0;
 }
 
-
-/**
-   Sets row_count in STMT's DES_RES and affected rows property DES object. Primary use is to set
-   number of affected rows for constructed resulsets. Setting mysql.affected_rows
-   is required for SQLRowCount to return correct data for such resultsets.
-*/
-void set_row_count(STMT *stmt, des_ulonglong rows)
-{
-  if (stmt != NULL && stmt->result != NULL)
-  {
-    stmt->result->row_count= rows;
-    stmt->dbc->des->affected_rows= rows;
-  }
-}
-
 /**
    Gets fractional time of a second from datetime or time string.
 
@@ -4050,132 +3894,3 @@ int got_out_parameters(STMT *stmt)
 
   return result;
 }
-
-
-int get_session_variable(STMT *stmt, const char *var, char *result)
-{
-  char buff[255+4*NAME_CHAR_LEN], *to;
-  DES_RES *res;
-  DES_ROW row;
-
-  if (var)
-  {
-    to= desodbc_stpmov(buff, "SHOW SESSION VARIABLES LIKE '");
-    to= desodbc_stpmov(to, var);
-    to= desodbc_stpmov(to, "'");
-    *to= '\0';
-
-    if (!SQL_SUCCEEDED(stmt->dbc->execute_query(buff, SQL_NTS, TRUE)))
-    {
-      return 0;
-    }
-
-    res= mysql_store_result(stmt->dbc->des);
-    if (!res)
-      return 0;
-
-    row= mysql_fetch_row(res);
-    if (row)
-    {
-      strcpy(result, row[1]);
-      mysql_free_result(res);
-      return (int)strlen(result);
-    }
-
-    mysql_free_result(res);
-  }
-
-  return 0;
-}
-
-
-/**
-  Sets the value of @@max_execution_time
-
-  @param[in]  stmt        stmt handler
-  @param[in]  new_value   Value to set @@max_execution_time.
-
-  Returns new_value if operation was successful, -1 otherwise
- */
-SQLRETURN set_query_timeout(STMT *stmt, SQLULEN new_value)
-{
-  char query[44];
-  SQLRETURN rc= SQL_SUCCESS;
-
-  if (new_value == stmt->stmt_options.query_timeout ||
-      !is_minimum_version(stmt->dbc->des->server_version, "5.7.8"))
-  {
-    /* Do nothing if setting same timeout or MySQL server older than 5.7.8 */
-    return SQL_SUCCESS;
-  }
-
-  if (new_value > 0)
-  {
-    unsigned long long msec_value= (unsigned long long)new_value * 1000;
-    desodbc_snprintf(query, sizeof(query),
-                    "set @@max_execution_time=%llu", msec_value);
-  }
-  else
-  {
-    strcpy(query, "set @@max_execution_time=DEFAULT");
-    new_value= 0;
-  }
-
-  if (SQL_SUCCEEDED(rc = stmt->dbc->execute_query(query, SQL_NTS, true)))
-  {
-    stmt->stmt_options.query_timeout= new_value;
-  }
-
-  return rc;
-}
-
-
-SQLULEN get_query_timeout(STMT *stmt)
-{
-  SQLULEN query_timeout= SQL_QUERY_TIMEOUT_DEFAULT; /* 0 */
-
-  if (is_minimum_version(stmt->dbc->des->server_version, "5.7.8"))
-  {
-    /* Be cautious with very long values even if they don't make sense */
-    char query_timeout_char[32]= {0};
-    uint length= get_session_variable(stmt, "MAX_EXECUTION_TIME",
-                                      (char*)query_timeout_char);
-    /* Terminate the string just in case */
-    query_timeout_char[length]= 0;
-    /* convert */
-    query_timeout= (SQLULEN)(atol(query_timeout_char) / 1000);
-  }
-  return query_timeout;
-}
-
-
-const char get_identifier_quote(STMT *stmt)
-{
-  const char tick= '`', quote= '"', empty= ' ';
-
-  if (is_minimum_version(stmt->dbc->des->server_version, "3.23.06"))
-  {
-    /*
-      The full list of all SQL modes takes over 512 symbols, so we reserve
-      some for the future
-     */
-    char sql_mode[2048]= " ";
-    /*
-      The token finder skips the leading space and starts
-      with the first non-space value. Thus (sql_mode+1).
-    */
-    uint length= get_session_variable(stmt, "SQL_MODE", (char*)(sql_mode+1));
-
-    const char *end=  sql_mode + length;
-    if (find_first_token(stmt->dbc->cxn_charset_info, sql_mode, end, "ANSI_QUOTES"))
-    {
-      return quote;
-    }
-    else
-    {
-      return tick;
-    }
-  }
-  return empty;
-}
-

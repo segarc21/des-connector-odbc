@@ -42,9 +42,9 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee])$")
-    include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/CMakeFiles/myodbc-setup.dir/install-cxx-module-bmi-Release.cmake" OPTIONAL)
+    include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/CMakeFiles/desodbc-setup.dir/install-cxx-module-bmi-Release.cmake" OPTIONAL)
   elseif(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
-    include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/CMakeFiles/myodbc-setup.dir/install-cxx-module-bmi-RelWithDebInfo.cmake" OPTIONAL)
+    include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/CMakeFiles/desodbc-setup.dir/install-cxx-module-bmi-RelWithDebInfo.cmake" OPTIONAL)
   endif()
 endif()
 
@@ -56,7 +56,7 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/CMakeFiles/myodbc-setup.dir/install-cxx-module-bmi-Debug.cmake" OPTIONAL)
+    include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/CMakeFiles/desodbc-setup.dir/install-cxx-module-bmi-Debug.cmake" OPTIONAL)
   endif()
 endif()
 

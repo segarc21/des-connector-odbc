@@ -142,7 +142,7 @@ IF(${MSI_64})
   SET(XML_DEPS_GUID "BF941AF6-D40E-44AA-81D6-33A75F6FAE8A")
 ENDIF()
 
-SET(EXCLUDED_FILES "${MYODBC_ANSI_NAME}.dll" "${MYODBC_UNICODE_NAME}.dll" "${MYODBC_SETUP_NAME}.dll"
+SET(EXCLUDED_FILES "${DESODBC_ANSI_NAME}.dll" "${DESODBC_UNICODE_NAME}.dll" "${DESODBC_SETUP_NAME}.dll"
   "libcrypto-1_1-x64.dll" "libcrypto-1_1.dll"
   "libssl-1_1-x64.dll" "libssl-1_1.dll"
   "libcrypto-3-x64.dll" "libssl-3-x64.dll"

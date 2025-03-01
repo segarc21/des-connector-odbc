@@ -142,8 +142,6 @@ void desodbc_end()
     */
     my_thread_end_wait_time= 0;
 #endif
-
-    mysql_library_end();
   }
 }
 
@@ -206,9 +204,6 @@ int APIENTRY LibMain(HANDLE inst, DWORD ul_reason_being_called,
   case DLL_THREAD_ATTACH:
     break;
   case DLL_THREAD_DETACH:
-#ifdef THREAD
-    mysql_thread_end();
-#endif
     break;
 
   default:

@@ -101,33 +101,33 @@ add_compile_options(${PLATFORM_CFLAGS})
 #
 # Note: MODULE will not produce import library (.lib) on Windows
 
-add_library(myodbc-setup MODULE ${SETUP_SRCS})
+add_library(desodbc-setup MODULE ${SETUP_SRCS})
 set_property(
-  TARGET myodbc-setup
-  PROPERTY OUTPUT_NAME ${MYODBC_SETUP_NAME}
+  TARGET desodbc-setup
+  PROPERTY OUTPUT_NAME ${DESODBC_SETUP_NAME}
 )
 
-add_version_info(myodbc-setup
-  "MySQL Connector/ODBC driver setup library."
+add_version_info(desodbc-setup
+  "DES Connector/ODBC driver setup library."
   "Provides driver configuration GUI."
 )
 
-target_link_libraries(myodbc-setup ${ODBCLIB} ${ODBCINSTLIB} otel_api)
+target_link_libraries(desodbc-setup ${ODBCLIB} ${ODBCINSTLIB} otel_api)
 
 # Note: When using GTK+, these libraries will be linked to -gtk modules.
 
 if(NOT use_gtk)
-  target_link_libraries(myodbc-setup
-    myodbc-util ${MYSQL_CLIENT_LIBS} ${PLATFORM_LIBS}
+  target_link_libraries(desodbc-setup
+    desodbc-util ${MYSQL_CLIENT_LIBS} ${PLATFORM_LIBS}
   )
 endif()
 
 if(MYSQL_CXX_LINKAGE)
-  set_target_properties(myodbc-setup PROPERTIES LINKER_LANGUAGE CXX)
+  set_target_properties(desodbc-setup PROPERTIES LINKER_LANGUAGE CXX)
 endif()
 
 if(WITH_NODEFAULTLIB)
-  set_target_properties(myodbc-setup PROPERTIES
+  set_target_properties(desodbc-setup PROPERTIES
     LINK_FLAGS_DEBUG "/NODEFAULTLIB:${WITH_NODEFAULTLIB}"
     LINK_FLAGS_RELWITHDEBINFO "/NODEFAULTLIB:${WITH_NODEFAULTLIB}"
     LINK_FLAGS_RELEASE "/NODEFAULTLIB:${WITH_NODEFAULTLIB}"
@@ -141,10 +141,10 @@ endif()
 
 if(use_gtk)
 
-  set(GTK3_target ${MYODBC_SETUP_NAME}-gtk3)
+  set(GTK3_target ${DESODBC_SETUP_NAME}-gtk3)
   set(GTK3_pkg_name gtk+-3.0)
 
-  set(GTK2_target ${MYODBC_SETUP_NAME}-gtk2)
+  set(GTK2_target ${DESODBC_SETUP_NAME}-gtk2)
   set(GTK2_pkg_name gtk+-2.0)
 
   include(FindPkgConfig)
@@ -185,7 +185,7 @@ if(use_gtk)
     add_library(${${gtk}_target} SHARED ${SETUP_SRCS_GTK})
 
     target_link_libraries(${${gtk}_target} PRIVATE
-       ${${gtk}_LIBS} myodbc-util ${ODBCLIB} ${MYSQL_CLIENT_LIBS} ${PLATFORM_LIBS}
+       ${${gtk}_LIBS} desodbc-util ${ODBCLIB} ${MYSQL_CLIENT_LIBS} ${PLATFORM_LIBS}
        otel_api
     )
 
@@ -211,10 +211,10 @@ endif(use_gtk)
 
 
 # Install specs
-set_property(TARGET myodbc-setup APPEND PROPERTY INSTALL_RPATH "$ORIGIN")
+set_property(TARGET desodbc-setup APPEND PROPERTY INSTALL_RPATH "$ORIGIN")
 
 if(use_gtk)
-  install(TARGETS myodbc-setup DESTINATION ${LIB_SUBDIR})
+  install(TARGETS desodbc-setup DESTINATION ${LIB_SUBDIR})
 
   if(TARGET ${GTK3_target})
     install(TARGETS  ${GTK3_target} DESTINATION ${LIB_SUBDIR})
@@ -224,11 +224,11 @@ if(use_gtk)
     install(TARGETS  ${GTK2_target} DESTINATION ${LIB_SUBDIR})
   endif()
 else()
-  install(TARGETS myodbc-setup
+  install(TARGETS desodbc-setup
     CONFIGURATIONS Release RelWithDebInfo
     DESTINATION ${LIB_SUBDIR})
 
-  install(TARGETS myodbc-setup
+  install(TARGETS desodbc-setup
     CONFIGURATIONS Debug
     DESTINATION "${LIB_SUBDIR}/Debug")
 endif()

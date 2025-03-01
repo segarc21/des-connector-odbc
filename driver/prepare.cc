@@ -121,7 +121,7 @@ SQLRETURN SQL_API DES_SQLBindParameter( SQLHSTMT     StatementHandle,
     CLEAR_STMT_ERROR(stmt);
 
     if (ParameterNumber < 1) {
-      stmt->set_error(DESERR_S1093, NULL, 0);
+      stmt->set_error(DESERR_S1093, NULL);
       return SQL_ERROR;
     }
 
