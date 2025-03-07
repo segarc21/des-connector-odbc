@@ -402,7 +402,24 @@ error:
   return true;
 }
 
-char *get_charsets_dir(char *buf) { return nullptr; //TODO: research
+char *get_charsets_dir(char *buf) {
+  const char *sharedir = SHAREDIR;
+  char *res;
+  DBUG_TRACE;
+
+  if (charsets_dir != nullptr)
+    strmake(buf, charsets_dir, FN_REFLEN - 1);
+  else {
+    if (test_if_hard_path(sharedir) ||
+        is_prefix(sharedir, DEFAULT_CHARSET_HOME))
+      strxmov(buf, sharedir, "/", CHARSET_DIR, NullS);
+    else
+      strxmov(buf, DEFAULT_CHARSET_HOME, "/", sharedir, "/", CHARSET_DIR,
+              NullS);
+  }
+  res = convert_dirname(buf, buf, NullS);
+  DBUG_PRINT("info", ("charsets dir: '%s'", buf));
+  return res;
 }
 
 CHARSET_INFO *all_charsets[MY_ALL_CHARSETS_SIZE] = {nullptr};

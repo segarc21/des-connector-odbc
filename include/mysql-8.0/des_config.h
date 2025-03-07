@@ -246,11 +246,11 @@
 /* #undef HAVE_UBSAN */
 /* #undef ENABLED_LOCAL_INFILE */
 /* #undef DEFAULT_MYSQL_HOME */
-/* #undef SHAREDIR */
+#define SHAREDIR "share"
 /* #undef DEFAULT_BASEDIR */
 #define MYSQL_DATADIR "C:/Program Files/MySQL/MySQL Server "
 #define MYSQL_KEYRINGDIR "C:/Program Files/MySQL/MySQL Server "
-/* #undef DEFAULT_CHARSET_HOME */
+#define DEFAULT_CHARSET_HOME "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0"
 /* #undef PLUGINDIR */
 /* #undef DEFAULT_SYSCONFDIR */
 /* #undef DEFAULT_TMPDIR */

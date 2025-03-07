@@ -65,7 +65,7 @@ namespace desodbc
 /* Can be set in /usr/include/pthread.h */
 #ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
 extern native_mutexattr_t my_fast_mutexattr;
-#define MY_MUTEX_INIT_FAST &my_fast_mutexattr
+#define DES_MUTEX_INIT_FAST &my_fast_mutexattr
 #else
 #define DES_MUTEX_INIT_FAST NULL
 #endif
@@ -164,7 +164,7 @@ static inline void safe_mutex_assert_not_owner(safe_mutex_t *mp) {
 }
 #endif /* SAFE_MUTEX */
 
-static inline int des_mutex_init(des_mutex_t *mp, const native_mutexattr_t *attr
+static inline int my_mutex_init(des_mutex_t *mp, const native_mutexattr_t *attr
 #ifdef SAFE_MUTEX
                                 ,
                                 const char *file, uint line
@@ -179,7 +179,7 @@ static inline int des_mutex_init(des_mutex_t *mp, const native_mutexattr_t *attr
 #endif
 }
 
-static inline int des_mutex_lock(des_mutex_t *mp
+static inline int my_mutex_lock(des_mutex_t *mp
 #ifdef SAFE_MUTEX
                                 ,
                                 const char *file, uint line
@@ -209,7 +209,7 @@ static inline int my_mutex_trylock(des_mutex_t *mp
 #endif
 }
 
-static inline int des_mutex_unlock(des_mutex_t *mp
+static inline int my_mutex_unlock(des_mutex_t *mp
 #ifdef SAFE_MUTEX
                                   ,
                                   const char *file, uint line

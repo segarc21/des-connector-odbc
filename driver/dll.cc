@@ -90,18 +90,14 @@ void desodbc_init(void)
   {
     struct lconv *tmp;
     DECLARE_LOCALE_HANDLE
-
     init_getfunctions();
     default_locale = setlocale(LC_NUMERIC,NullS);
-
     __LOCALE_SET("")
-
     tmp=localeconv();
     decimal_point = tmp->decimal_point;
     thousands_sep = tmp->thousands_sep;
 
     __LOCALE_RESTORE()
-
     utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY),
                                              DESF(0));
 

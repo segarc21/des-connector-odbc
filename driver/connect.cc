@@ -263,9 +263,43 @@ SQLRETURN DBC::createPipes() {
     CloseHandle(env->driver_to_des_in_wpipe);
     return SQL_ERROR;
   }
+  #else
 
+  //TODO: handle errors appropriately
+  if (mkfifo(IN_WPIPE_NAME, 0666) == -1) {
+    perror("mkfifo");
+    return 1;
+}
+
+
+  if (mkfifo(OUT_RPIPE_NAME, 0666) == -1) {
+      perror("mkfifo");
+      unlink(IN_WPIPE_NAME);
+      return 1;
+  }
   #endif
   return SQL_SUCCESS;
+}
+
+const char* get_executable_dir(const char* executable_path) {
+
+  std::string executable_path_str(executable_path);
+  size_t pos = executable_path_str.find_last_of("/"); //TODO: consider Windows ANSI (right now, I'm considering Unix)
+
+  if (pos != std::string::npos) {
+    std::string dir_str = executable_path_str.substr(0, pos);
+    size_t dir_size = dir_str.size();
+
+    char *dir = new char[dir_size + 1]; //TODO: consider making an 'util' function out of this
+    dir_str.copy(dir, dir_size);
+    dir[dir_size] = '\0';
+
+    return dir;
+
+  } else { //Incorrect path. TODO: handle error appropiately.
+    exit(1);
+    return nullptr; //to prevent compiler errors
+  }
 }
 
 const wchar_t* get_executable_dir(const wchar_t *executable_path) {
@@ -289,10 +323,149 @@ const wchar_t* get_executable_dir(const wchar_t *executable_path) {
   }
 }
 
-SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
+void getDESProcessPipes() {
+  ENV *env = dbc_global_var->env;
 #ifdef _WIN32
-  ENV *env = this->env;
+  bool finished = false;
 
+  WaitForSingleObject(env->shared_memory_mutex, INFINITE);
+  WaitForSingleObject(env->request_handle_mutex, INFINITE);
+
+  env->shmem->handle_sharing_info.pid_handle_petitioner = GetCurrentProcessId();
+
+  while (!finished) {
+    DWORD random_pid =
+        env->shmem->pids_connected_struct
+            .pids_connected[rand() %
+                            (env->shmem->pids_connected_struct.size -
+                             1)];  // we request the handles to a random peer
+                                   // TODO: impleemnt better criteria
+    if (random_pid != GetCurrentProcessId()) {
+      env->shmem->handle_sharing_info.pid_handle_petitionee = random_pid;
+
+      SetEvent(env->request_handle_event);
+      WaitForSingleObject(env->handle_sent_event,
+                          INFINITE);  // TODO: handle errors
+
+      env->driver_to_des_out_rpipe = env->shmem->handle_sharing_info.out_handle;
+      env->driver_to_des_in_wpipe = env->shmem->handle_sharing_info.in_handle;
+
+      // we reset the structure once we have saved the handles
+      env->shmem->handle_sharing_info.in_handle = NULL;
+      env->shmem->handle_sharing_info.out_handle = NULL;
+      env->shmem->handle_sharing_info.pid_handle_petitionee = 0;
+      env->shmem->handle_sharing_info.pid_handle_petitioner = 0;
+
+      finished = true;
+    }
+  }
+
+  ReleaseMutex(env->request_handle_mutex);
+  ReleaseMutex(env->shared_memory_mutex);
+  #else
+
+  env->driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_WRONLY);
+  
+  if (env->driver_to_des_in_wpipe == -1) {
+      unlink(IN_WPIPE_NAME);
+      unlink(OUT_RPIPE_NAME);
+      return; //TODO: handle errors appropriately
+  }
+  
+  env->driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_RDONLY);
+  if (env->driver_to_des_out_rpipe == -1) {
+      close(env->driver_to_des_in_wpipe);
+      unlink(IN_WPIPE_NAME);
+      unlink(OUT_RPIPE_NAME);
+      return; //TODO: handle errors appropriately
+  }
+
+  #endif
+}
+
+SQLRETURN DBC::createDESProcess(const char* des_path) {
+  ENV *env = this->env;
+  #ifdef _WIN32
+  #else
+
+  pid_t pid = fork();
+  if (pid == -1) {
+      perror("fork");
+      unlink(IN_WPIPE_NAME);
+      unlink(OUT_RPIPE_NAME);
+      return 1;
+  } else if (pid == 0) {
+    int driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_RDONLY);
+    if (driver_to_des_in_wpipe == -1) {
+        perror("open driver_to_des_in_wpipe");
+        unlink(IN_WPIPE_NAME);
+        unlink(OUT_RPIPE_NAME);
+        return 1;
+    }
+
+    int driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_WRONLY);
+    if (driver_to_des_out_rpipe == -1) {
+        perror("open child_to_parent");
+        ::close(driver_to_des_in_wpipe);
+        unlink(IN_WPIPE_NAME);
+        unlink(OUT_RPIPE_NAME);
+        return 1;
+    }
+
+    dup2(driver_to_des_in_wpipe, STDIN_FILENO);
+    dup2(driver_to_des_out_rpipe, STDOUT_FILENO);
+
+    env->shmem->DES_pid = getpid();
+
+    const char* exec_dir = get_executable_dir(des_path);
+    chdir(exec_dir); //TODO: handle possible errors
+
+    execlp(des_path, des_path, nullptr);
+
+    perror("execlp");
+    ::close(env->driver_to_des_in_wpipe);
+    ::close(env->driver_to_des_out_rpipe);
+    unlink(IN_WPIPE_NAME);
+    unlink(OUT_RPIPE_NAME);
+    return 1;
+  } else {
+    env->shmem->des_process_created = true;
+
+    if (sem_post(env->shared_memory_mutex) == -1) {
+        perror("sem_post");
+    }
+
+    getDESProcessPipes();
+    
+    char buffer[4096];
+    ssize_t bytes_read;
+        
+    bool finished_reading = false;
+    std::string complete_reading_str = "";
+    while (!finished_reading) {
+      BOOL success = read(env->driver_to_des_out_rpipe, buffer, sizeof(buffer));
+      buffer[bytes_read] = '/0'; //we need it to be zero-terminated, as advised by a warning when tring to assign the char[] to a new std::string
+      std::string buffer_str = buffer;
+  
+      complete_reading_str += buffer_str;
+  
+      if (success == 0 || complete_reading_str.find("DES>") != std::string::npos) {
+        finished_reading = true;
+      }
+    }
+    
+    env->shmem->des_process_created = true;
+  }
+  #endif
+
+  return SQL_SUCCESS;
+
+}
+
+SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
+
+  ENV *env = this->env;
+  #ifdef _WIN32
   // Before creating the process, we need to create STARTUPINFO and
   // PROCESS_INFORMATION structures. Piece of code extracted from the
   // Microsoft's child process creating tutorial
@@ -388,7 +561,7 @@ any special flags.
 void shareHandles() {
 #ifdef _WIN32
   ENV *env = dbc_global_var->env;
-  SharedMemory *shmem = env->shmem;
+  SharedMemoryWin *shmem = env->shmem;
 
   while (true) {
     DWORD wait_event = WaitForSingleObject(env->request_handle_event, INFINITE);
@@ -418,49 +591,13 @@ void shareHandles() {
   #endif
 }
 
-
-void getDESProcessPipes() {
-#ifdef _WIN32
-  bool finished = false;
-
-  ENV *env = dbc_global_var->env;
-
-  WaitForSingleObject(env->shared_memory_mutex, INFINITE);
-  WaitForSingleObject(env->request_handle_mutex, INFINITE);
-
-  env->shmem->handle_sharing_info.pid_handle_petitioner = GetCurrentProcessId();
-
-  while (!finished) {
-    DWORD random_pid =
-        env->shmem->pids_connected_struct
-            .pids_connected[rand() %
-                            (env->shmem->pids_connected_struct.size -
-                             1)];  // we request the handles to a random peer
-                                   // TODO: impleemnt better criteria
-    if (random_pid != GetCurrentProcessId()) {
-      env->shmem->handle_sharing_info.pid_handle_petitionee = random_pid;
-
-      SetEvent(env->request_handle_event);
-      WaitForSingleObject(env->handle_sent_event,
-                          INFINITE);  // TODO: handle errors
-
-      env->driver_to_des_out_rpipe = env->shmem->handle_sharing_info.out_handle;
-      env->driver_to_des_in_wpipe = env->shmem->handle_sharing_info.in_handle;
-
-      // we reset the structure once we have saved the handles
-      env->shmem->handle_sharing_info.in_handle = NULL;
-      env->shmem->handle_sharing_info.out_handle = NULL;
-      env->shmem->handle_sharing_info.pid_handle_petitionee = 0;
-      env->shmem->handle_sharing_info.pid_handle_petitioner = 0;
-
-      finished = true;
-    }
-  }
-
-  ReleaseMutex(env->request_handle_mutex);
-  ReleaseMutex(env->shared_memory_mutex);
-  #endif
-}
+#ifndef _WIN32
+#include <iostream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <cstdio>
+#endif
 
 /**
   Try to establish a connection to a MySQL server based on the data source
@@ -477,7 +614,7 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 
 #ifdef _WIN32
   WaitForSingleObject(this->env->shared_memory_mutex, INFINITE);
-  SharedMemory *shmem = this->env->shmem;
+  SharedMemoryWin *shmem = this->env->shmem;
 
   shmem->pids_connected_struct
       .pids_connected[shmem->pids_connected_struct.size] =
@@ -511,7 +648,26 @@ SQLRETURN DBC::connect(DataSource *dsrc)
 
   if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
       this->connected = true;
-  #endif
+#else
+  SharedMemoryUnix *shmem = this->env->shmem;
+  this->cxn_charset_info = desodbc::get_charset(255, DESF(0));
+  const char *des_path = static_cast<const char*>(dsrc->opt_DES_EXEC);
+
+  if (!this->env->shmem->des_process_created) {
+    rc = this->createPipes();
+    rc = this->createDESProcess(des_path);
+    this->env->shmem->n_clients = 1;
+  } else {
+    getDESProcessPipes();
+    this->env->shmem->n_clients += 1;
+    rc = SQL_SUCCESS;
+  }
+
+  if (sem_post(this->env->shared_memory_mutex) == -1) {
+    perror("sem_post");
+  }
+
+#endif
   return rc;
 }
 

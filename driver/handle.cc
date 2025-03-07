@@ -153,6 +153,7 @@ SQLRETURN SQL_API DES_SQLAllocEnv(SQLHENV *phenv)
     env = new ENV(SQL_OV_ODBC3);
 #endif
   *phenv = (SQLHENV)env;
+
   return SQL_SUCCESS;
 }
 
@@ -207,7 +208,7 @@ SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
     ENV *penv= (ENV *) henv;
 
     if (!thread_count)
-      desodbc::des_thread_init();
+      desodbc::my_thread_init();
 
     ++thread_count;
 

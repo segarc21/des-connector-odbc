@@ -85,10 +85,10 @@ mysql_cond_t THR_COND_threads;
 #endif
 
 #ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
-native_mutexattr_t des_fast_mutexattr;
+native_mutexattr_t my_fast_mutexattr;
 #endif
 #ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
-native_mutexattr_t des_errorcheck_mutexattr;
+native_mutexattr_t my_errorcheck_mutexattr;
 #endif
 #ifdef _WIN32
 static void install_sigabrt_handler();
@@ -118,7 +118,37 @@ static int set_dessys_thread_var(struct st_des_thread_var *dessys_var) {
 */
 
 void my_thread_global_reinit() {
-    //TODO: do something with this
+  assert(des_thread_global_init_done);
+
+#ifdef HAVE_PSI_INTERFACE
+  my_init_mysys_psi_keys();
+#endif
+
+  des_mutex_destroy(&THR_LOCK_heap);
+  des_mutex_init(key_THR_LOCK_heap, &THR_LOCK_heap, DES_MUTEX_INIT_FAST);
+
+  des_mutex_destroy(&THR_LOCK_net);
+  des_mutex_init(key_THR_LOCK_net, &THR_LOCK_net, DES_MUTEX_INIT_FAST);
+
+  des_mutex_destroy(&THR_LOCK_myisam);
+  des_mutex_init(key_THR_LOCK_myisam, &THR_LOCK_myisam, DES_MUTEX_INIT_SLOW);
+
+  des_mutex_destroy(&THR_LOCK_malloc);
+  des_mutex_init(key_THR_LOCK_malloc, &THR_LOCK_malloc, DES_MUTEX_INIT_FAST);
+
+  des_mutex_destroy(&THR_LOCK_open);
+  des_mutex_init(key_THR_LOCK_open, &THR_LOCK_open, DES_MUTEX_INIT_FAST);
+
+  des_mutex_destroy(&THR_LOCK_charset);
+  des_mutex_init(key_THR_LOCK_charset, &THR_LOCK_charset, DES_MUTEX_INIT_FAST);
+
+#ifndef NDEBUG
+  des_mutex_destroy(&THR_LOCK_threads);
+  des_mutex_init(key_THR_LOCK_threads, &THR_LOCK_threads, MY_MUTEX_INIT_FAST);
+
+  des_cond_destroy(&THR_COND_threads);
+  des_cond_init(key_THR_COND_threads, &THR_COND_threads);
+#endif
 }
 
 /**
@@ -128,9 +158,51 @@ void my_thread_global_reinit() {
   @retval  true   error
 */
 
-bool des_thread_global_init() {
-  // TODO: do something with this
-    return true;
+bool my_thread_global_init() {
+  if (des_thread_global_init_done) return false;
+  des_thread_global_init_done = true;
+
+#if defined(SAFE_MUTEX)
+  safe_mutex_global_init(); /* Must be called early */
+#endif
+
+#ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
+  /*
+    Set mutex type to "fast" a.k.a "adaptive"
+
+    In this case the thread may steal the mutex from some other thread
+    that is waiting for the same mutex.  This will save us some
+    context switches but may cause a thread to 'starve forever' while
+    waiting for the mutex (not likely if the code within the mutex is
+    short).
+  */
+  pthread_mutexattr_init(&my_fast_mutexattr);
+  pthread_mutexattr_settype(&my_fast_mutexattr, PTHREAD_MUTEX_ADAPTIVE_NP);
+#endif
+
+#ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
+  /*
+    Set mutex type to "errorcheck"
+  */
+  pthread_mutexattr_init(&my_errorcheck_mutexattr);
+  pthread_mutexattr_settype(&my_errorcheck_mutexattr, PTHREAD_MUTEX_ERRORCHECK);
+#endif
+
+  des_mutex_init(key_THR_LOCK_malloc, &THR_LOCK_malloc, DES_MUTEX_INIT_FAST);
+  des_mutex_init(key_THR_LOCK_open, &THR_LOCK_open, DES_MUTEX_INIT_FAST);
+  des_mutex_init(key_THR_LOCK_charset, &THR_LOCK_charset, DES_MUTEX_INIT_FAST);
+  des_mutex_init(key_THR_LOCK_lock, &THR_LOCK_lock, DES_MUTEX_INIT_FAST);
+  des_mutex_init(key_THR_LOCK_myisam, &THR_LOCK_myisam, DES_MUTEX_INIT_SLOW);
+  des_mutex_init(key_THR_LOCK_myisam_mmap, &THR_LOCK_myisam_mmap,
+                   DES_MUTEX_INIT_FAST);
+  des_mutex_init(key_THR_LOCK_heap, &THR_LOCK_heap, DES_MUTEX_INIT_FAST);
+  des_mutex_init(key_THR_LOCK_net, &THR_LOCK_net, DES_MUTEX_INIT_FAST);
+#ifndef NDEBUG
+  des_mutex_init(key_THR_LOCK_threads, &THR_LOCK_threads, MY_MUTEX_INIT_FAST);
+  des_cond_init(key_THR_COND_threads, &THR_COND_threads);
+#endif
+
+  return false;
 }
 
 void my_thread_global_end() {
@@ -163,19 +235,19 @@ void my_thread_global_end() {
 #endif
 
 #ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
-  pthread_mutexattr_destroy(&des_fast_mutexattr);
+  pthread_mutexattr_destroy(&my_fast_mutexattr);
 #endif
 #ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
-  pthread_mutexattr_destroy(&des_errorcheck_mutexattr);
+  pthread_mutexattr_destroy(&my_errorcheck_mutexattr);
 #endif
-  mysql_mutex_destroy(&THR_LOCK_malloc);
-  mysql_mutex_destroy(&THR_LOCK_open);
-  mysql_mutex_destroy(&THR_LOCK_lock);
-  mysql_mutex_destroy(&THR_LOCK_myisam);
-  mysql_mutex_destroy(&THR_LOCK_myisam_mmap);
-  mysql_mutex_destroy(&THR_LOCK_heap);
-  mysql_mutex_destroy(&THR_LOCK_net);
-  mysql_mutex_destroy(&THR_LOCK_charset);
+  des_mutex_destroy(&THR_LOCK_malloc);
+  des_mutex_destroy(&THR_LOCK_open);
+  des_mutex_destroy(&THR_LOCK_lock);
+  des_mutex_destroy(&THR_LOCK_myisam);
+  des_mutex_destroy(&THR_LOCK_myisam_mmap);
+  des_mutex_destroy(&THR_LOCK_heap);
+  des_mutex_destroy(&THR_LOCK_net);
+  des_mutex_destroy(&THR_LOCK_charset);
 #ifndef NDEBUG
   if (all_threads_killed) {
     mysql_mutex_destroy(&THR_LOCK_threads);
@@ -196,7 +268,7 @@ void my_thread_global_end() {
   @retval true   Fatal error; mysys/dbug functions can't be used
 */
 
-bool des_thread_init() {
+bool my_thread_init() {
 #ifndef NDEBUG
   struct st_des_thread_var *tmp;
 #endif

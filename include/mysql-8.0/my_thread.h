@@ -161,12 +161,12 @@ void my_thread_exit(void *value_ptr) MY_ATTRIBUTE((noreturn));
 character. */
 void my_thread_self_setname(const char *name);
 
-extern bool des_thread_global_init();
+extern bool my_thread_global_init();
 extern void my_thread_global_reinit();
 extern void my_thread_global_end();
 
 // Need to be extern "C" for the time being, due to memcached.
-extern bool des_thread_init();
+extern bool my_thread_init();
 extern void my_thread_end();
 
 } /* namespace myodbc */

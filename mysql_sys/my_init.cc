@@ -157,9 +157,9 @@ bool des_init() {
   if ((str = getenv("UMASK_DIR")) != nullptr)
     des_umask_dir = (int)(atoi_octal(str) | 0700);
 
-  if (desodbc::des_thread_global_init()) return true;
+  if (desodbc::my_thread_global_init()) return true;
 
-  if (des_thread_init()) return true;
+  if (my_thread_init()) return true;
 
   /* $HOME is needed early to parse configuration files located in ~/ */
   if ((home_dir = getenv("HOME")) != nullptr)

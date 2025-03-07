@@ -403,7 +403,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\desc.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\dll.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\error.cc" />
-    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\execute.cc">
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\EXECUTE.CC">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>
@@ -414,7 +414,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\driver.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\options.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\parse.cc" />
-    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\prepare.cc">
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\PREPARE.CC">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>
@@ -425,7 +425,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\my_prepared_stmt.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\my_stmt.cc" />
     <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\utility.cc" />
-    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\unicode.cc">
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\driver\UNICODE.CC">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">CompileAsCpp</CompileAs>

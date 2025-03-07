@@ -139,6 +139,44 @@ DES_RESULT* do_internal_query(std::string query) {
     }
   }
   clear_pipe(env->driver_to_des_out_rpipe);
+  #else
+
+  if (sem_wait(env->query_mutex) == -1) {
+    perror("sem_wait");
+    return nullptr;
+  }
+
+  if (write(env->driver_to_des_in_wpipe, full_query_arr, strlen(full_query_arr)) == -1) {
+    perror("write");
+    return nullptr;
+  }
+
+  bool finished_reading = false;
+  bool read_success = false;
+  CHAR buffer[BUFFER_SIZE];
+  ssize_t bytes_read;
+
+  std::string tapi_output = "";
+
+  while (!finished_reading) {
+    bytes_read = read(env->driver_to_des_out_rpipe, buffer, sizeof(buffer));
+    buffer[bytes_read] = '\0';
+    std::string buffer_str = buffer;
+    tapi_output += buffer_str;
+
+    if (tapi_output.find("$eot") !=
+        std::string::npos) {  // not all querys distinct from process return
+                              // $eot. TODO: research
+      finished_reading = true;
+    }
+  }
+
+  if (sem_post(env->query_mutex) == -1) {
+    perror("sem_post");
+    return nullptr;
+  }
+
+  #endif
 
   STMT *temp_stmt = new STMT(dbc_global_var);
   temp_stmt->type = SELECT;
@@ -154,7 +192,6 @@ DES_RESULT* do_internal_query(std::string query) {
   }
 
   DES_SQLFreeStmt(temp_stmt, SQL_CLOSE);
-#endif _WIN32
   return res;
 }
 
@@ -208,6 +245,47 @@ SQLRETURN do_quiet_internal_query(STMT* stmt, std::string query) {
     }
   }
   clear_pipe(env->driver_to_des_out_rpipe);
+  #else
+
+  if (sem_wait(env->query_mutex) == -1) {
+    perror("sem_wait");
+    return SQL_ERROR;
+  }
+
+  if (write(env->driver_to_des_in_wpipe, full_query_arr, strlen(full_query_arr)) == -1) {
+    perror("write");
+    return SQL_ERROR;
+  }
+
+  bool finished_reading = false;
+  bool read_success = false;
+  CHAR buffer[BUFFER_SIZE];
+  ssize_t bytes_read;
+
+  std::string tapi_output = "";
+
+  while (!finished_reading) {
+    bytes_read = read(env->driver_to_des_out_rpipe, buffer, sizeof(buffer));
+    buffer[bytes_read] = '\0';
+    std::string buffer_str = buffer;
+    tapi_output += buffer_str;
+
+    if (tapi_output.size() > 0 &&
+        tapi_output.size() <
+            BUFFER_SIZE) {  // TODO: coarse solution, but as this function
+      // is called when adding/updating/deleting rows, and DES TAPI throws a
+      // very short message when doing this, we can be sure that we have read
+      // everything inside our buffer.
+      finished_reading = true;
+    }
+  }
+
+  if (sem_post(env->query_mutex) == -1) {
+    perror("sem_post");
+    return SQL_ERROR;
+  }
+
+  #endif
 
   if (tapi_output.find("$error") != std::string::npos)
     return SQL_ERROR;  // TODO: handle errors appropriately, providing DES'
@@ -216,7 +294,6 @@ SQLRETURN do_quiet_internal_query(STMT* stmt, std::string query) {
     stmt->affected_rows = stoll(tapi_output);
     return SQL_SUCCESS;
   }
-#endif
   return SQL_SUCCESS;
 }
     /*
@@ -225,7 +302,10 @@ SQLRETURN do_quiet_internal_query(STMT* stmt, std::string query) {
 */
 SQLRETURN DES_do_query(STMT* stmt, std::string query) {
   int error = SQL_ERROR, native_error = 0;
-#ifdef _WIN32
+  bool read_success = false;
+  bool finished_reading = false;
+  ENV *env = dbc_global_var->env;
+  char *full_query_arr = nullptr;
   SQLULEN query_length = query.length();
   std::string tapi_output = "";
   std::string full_query = "";
@@ -238,15 +318,17 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
     goto exit;
   }
 
-  // Write the command to the child's STDIN
   DWORD bytes_written;
-  ENV *env = dbc_global_var->env;
+  
   full_query = "/tapi " + query + '\n'; //query for the launched DES process
 
   //We convert the string to a char*.
-  char *full_query_arr = new char[full_query.size() + sizeof(char)];  //we hold a final char for the delimiter '\0'
+  full_query_arr = new char[full_query.size() + sizeof(char)];  //we hold a final char for the delimiter '\0'
   std::copy(full_query.begin(), full_query.end(), full_query_arr);
   full_query_arr[full_query.size()] = '\0';
+
+
+#ifdef _WIN32
 
   DWORD wait_event = WaitForSingleObject(env->query_mutex, INFINITE);
 
@@ -267,8 +349,8 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
       However, that output message had a fixed length and behavior. We introduce
       some new logic when treating a command output.
   */
-  bool finished_reading = false;
-  bool read_success = false;
+  finished_reading = false;
+  read_success = false;
   CHAR buffer[BUFFER_SIZE];
   DWORD bytes_read;
 
@@ -293,6 +375,47 @@ SQLRETURN DES_do_query(STMT* stmt, std::string query) {
   }
   clear_pipe(env->driver_to_des_out_rpipe);
   ReleaseMutex(env->query_mutex);
+  #else
+
+  if (sem_wait(env->query_mutex) == -1) {
+    perror("sem_wait");
+    return SQL_ERROR;
+  }
+
+  if (write(env->driver_to_des_in_wpipe, full_query_arr, strlen(full_query_arr)) == -1) {
+    perror("write");
+    return SQL_ERROR;
+  }
+
+  finished_reading = false;
+  read_success = false;
+  CHAR buffer[BUFFER_SIZE];
+  ssize_t bytes_read;
+
+  while (!finished_reading) {
+    bytes_read = read(env->driver_to_des_out_rpipe, buffer, sizeof(buffer));
+
+    buffer[bytes_read] = '\0';
+    std::string buffer_str = buffer;
+    tapi_output += buffer_str;
+
+    if (stmt->type == PROCESS) { //TODO: what happens with nested /process commands?
+        if (tapi_output.find("Info: Batch file processed.") !=
+            std::string::npos) {
+            finished_reading = true;
+        }
+    } else {
+      if (tapi_output.find("$eot") != std::string::npos) { //not all querys distinct from process return $eot. TODO: research
+        finished_reading = true;
+      }
+    }
+  }
+
+  if (sem_post(env->query_mutex) == -1) {
+    perror("sem_post");
+    return SQL_ERROR;
+  }
+  #endif
 
   //We parse the TAPI output and create an internal table from the result view
   stmt->last_output = tapi_output;
@@ -317,7 +440,6 @@ exit:
     stmt->query = stmt->orig_query;
     stmt->orig_query.reset(NULL, NULL, NULL);
   }
-#endif
   return error;
 }
 

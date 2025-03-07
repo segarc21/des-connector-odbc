@@ -144,7 +144,7 @@ namespace desodbc
   @param A Mutex attributes
 */
 
-#define def_des_mutex_init(K, M, A) \
+#define des_mutex_init(K, M, A) \
   des_mutex_init_with_src(K, M, A, __FILE__, __LINE__)
 
 #define des_mutex_init_with_src(K, M, A, F, L) \
@@ -156,10 +156,10 @@ namespace desodbc
   @c mysql_mutex_destroy is a drop-in replacement
   for @c pthread_mutex_destroy.
 */
-#define mysql_mutex_destroy(M) \
-  mysql_mutex_destroy_with_src(M, __FILE__, __LINE__)
+#define des_mutex_destroy(M) \
+  des_mutex_destroy_with_src(M, __FILE__, __LINE__)
 
-#define mysql_mutex_destroy_with_src(M, F, L) \
+#define des_mutex_destroy_with_src(M, F, L) \
   inline_mysql_mutex_destroy(M, F, L)
 
 /**
@@ -215,7 +215,7 @@ static inline int inline_des_mutex_init(PSI_mutex_key key [[maybe_unused]],
 #else
   that->m_psi = nullptr;
 #endif
-  return des_mutex_init(&that->m_mutex, attr
+  return my_mutex_init(&that->m_mutex, attr
 #ifdef SAFE_MUTEX
                        ,
                        src_file, src_line
@@ -274,7 +274,7 @@ static inline int inline_des_mutex_lock(repl_des_mutex_t *that,
 #endif
 
   /* Non instrumented code */
-  result = des_mutex_lock(&that->m_mutex
+  result = my_mutex_lock(&that->m_mutex
 #ifdef SAFE_MUTEX
                          ,
                          src_file, src_line
@@ -340,7 +340,7 @@ static inline int inline_des_mutex_unlock(repl_des_mutex_t *that,
   }
 #endif
 
-  result = des_mutex_unlock(&that->m_mutex
+  result = my_mutex_unlock(&that->m_mutex
 #ifdef SAFE_MUTEX
                            ,
                            src_file, src_line

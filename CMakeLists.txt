@@ -125,6 +125,9 @@ IF(SYSCONFDIR)
   SET(DEFAULT_SYSCONFDIR "${SYSCONFDIR}")
 ENDIF()
 
+SET(DEFAULT_CHARSET_HOME "${CMAKE_SOURCE_DIR}")
+SET(SHAREDIR share)
+
 #
 # Macro to enable C++14 for all targets in the current directory and below.
 #

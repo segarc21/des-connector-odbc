@@ -223,7 +223,6 @@ SQLConnectW(SQLHDBC hdbc, SQLWCHAR *dsn, SQLSMALLINT dsn_len,
             SQLWCHAR *auth, SQLSMALLINT auth_len)
 {
   CHECK_HANDLE(hdbc);
-
   ((DBC *)hdbc)->unicode= TRUE; /* Hooray, a Unicode connection! */
 
   return DESConnect(hdbc, dsn, dsn_len, user, user_len, auth, auth_len);
