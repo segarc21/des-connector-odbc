@@ -26,12 +26,12 @@
 # along with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-SET(CONNECTOR_MAJOR "9")
+SET(CONNECTOR_MAJOR "1")
 SET(CONNECTOR_MINOR "0")
 SET(CONNECTOR_PATCH "0")
 
-SET(CONNECTOR_MAJOR_PREV "8")
-SET(CONNECTOR_MINOR_PREV "4")
+SET(CONNECTOR_MAJOR_PREV "0")
+SET(CONNECTOR_MINOR_PREV "0")
 SET(CONNECTOR_PATCH_PREV "0")
 
 
@@ -40,7 +40,7 @@ SET(CONNECTOR_QUALITY "GA")
 
 # Note: To be used in copyright notes of generated files
 
-set(COPYRIGHT_YEAR 2024)
+set(COPYRIGHT_YEAR 2025)
 
 
 # ----------------------------------------------------------------------

@@ -172,13 +172,10 @@ VOID OnWMNotify(WPARAM wParam, LPARAM lParam)
                 lpttt->lpszText = tip; \
                 return;
 
-			SET_TIP(drvname, L"An unique name for this data source");
-			SET_TIP(drvdesc, L"A brief description for this data source");
-			SET_TIP(desexecpath, L"The path for the DES executable");
-			SET_TIP(PORT,    L"The TCP/IP port to use if server is not localhost");
-			SET_TIP(username, L"The username used to connect to MySQL");
-			SET_TIP(password, L"The password for the server user combination");
-			SET_TIP(dbname, L"The database to be current upon connect");
+			SET_TIP(DSN, L"An unique name for this data source");
+			SET_TIP(DESCRIPTION, L"A brief description for this data source");
+			SET_TIP(DES_EXEC_PATH,    L"The path of the DES executable");
+			SET_TIP(DES_WORKING_DIR, L"The working directory specified for DES");
         }
     }
 return;

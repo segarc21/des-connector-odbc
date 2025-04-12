@@ -386,7 +386,7 @@ void on_charset_popup (GtkComboBox *widget, gpointer user_data)
 void on_file_button_clicked(GtkComboBox *widget, gpointer user_data)
 {
   GtkWidget *dialog;
-  dialog = gtk_file_chooser_dialog_new ("Choose File",
+  dialog = gtk_file_chooser_dialog_new ("Select DES executable...",
                                         GTK_WINDOW(dsnEditDialog),
                                         GTK_FILE_CHOOSER_ACTION_OPEN,
                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -406,7 +406,7 @@ void on_file_button_clicked(GtkComboBox *widget, gpointer user_data)
 void on_folder_button_clicked(GtkComboBox *widget, gpointer user_data)
 {
   GtkWidget *dialog;
-  dialog = gtk_file_chooser_dialog_new ("Choose Directory",
+  dialog = gtk_file_chooser_dialog_new ("Select a working directory for DES...",
                                         GTK_WINDOW(dsnEditDialog),
                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -641,6 +641,16 @@ int ShowOdbcParamsDialog(DataSource* params, HWND ParentWnd, BOOL isPrompt)
 
   g_signal_connect ((gpointer) hide_details, "clicked",
                       G_CALLBACK (on_hide_details_clicked), NULL);
+
+  dummy= GTK_WIDGET (gtk_builder_get_object (builder, "browse_exec"));
+  entry= GTK_ENTRY (gtk_builder_get_object (builder, "DES_EXEC"));
+  g_signal_connect ((gpointer) dummy, "clicked",
+                    G_CALLBACK (on_file_button_clicked), entry);
+
+  dummy= GTK_WIDGET (gtk_builder_get_object (builder, "browse_dir"));
+  entry= GTK_ENTRY (gtk_builder_get_object (builder, "DES_WORKING_DIR"));
+  g_signal_connect ((gpointer) dummy, "clicked",
+                    G_CALLBACK (on_folder_button_clicked), entry);
 
   dummy= GTK_WIDGET (gtk_builder_get_object (builder, "ok"));
   g_signal_connect ((gpointer) dummy, "clicked",

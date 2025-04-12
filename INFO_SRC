@@ -1,8 +1,8 @@
 MySQL Connector/ODBC Sources Information
 
-version              :  9.0.0
-date                 :  2025-03-01
+version              :  1.0.0
+date                 :  2025-03-07
 branch               :  main
-commit               :  e35516951e78a6d236aed8744dc00f82cf832c98
-short                :  e355169
+commit               :  5e5842998dc25270447b436df45ce3217efe4e32
+short                :  5e58429
 

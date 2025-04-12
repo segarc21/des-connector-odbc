@@ -57,7 +57,7 @@ des_bool free_current_result(STMT *stmt)
    i.e using mysql_* part of api, ssps - prepared on server, using mysql_stmt
  */
 static
-DES_RESULT * stmt_get_result(STMT *stmt, BOOL force_use)
+DES_RESULT * stmt_get_result(STMT *stmt)
 {
   return des_store_result(stmt);
 }
@@ -65,12 +65,12 @@ DES_RESULT * stmt_get_result(STMT *stmt, BOOL force_use)
 
 /* For text protocol this get result itself as well. Besides for text protocol
    we need to use/store each resultset of multiple resultsets */
-DES_RESULT * get_result_metadata(STMT *stmt, BOOL force_use)
+DES_RESULT * get_result_metadata(STMT *stmt)
 {
   /* just a precaution, mysql_free_result checks for NULL anywat */
   des_free_result(stmt->result);
 
-  stmt->result = stmt_get_result(stmt, force_use);
+  stmt->result = stmt_get_result(stmt);
 
   return stmt->result;
 }
@@ -396,7 +396,7 @@ bool scrollable(STMT * stmt, const char * query, const char * query_end)
 }
 
 SQLRETURN STMT::do_local_query() {
-  if (!get_result_metadata(this, FALSE)) {
+  if (!get_result_metadata(this)) {
     stmt_result_free(this);
     return this->set_error("S1001", "Not enough memory");
   }

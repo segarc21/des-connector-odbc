@@ -34,9 +34,9 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc9w.dll")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc1w.dll")
   elseif(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc9w.dll")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc1w.dll")
   endif()
 endif()
 
@@ -50,7 +50,7 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/debug" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9w.dll")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/debug" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc1w.dll")
   endif()
 endif()
 
@@ -62,9 +62,9 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc9a.dll")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc1a.dll")
   elseif(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc9a.dll")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc1a.dll")
   endif()
 endif()
 
@@ -78,7 +78,7 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/debug" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc9a.dll")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/debug" TYPE MODULE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc1a.dll")
   endif()
 endif()
 

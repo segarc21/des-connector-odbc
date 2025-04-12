@@ -52,7 +52,6 @@ SQLEndTran(SQLSMALLINT HandleType,
            SQLHANDLE   Handle,
            SQLSMALLINT CompletionType)
 {
-  CHECK_HANDLE(Handle);
-  //TODO: prohibit using this function
+  //Transactions are not supported in DES.
   return SQL_ERROR;
 }

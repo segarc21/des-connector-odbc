@@ -757,6 +757,28 @@ Function sets up a result set containing details of the types
 supported by mysql.
 */
 
+DES_FIELD SQL_GET_TYPE_INFO_fields[] = {
+    DESODBC_FIELD_STRING("TYPE_NAME", 32, NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
+    DESODBC_FIELD_STRING("LITERAL_PREFIX", 2, 0),
+    DESODBC_FIELD_STRING("LITERAL_SUFFIX", 1, 0),
+    DESODBC_FIELD_STRING("CREATE_PARAMS", 15, 0),
+    DESODBC_FIELD_SHORT("NULLABLE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("CASE_SENSITIVE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("SEARCHABLE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("UNSIGNED_ATTRIBUTE", 0),
+    DESODBC_FIELD_SHORT("FIXED_PREC_SCALE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("AUTO_UNIQUE_VALUE", 0),
+    DESODBC_FIELD_STRING("LOCAL_TYPE_NAME", 60, 0),
+    DESODBC_FIELD_SHORT("MINIMUM_SCALE", 0),
+    DESODBC_FIELD_SHORT("MAXIMUM_SCALE", 0),
+    DESODBC_FIELD_SHORT("SQL_DATATYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("SQL_DATETIME_SUB", 0),
+    DESODBC_FIELD_LONG("NUM_PREC_RADIX", 0),
+    DESODBC_FIELD_SHORT("INTERVAL_PRECISION", 0),
+};
+
 const uint SQL_GET_TYPE_INFO_FIELDS = (uint)array_elements(SQL_GET_TYPE_INFO_fields);
 
 char sql_searchable[6], sql_unsearchable[6], sql_nullable[6], sql_no_nulls[6],
@@ -885,6 +907,13 @@ char *SQL_GET_TYPE_INFO_values[][19] =
 
 const uint DES_DATA_TYPES = (uint)array_elements(SQL_GET_TYPE_INFO_values);
 
+void ResultTable::insert_SQLGetTypeInfo_cols() {
+  insert_cols(SQL_GET_TYPE_INFO_fields,
+              array_elements(SQL_GET_TYPE_INFO_fields));
+}
+
+
+
 /**
 Return information about data types supported by the server.
 
@@ -917,11 +946,10 @@ SQLRETURN SQL_API DESGetTypeInfo(SQLHSTMT hstmt, SQLSMALLINT fSqlType)
     }
   }
 
-  stmt->type_requested = fSqlType;
+  stmt->params_for_table.type_requested = fSqlType;
   stmt->type = SQLGETTYPEINFO;
 
-  error = stmt->do_local_query();
-  stmt->fake_result = 1;
+  error = stmt->build_results();
 
   return error;
 }

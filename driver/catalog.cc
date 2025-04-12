@@ -66,7 +66,24 @@ static DES_FIELD SQLCOLUMNS_fields[] = {
     DESODBC_FIELD_STRING("IS_NULLABLE", 3, 0),
 };
 
+
 const uint SQLCOLUMNS_FIELDS= (uint)array_elements(SQLCOLUMNS_values);
+
+void ResultTable::insert_SQLColumns_cols() {
+  insert_cols(SQLCOLUMNS_fields, array_elements(SQLCOLUMNS_fields));
+}
+
+
+DES_FIELD SQLSPECIALCOLUMNS_fields[] = {
+    DESODBC_FIELD_SHORT("SCOPE", 0),
+    DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("DATA_TYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_STRING("TYPE_NAME", 20, NOT_NULL_FLAG),
+    DESODBC_FIELD_LONG("COLUMN_SIZE", 0),
+    DESODBC_FIELD_LONG("BUFFER_LENGTH", 0),
+    DESODBC_FIELD_LONG("DECIMAL_DIGITS", 0),
+    DESODBC_FIELD_SHORT("PSEUDO_COLUMN", 0),
+};
 
 static char *SQLSPECIALCOLUMNS_values[] = {0, NULL, 0, NULL, 0, 0, 0, 0};
 
@@ -247,6 +264,20 @@ SQLTables
 ****************************************************************************
 */
 
+DES_FIELD SQLTABLES_fields[] = {
+    DESODBC_FIELD_NAME("TABLE_CAT", 0),
+    DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("TABLE_NAME", 0),
+    DESODBC_FIELD_NAME("TABLE_TYPE", 0),
+    /*
+      Table remark length is 80 characters
+    */
+    DESODBC_FIELD_STRING("REMARKS", 80, 0),
+};
+
+void ResultTable::insert_metadata_cols() {
+  insert_cols(SQLTABLES_fields, array_elements(SQLTABLES_fields));
+}
 
 SQLRETURN SQL_API
 DESTables(SQLHSTMT hstmt,
@@ -255,24 +286,56 @@ DESTables(SQLHSTMT hstmt,
             SQLCHAR *table_name, SQLSMALLINT table_len,
             SQLCHAR *type_name, SQLSMALLINT type_len)
 {
-
   SQLRETURN rc = SQL_SUCCESS;
+  std::pair<SQLRETURN, std::string> pair;
   STMT *stmt= (STMT *)hstmt;
+  DBC *dbc = stmt->dbc;
 
   CLEAR_STMT_ERROR(hstmt);
   DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
-  std::string dbschema_str = "/dbschema";
-  SQLCHAR *dbschema_sqlchar = reinterpret_cast<unsigned char *>(
-      const_cast<char *>(dbschema_str.c_str()));
-  SQLINTEGER dbschema_len = dbschema_str.size();
+  rc = dbc->getQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
+  pair = dbc->send_query_and_read("/current_db");
+  rc = pair.first;
+  std::string current_db_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+  std::string previous_db = getLines(current_db_output)[0];
+
+  pair = dbc->send_query_and_read("/use_db $des");
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db); //trying to revert the database change
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  if (table_name) {
+    std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+    stmt->params_for_table.table_name = table_name_str;
+  }
   stmt->type = SQLTABLES;
-  
-  rc = DES_SQLPrepare(hstmt, dbschema_sqlchar, dbschema_len, false, false);
 
-  rc = DES_SQLExecute(stmt);
+  rc = stmt->build_results();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
 
+  pair = dbc->send_query_and_read("/use_db " + previous_db);
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  rc = dbc->releaseQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
 }
@@ -356,12 +419,61 @@ DESColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
              SQLCHAR *column_name, SQLSMALLINT column_len)
 
 {
+  SQLRETURN rc = SQL_SUCCESS;
+  std::pair<SQLRETURN, std::string> pair;
   STMT *stmt= (STMT *)hstmt;
-
+  DBC *dbc = stmt->dbc;
   CLEAR_STMT_ERROR(hstmt);
   DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
-  return SQL_ERROR; //TODO: implement
+  rc = dbc->getQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+  pair = dbc->send_query_and_read("/current_db");
+  rc = pair.first;
+  std::string current_db_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+  std::string previous_db = getLines(current_db_output)[0];
+
+  pair = dbc->send_query_and_read("/use_db $des");
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read(
+        "/use_db " + previous_db);  // trying to revert the database change
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+  stmt->params_for_table.table_name = table_name_str;
+  if (column_name) {
+    std::string column_str = sqlcharptr_to_str(column_name, column_len);
+    stmt->params_for_table.column_name = column_str;
+
+  }
+  stmt->type = SQLCOLUMNS;
+
+  rc = stmt->build_results();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  pair = dbc->send_query_and_read("/use_db " + previous_db);
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  rc = dbc->releaseQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+  return rc;
 }
 
 
@@ -371,7 +483,25 @@ SQLStatistics
 ****************************************************************************
 */
 
+DES_FIELD SQLSTAT_fields[] = {
+    DESODBC_FIELD_NAME("TABLE_CAT", 0),
+    DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("NON_UNIQUE", 0),
+    DESODBC_FIELD_NAME("INDEX_QUALIFIER", 0),
+    DESODBC_FIELD_NAME("INDEX_NAME", 0),
+    DESODBC_FIELD_SHORT("TYPE", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("ORDINAL_POSITION", 0),
+    DESODBC_FIELD_NAME("COLUMN_NAME", 0),
+    DESODBC_FIELD_STRING("ASC_OR_DESC", 1, 0),
+    DESODBC_FIELD_LONG("CARDINALITY", 0),
+    DESODBC_FIELD_LONG("PAGES", 0),
+    DESODBC_FIELD_STRING("FILTER_CONDITION", 10, 0),
+};
 
+void ResultTable::insert_SQLStatistics_cols() {
+  insert_cols(SQLSTAT_fields, array_elements(SQLSTAT_fields));
+}
 
 /*
   @type    : ODBC 1.0 API
@@ -389,7 +519,12 @@ DESStatistics(SQLHSTMT hstmt,
                 SQLUSMALLINT fUnique,
                 SQLUSMALLINT fAccuracy)
 {
+  SQLRETURN rc = SQL_SUCCESS;
+  std::pair<SQLRETURN, std::string> pair;
   STMT *stmt= (STMT *)hstmt;
+  CLEAR_STMT_ERROR(hstmt);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+  DBC *dbc = stmt->dbc;
 
   /*
     In DES, we cannot check statistics relative to indexes nor pages.
@@ -397,21 +532,55 @@ DESStatistics(SQLHSTMT hstmt,
     if requested.
   */
 
+  rc = dbc->getQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+  pair = dbc->send_query_and_read("/current_db");
+  rc = pair.first;
+  std::string current_db_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+  std::string previous_db = getLines(current_db_output)[0];
+
+  pair = dbc->send_query_and_read("/use_db $des");
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read(
+        "/use_db " + previous_db);  // trying to revert the database change
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+  stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLSTATISTICS;
 
-  stmt->table_name = std::string(reinterpret_cast<char *>(table_name));
+  rc = stmt->build_results();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
 
-  std::string query_str = "select * from " + stmt->table_name + ";";
-  SQLCHAR *query = reinterpret_cast<unsigned char*>(const_cast<char*>(query_str.c_str()));
-  SQLINTEGER query_length = query_str.size();
+  pair = dbc->send_query_and_read("/use_db " + previous_db);
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
 
-  SQLRETURN rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
-
-  rc = DES_SQLExecute(stmt);
+  rc = dbc->releaseQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
 }
 
+void ResultTable::insert_SQLSpecialColumns_cols() {
+  insert_cols(SQLSPECIALCOLUMNS_fields,
+              array_elements(SQLSPECIALCOLUMNS_fields));
+}
 
 /*
   @type    : ODBC 1.0 API
@@ -431,35 +600,92 @@ DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
                     SQLUSMALLINT fScope,
                     SQLUSMALLINT fNullable)
 {
-  STMT        *stmt=(STMT *) hstmt;
-  /*
-   * In this preliminar version we will ignore the catalog and schema inputs.
-   */
-
-  stmt->type = SQLSPECIALCOLUMNS;
-
   /*
     As DES does not support indexing nor pseudocolumns, we will only return
     the primary keys when dealing with the SQLSPECIALCOLUMNS statement type.
     It will be necesary to call /dbschema table_name to do so.
   */ 
-  std::string dbschema_str = "/dbschema";
-  SQLCHAR *dbschema_sqlchar = reinterpret_cast<unsigned char *>(
-      const_cast<char *>(dbschema_str.c_str()));
-  SQLINTEGER dbschema_len = dbschema_str.size();
-  // Now, we construct the query "/dbschema table_name"
-  std::string table_name_str = std::string(reinterpret_cast<char *>(table_name));
-  std::string query_str = "/dbschema " + table_name_str;
-  SQLCHAR *query =
-      reinterpret_cast<unsigned char *>(const_cast<char *>(query_str.c_str()));
-  SQLINTEGER query_length = query_str.size();
+  SQLRETURN rc = SQL_SUCCESS;
+  std::pair<SQLRETURN, std::string> pair;
+  DBC *dbc;
+  STMT *stmt = (STMT *)hstmt;
 
-  SQLRETURN rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
+  CLEAR_STMT_ERROR(hstmt);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
-  rc = DES_SQLExecute(stmt);
+  dbc = ((STMT *)hstmt)->dbc;
+  /*
+   * In this preliminar version we will ignore the catalog and schema inputs.
+   */
+
+  rc = dbc->getQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+  pair = dbc->send_query_and_read("/current_db");
+  rc = pair.first;
+  std::string current_db_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+  std::string previous_db = getLines(current_db_output)[0];
+
+  pair = dbc->send_query_and_read("/use_db $des");
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read(
+        "/use_db " + previous_db);  // trying to revert the database change
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+  std::string main_query = "/dbschema " + table_name_str;
+  pair = dbc->send_query_and_read(main_query);
+  rc = pair.first;
+  std::string main_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  stmt->params_for_table.table_name = table_name_str;
+  stmt->type = SQLSPECIALCOLUMNS;
+  stmt->last_output = main_output;
+
+  rc = stmt->build_results();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  pair = dbc->send_query_and_read("/use_db " + previous_db);
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  rc = dbc->releaseQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
 }
+
+DES_FIELD SQLPRIM_KEYS_fields[] = {
+    DESODBC_FIELD_NAME("TABLE_CAT", 0),
+    DESODBC_FIELD_NAME("TABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("TABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("COLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
+    DESODBC_FIELD_STRING("PK_NAME", 128, 0),
+};
+
+void ResultTable::insert_SQLPrimaryKeys_cols() {
+  insert_cols(SQLPRIM_KEYS_fields, array_elements(SQLPRIM_KEYS_fields));
+};
 
 /*
   @type    : ODBC 1.0 API
@@ -468,7 +694,6 @@ DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
        does not support returning primary keys from multiple tables in
        a single call
 */
-
 SQLRETURN SQL_API
 DESPrimaryKeys(SQLHSTMT hstmt,
                  SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
@@ -476,7 +701,8 @@ DESPrimaryKeys(SQLHSTMT hstmt,
                  SQLSMALLINT schema_len,
                  SQLCHAR *table_name, SQLSMALLINT table_len)
 {
-  SQLRETURN rc;
+  SQLRETURN rc = SQL_SUCCESS;
+  std::pair<SQLRETURN, std::string> pair;
   DBC *dbc;
   STMT *stmt= (STMT *) hstmt;
 
@@ -488,18 +714,58 @@ DESPrimaryKeys(SQLHSTMT hstmt,
    * In this preliminar version we will ignore the catalog and schema inputs.
    */
 
+  rc = dbc->getQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+  pair = dbc->send_query_and_read("/current_db");
+  rc = pair.first;
+  std::string current_db_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+  std::string previous_db = getLines(current_db_output)[0];
+
+  pair = dbc->send_query_and_read("/use_db $des");
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read(
+        "/use_db " + previous_db);  // trying to revert the database change
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+  std::string main_query = "/dbschema " + table_name_str;
+  pair = dbc->send_query_and_read(main_query);
+  rc = pair.first;
+  std::string main_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLPRIMARYKEYS;
+  stmt->last_output = main_output;
 
-  // Now, we construct the query "/dbschema table_name"
-  std::string table_name_str(reinterpret_cast<char const *>(table_name));
-  std::string query_str = "/dbschema " + table_name_str;
-  SQLCHAR *query =
-      reinterpret_cast<unsigned char *>(const_cast<char *>(query_str.c_str()));
-  SQLINTEGER query_length = query_str.size();
+  rc = stmt->build_results();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
 
-  rc = DES_SQLPrepare(hstmt, query, query_length, false, false);
+  pair = dbc->send_query_and_read("/use_db " + previous_db);
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
 
-  rc = DES_SQLExecute(stmt);
+  rc = dbc->releaseQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
 }
@@ -510,6 +776,28 @@ DESPrimaryKeys(SQLHSTMT hstmt,
 SQLForeignKeys
 ****************************************************************************
 */
+
+DES_FIELD SQLFORE_KEYS_fields[] = {
+    DESODBC_FIELD_NAME("PKTABLE_CAT", 0),
+    DESODBC_FIELD_NAME("PKTABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("PKTABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("PKCOLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("FKTABLE_CAT", 0),
+    DESODBC_FIELD_NAME("FKTABLE_SCHEM", 0),
+    DESODBC_FIELD_NAME("FKTABLE_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_NAME("FKCOLUMN_NAME", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("KEY_SEQ", NOT_NULL_FLAG),
+    DESODBC_FIELD_SHORT("UPDATE_RULE", 0),
+    DESODBC_FIELD_SHORT("DELETE_RULE", 0),
+    DESODBC_FIELD_NAME("FK_NAME", 0),
+    DESODBC_FIELD_NAME("PK_NAME", 0),
+    DESODBC_FIELD_SHORT("DEFERRABILITY", 0),
+};
+
+void ResultTable::insert_SQLForeignKeys_cols() {
+  insert_cols(SQLFORE_KEYS_fields, array_elements(SQLFORE_KEYS_fields));
+};
+
 /**
   Retrieve either a list of foreign keys in a specified table, or the list
   of foreign keys in other tables that refer to the primary key in the
@@ -549,7 +837,8 @@ DESForeignKeys(SQLHSTMT hstmt,
                  SQLCHAR *fk_schema_name,
                  SQLSMALLINT fk_schema_len,
                  SQLCHAR *fk_table_name, SQLSMALLINT fk_table_len) {
-  SQLRETURN rc;
+  SQLRETURN rc = SQL_SUCCESS;
+  std::pair<SQLRETURN, std::string> pair;
   DBC *dbc;
 
   LOCK_STMT(hstmt);
@@ -592,41 +881,80 @@ DESForeignKeys(SQLHSTMT hstmt,
   // TODO: check possible loss of data if converting to string (as warned by the
   // compiler).
   if (pk_table_name != NULL && fk_table_name != NULL) {
-    std::string pk_table_str(reinterpret_cast<char const *>(pk_table_name));
+    std::string pk_table_str = sqlcharptr_to_str(pk_table_name, pk_table_len);
+    std::string fk_table_str = sqlcharptr_to_str(fk_table_name, fk_table_len);
 
-    std::string fk_table_str(reinterpret_cast<char const *>(fk_table_name));
-
-    stmt->pk_table_name = pk_table_str;
-    stmt->fk_table_name = fk_table_str;
+    stmt->params_for_table.pk_table_name = pk_table_str;
+    stmt->params_for_table.fk_table_name = fk_table_str;
     stmt->type = SQLFOREIGNKEYS_PKFK;
 
   } else if (pk_table_name != NULL) {
-    std::string pk_table_str(reinterpret_cast<char const *>(pk_table_name));
+    std::string pk_table_str = sqlcharptr_to_str(pk_table_name, pk_table_len);
 
-    stmt->pk_table_name = pk_table_str;
+    stmt->params_for_table.pk_table_name = pk_table_str;
 
     stmt->type = SQLFOREIGNKEYS_PK;
   }
 
   else if (fk_table_name != NULL) {
-    std::string fk_table_str(reinterpret_cast<char const *>(fk_table_name));
+    std::string fk_table_str = sqlcharptr_to_str(fk_table_name, fk_table_len);
 
-    stmt->fk_table_name = fk_table_str;
+    stmt->params_for_table.fk_table_name = fk_table_str;
 
     stmt->type = SQLFOREIGNKEYS_FK;
 
   } else
     return SQL_ERROR;
 
-  // Now, we construct the query "/dbschema"
-  std::string dbschema_str = "/dbschema";
-  SQLCHAR *dbschema_sqlchar = reinterpret_cast<unsigned char *>(
-      const_cast<char *>(dbschema_str.c_str()));
-  SQLINTEGER dbschema_len = dbschema_str.size();
+  rc = dbc->getQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
-  rc = DES_SQLPrepare(hstmt, dbschema_sqlchar, dbschema_len, false, false);
+  pair = dbc->send_query_and_read("/current_db");
+  rc = pair.first;
+  std::string current_db_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+  std::string previous_db = getLines(current_db_output)[0];
 
-  rc = DES_SQLExecute(stmt);
+  pair = dbc->send_query_and_read("/use_db $des");
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read(
+        "/use_db " + previous_db);  // trying to revert the database change
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  std::string main_query = "/dbschema";
+  pair = dbc->send_query_and_read(main_query);
+  rc = pair.first;
+  std::string main_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  stmt->last_output = main_output;
+
+  rc = stmt->build_results();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->send_query_and_read("/use_db " + previous_db);
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  pair = dbc->send_query_and_read("/use_db " + previous_db);
+  rc = pair.first;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    dbc->releaseQueryMutex();
+    return rc;
+  }
+
+  rc = dbc->releaseQueryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
 }

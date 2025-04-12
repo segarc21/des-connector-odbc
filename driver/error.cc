@@ -159,7 +159,10 @@ DESERROR::DESERROR(desodbc_errid errid, const char* errtext)
 
   retcode = desodbc3_errors[errid].retcode;
   sqlstate = desodbc3_errors[errid].sqlstate;
-  message = errtext + errmsg;
+  if (errtext)
+    message = errtext + errmsg;
+  else
+    message = errmsg;
 }
 
 DESERROR::DESERROR(const char* state, const char* msg)

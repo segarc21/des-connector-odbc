@@ -56,12 +56,12 @@
 
 const char usage[] =
 "+---                                                                   \n"
-"| myodbc-installer v" DESODBC_VERSION "                                 \n"
+"| desodbc-installer v" DESODBC_VERSION "                               \n"
 "+---                                                                   \n"
 "|                                                                      \n"
 "| Description                                                          \n"
 "|                                                                      \n"
-"|    This program is for managing MySQL Connector/ODBC configuration   \n"
+"|    This program is for managing DES Connector/ODBC configuration   \n"
 "|    options at the command prompt. It can be used to register or      \n"
 "|    unregister an ODBC driver, and to create, edit, or remove DSN.    \n"
 "|                                                                      \n"
@@ -86,7 +86,7 @@ const char usage[] =
 #endif
 "| Syntax                                                               \n"
 "|                                                                      \n"
-"|    myodbc-installer <Object> <Action> [Options]                      \n"
+"|    desodbc-installer <Object> <Action> [Options]                     \n"
 "|                                                                      \n"
 "| Object                                                               \n"
 "|                                                                      \n"
@@ -105,51 +105,53 @@ const char usage[] =
 "|     -n <name>                                                        \n"
 "|     -t <attribute string>                                            \n"
 "|        if used for handling data source names the <attribute string> \n"
-"|        can contain ODBC options for establishing connections to MySQL\n"
-"|        Server. The full list of ODBC options can be obtained from    \n"
-"|        http://dev.mysql.com/doc/connector-odbc/en/                   \n"
+"|        can contain ODBC options for the DES executable path and/or   \n"
+"|        the working directory from which DES should be launched.      \n"
 /* Note: These scope values line up with the SQLSetConfigMode constants */
 "|     -c0 add as both a user and a system data source                  \n"
 "|     -c1 add as a user data source                                    \n"
 "|     -c2 add as a system data source (default)                        \n"
 "|                                                                      \n"
+"|     Note that adding as a system data source may require admin       \n"
+"|     privileges.                                                      \n"
+"|                                                                      \n"
 "| Examples                                                             \n"
 "|                                                                      \n"
 "|    List drivers                                                      \n"
-"|    shell> myodbc-installer -d -l                                     \n"
+"|    shell> desodbc-installer -d -l                                    \n"
 "|                                                                      \n"
 #ifndef _WIN32
 "|    Register a Unicode driver (UNIX example)                          \n"
-"|    shell> myodbc-installer -d -a -n \"MySQL ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
-"|              -t \"DRIVER=/path/to/driver/libmyodbc" DESODBC_STRMAJOR_VERSION "w.so;SETUP=/path/to/gui/libmyodbc" DESODBC_STRMAJOR_VERSION "S.so\"\n"
+"|    shell> desodbc-installer -d -a -n \"DES ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
+"|              -t \"DRIVER=/path/to/driver/libdesodbc" DESODBC_STRMAJOR_VERSION "w.so;SETUP=/path/to/gui/libdesodbc" DESODBC_STRMAJOR_VERSION "S.so\"\n"
 "|                                                                      \n"
 "|      Note                                                            \n"
 "|         * The /path/to/driver is /usr/lib for 32-bit systems and     \n"
 "|           some 64-bit systems, and /usr/lib64 for most 64-bit systems\n"
 "|                                                                      \n"
-"|         * driver_name is libmyodbc" DESODBC_STRMAJOR_VERSION "a.so for the ANSI version and     \n"
-"|           libmyodbc" DESODBC_STRMAJOR_VERSION "w.so for the Unicode version of MySQL ODBC Driver\n"
+"|         * driver_name is libdesodbc" DESODBC_STRMAJOR_VERSION "a.so for the ANSI version and    \n"
+"|           libdesodbc" DESODBC_STRMAJOR_VERSION "w.so for the Unicode version of DES ODBC Driver \n"
 "|                                                                      \n"
 "|         * The SETUP parameter is optional; it provides location of   \n"
-"|           the GUI module (libmyodbc" DESODBC_STRMAJOR_VERSION "S.so) for DSN setup, which       \n"
+"|           the GUI module (libdesodbc" DESODBC_STRMAJOR_VERSION "S.so) for DSN setup, which      \n"
 "|           is not supported on Solaris and Mac OSX systems            \n"
 "|                                                                      \n"
 #else
 "|    Register a Unicode driver (Windows example)                       \n"
-"|    shell> myodbc-installer -d -a -n \"MySQL ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
-"|              -t \"DRIVER=myodbc" DESODBC_STRMAJOR_VERSION "w.dll;SETUP=myodbc" DESODBC_STRMAJOR_VERSION "S.dll\"\n"
+"|    shell> desodbc-installer -d -a -n \"DES ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
+"|              -t \"DRIVER=desodbc" DESODBC_STRMAJOR_VERSION "w.dll;SETUP=desodbc" DESODBC_STRMAJOR_VERSION "S.dll\"\n"
 "|                                                                      \n"
 "|      Note                                                            \n"
-"|         * driver_name is myodbc" DESODBC_STRMAJOR_VERSION "a.dll for the ANSI version and       \n"
-"|           myodbc" DESODBC_STRMAJOR_VERSION "w.dll for the Unicode version of MySQL ODBC Driver  \n"
+"|         * driver_name is desodbc" DESODBC_STRMAJOR_VERSION "a.dll for the ANSI version and      \n"
+"|           desodbc" DESODBC_STRMAJOR_VERSION "w.dll for the Unicode version of DES ODBC Driver   \n"
 "|                                                                      \n"
 #endif
 "|    Add a new system data source name for Unicode driver              \n"
-"|    shell> myodbc-installer -s -a -c2 -n \"test\" \\                  \n"
-"|              -t \"DRIVER=MySQL ODBC " DESODBC_STRSERIES " Unicode Driver;SERVER=localhost;DATABASE=test;UID=myid;PWD=mypwd\"\n"
+"|    shell> desodbc-installer -s -a -c2 -n \"test\" \\                 \n"
+"|              -t \"DRIVER=DES ODBC " DESODBC_STRSERIES " Unicode Driver;DES_EXEC=C:\\des\\des.exe;DES_WORKING_DIR=C:\\des\"\n"
 "|                                                                      \n"
 "|    List data source name attributes for 'test'                       \n"
-"|    shell> myodbc-installer -s -l -c2 -n \"test\"                    \n"
+"|    shell> desodbc-installer -s -l -c2 -n \"test\"                    \n"
 "+---                                                                   \n";
 
 /* command line args */
@@ -210,7 +212,11 @@ void print_installer_error()
   {
     if (SQLInstallerError(msgno, &errcode, errmsg, 256, NULL) != SQL_SUCCESS)
       return;
-    fprintf(stderr, "[ERROR] SQLInstaller error %d: %s\n", errcode, errmsg);
+    fprintf(stderr, "[ERROR] SQLInstaller error %d: %s", errcode, errmsg);
+    if (errcode == 19) {
+      fprintf(stderr, ". Do you have the necessary permissions for that operation?\n");
+    } else
+      fprintf(stderr, "\n");
   }
 }
 
@@ -509,31 +515,9 @@ int list_datasource_details(DataSource *ds)
 
   OPTION_CUSTOM_OUTPUT(DSN, "Name");
   OPTION_CUSTOM_OUTPUT(DRIVER, "Driver");
-  OPTION_CUSTOM_OUTPUT(UID, "Uid");
-  OPTION_CUSTOM_OUTPUT(DATABASE, "Database");
   OPTION_CUSTOM_OUTPUT(DESCRIPTION, "Description");
   OPTION_CUSTOM_OUTPUT(DES_EXEC, "DES Executable");
-  OPTION_CUSTOM_OUTPUT(SOCKET, "Socket");
-  OPTION_CUSTOM_OUTPUT(PORT, "Port");
-  OPTION_CUSTOM_OUTPUT(INITSTMT, "Initial Statement");
-  OPTION_CUSTOM_OUTPUT(CHARSET, "Character Set");
-  OPTION_CUSTOM_OUTPUT(SSL_KEY, "SSL Key");
-  OPTION_CUSTOM_OUTPUT(SSL_CERT, "SSL Cert");
-  OPTION_CUSTOM_OUTPUT(SSL_CA, "SSL CA");
-  OPTION_CUSTOM_OUTPUT(SSL_CAPATH, "SSL CA Path");
-  OPTION_CUSTOM_OUTPUT(SSL_CIPHER, "SSL Cipher");
-  OPTION_CUSTOM_OUTPUT(SSL_MODE, "SSL Mode");
-  OPTION_CUSTOM_OUTPUT(SSLVERIFY, "Verify SSL Cert");
-  OPTION_CUSTOM_OUTPUT(RSAKEY, "RSA Public Key");
-  OPTION_CUSTOM_OUTPUT(TLS_VERSIONS, "TLS Versions");
-  OPTION_CUSTOM_OUTPUT(SSL_CRL, "SSL CRL");
-  OPTION_CUSTOM_OUTPUT(SSL_CRLPATH, "SSL CRL Path");
-  OPTION_CUSTOM_OUTPUT(PLUGIN_DIR, "Plugin Directory");
-  OPTION_CUSTOM_OUTPUT(DEFAULT_AUTH, "Default Authentication Library");
-  OPTION_CUSTOM_OUTPUT(OCI_CONFIG_FILE, "OCI Config File");
-  OPTION_CUSTOM_OUTPUT(OCI_CONFIG_PROFILE, "OCI Config Profile");
-  OPTION_CUSTOM_OUTPUT(AUTHENTICATION_KERBEROS_MODE, "Kerberos Authentication Mode");
-
+  OPTION_CUSTOM_OUTPUT(DES_WORKING_DIR, "DES Working Directory");
   bool bool_mode = false;
 
   for (const auto &v : params) {

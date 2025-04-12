@@ -89,32 +89,6 @@ des_bool odbc_supported_conversion(SQLSMALLINT sqlType, SQLSMALLINT cType)
  {
    switch(field->type)
    {
-   case DES_TYPE_BIT:
-     {
-       switch (cType)
-       {
-       case SQL_C_BIT:
-       case SQL_C_TINYINT:
-       case SQL_C_STINYINT:
-       case SQL_C_UTINYINT:
-       case SQL_C_SHORT:
-       case SQL_C_SSHORT:
-       case SQL_C_USHORT:
-       case SQL_C_LONG:
-       case SQL_C_SLONG:
-       case SQL_C_ULONG:
-       case SQL_C_FLOAT:
-       case SQL_C_DOUBLE:
-       case SQL_C_SBIGINT:
-       case SQL_C_UBIGINT:
-         return TRUE;
-
-       /* SQL_BIT should be converted SQL_C_NUMERIC, while SQL_BINARY should not
-        */
-       case SQL_C_NUMERIC:
-         return TRUE;
-       }
-     }
    case DES_TYPE_STRING:
      {
        switch (cType)
@@ -453,31 +427,6 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       pcbValue= &tmp; /* Easier code */
     }
 
-    if (field->type == DES_TYPE_BIT)
-    {
-      switch(fCType)
-      {
-      case SQL_C_BIT:
-        return copy_binary_result(stmt, (SQLCHAR *)rgbValue, cbValueMax,
-                                  pcbValue, field, value, length);
-
-      //https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/sql-to-c-bit?view=sql-server-ver15
-      //When bit SQL data is converted to character C data, the possible values are "0" and "1".
-      case SQL_C_CHAR:
-        return copy_bit_result(stmt, (SQLCHAR *)rgbValue, cbValueMax,
-                               pcbValue, field, value, length);
-      case SQL_C_WCHAR:
-        return wcopy_bit_result(stmt, (SQLWCHAR *)rgbValue, cbValueMax,
-                                pcbValue, field, value, length);
-      case SQL_C_UBIGINT:
-        u_numeric_value = binary2ull(value, length);
-        break;
-      default:
-        numeric_value = binary2ll(value, length);
-        convert= 0;
-      }
-    }
-
     switch (fCType)
     {
     case SQL_C_CHAR:
@@ -485,6 +434,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
         Handle BLOB -> CHAR conversion
         Conversion only for field which is having binary character set (63)
       */
+      /*
       if ((field->flags & BINARY_FLAG) &&
         field->charsetnr == BINARY_CHARSET_NUMBER &&
         IS_LONGDATA(field->type) &&
@@ -493,6 +443,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
         return copy_binhex_result(stmt, (SQLCHAR *)rgbValue,
           (SQLINTEGER)cbValueMax, pcbValue, value, length);
       }
+      */
       /* fall through */
 
     case SQL_C_BINARY:
@@ -534,6 +485,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       {
         char *tmp= get_string(stmt, column_number, value, &length, as_string);
 
+        /*
         if ((field->flags & BINARY_FLAG) &&
           field->charsetnr == BINARY_CHARSET_NUMBER &&
           IS_LONGDATA(field->type) &&
@@ -543,6 +495,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
                   (SQLINTEGER)(cbValueMax / sizeof(SQLWCHAR)),
                   pcbValue, tmp, length);
         }
+        */
 
         return copy_wchar_result(stmt, (SQLWCHAR *)rgbValue,
                         (SQLINTEGER)(cbValueMax / sizeof(SQLWCHAR)), pcbValue,
@@ -1586,7 +1539,7 @@ SQLRETURN SQL_API SQLMoreResults( SQLHSTMT hstmt )
   }
 
   /* start using the new resultset */
-  stmt->result = get_result_metadata(stmt, FALSE);
+  stmt->result = get_result_metadata(stmt);
 
   if (!stmt->result)
   {
@@ -2536,4 +2489,989 @@ SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle) {
   return DES_SQLExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
                              stmt->ird->rows_processed_ptr,
                              stmt->ird->array_status_ptr, 0);
+}
+
+size_t ResultTable::col_count() { return names_ordered.size(); }
+
+size_t ResultTable::row_count() {
+  if (names_ordered.size() != 0)
+    return columns[names_ordered[0]].values.size();
+  else
+    return 0;
+}
+
+std::string ResultTable::index_to_name_col(size_t index) {
+  return names_ordered[index - 1];
+}
+
+void ResultTable::refresh_row(const int row_index) {
+  for (auto pair : columns) {
+    Column col = pair.second;
+    col.refresh_row(row_index);
+  }
+}
+
+void ResultTable::insert_col(const std::string &tableName,
+                        const std::string &columnName,
+                             const TypeAndLength &columnType,
+                             const SQLSMALLINT &columnNullable) {
+  names_ordered.push_back(columnName);
+  columns[columnName] =
+      Column(tableName, columnName, columnType, columnNullable);
+}
+
+void ResultTable::insert_col(DES_FIELD *field) {
+  std::string name = field->name;
+  names_ordered.push_back(name);
+  columns[name] = Column(field);
+}
+
+void ResultTable::insert_value(const std::string &columnName, char *value) {
+  columns[columnName].insert_value(value);
+}
+
+void ResultTable::insert_value(const std::string &columnName,
+                               const std::string &value) {
+  columns[columnName].insert_value(string_to_char_pointer(value));
+}
+
+unsigned long Column::getLength(int row) {
+  if (!values.empty() && values[row])
+    return strlen(values[row]);  // TODO: size() throws a size_t, research
+                                 // what to do to ensure compatibility
+  else
+    return 0;
+}
+
+unsigned int Column::getDecimals() {
+  if (this->field->type == DES_TYPE_FLOAT ||
+      this->field->type == DES_TYPE_REAL) {
+    unsigned int max_decimals = 0;
+    for (auto value : values) {
+      std::string val_str(value);
+      size_t pos = val_str.find('.');
+      if (pos != std::string::npos) {
+        unsigned int decimals =
+            val_str.substr(pos + 1, val_str.size() - (pos + 1)).size();
+        if (decimals > max_decimals)
+            max_decimals = decimals;
+      }
+    }
+
+    return max_decimals;
+
+  } else
+    return 0;
+}
+
+unsigned int Column::getMaxLength() {
+  unsigned int max = 0;
+
+  for (auto value : values) {
+    if (value && strlen(value) > max) max = strlen(value);
+  }
+
+  return max;
+}
+
+DES_ROWS * Column::generate_DES_ROWS(int current_row) {
+  DES_ROWS *rows = new DES_ROWS;
+  DES_ROWS *ptr = rows;
+  for (int i = 0; current_row + i < values.size(); ++i) {
+    ptr->data = new char *;
+    *(ptr->data) = values[current_row + i];
+
+    if (current_row + (i + 1) < values.size()) {
+      ptr->next = new DES_ROWS;
+      ptr = ptr->next;
+    } else
+      ptr->next = nullptr;
+
+    // length doesn't seem to be modified, as I have verified debugging MySQL
+    // ODBC. TODO: research
+  }
+  return rows;
+}
+
+DES_FIELD * Column::get_DES_FIELD() {
+  // We need to have these values updated right now
+  this->field->max_length =
+      getMaxLength();
+  this->field->decimals = getDecimals();
+  return this->field;
+}
+
+Column::Column(const std::string &table_name, const std::string &col_name,
+               const TypeAndLength &col_type, const SQLSMALLINT &col_nullable) {
+  this->field = new DES_FIELD;
+
+  this->field->name = string_to_char_pointer(col_name);
+  this->field->org_name = string_to_char_pointer(col_name);
+  this->field->name_length = col_name.size();
+  this->field->org_name_length = col_name.size();
+
+  this->field->table = string_to_char_pointer(table_name);
+  this->field->org_table = string_to_char_pointer(table_name);
+  this->field->table_length = table_name.size();
+  this->field->org_table_length = table_name.size();
+
+  this->field->db = string_to_char_pointer("$des");  // TODO: temporal
+  this->field->db_length = 4;                        // TODO: temporal
+
+  this->field->catalog = string_to_char_pointer("def");  // TODO: temporal
+  this->field->catalog_length = 3;                       // TODO: temporal
+
+  this->field->def = nullptr;  // TODO: research
+  this->field->def_length = 0;
+
+  this->field->flags = col_nullable == 1 ? NOT_NULL_FLAG : 0;
+
+  this->field->decimals = 0;
+
+  this->field->charsetnr = 48; //latin1
+
+  this->field->extension = nullptr;
+
+  this->field->type = col_type.simple_type;
+
+  this->field->length = get_Type_size(col_type);
+
+  this->field->max_length =
+      0;  // the column right now is empty.
+          // it will update when a function requires to know this value.
+}
+
+void Column::refresh_row(const int row_index) {
+  /*
+string_to_char_pointer(values[row_index], (char *)target_value_binding);
+*str_len_or_ind_binding = values[row_index].size();
+*/
+}
+void Column::update_row(const int row_index, char *value) {
+  if (values[row_index]) delete values[row_index];
+  values[row_index] = value;
+}
+void Column::remove_row(const int row_index) {
+  values.erase(values.begin() + row_index);
+}
+SQLSMALLINT Column::get_decimal_digits() {
+  // It seems that there is no type in DES that has this attribute.
+  // Consequently, we should always return zero.
+  // Check
+  // https://learn.microsoft.com/en-us/sql/odbc/reference/appendixes/decimal-digits?view=sql-server-ver16
+  return 0;
+}
+
+
+unsigned long *ResultTable::fetch_lengths(int current_row) {
+  unsigned long *lengths =
+      (unsigned long *)malloc(names_ordered.size() * sizeof(unsigned long));
+
+  for (int i = 0; i < names_ordered.size(); ++i) {
+    unsigned long *length = lengths + i;
+    *length = columns[names_ordered[i]].getLength(current_row);
+  }
+
+  return lengths;
+}
+
+DES_ROW ResultTable::generate_DES_ROW(const int index) {
+  int n_cols = names_ordered.size();
+  DES_ROW row = new char *[n_cols];
+
+  for (int i = 0; i < n_cols; ++i) {
+    row[i] = columns[names_ordered[i]].values[index];
+  }
+
+  return row;
+}
+
+DES_ROWS *ResultTable::generate_DES_ROWS(const int current_row) {
+  DES_ROWS *rows = new DES_ROWS;
+  rows->data = nullptr;
+  rows->next = nullptr;
+
+  DES_ROWS *ptr = rows;
+  int n_rows =
+      columns[names_ordered[0]].values.size();  // sloppy way to do this. TODO:
+                                                // guarantee encapsulation
+  for (int i = 0; current_row + i < n_rows; ++i) {
+    ptr->data = generate_DES_ROW(current_row + i);
+
+    if (current_row + (i + 1) < n_rows) {
+      ptr->next = new DES_ROWS;
+      ptr = ptr->next;
+    } else
+      ptr->next = nullptr;
+
+    // length doesn't seem to be modified, as I have verified debugging MySQL
+    // ODBC. TODO: research
+  }
+  return rows;
+}
+
+DES_FIELD* ResultTable::get_DES_FIELD(int col_index) {
+  return columns[names_ordered[col_index]].get_DES_FIELD();
+}
+
+std::vector<ForeignKeyInfo> ResultTable::getForeignKeysFromTAPI(
+    const std::vector<std::string> &lines, int &index) {
+  std::vector<ForeignKeyInfo> result;
+
+  while (lines[index] != "$") {
+    std::string str = lines[index];
+
+    // We erase these brackets for easer the parsing
+    str.erase(std::remove(str.begin(), str.end(), '['), str.end());
+    str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
+    ForeignKeyInfo fki;
+    // We skip the "non foreign" table name
+    int i = 0;
+    while (str[i] != '.') i++;
+    i++;  // we skip '.'
+    std::string key = "";
+    while (str[i] != ' ') {
+      key += str[i];
+      i++;
+    }
+    i += 4;  // we skip " -> "
+    std::string foreign_table = "";
+    while (str[i] != '.') {
+      foreign_table += str[i];
+      i++;
+    }
+    i++;  // we skip '.'
+    std::string foreign_key = "";
+    while (i < str.size()) {
+      foreign_key += str[i];
+      i++;
+    }
+
+    fki.key = key;
+    fki.foreign_table = foreign_table;
+    fki.foreign_key = foreign_key;
+
+    result.push_back(fki);
+
+    index++;
+  }
+
+  return result;
+}
+
+DBSchemaTableInfo ResultTable::getTableInfo(
+    const std::vector<std::string> &lines,
+                               int &index) {
+  // We asume that the first given line by index is "$table".
+  // Leaves the index to the position when all we are
+  // interested in has been already fetched.
+
+  DBSchemaTableInfo table_info;
+
+  index++;
+
+  std::string table_name = lines[index];
+  table_info.name = table_name;
+
+  index++;
+  int col_index = 1;
+  while (index < lines.size() && lines[index] != "$") {
+    std::string column_name = lines[index];
+    TypeAndLength type = get_Type_from_str(lines[index + 1]);
+
+    table_info.columns_index_map.insert({column_name, col_index});
+    table_info.columns_type_map.insert({column_name, type});
+
+    col_index++;
+    index += 2;  // in each iteration we are fetching name and type of each
+                 // column
+  }
+  index++;
+  if (lines[index] != "$")
+    table_info.not_nulls = convertArrayNotationToStringVector(lines[index]);
+  index += 2;
+  if (lines[index] != "$")
+    table_info.primary_keys = convertArrayNotationToStringVector(lines[index]);
+  index += 3;
+  if (lines[index] != "$")
+    table_info.foreign_keys = getForeignKeysFromTAPI(lines, index);
+
+  return table_info;
+}
+
+std::unordered_map<std::string, DBSchemaTableInfo> ResultTable::getAllTablesInfo(
+    const std::string &str) {
+  // Table name -> DBSchemaTableInfo structure
+  std::unordered_map<std::string, DBSchemaTableInfo> main_map;
+
+  std::vector<std::string> lines = getLines(str);
+  // Table name -> its TAPI output
+  std::unordered_map<std::string, std::string> table_str_map;
+
+  int i = 0;
+  DBSchemaTableInfo table_info;
+  while (true) {
+    while (i < lines.size() && lines[i] != "$table") {
+      i++;
+    }
+    if (i == lines.size()) break;
+
+    table_info = getTableInfo(lines, i);
+
+    main_map.insert({table_info.name, table_info});
+  }
+
+  return main_map;
+}
+
+void ResultTable::insert_cols(DES_FIELD array[], int array_size) {
+  for (int i = 0; i < array_size; ++i) {
+    DES_FIELD *field = new DES_FIELD;
+    memcpy(field, &array[i], sizeof(DES_FIELD));
+    insert_col(field);
+  }
+}
+
+void ResultTable::build_table() {
+  switch (this->command_type) {
+    case SELECT:
+      build_table_select();
+      break;
+    case SQLTABLES:
+      build_table_SQLTables();
+      break;
+    case PROCESS:
+      insert_metadata_cols();
+      break;
+    case SQLPRIMARYKEYS:
+      build_table_SQLPrimaryKeys();
+      break;
+    case SQLFOREIGNKEYS_FK:
+      build_table_SQLForeignKeys_FK();
+      break;
+    case SQLFOREIGNKEYS_PK:
+      build_table_SQLForeignKeys_PK();
+      break;
+    case SQLFOREIGNKEYS_PKFK:
+      build_table_SQLForeignKeys_PKFK();
+      break;
+    case SQLGETTYPEINFO:
+      build_table_SQLGetTypeInfo();
+      break;
+    case SQLSTATISTICS:
+      build_table_SQLStatistics();
+      break;
+    case SQLSPECIALCOLUMNS:
+      build_table_SQLSpecialColumns();
+      break;
+    case SQLCOLUMNS:
+      build_table_SQLColumns();
+    default:
+      insert_metadata_cols();
+      break;
+  }
+
+}
+
+ResultTable::ResultTable(COMMAND_TYPE type, const std::string& output) {
+  this->command_type = type;
+  this->str = output;
+
+  this->build_table();
+}
+
+ResultTable::ResultTable(STMT *stmt) {
+  this->dbc = dbc;
+  this->params.column_name = stmt->params_for_table.column_name;
+  this->params.table_name = stmt->params_for_table.table_name;
+  this->command_type = stmt->type;
+  this->params.type_requested = stmt->params_for_table.type_requested;
+  this->params.pk_table_name = stmt->params_for_table.pk_table_name;
+  this->params.fk_table_name = stmt->params_for_table.fk_table_name;
+  this->str = stmt->last_output;
+
+  this->build_table();
+}
+
+void ResultTable::build_table_SQLForeignKeys_PK() {
+  insert_SQLForeignKeys_cols();
+
+  std::string pk_table_name = this->params.pk_table_name;
+
+  std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
+      getAllTablesInfo(str);
+
+  for (auto pair_name_table_info : tables_info) {
+    std::string fk_table_name = pair_name_table_info.first;
+    DBSchemaTableInfo fk_table_info = pair_name_table_info.second;
+
+    std::vector<std::string> keysReferringToPkTable;
+    for (int i = 0; i < fk_table_info.foreign_keys.size(); ++i) {
+      if (fk_table_info.foreign_keys[i].foreign_table == pk_table_name) {
+        insert_value("PKTABLE_CAT", "");
+        insert_value("PKTABLE_SCHEM", "");
+        insert_value("PKTABLE_NAME", pk_table_name);
+        insert_value("PKCOLUMN_NAME",
+                     fk_table_info.foreign_keys[i].foreign_key);
+        insert_value("FKTABLE_CAT", "");
+        insert_value("FKTABLE_SCHEM", "");
+        insert_value("FKTABLE_NAME", fk_table_name);
+        insert_value("FKCOLUMN_NAME", fk_table_info.foreign_keys[i].key);
+        insert_value(
+            "KEY_SEQ",
+            std::to_string(fk_table_info.columns_index_map
+                               [fk_table_info.foreign_keys[i]
+                                    .key]));  // I assume that KEY_SEQ refers
+                                              // to the foreign key in every
+                                              // case. TODO: check
+        // We will leave these unspecified until further development.
+        insert_value("UPDATE_RULE", "");
+        insert_value("DELETE_RULE", "");
+        insert_value("FK_NAME", "");
+        insert_value("PK_NAME", "");
+        insert_value("DEFERRABILITY", "");
+      }
+    }
+  }
+}
+
+void ResultTable::build_table_SQLForeignKeys_FK() {
+  insert_SQLForeignKeys_cols();
+
+  std::string table_name = this->params.fk_table_name;
+
+  std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
+      getAllTablesInfo(str);
+
+  DBSchemaTableInfo table_info = tables_info[table_name];
+  std::vector<ForeignKeyInfo> foreign_keys = table_info.foreign_keys;
+
+  for (int i = 0; i < foreign_keys.size(); ++i) {
+    insert_value("PKTABLE_CAT", "");
+    insert_value("PKTABLE_SCHEM", "");
+    insert_value("PKTABLE_NAME", foreign_keys[i].foreign_table);
+    insert_value("PKCOLUMN_NAME", foreign_keys[i].foreign_key);
+    insert_value("FKTABLE_CAT", "");
+    insert_value("FKTABLE_SCHEM", "");
+    insert_value("FKTABLE_NAME", this->params.fk_table_name);
+    insert_value("FKCOLUMN_NAME", foreign_keys[i].key);
+    insert_value("KEY_SEQ",
+                 std::to_string(
+                     table_info.columns_index_map
+                         [foreign_keys[i].key]));  // I assume that KEY_SEQ
+                                                   // refers to the foreign key
+                                                   // in every case. TODO: check
+    // We will leave these unspecified until further development.
+    insert_value("UPDATE_RULE", "");
+    insert_value("DELETE_RULE", "");
+    insert_value("FK_NAME", "");
+    insert_value("PK_NAME", "");
+    insert_value("DEFERRABILITY", "");
+  }
+}
+
+void ResultTable::build_table_SQLForeignKeys_PKFK() {
+  insert_SQLForeignKeys_cols();
+
+  std::string pk_table_name = this->params.pk_table_name;
+  std::string fk_table_name = this->params.fk_table_name;
+
+  std::unordered_map<std::string, DBSchemaTableInfo> tables_info =
+      getAllTablesInfo(str);
+
+  for (auto pair_name_table_info : tables_info) {
+    std::string local_fk_table_name = pair_name_table_info.first;
+    DBSchemaTableInfo local_fk_table_info = pair_name_table_info.second;
+
+    std::vector<std::string> keysReferringToPkTable;
+    if (local_fk_table_name ==
+        fk_table_name) { /* this if condition is the only
+                            difference with the
+                            parse_sqlforeign_pk
+                            function. TODO: consider refactoring
+                            */
+      for (int i = 0; i < local_fk_table_info.foreign_keys.size(); ++i) {
+        if (local_fk_table_info.foreign_keys[i].foreign_table ==
+            pk_table_name) {
+          insert_value("PKTABLE_CAT", "");
+          insert_value("PKTABLE_SCHEM", "");
+          insert_value("PKTABLE_NAME", pk_table_name);
+          insert_value("PKCOLUMN_NAME",
+                       local_fk_table_info.foreign_keys[i].foreign_key);
+          insert_value("FKTABLE_CAT", "");
+          insert_value("FKTABLE_SCHEM", "");
+          insert_value("FKTABLE_NAME", local_fk_table_name);
+          insert_value("FKCOLUMN_NAME",
+                       local_fk_table_info.foreign_keys[i].key);
+          insert_value(
+              "KEY_SEQ",
+              std::to_string(local_fk_table_info.columns_index_map
+                                 [local_fk_table_info.foreign_keys[i]
+                                      .key]));  // I assume that KEY_SEQ
+                                                // refers to the foreign key
+                                                // in every case. TODO: check
+          // We will leave these unspecified until further development.
+          insert_value("UPDATE_RULE", "");
+          insert_value("DELETE_RULE", "");
+          insert_value("FK_NAME", "");
+          insert_value("PK_NAME", "");
+          insert_value("DEFERRABILITY", "");
+        }
+      }
+    }
+  }
+}
+
+void ResultTable::build_table_SQLColumns() {
+  // TODO: handle errors
+  insert_SQLColumns_cols();
+
+  std::string table_name_search = this->params.table_name;
+  std::string column_name_search = this->params.column_name;
+
+  auto pair = this->dbc->send_query_and_read("/dbschema");
+  SQLRETURN rc = pair.first;
+  std::string dbschema_str = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    return; //TODO: release mutex?
+  }
+
+  std::unordered_map<std::string, DBSchemaTableInfo> map = getAllTablesInfo(dbschema_str);
+
+  std::vector<std::string> dbschema_tables;
+  for (auto pair : map) {
+    dbschema_tables.push_back(pair.first);
+  }
+
+  std::vector<std::string> dbschema_table_names =
+      search_odbc_pattern(table_name_search, dbschema_tables);
+
+  for (auto dbschema_table_name : dbschema_table_names) {
+    
+    std::string select_query = "select * from " + dbschema_table_name;
+    pair = dbc->send_query_and_read(select_query);
+    rc = pair.first;
+    std::string select_query_output = pair.second;
+    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      return; //TODO: release mutex?
+    }
+
+    ResultTable table(SELECT, select_query_output);
+
+    std::vector<std::string> col_names = table.names_ordered;
+    if (this->params.column_name != "") {
+      std::vector<std::string> requested_columns_names =
+          search_odbc_pattern(column_name_search, col_names);
+      col_names = requested_columns_names;
+    }
+
+    for (int i = 0; i < col_names.size(); ++i) {
+      Column col = table.columns[col_names[i]];
+      DES_FIELD *field = col.get_DES_FIELD();
+
+      insert_value("TABLE_CAT", "");
+      insert_value("TABLE_SCHEM", "");
+      insert_value(
+          "TABLE_NAME", dbschema_table_name);
+      insert_value("COLUMN_NAME", col_names[i]);
+
+      enum_field_types des_type = field->type;
+      int sql_type = des_type_2_sql_type(des_type);
+      insert_value("DATA_TYPE", std::to_string(sql_type));
+      insert_value("TYPE_NAME", des_type_2_str(des_type));
+
+      insert_value("COLUMN_SIZE", std::to_string(field->max_length));
+
+      TypeAndLength tal = {col.get_type(), col.getMaxLength()};
+      insert_value("BUFFER_LENGTH",
+                   std::to_string(get_transfer_octet_length(tal)));
+
+      insert_value("DECIMAL_DIGITS", std::to_string(field->decimals));
+
+      if (is_numeric_des_data_type(des_type)) {
+        insert_value("NUM_PREC_RADIX", "10");
+      } else
+        insert_value("NUM_PREC_RADIX", NULL_STR);
+
+      insert_value(
+          "NULLABLE",
+          std::to_string(SQL_NULLABLE_UNKNOWN));  // it seems that we cannot
+                                                  // know this in DES.
+      insert_value("REMARKS", "");
+      insert_value("COLUMN_DEF", NULL_STR);
+      if (sql_type == SQL_TYPE_DATE)
+        insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATETIME));
+      else
+        insert_value("SQL_DATA_TYPE", std::to_string(sql_type));
+
+      if (sql_type == SQL_TYPE_DATE)
+        insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_DATE));
+      else if (sql_type == SQL_TYPE_TIME)
+        insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIME));
+      else if (sql_type == SQL_TYPE_TIMESTAMP)
+        insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIMESTAMP));
+      else
+        insert_value("SQL_DATETIME_SUB", NULL_STR);
+
+      if (is_character_des_type(field))) {
+      insert_value("CHAR_OCTET_LENGTH", std::to_string(tal.len));
+    }
+      else
+        insert_value("CHAR_OCTET_LENGTH", NULL_STR);
+
+      insert_value("ORDINAL_POSITION", std::to_string(i + 1));
+      insert_value("IS_NULLABLE", "");
+    }
+  
+  }
+
+}
+
+void ResultTable::build_table_SQLPrimaryKeys() {
+  // TODO: handle errors
+  insert_SQLPrimaryKeys_cols();
+
+  // First, we separate the TAPI str into lines.
+  std::vector<std::string> lines = getLines(str);
+
+  int i = 0;
+  DBSchemaTableInfo table_info = getTableInfo(lines, i);
+
+  if (table_info.primary_keys.size() == 0) return;
+
+  for (int i = 0; i < table_info.primary_keys.size(); ++i) {
+    std::string TABLE_CAT = "";
+    std::string TABLE_SCHEM = "";
+    std::string TABLE_NAME = "";
+    std::string COLUMN_NAME = table_info.primary_keys[i];
+    int KEY_SEQ = table_info.columns_index_map[table_info.primary_keys[i]];
+    std::string PK_NAME = "";
+
+    insert_value("TABLE_CAT", string_to_char_pointer(TABLE_CAT));
+    insert_value("TABLE_SCHEM", string_to_char_pointer(TABLE_SCHEM));
+    insert_value("TABLE_NAME", string_to_char_pointer(TABLE_NAME));
+    insert_value("COLUMN_NAME", string_to_char_pointer(COLUMN_NAME));
+    insert_value("KEY_SEQ", string_to_char_pointer(std::to_string(
+                                KEY_SEQ)));  // check if this is correct
+    insert_value("PK_NAME", string_to_char_pointer(PK_NAME));
+  }
+}
+
+void ResultTable::build_table_SQLTables() {
+  insert_metadata_cols();
+
+  std::string table_name_param = this->params.table_name;
+
+  std::vector<std::vector<std::string>> results;
+
+  std::string dbschema_query = "/dbschema";
+  auto pair = dbc->send_query_and_read(dbschema_query);
+  SQLRETURN rc = pair.first;
+  std::string dbschema_query_output = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    return; //TODO: do something with mutex?
+  }
+
+  std::unordered_map<std::string, DBSchemaTableInfo> map =
+      getAllTablesInfo(dbschema_query_output);
+
+  std::vector<std::string> dbschema_tables;
+  for (auto pair : map) {
+    dbschema_tables.push_back(pair.first);
+  }
+
+  std::vector<std::string> dbschema_table_names =
+      search_odbc_pattern(table_name_param, dbschema_tables);
+
+  std::vector<std::string> lines = getLines(dbschema_query_output);
+
+  int i = 0;
+
+  while (i < lines.size()) {
+    if (lines[i] == "$eot") break;
+    std::string TABLE_CAT = "";
+    std::string TABLE_SCHEM = "";
+    std::string TABLE_NAME = "";
+    std::string TABLE_TYPE = "";
+    std::string REMARKS = "";
+
+    if (lines[i] == "$table") {
+      TABLE_TYPE = "TABLE";
+      i++;
+      TABLE_NAME = lines[i];
+    } else if (lines[i] == "$view") {
+      TABLE_TYPE = "VIEW";
+      i += 2;
+      TABLE_NAME = lines[i];
+    } else
+      break;
+
+    bool table_in_requested_tables = true;
+    if (table_name_param.size() > 0) {
+      table_in_requested_tables =
+          (std::find(dbschema_table_names.begin(), dbschema_table_names.end(),
+                     TABLE_NAME) !=
+           dbschema_table_names.end());
+    }
+
+    if ((table_name_param.size() > 0 && table_in_requested_tables) ||
+        (table_name_param.size() == 0)) {
+      insert_value("TABLE_CAT", string_to_char_pointer(TABLE_CAT));
+      insert_value("TABLE_SCHEM", string_to_char_pointer(TABLE_SCHEM));
+      insert_value("TABLE_NAME", string_to_char_pointer(TABLE_NAME));
+      insert_value("TABLE_TYPE", string_to_char_pointer(TABLE_TYPE));
+      insert_value("REMARKS", string_to_char_pointer(REMARKS));
+    }
+
+    while (lines[i].size() <= 1 || lines[i][0] != '$') i++;
+  }
+}
+
+void ResultTable::build_table_select() {
+
+  // First, we separate the TAPI str into lines.
+  std::vector<std::string> lines = getLines(str);
+
+  std::vector<std::string> column_names;
+
+  // We ignore the first line, that contains the keywords success/answer.
+  int i = 1;
+
+  // If the first message is not answer, we can be sure that the output
+  // originates from a non-select query. We then create the default
+  // metadata table on the else clause.
+  if (lines.size() >= 1 && lines[0] == "answer") {
+    bool checked_cols = false;
+
+    while (!checked_cols && lines[i] != "$eot") {
+      // For each column, TAPI gives in a line its name and then its type.
+      size_t pos_dot = lines[i].find('.', 0);
+      std::string table = lines[i].substr(0, pos_dot);
+      std::string name = lines[i];
+      TypeAndLength type = get_Type_from_str(lines[i + 1]);
+
+      // I have put SQL_NULLABLE_UNKNOWN because I do not know
+      // if a result table from select may have an attribute "nullable"
+      insert_col(table, name, type, SQL_NULLABLE_UNKNOWN);
+
+      column_names.push_back(name);
+
+      i += 2;
+
+      if (lines[i] == "$") checked_cols = true;
+    }
+
+    i++;  // We skip the final $
+    if (i == lines.size()) return;
+    std::string aux = lines[i];
+    while (aux != "$eot") {
+      for (int j = 0; j < column_names.size(); ++j) {
+        std::string name_col = column_names[j];
+        std::string value = lines[i];
+
+        if (value == "null")
+          insert_value(name_col, nullptr);
+        else {
+          // When we reach a varchar value, we remove the " ' " characters
+          // provided by the TAPI.
+          if (value.size() > 0 && value[0] == '\'') {
+            value = value.substr(1, value.size() - 2);
+          }
+
+          insert_value(name_col, value);
+        }
+
+        i++;
+      }
+      aux = lines[i];
+      i++;  // to skip $ or $eot
+    }
+  } else {  // if it is not possible, we create the default metadata table.
+    insert_metadata_cols();
+  }
+}
+
+void ResultTable::build_table_SQLStatistics() {
+  insert_SQLStatistics_cols();
+
+  std::string table_name_search = this->params.table_name;
+
+  auto pair = this->dbc->send_query_and_read("/dbschema");
+  SQLRETURN rc = pair.first;
+  std::string dbschema_str = pair.second;
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    return;  // TODO: release mutex?
+  }
+
+  std::unordered_map<std::string, DBSchemaTableInfo> map =
+      getAllTablesInfo(dbschema_str);
+
+  std::vector<std::string> dbschema_tables;
+  for (auto pair : map) {
+    dbschema_tables.push_back(pair.first);
+  }
+
+  std::vector<std::string> dbschema_table_names =
+      search_odbc_pattern(table_name_search, dbschema_tables);
+
+  for (auto dbschema_table_name : dbschema_table_names) {
+    
+    std::string select_query = "select * from " + dbschema_table_name;
+    pair = dbc->send_query_and_read(select_query);
+    rc = pair.first;
+    std::string select_query_output = pair.second;
+    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      return; //TODO: do something with mutex?
+    }
+    ResultTable select_table(SELECT, select_query_output);
+
+    insert_value("TABLE_CAT", NULL_STR);
+    insert_value("TABLE_SCHEM", NULL_STR);
+    insert_value("TABLE_NAME", this->params.table_name);
+    insert_value("NON_UNIQUE", NULL_STR);
+    insert_value("INDEX_QUALIFIER", NULL_STR);
+    insert_value("INDEX_NAME", NULL_STR);
+    insert_value("TYPE", std::to_string(SQL_TABLE_STAT));
+    insert_value("ORDINAL_POSITION", NULL_STR);
+    insert_value("COLUMN_NAME", NULL_STR);
+    insert_value("ASC_OR_DESC", NULL_STR);
+    insert_value("CARDINALITY", std::to_string(select_table.row_count()));
+    insert_value("PAGES", NULL_STR);
+    insert_value("FILTER_CONDITION", NULL_STR);
+
+  }
+  
+}
+
+
+void ResultTable::build_table_SQLSpecialColumns() {
+  insert_SQLSpecialColumns_cols();
+  std::vector<std::string> lines = getLines(str);
+  int index = 0;
+  DBSchemaTableInfo table_info = getTableInfo(lines, index);
+
+  for (int i = 0; i < table_info.primary_keys.size(); ++i) {
+    std::string primary_key = table_info.primary_keys[i];
+    TypeAndLength type = table_info.columns_type_map.at(primary_key);
+    insert_value("SCOPE", std::to_string(SQL_SCOPE_SESSION));
+    insert_value("COLUMN_NAME", primary_key);
+    insert_value("DATA_TYPE", std::to_string(type.simple_type));
+    insert_value("TYPE_NAME", Type_to_type_str(type));
+    insert_value("COLUMN_SIZE", std::to_string(get_Type_size(type)));
+    insert_value("BUFFER_LENGTH", NULL_STR);  // TODO: implement
+    insert_value("DECIMAL_DIGITS", NULL_STR);
+    insert_value("PSEUDO_COLUMN", std::to_string(SQL_PC_NOT_PSEUDO));
+  }
+}
+
+void ResultTable::build_table_SQLGetTypeInfo() {
+  insert_SQLGetTypeInfo_cols();
+  SQLSMALLINT type_requested = this->params.type_requested;
+
+  for (int i = 0; i < supported_types.size(); i++) {
+    enum_field_types des_type = supported_types[i];
+    std::string des_type_name = des_type_2_str(des_type);
+    SQLSMALLINT sql_data_type = des_type_2_sql_type(des_type);
+
+    if (type_requested == sql_data_type ||
+        type_requested == SQL_ALL_TYPES) {
+
+        bool type_is_character_data = is_character_des_data_type(des_type);
+        bool type_is_time_data = is_time_des_data_type(des_type);
+
+        insert_value("TYPE_NAME", des_type_name);
+        insert_value("DATA_TYPE", std::to_string(sql_data_type));
+        if (des_type_name ==
+            "char")  // special case (char is not considered in SQL standards)
+        insert_value("COLUMN_SIZE", std::to_string(1));
+        else
+        insert_value("COLUMN_SIZE",
+                        std::to_string(get_type_size(des_type)));
+
+        if (type_is_character_data) {
+        insert_value("LITERAL_PREFIX", "\'");
+        insert_value("LITERAL_SUFFIX", "\'");
+        } else {
+        insert_value("LITERAL_PREFIX", NULL_STR);
+        insert_value("LITERAL_SUFFIX", NULL_STR);
+        }
+        insert_value(
+            "CREATE_PARAMS",
+            NULL_STR);  // TODO: I do not really understand this field
+        insert_value(
+            "NULLABLE",
+            std::to_string(
+                SQL_NULLABLE_UNKNOWN));  // TODO: I currently do not know
+                                        // which DES types are nullable
+        if (type_is_character_data && !type_is_time_data) {
+        insert_value("CASE_SENSITIVE", std::to_string(SQL_TRUE));
+        } else {
+        insert_value("CASE_SENSITIVE", std::to_string(SQL_FALSE));
+        }
+
+        // TODO: check if the following is correct according
+        // to DES policies
+        if (type_is_character_data && !type_is_time_data) {
+        insert_value("SEARCHABLE", std::to_string(SQL_SEARCHABLE));
+        } else {
+        insert_value("SEARCHABLE", std::to_string(SQL_PRED_BASIC));
+        }
+
+        if (type_is_character_data) {
+        insert_value("UNSIGNED_ATTRIBUTE", NULL_STR);
+        } else
+        insert_value("UNSIGNED_ATTRIBUTE", std::to_string(SQL_FALSE));
+
+        if (type_requested == SQL_LONGVARCHAR)
+        insert_value("FIXED_PREC_SCALE", std::to_string(SQL_FALSE));
+        else
+        insert_value("FIXED_PREC_SCALE", std::to_string(SQL_TRUE));
+
+        // It seems that DES does not have auto-incrementing types.
+        // TODO: confirm it
+        if (type_is_character_data)
+        insert_value("AUTO_UNIQUE_VALUE",
+                        NULL_STR);  // a time data type can be considered as
+                                    // numeric? TODO: research
+        else
+        insert_value("AUTO_UNIQUE_VALUE", std::to_string(FALSE));
+
+        insert_value("LOCAL_TYPE_NAME",
+                    NULL_STR);  // TODO: research this concept
+        insert_value("MINIMUM_SCALE",
+                    NULL_STR);  // TODO: The concept of scale does not seem
+                                // to
+                                // be appliable to DES
+        insert_value("MAXIMUM_SCALE",
+                    NULL_STR);  // or, is it the minimum and maximum value?
+                                // (i.e. in integers)
+        insert_value("SQL_DATATYPE", std::to_string(sql_data_type));
+
+        // TODO: research
+        if (type_is_time_data) {
+            switch (sql_data_type) {
+                case SQL_TYPE_DATE:
+                insert_value("SQL_DATETIME_SUB", std::to_string(SQL_DATE));
+                break;
+                case SQL_TYPE_TIME:
+                insert_value("SQL_DATETIME_SUB", std::to_string(SQL_TIME));
+                break;
+                case SQL_TYPE_TIMESTAMP:
+                insert_value("SQL_DATETIME_SUB", std::to_string(SQL_TIMESTAMP));
+                break;
+                default:
+                insert_value("SQL_DATETIME_SUB", NULL_STR);
+                break;
+            }
+        } else
+        insert_value("SQL_DATETIME_SUB", NULL_STR);
+
+        if (type_is_character_data)
+        insert_value("NUM_PREC_RADIX", NULL_STR);
+        else  // is numeric
+        insert_value("NUM_PREC_RADIX", "10");
+
+        insert_value("INTERVAL_PRECISION", NULL_STR);
+    }
+  }
 }

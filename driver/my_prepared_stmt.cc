@@ -85,10 +85,13 @@ void ssps_close(STMT *stmt) {
 }
 
 bool is_varlen_type(enum enum_field_types type) {
+  /*
   return (type == DES_TYPE_BLOB || type == DES_TYPE_TINY_BLOB ||
           type == DES_TYPE_MEDIUM_BLOB || type == DES_TYPE_LONG_BLOB ||
           type == DES_TYPE_VAR_STRING || type == DES_TYPE_JSON ||
           type == DES_TYPE_VECTOR);
+  */
+  return true; //TODO: implement
 }
 
 /* The structure and following allocation function are borrowed from c/c++ and
@@ -115,38 +118,9 @@ static st_buffer_size_type allocate_buffer_for_field(
   st_buffer_size_type result(NULL, 0, field->type);
 
   switch (field->type) {
-    case DES_TYPE_NULL:
-      break;
-
-    case DES_TYPE_TINY:
-      result.size = 1;
-      break;
-
-    case DES_TYPE_SHORT:
-      result.size = 2;
-      break;
-
-    case DES_TYPE_INT24:
-    case DES_TYPE_LONG:
-      result.size = 4;
-      break;
-
-    /*
-      For consistency with results obtained through DES_ROW
-      we must fetch FLOAT and DOUBLE as character data
-    */
-    case DES_TYPE_DOUBLE:
     case DES_TYPE_FLOAT:
       result.size = 24;
       result.type = DES_TYPE_STRING;
-      break;
-
-    case DES_TYPE_LONGLONG:
-      result.size = 8;
-      break;
-
-    case DES_TYPE_YEAR:
-      result.size = 2;
       break;
 
     case DES_TYPE_TIMESTAMP:
@@ -156,14 +130,7 @@ static st_buffer_size_type allocate_buffer_for_field(
       result.size = sizeof(MYSQL_TIME);
       break;
 
-    case DES_TYPE_TINY_BLOB:
-    case DES_TYPE_MEDIUM_BLOB:
-    case DES_TYPE_LONG_BLOB:
-    case DES_TYPE_BLOB:
     case DES_TYPE_STRING:
-    case DES_TYPE_VAR_STRING:
-    case DES_TYPE_JSON:
-    case DES_TYPE_VECTOR:
       /* We will get length with fetch and then fetch column */
       if (field->length > 0 && field->length < 1025)
         result.size = field->length + 1;
@@ -172,11 +139,6 @@ static st_buffer_size_type allocate_buffer_for_field(
         // The buffer will be reallocated later.
         result.size = 1024;
       }
-      break;
-
-    case DES_TYPE_DECIMAL:
-    case DES_TYPE_NEWDECIMAL:
-      result.size = 64;
       break;
 
 #if A1
@@ -190,20 +152,7 @@ static st_buffer_size_type allocate_buffer_for_field(
     case DES_TYPE_ENUM:
     case DES_TYPE_SET:
 #endif
-    case DES_TYPE_BIT:
-      result.type = (enum_field_types)DES_TYPE_BIT;
-      if (outparams) {
-        /* For out params we surprisingly get it as string representation of a
-           number representing those bits. Allocating buffer to accommodate
-           largest string possible - 8 byte number + NULL terminator.
-           We will need to terminate the string to convert it to a number */
-        result.size = 30;
-      } else {
-        result.size = (field->length + 7) / 8;
-      }
 
-      break;
-    case DES_TYPE_GEOMETRY:
     default:
       /* Error? */
       1;
@@ -380,6 +329,49 @@ SQLRETURN STMT::set_error(const char *state, const char *msg) {
 SQLRETURN STMT::set_error(const char *state) {
   error = DESERROR(state, ""); //TODO: research what to do
   return error.retcode;
+}
+
+SQLRETURN STMT::set_error_from_tapi_output(const std::string &tapi_output) {
+  auto lines = getLines(tapi_output);
+  /* Note: there are multiple ways to parse the info messages depending on the command.
+  * There is not a standard syntax for every command: in 5.18.1.2 (DES v6.7 manual), it says
+  that the answers can be defined specifically for some commands.
+  For instance, it can be checked an error of /process should be parsed differently than an "$error" notified
+  by /ls.
+  We then throw the full TAPI msg. It is not a bad idea: after all, the application using this connector
+  may find it useful to work on the TAPI notation, since the application itself can be a computer program that
+  uses this TAPI to its advantage.
+  */
+  const char *msg = string_to_char_pointer(tapi_output);
+
+  this->set_error("HY000", msg);
+
+  if (std::all_of(lines[1].begin(), lines[1].end(), ::isdigit)) {
+    uint native_error = stoi(lines[1]);
+    this->error.native_error = native_error;
+
+    switch (native_error) {  // DES manual 5.18.1.2
+      case 0:
+        return SQL_ERROR;
+      case 1:
+      case 2:
+        return SQL_SUCCESS_WITH_INFO;
+    }
+  }
+  return SQL_ERROR;
+}
+
+SQLRETURN STMT::check_and_set_errors(const std::string &tapi_output) {
+  if (is_in_string(tapi_output, "$error")) {
+    return this->set_error_from_tapi_output(tapi_output);
+  } else if (is_in_string(tapi_output, "$success")) {
+    return SQL_SUCCESS;
+  } else {
+    if (tapi_output.size() == 0) return SQL_SUCCESS;
+    const char *msg = string_to_char_pointer(tapi_output);
+    this->set_error("HY000", msg);
+    return SQL_SUCCESS_WITH_INFO;
+  }   
 }
 
 long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow) {

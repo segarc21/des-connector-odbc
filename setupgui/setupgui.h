@@ -136,7 +136,6 @@ void setUnsignedFieldDataTab(unsigned int framenum, const unsigned int param, in
 
 HWND getTabCtrlTab(void);
 HWND getTabCtrlTabPages(unsigned int framenum);
-void SwitchTcpOrPipe(HWND hwnd, BOOL usePipe);
 void setControlEnabled(unsigned int framenum, int idc, des_bool state);
 
 #define GET_STRING(name) \

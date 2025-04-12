@@ -28,7 +28,7 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-// Version info resources for myodbc9S.dll
+// Version info resources for myodbc1S.dll
 // Note: This is a generated file -- see cmake/version_info.cmake in the source tree.
 
 #include <windows.h>
@@ -37,8 +37,8 @@
 
 
 VS_VERSION_INFO VERSIONINFO
-  FILEVERSION    9,0,0,0
-  PRODUCTVERSION 9,0,0,0
+  FILEVERSION    1,0,0,0
+  PRODUCTVERSION 1,0,0,0
   FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
   FILEFLAGS      VS_FF_DEBUG
   FILEOS         VOS__WINDOWS32
@@ -50,12 +50,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Oracle Corporation\0"
             VALUE "ProductName", "MySQL Connector/ODBC\0"
-            VALUE "ProductVersion", "9.0.0.0\0"
-            VALUE "FileVersion", "9.0.0.0\0"
-            VALUE "LegalCopyright", "Copyright (c) 1995, 2024, Oracle and/or its affiliates.\0"
+            VALUE "ProductVersion", "1.0.0.0\0"
+            VALUE "FileVersion", "1.0.0.0\0"
+            VALUE "LegalCopyright", "Copyright (c) 1995, 2025, Oracle and/or its affiliates.\0"
             VALUE "LegalTrademarks", "Oracle(R), Java, MySQL, and NetSuite are registered trademarks of Oracle and/or its affiliates.\0"
-            VALUE "OriginalFilename", "myodbc9S.dll\0"
-            VALUE "InternalName", "myodbc9S\0"
+            VALUE "OriginalFilename", "myodbc1S.dll\0"
+            VALUE "InternalName", "myodbc1S\0"
             VALUE "FileDescription", "DES Connector/ODBC driver setup library.\0"
             VALUE "Comments", "Provides driver configuration GUI.\0"
         END

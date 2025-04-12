@@ -52,12 +52,14 @@ void ENV::add_dbc(DBC* dbc)
 {
   LOCK_ENV(this);
   conn_list.emplace_back(dbc);
+  active_dbcs_global_var.emplace_back(dbc);
 }
 
 void ENV::remove_dbc(DBC* dbc)
 {
   LOCK_ENV(this);
   conn_list.remove(dbc);
+  active_dbcs_global_var.remove(dbc);
 }
 
 bool ENV::has_connections()
@@ -69,7 +71,17 @@ DBC::DBC(ENV *p_env)  : env(p_env),
                         txn_isolation(DEFAULT_TXN_ISOLATION),
                         last_query_time((time_t) time((time_t*) 0))
 {
-  //mysql->net.vio = nullptr;
+  //Fast way to put into a std::string the address itself of a given pointer
+  std::stringstream ss;
+  ss << static_cast<void *>(this);
+  std::string dbc_mem_address = ss.str();
+
+  #ifdef _WIN32
+  this->connection_id = this->str_hasher(std::to_string(GetCurrentProcessId()) + dbc_mem_address);
+  #else
+  this->connection_id = this->str_hasher(std::to_string(getpid()) + dbc_mem_address);
+  #endif
+
   desodbc_ov_init(env->odbc_ver);
   env->add_dbc(this);
 }
@@ -97,19 +109,184 @@ void DBC::free_explicit_descriptors()
   }
 }
 
-void DBC::close()
+SQLRETURN DBC::close()
 {
-//TODO: research what to do
+  SQLRETURN ret;
+  if (!this->closed) {
+#ifdef _WIN32
+    ret = getSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      return ret;
+    }
+
+    this->shmem->handle_sharing_info.handle_petitioner.id = this->connection_id;
+
+    ret = setFinishingEvent();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      releaseSharedMemoryMutex();
+      return ret;
+    }
+    if (share_pipes_thread != nullptr && share_pipes_thread.get()->joinable())
+     share_pipes_thread->join();
+    share_pipes_thread.reset();
+
+    this->shmem->handle_sharing_info.handle_petitioner.id = 0; //we reset this field
+    ret = releaseSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+    try_close(this->driver_to_des_in_rpipe);
+    try_close(this->driver_to_des_in_wpipe);
+    try_close(this->driver_to_des_out_rpipe);
+    try_close(this->driver_to_des_out_wpipe);
+
+    ret = getSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      return ret;
+    }
+  
+    ConnectedClients clients = this->shmem->connected_clients_struct;
+    remove_client_from_shmem(clients, this->connection_id);
+    if (clients.size == 0) {
+
+      DWORD pid = this->shmem->DES_pid;
+
+      HANDLE des_process_handle =
+            OpenProcess(PROCESS_TERMINATE, false, pid);
+      if (des_process_handle == NULL) {
+        releaseSharedMemoryMutex();
+        return this->set_win_error(
+            "Failing to access DES process with PID " + std::to_string(pid),
+            true);
+      }
+
+      if (!TerminateProcess(des_process_handle, 1)) {
+        releaseSharedMemoryMutex();
+        return this->set_win_error(
+            "Failing to terminate DES process with PID " + std::to_string(pid),
+            true);
+      }
+    }
+
+    ret = releaseSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      return ret;
+    }
+
+    // All these functions closes the correspondent objects for only this
+    // instance. Windows by itself destroys these objects when no instance has
+    // access to them.
+    if (!UnmapViewOfFile(shmem)) {
+      return this->set_win_error(
+          "Failing to unmap shared memory file " + std::string(SHARED_MEMORY_NAME),
+          true);
+    }
+    try_close(query_mutex);
+    try_close(shared_memory_mutex);
+    try_close(request_handle_mutex);
+    try_close(request_handle_event);
+    try_close(handle_sent_event);
+    try_close(finishing_event);
+#else
+
+  ret = getSharedMemoryMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO)
+    return ret;
+
+  try_close(this->driver_to_des_out_rpipe);
+  try_close(this->driver_to_des_out_wpipe);
+  try_close(this->driver_to_des_in_rpipe);
+  try_close(this->driver_to_des_in_wpipe);
+  
+  this->shmem->n_clients -= 1;
+  if (this->shmem->n_clients == 0) {
+
+    ret = releaseSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO)
+    return ret;
+    
+    //We will not handle errors for unlink.
+    //If a file does not exist, it is fine for us.
+    unlink(IN_WPIPE_NAME);
+    unlink(OUT_RPIPE_NAME);
+
+    #ifdef __APPLE__
+    if (sem_close(query_mutex) == -1) {
+      return this->set_unix_error("Failing to close query mutex", true);
+    }
+    if (sem_close(shared_memory_mutex) == -1) {
+      return this->set_unix_error("Failing to close shared memory mutex", true);
+    }
+
+    sem_unlink(QUERY_MUTEX_NAME);
+    sem_unlink(SHARED_MEMORY_MUTEX_NAME);
+    #endif
+    
+    if (kill(this->shmem->DES_pid, SIGTERM) == -1) {
+      return this->set_unix_error("Failing to kill DES process", true);
+    }
+
+    if (shmdt(this->shmem) == -1) {
+      return this->set_unix_error("Failing to detach shared memory from connector", true);
+    }
+    if (shmctl(this->shm_id, IPC_RMID, 0) == -1) {
+      return this->set_unix_error("Failing to remove shared memory segment", true);
+    }
+
+  } else {
+    ret = releaseSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+    #ifdef __APPLE__
+    if (sem_close(query_mutex) == -1) {
+      return this->set_unix_error("Failing to close query mutex", true);
+    }
+    if (sem_close(shared_memory_mutex) == -1) {
+      return this->set_unix_error("Failing to close shared memory mutex", true);
+    }
+    #endif
+
+    if (shmdt(this->shmem) == -1) {
+      return this->set_unix_error("Failing to detach shared memory from connector", true);
+    }
+  }
+
+#endif
+  }
+  this->closed = true;
+
+  return SQL_SUCCESS;
 }
 
 DBC::~DBC()
 {
+  if (!closed)
+      DBC::close();
   if (env)
     env->remove_dbc(this);
 
   free_explicit_descriptors();
 }
 
+#ifdef _WIN32
+SQLRETURN DBC::set_win_error(std::string err, bool show_win_err) {
+  if (show_win_err)
+    err +=
+        ". Last Windows error message: " + '\"' + GetLastWinErrMessage() + '\"';
+  return this->set_error("HY000", string_to_char_pointer(err), 0);
+
+}
+#else
+SQLRETURN DBC::set_unix_error(std::string err, bool show_unix_err) {
+  if (show_unix_err) {
+    err += ". Last Unix-like error message: ";
+    err += '\"';
+    err += strerror(errno);
+    err += '\"';
+  }
+  return this->set_error("HY000", string_to_char_pointer(err), 0);
+
+}
+#endif
 
 SQLRETURN DBC::set_error(char * state, const char * message, uint errcode)
 {
@@ -233,7 +410,6 @@ SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
     try
     {
       dbc = new DBC(penv);
-      dbc_global_var = dbc;
       *phdbc = (SQLHDBC)dbc;
     }
     catch(...)
@@ -416,7 +592,12 @@ SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
 
     stmt->state= ST_UNKNOWN;
 
-    stmt->table_name.clear();
+    stmt->params_for_table.table_name.clear();
+    stmt->params_for_table.fk_table_name.clear();
+    stmt->params_for_table.pk_table_name.clear();
+    stmt->params_for_table.column_name.clear();
+    stmt->params_for_table.type_requested = SQL_TYPE_NULL;
+
     stmt->dummy_state= ST_DUMMY_UNKNOWN;
     stmt->cursor.pk_validated= FALSE;
     stmt->reset_setpos_apd();

@@ -75,51 +75,6 @@ static SQLWCHAR out_buf[1024];
 HelpButtonPressedCallbackType* gHelpButtonPressedCallback = NULL;
 
 
-/* Function that enables/disables groups of controls */
-#define SWITCHED_GROUPS 2
-#define MAX_GROUP_COTROLS 2
-void SwitchTcpOrPipe(HWND hwnd, BOOL usePipe)
-{
-  /* groups of fields to enable/disable*/
-  const int switchedFields[SWITCHED_GROUPS][MAX_GROUP_COTROLS]=
-                                    {{IDC_EDIT_DES_EXEC, IDC_EDIT_PORT},
-                                     {IDC_EDIT_SOCKET, 0}};
-
-  /* Default value for enabled empty field */
-  const LPCWSTR defaultValues[SWITCHED_GROUPS][MAX_GROUP_COTROLS]=
-                                    {{NULL, NULL}, {L"MySQL", NULL}};
-  /* Can't be sure that usePipe contains 1 as TRUE*/
-  long activeIndex= usePipe ? 1L : 0L;
-
-  for (long i= 0; i < SWITCHED_GROUPS; ++i)
-    for (long j= 0; j < MAX_GROUP_COTROLS && switchedFields[i][j] != 0; ++j)
-    {
-      HWND control= GetDlgItem(hwnd, switchedFields[i][j]);
-      EnableWindow(control, i == activeIndex);
-
-      if (defaultValues[i][j] != NULL)
-      {
-        if (i == activeIndex)
-        {
-          if (Edit_GetTextLength(control) == 0)
-          {
-            /* remember that we set that value */
-            Edit_SetText(control, defaultValues[i][j]);
-            controlWithDefValue= switchedFields[i][j];
-          }
-        }
-        else if (controlWithDefValue == switchedFields[i][j])
-        {
-          /* we don't want to store the value we set instead of user */
-          Edit_SetText(control,L"");
-        }
-      }
-    }
-}
-#undef SWITCHED_GROUPS
-#undef MAX_GROUP_COTROLS
-
-
 void InitStaticValues()
 {
   BusyIndicator= true;
@@ -439,7 +394,7 @@ void btnCancel_Click (HWND hwnd)
 }
 
 
-void btnBrowse_Click (HWND hwnd)
+void btnExecBrowse_Click (HWND hwnd)
 {
   /*I work with unicode since definitions expand
   to the unicode version. However, this code compiles
@@ -468,7 +423,31 @@ void btnBrowse_Click (HWND hwnd)
   dialog.nFilterIndex = 2; //selecting .exe by default 
   
   if (GetOpenFileNameW(&dialog)) {
-    SetDlgItemTextW(hwnd, IDC_EDIT_PATH, dialog.lpstrFile); //(winuser.h) sets the text in the specified control
+    SetDlgItemTextW(hwnd, IDC_EDIT_DES_EXEC, dialog.lpstrFile); //(winuser.h) sets the text in the specified control
+  }
+}
+
+void btnWorkingBrowse_Click(HWND hwnd) {
+
+  BROWSEINFOW dialog;
+  wchar_t path[MAX_PATH];  // buffer for file name
+  path[0] = '\0';
+
+  ZeroMemory(&dialog, sizeof(dialog));
+
+  dialog.lpszTitle = L"Select a working directory for DES...";
+
+  // Inicializa el di�logo de selecci�n de carpetas
+  LPITEMIDLIST pidl = SHBrowseForFolder(&dialog);
+
+  if (pidl != NULL) {
+
+    // Obtiene la ruta de la carpeta seleccionada
+    if (SHGetPathFromIDListW(pidl, path)) {
+      CoTaskMemFree(pidl);
+      SetDlgItemTextW(hwnd, IDC_EDIT_DES_WORKING_DIR, path);
+    } else
+        CoTaskMemFree(pidl);
   }
 }
 
@@ -654,22 +633,23 @@ void FormMain_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       btnDetails_Click(hwnd); break;
     case IDC_BUTTON_HELP:
       btnHelp_Click(hwnd); break;
-    case IDC_BUTTON_BROWSE:
-      btnBrowse_Click(hwnd); break;
+    case IDC_BUTTON_EXEC_BROWSE:
+      btnExecBrowse_Click(hwnd); break;
+    case IDC_BUTTON_WORKING_BROWSE:
+      btnWorkingBrowse_Click(hwnd);
+      break;
     case IDC_EDIT_DSN:
     {
       if (codeNotify==EN_CHANGE)
       {
         int len = Edit_GetTextLength(GetDlgItem(hwnd,IDC_EDIT_DSN));
         Button_Enable(GetDlgItem(hwnd,IDOK), len > 0);
-        Button_Enable(GetDlgItem(hwnd,IDC_BUTTON_BROWSE), len > 0);
+        Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_EXEC_BROWSE), len > 0);
+        Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_WORKING_BROWSE), len > 0);
         RedrawWindow(hwnd,NULL,NULL,RDW_INVALIDATE);
       }
       break;
     }
-
-    case IDC_EDIT_dbname:
-      processDbCombobox(hwnd, hwndCtl, codeNotify);
     break;
     /* For later in the development.
     case IDC_EDIT_CHARSET:
@@ -815,7 +795,8 @@ BOOL FormMain_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
   if (g_isPrompt == (!pParams->opt_DSN))
   {
     Button_Enable(GetDlgItem(hwnd,IDOK), 1);
-    Button_Enable(GetDlgItem(hwnd,IDC_BUTTON_BROWSE), 1);
+    Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_EXEC_BROWSE), 1);
+    Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_WORKING_BROWSE), 1);
     RedrawWindow(hwnd,NULL,NULL,RDW_INVALIDATE);
   }
 

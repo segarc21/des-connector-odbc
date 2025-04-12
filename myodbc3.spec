@@ -29,7 +29,7 @@
 
 ##############################################################################
 #
-# mysql-connector-odbc 9.0 RPM specification
+# mysql-connector-odbc 1.0 RPM specification
 #
 ##############################################################################
 
@@ -55,12 +55,12 @@
 #
 ##############################################################################
 
-Summary:	An ODBC 9.0 driver for MySQL - driver package
+Summary:	An ODBC 1.0 driver for MySQL - driver package
 Name:		mysql-connector-odbc%{?product_suffix}
-Version:	9.0.0
+Version:	1.0.0
 Release:	1%{?fedora:0}%{?commercial:.1}%{?dist}
 License:	Copyright (c) 2000, , %{mysql_vendor}. All rights reserved.  Under %{license_type} license as shown in the Description field.
-Source0:	http://cdn.mysql.com/Downloads/Connector-ODBC/9.0/%{name}-9.0.0-src.tar.gz
+Source0:	http://cdn.mysql.com/Downloads/Connector-ODBC/1.0/%{name}-1.0.0-src.tar.gz
 URL:		http://www.mysql.com/
 Group:		Applications/Databases
 Vendor:		%{mysql_vendor}
@@ -82,14 +82,14 @@ Requires:       unixODBC >= 2.2.14
 
 %if 0%{?odbc_gui}
 %package setup
-Summary:	An ODBC 9.0 driver for MySQL - setup library
+Summary:	An ODBC 1.0 driver for MySQL - setup library
 Group:		Application/Databases
 AutoReq:	no
 Requires:	%{name} = %{version}-%{release}
 %endif
 
 %package test
-Summary:	An ODBC 9.0 driver for MySQL - tests
+Summary:	An ODBC 1.0 driver for MySQL - tests
 Group:		Application/Databases
 Requires:	%{name} = %{version}-%{release}
 
@@ -105,9 +105,9 @@ application to MySQL. mysql-connector-odbc works on Windows XP/Vista/7/8
 Windows Server 2003/2008/2012, and most Unix platforms (incl. OSX and Linux).
 MySQL is a trademark of %{mysql_vendor}
 
-mysql-connector-odbc 9.0 is an enhanced version of mysql-connector-odbc 8.4.
+mysql-connector-odbc 1.0 is an enhanced version of mysql-connector-odbc 0.0.
 The driver comes in 2 flavours - ANSI and Unicode and commonly referred to as
-'MySQL ODBC 9.0 ANSI Driver' or 'MySQL ODBC 9.0 Unicode Driver' respectively.
+'MySQL ODBC 1.0 ANSI Driver' or 'MySQL ODBC 1.0 Unicode Driver' respectively.
 
 The MySQL software has Dual Licensing, which means you can use the
 MySQL software free of charge under the GNU General Public License
@@ -136,7 +136,7 @@ The test suite for MySQL ODBC.
 ##############################################################################
 
 %prep
-%setup -q -n %{name}-9.0.0-src
+%setup -q -n %{name}-1.0.0-src
 
 %build
 mkdir release
@@ -199,16 +199,16 @@ popd
 
 %post
 if [ -x /usr/bin/myodbc-installer ]; then
-    /usr/bin/myodbc-installer -a -d -n "MySQL ODBC 9.0 Unicode Driver" -t "DRIVER=%{_libdir}/libmyodbc9w.so"
-    /usr/bin/myodbc-installer -a -d -n "MySQL ODBC 9.0 ANSI Driver"    -t "DRIVER=%{_libdir}/libmyodbc9a.so"
+    /usr/bin/myodbc-installer -a -d -n "MySQL ODBC 1.0 Unicode Driver" -t "DRIVER=%{_libdir}/libmyodbc1w.so"
+    /usr/bin/myodbc-installer -a -d -n "MySQL ODBC 1.0 ANSI Driver"    -t "DRIVER=%{_libdir}/libmyodbc1a.so"
 fi
 
 %if 0%{?odbc_gui}
 %post setup
-/usr/bin/myodbc-installer -r -d -n "MySQL ODBC 9.0 Unicode Driver"
-/usr/bin/myodbc-installer -r -d -n "MySQL ODBC 9.0 ANSI Driver"
-/usr/bin/myodbc-installer -a -d -n "MySQL ODBC 9.0 Unicode Driver" -t "DRIVER=%{_libdir}/libmyodbc9w.so;SETUP=%{_libdir}/libmyodbc9S.so"
-/usr/bin/myodbc-installer -a -d -n "MySQL ODBC 9.0 ANSI Driver"    -t "DRIVER=%{_libdir}/libmyodbc9a.so;SETUP=%{_libdir}/libmyodbc9S.so"
+/usr/bin/myodbc-installer -r -d -n "MySQL ODBC 1.0 Unicode Driver"
+/usr/bin/myodbc-installer -r -d -n "MySQL ODBC 1.0 ANSI Driver"
+/usr/bin/myodbc-installer -a -d -n "MySQL ODBC 1.0 Unicode Driver" -t "DRIVER=%{_libdir}/libmyodbc1w.so;SETUP=%{_libdir}/libmyodbc1S.so"
+/usr/bin/myodbc-installer -a -d -n "MySQL ODBC 1.0 ANSI Driver"    -t "DRIVER=%{_libdir}/libmyodbc1a.so;SETUP=%{_libdir}/libmyodbc1S.so"
 %endif
 
 # ----------------------------------------------------------------------
@@ -217,18 +217,18 @@ fi
 
 # Removing the driver package, we simply orphan any related DSNs
 %preun
-myodbc-installer -r -d -n "MySQL ODBC 9.0 Unicode Driver"
-myodbc-installer -r -d -n "MySQL ODBC 9.0 ANSI Driver"
+myodbc-installer -r -d -n "MySQL ODBC 1.0 Unicode Driver"
+myodbc-installer -r -d -n "MySQL ODBC 1.0 ANSI Driver"
 
 # Removing the setup RPM, downgrade the registration
 %if 0%{?odbc_gui}
 %preun setup
 if [ "$1" = 0 ]; then
     if [ -x %{_bindir}/myodbc-installer ]; then
-        %{_bindir}/myodbc-installer -r -d -n "MySQL ODBC 9.0 Unicode Driver" > /dev/null 2>&1 || :
-        %{_bindir}/myodbc-installer -r -d -n "MySQL ODBC 9.0 ANSI Driver"    > /dev/null 2>&1 || :
-        %{_bindir}/myodbc-installer -a -d -n "MySQL ODBC 9.0 Unicode Driver" -t "DRIVER=%{_libdir}/libmyodbc9w.so" > /dev/null 2>&1 || :
-        %{_bindir}/myodbc-installer -a -d -n "MySQL ODBC 9.0 ANSI Driver"    -t "DRIVER=%{_libdir}/libmyodbc9a.so" > /dev/null 2>&1 || :
+        %{_bindir}/myodbc-installer -r -d -n "MySQL ODBC 1.0 Unicode Driver" > /dev/null 2>&1 || :
+        %{_bindir}/myodbc-installer -r -d -n "MySQL ODBC 1.0 ANSI Driver"    > /dev/null 2>&1 || :
+        %{_bindir}/myodbc-installer -a -d -n "MySQL ODBC 1.0 Unicode Driver" -t "DRIVER=%{_libdir}/libmyodbc1w.so" > /dev/null 2>&1 || :
+        %{_bindir}/myodbc-installer -a -d -n "MySQL ODBC 1.0 ANSI Driver"    -t "DRIVER=%{_libdir}/libmyodbc1a.so" > /dev/null 2>&1 || :
     fi
 fi
 %endif
@@ -242,8 +242,8 @@ fi
 %files
 %defattr(-, root, root, -)
 %{_bindir}/myodbc-installer
-%{_libdir}/libmyodbc9w.so
-%{_libdir}/libmyodbc9a.so
+%{_libdir}/libmyodbc1w.so
+%{_libdir}/libmyodbc1a.so
 %doc %{license_files}
 %doc ChangeLog INFO_SRC INFO_BIN
 
@@ -252,8 +252,8 @@ fi
 %defattr(-, root, root, -)
 %doc %{license_files}
 %doc INFO_SRC INFO_BIN
-%{_libdir}/libmyodbc9S.so
-%{_libdir}/libmyodbc9S-gtk*.so
+%{_libdir}/libmyodbc1S.so
+%{_libdir}/libmyodbc1S-gtk*.so
 %endif
 
 %files test

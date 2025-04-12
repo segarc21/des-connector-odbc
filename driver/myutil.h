@@ -41,7 +41,7 @@
 #ifndef __MYUTIL_H__
 #define __MYUTIL_H__
 
-#include <field_types.h>
+#include "field_types.h"
 
 /*
   Utility macros
@@ -84,13 +84,85 @@ typedef char * DYNAMIC_ELEMENT;
 // from DES_FIELD struct in MySQL 8.3.0
 // (see WL#16221 and WL#16383)
 
-
-
-#include "field_types.h"
-
 /*
   Utility function prototypes that share among files
 */
+
+#ifdef _WIN32
+void try_close(HANDLE h);
+#else
+void try_close(int fd);
+#endif
+
+#ifdef _WIN32
+std::string GetLastWinErrMessage();
+#endif
+
+std::string odbc_pattern_to_regex_pattern(const std::string &odbc_pattern);
+
+std::vector<std::string> search_odbc_pattern(
+    const std::string &pattern, const std::vector<std::string> &v_str);
+
+bool is_character_sql_data_type(SQLSMALLINT sql_type);
+bool is_numeric_des_data_type(enum_field_types type);
+bool is_character_des_data_type(enum_field_types type);
+bool is_time_des_data_type(enum_field_types type);
+
+int des_type_2_sql_type(enum_field_types des_type);
+std::string des_type_2_str(enum_field_types des_type);
+
+char *sqlcharptr_to_charptr(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len);
+std::string sqlcharptr_to_str(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len);
+
+bool is_bulkable_statement(const std::string& query);
+bool is_in_string(const std::string &str, const std::string &search);
+
+TypeAndLength get_Type_from_str(const std::string &str);
+SQLULEN get_type_size(enum_field_types type);
+std::string Type_to_type_str(TypeAndLength type);
+SQLULEN get_Type_size(TypeAndLength type);
+TypeAndLength get_Type(enum_field_types type);
+
+char *string_to_char_pointer(const std::string &str);
+
+std::vector<std::string> getLines(const std::string &str);
+std::vector<std::string> convertArrayNotationToStringVector(std::string str);
+
+inline const std::vector<enum_field_types> supported_types = {
+    DES_TYPE_VARCHAR,  DES_TYPE_STRING,   DES_TYPE_CHAR_N,  DES_TYPE_VARCHAR_N,
+    DES_TYPE_INTEGER,  DES_TYPE_CHAR,     DES_TYPE_INTEGER, DES_TYPE_INT,
+    DES_TYPE_FLOAT,    DES_TYPE_REAL,     DES_TYPE_DATE,    DES_TYPE_TIME,
+    DES_TYPE_DATETIME, DES_TYPE_TIMESTAMP};
+
+inline const std::unordered_map<std::string, SQLSMALLINT> typestr_sqltype_map = {
+    {"varchar()", SQL_VARCHAR},
+    {"string", SQL_LONGVARCHAR},
+    {"varchar", SQL_LONGVARCHAR},
+    {"char", SQL_CHAR},  // we will use it with size_str=1
+    {"char()", SQL_CHAR},
+    {"integer", SQL_BIGINT},
+    {"int", SQL_BIGINT},
+    {"float", SQL_DOUBLE},
+    {"real", SQL_DOUBLE},
+    {"date", SQL_TYPE_DATE},
+    {"time", SQL_TYPE_TIME},
+    {"datetime", SQL_TYPE_TIMESTAMP},
+    {"timestamp", SQL_TYPE_TIMESTAMP}};
+
+inline const std::unordered_map<std::string, enum_field_types> typestr_simpletype_map =
+    {{"varchar()", DES_TYPE_VARCHAR_N},
+     {"string", DES_TYPE_STRING},
+     {"varchar", DES_TYPE_VARCHAR},
+     {"char", DES_TYPE_CHAR},  // we will use it with size_str=1
+     {"char()", DES_TYPE_CHAR_N},
+     {"integer", DES_TYPE_INTEGER},
+     {"int", DES_TYPE_INT},
+     {"float", DES_TYPE_FLOAT},
+     {"real", DES_TYPE_REAL},
+     {"date", DES_TYPE_DATE},
+     {"time", DES_TYPE_TIME},
+     {"datetime", DES_TYPE_DATETIME},
+     {"timestamp", DES_TYPE_TIMESTAMP}};
 
 SQLRETURN         DES_SQLPrepare (SQLHSTMT hstmt, SQLCHAR *szSqlStr,
                                  SQLINTEGER cbSqlStr,
@@ -159,7 +231,8 @@ SQLULEN     get_column_size             (STMT *stmt, DES_FIELD *field);
 SQLULEN     get_column_size_from_str    (STMT *stmt, const char *size_str);
 SQLULEN     fill_column_size_buff       (char *buff, STMT *stmt, DES_FIELD *field);
 SQLSMALLINT get_decimal_digits          (STMT *stmt, DES_FIELD *field);
-SQLLEN      get_transfer_octet_length   (STMT *stmt, DES_FIELD *field);
+SQLLEN get_transfer_octet_length(TypeAndLength tal);
+SQLLEN get_transfer_octet_length(STMT *stmt, DES_FIELD *field);
 SQLLEN      fill_transfer_oct_len_buff  (char *buff, STMT *stmt, DES_FIELD *field);
 SQLLEN      get_display_size            (STMT *stmt, DES_FIELD *field);
 SQLLEN      fill_display_size_buff      (char *buff, STMT *stmt, DES_FIELD *field);
@@ -177,11 +250,15 @@ SQLLEN      get_bookmark_value                  (SQLSMALLINT fCType, SQLPOINTER 
   ((type) == SQL_BINARY || (type) == SQL_VARBINARY || \
    (type) == SQL_LONGVARBINARY)
 
-#define is_numeric_mysql_type(field) \
-  ((field)->type <= DES_TYPE_NULL || (field)->type == DES_TYPE_LONGLONG || \
-   (field)->type == DES_TYPE_INT24 || \
-   ((field)->type == DES_TYPE_BIT && (field)->length == 1) || \
-   (field)->type == DES_TYPE_NEWDECIMAL)
+#define is_numeric_des_type(field) \
+  ((field)->type == DES_TYPE_INTEGER || (field)->type == DES_TYPE_INT || \
+   (field)->type == DES_TYPE_FLOAT || \
+   ((field)->type == DES_TYPE_REAL)
+
+#define is_character_des_type(field)                                       \
+  ((field)->type == DES_TYPE_VARCHAR || (field)->type == DES_TYPE_STRING || \
+   (field)->type == DES_TYPE_CHAR_N || \
+   ((field)->type == DES_TYPE_VARCHAR_N)
 
 SQLRETURN SQL_API DES_SQLBindParameter(SQLHSTMT hstmt,SQLUSMALLINT ipar,
               SQLSMALLINT fParamType,
@@ -329,7 +406,7 @@ void fill_ird_data_lengths (DESC *ird, ulong *lengths, uint fields);
 /* my_stmt.c */
 BOOL              returned_result     (STMT *stmt);
 des_bool           free_current_result (STMT *stmt);
-DES_RESULT *       get_result_metadata (STMT *stmt, BOOL force_use);
+DES_RESULT *       get_result_metadata (STMT *stmt);
 int               bind_result         (STMT *stmt);
 int               get_result          (STMT *stmt);
 des_ulonglong      affected_rows       (STMT *stmt);

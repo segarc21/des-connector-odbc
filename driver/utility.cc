@@ -200,37 +200,22 @@ void fix_result_types(STMT *stmt)
     irrec->fixed_prec_scale= SQL_FALSE;
     switch (field->type)
     {
-    case DES_TYPE_LONG_BLOB:
-    case DES_TYPE_TINY_BLOB:
-    case DES_TYPE_MEDIUM_BLOB:
-    case DES_TYPE_BLOB:
-    case DES_TYPE_VAR_STRING:
     case DES_TYPE_STRING:
-    case DES_TYPE_JSON:
       if (field->charsetnr == BINARY_CHARSET_NUMBER)
       {
         irrec->literal_prefix= (SQLCHAR *) "0x";
         irrec->literal_suffix= (SQLCHAR *) "";
         // The charset number must be only changed for JSON
-        if (field->type == DES_TYPE_JSON)
-          field->charsetnr = UTF8_CHARSET_NUMBER;
         break;
       }
       /* FALLTHROUGH */
 
     case DES_TYPE_DATE:
     case DES_TYPE_DATETIME:
-    case DES_TYPE_NEWDATE:
     case DES_TYPE_TIMESTAMP:
     case DES_TYPE_TIME:
-    case DES_TYPE_YEAR:
       irrec->literal_prefix= (SQLCHAR *) "'";
       irrec->literal_suffix= (SQLCHAR *) "'";
-      break;
-
-    case DES_TYPE_VECTOR:
-      irrec->literal_prefix = (SQLCHAR *) "";
-      irrec->literal_suffix = (SQLCHAR *) "";
       break;
 
     default:
@@ -238,24 +223,11 @@ void fix_result_types(STMT *stmt)
       irrec->literal_suffix= (SQLCHAR *) "";
     }
     switch (field->type) {
-    case DES_TYPE_SHORT:
-    case DES_TYPE_LONG:
-    case DES_TYPE_LONGLONG:
-    case DES_TYPE_INT24:
-    case DES_TYPE_TINY:
-    case DES_TYPE_DECIMAL:
-      irrec->num_prec_radix= 10;
-      break;
 
     /* overwrite irrec->precision set above */
     case DES_TYPE_FLOAT:
       irrec->num_prec_radix= 2;
       irrec->precision= 23;
-      break;
-
-    case DES_TYPE_DOUBLE:
-      irrec->num_prec_radix= 2;
-      irrec->precision= 53;
       break;
 
     default:
@@ -790,38 +762,19 @@ SQLRETURN wcopy_bit_result(STMT *stmt,
 }
 
 std::map<std::string, int> sql_data_types_map = {
-  { "bit", SQL_BIT },
-  { "decimal", SQL_DECIMAL },
-  { "char", SQL_CHAR },
-  { "tinyint", SQL_TINYINT },
-  { "smallint", SQL_SMALLINT },
-  { "mediumint", SQL_INTEGER },
-  { "int", SQL_INTEGER },
-  { "bigint", SQL_BIGINT },
-  { "float", SQL_REAL },
-  { "double", SQL_DOUBLE },
-  { "year", SQL_SMALLINT },
-  { "timestamp", SQL_TIMESTAMP },
-  { "datetime", SQL_TIMESTAMP },
-  { "date", SQL_TYPE_DATE },
-  { "time", SQL_TIME },
-  { "binary", SQL_BINARY },
-  { "varbinary", SQL_VARBINARY },
-  { "vector", SQL_VARBINARY },
-  { "varchar", SQL_VARCHAR },
-  { "tinyblob", SQL_LONGVARBINARY },
-  { "tinytext", SQL_LONGVARCHAR },
-  { "mediumblob", SQL_LONGVARBINARY },
-  { "mediumtext", SQL_LONGVARCHAR },
-  { "blob", SQL_LONGVARBINARY },
-  { "text", SQL_LONGVARCHAR },
-  { "longblob", SQL_LONGVARBINARY },
-  { "longtext", SQL_LONGVARCHAR },
-  { "enum", SQL_CHAR },
-  { "set", SQL_CHAR },
-  { "geometry", SQL_LONGVARBINARY },
-  { "JSON", SQL_LONGVARCHAR },
-  { "json", SQL_LONGVARCHAR }
+    {"varchar", SQL_LONGVARCHAR},
+    {"string", SQL_LONGVARCHAR},
+    {"char(N)", SQL_CHAR},
+    {"varchar(N)", SQL_CHAR},
+    {"char", SQL_CHAR},
+    {"integer", SQL_BIGINT},
+    {"int", SQL_BIGINT},
+    {"float", SQL_DOUBLE},
+    {"real", SQL_DOUBLE},
+    {"date", SQL_TYPE_DATE},
+    {"time", SQL_TYPE_TIME},
+    {"datetime", SQL_DATETIME},
+    {"timestamp", SQL_TYPE_TIMESTAMP}
 };
 
 SQLSMALLINT get_sql_data_type_from_str(const char *mysql_type_name)
@@ -892,224 +845,48 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
                             !stmt->dbc->ds.opt_NO_BINARY_RESULT);
 
   switch (field->type) {
-  case DES_TYPE_BIT:
-    if (buff)
-      (void)desodbc_stpmov(buff, "bit");
-    /*
-      MySQL's BIT type can have more than one bit, in which case we treat
-      it as a BINARY field.
-    */
-    return (field->length > 1) ? SQL_BINARY : SQL_BIT;
-
-  case DES_TYPE_DECIMAL:
-  case DES_TYPE_NEWDECIMAL:
-    if (buff)
-      (void)desodbc_stpmov(buff, "decimal");
-    return SQL_DECIMAL;
-
-  case DES_TYPE_TINY:
-    /* MYSQL_TYPE_TINY could either be a TINYINT or a single CHAR. */
-    if (buff)
-    {
-      buff= desodbc_stpmov(buff, (field->flags & NUM_FLAG) ? "tinyint" : "char");
-      if (field->flags & UNSIGNED_FLAG)
-        (void)desodbc_stpmov(buff, " unsigned");
-    }
-    return (field->flags & NUM_FLAG) ? SQL_TINYINT : SQL_CHAR;
-
-  case DES_TYPE_SHORT:
-    if (buff)
-    {
-      buff= desodbc_stpmov(buff, "smallint");
-      if (field->flags & UNSIGNED_FLAG)
-        (void)desodbc_stpmov(buff, " unsigned");
-    }
-    return SQL_SMALLINT;
-
-  case DES_TYPE_INT24:
-    if (buff)
-    {
-      buff= desodbc_stpmov(buff, "mediumint");
-      if (field->flags & UNSIGNED_FLAG)
-        (void)desodbc_stpmov(buff, " unsigned");
-    }
-    return SQL_INTEGER;
-
-  case DES_TYPE_LONG:
-    if (buff)
-    {
-      buff= desodbc_stpmov(buff, "integer");
-      if (field->flags & UNSIGNED_FLAG)
-        (void)desodbc_stpmov(buff, " unsigned");
-    }
-    return SQL_INTEGER;
-
-  case DES_TYPE_LONGLONG:
-    if (buff)
-    {
-      if (stmt->dbc->ds.opt_NO_BIGINT)
-        buff= desodbc_stpmov(buff, "int");
-      else
-        buff= desodbc_stpmov(buff, "bigint");
-
-      if (field->flags & UNSIGNED_FLAG)
-        (void)desodbc_stpmov(buff, " unsigned");
-    }
-
-    if (stmt->dbc->ds.opt_NO_BIGINT)
-      return SQL_INTEGER;
-
-    return SQL_BIGINT;
-
-  case DES_TYPE_FLOAT:
-    if (buff)
-    {
-      buff= desodbc_stpmov(buff, "float");
-      if (field->flags & UNSIGNED_FLAG)
-        (void)desodbc_stpmov(buff, " unsigned");
-    }
-    return SQL_REAL;
-
-  case DES_TYPE_DOUBLE:
-    if (buff)
-    {
-      buff= desodbc_stpmov(buff, "double");
-      if (field->flags & UNSIGNED_FLAG)
-        (void)desodbc_stpmov(buff, " unsigned");
-    }
-    return SQL_DOUBLE;
-
-  case DES_TYPE_NULL:
-    if (buff)
-      (void)desodbc_stpmov(buff, "null");
-    return SQL_VARCHAR;
-
-  case DES_TYPE_YEAR:
-    if (buff)
-      (void)desodbc_stpmov(buff, "year");
-    return SQL_SMALLINT;
-
-  case DES_TYPE_TIMESTAMP:
-    if (buff)
-      (void)desodbc_stpmov(buff, "timestamp");
-    if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
+    case DES_TYPE_VARCHAR:
+      if (buff) (void)desodbc_stpmov(buff, "varchar");
+      return SQL_LONGVARCHAR;
+    case DES_TYPE_STRING:
+      if (buff) (void)desodbc_stpmov(buff, "string");
+      return SQL_LONGVARCHAR;
+    case DES_TYPE_CHAR_N:
+      if (buff) (void)desodbc_stpmov(buff, "char(N)");
+      return SQL_CHAR;
+    case DES_TYPE_VARCHAR_N:
+      if (buff) (void)desodbc_stpmov(buff, "varchar(N)");
+      return SQL_VARCHAR;
+    case DES_TYPE_CHAR:
+      if (buff) (void)desodbc_stpmov(buff, "char");
+      return SQL_CHAR;
+    case DES_TYPE_INTEGER:
+      if (buff) (void)desodbc_stpmov(buff, "integer");
+      return SQL_BIGINT;
+    case DES_TYPE_INT:
+      if (buff) (void)desodbc_stpmov(buff, "int");
+      return SQL_BIGINT;
+    case DES_TYPE_FLOAT:
+      if (buff) (void)desodbc_stpmov(buff, "float");
+      return SQL_DOUBLE;
+    case DES_TYPE_REAL:
+      if (buff) (void)desodbc_stpmov(buff, "real");
+      return SQL_DOUBLE;
+    case DES_TYPE_DATE:
+      if (buff) (void)desodbc_stpmov(buff, "date");
+      if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3) return SQL_TYPE_DATE;
+      return SQL_DATE;
+    case DES_TYPE_TIME:
+      if (buff) (void)desodbc_stpmov(buff, "time");
+      if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3) return SQL_TYPE_TIME;
+      return SQL_TIME;
+    case DES_TYPE_DATETIME:
+      if (buff) (void)desodbc_stpmov(buff, "datetime");
+      return SQL_DATETIME;
+    case DES_TYPE_TIMESTAMP:
+      if (buff) (void)desodbc_stpmov(buff, "timestamp");
+      if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3) return SQL_TYPE_TIMESTAMP;
       return SQL_TYPE_TIMESTAMP;
-    return SQL_TIMESTAMP;
-
-  case DES_TYPE_DATETIME:
-    if (buff)
-      (void)desodbc_stpmov(buff, "datetime");
-    if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
-      return SQL_TYPE_TIMESTAMP;
-    return SQL_TIMESTAMP;
-
-  case DES_TYPE_NEWDATE:
-  case DES_TYPE_DATE:
-    if (buff)
-      (void)desodbc_stpmov(buff, "date");
-    if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
-      return SQL_TYPE_DATE;
-    return SQL_DATE;
-
-  case DES_TYPE_TIME:
-    if (buff)
-      (void)desodbc_stpmov(buff, "time");
-    if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
-      return SQL_TYPE_TIME;
-    return SQL_TIME;
-
-  case DES_TYPE_STRING:
-    if (buff)
-      (void)desodbc_stpmov(buff, field_is_binary ? "binary" : "char");
-
-    // Return the wide type only if driver is unicode and field charset
-    // is multibyte.
-    return field_is_binary ? SQL_BINARY :
-      (stmt->dbc->unicode ? SQL_WCHAR : SQL_CHAR);
-
-  /*
-    DES_TYPE_VARCHAR is never actually sent, this just silences
-    a compiler warning.
-  */
-  case DES_TYPE_VARCHAR:
-  case DES_TYPE_VAR_STRING:
-    if (buff)
-      (void)desodbc_stpmov(buff, field_is_binary ? "varbinary" : "varchar");
-
-    return field_is_binary ? SQL_VARBINARY :
-      (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
-       SQL_WVARCHAR : SQL_VARCHAR);
-
-  case DES_TYPE_TINY_BLOB:
-    if (buff)
-      (void)desodbc_stpmov(buff, field_is_binary ? "tinyblob" : "tinytext");
-
-    return field_is_binary ? SQL_LONGVARBINARY :
-      (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
-       SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
-
-  case DES_TYPE_BLOB:
-    if (buff)
-    {
-      switch(field->length)
-      {
-        case 255:
-          (void)desodbc_stpmov(buff, field_is_binary ? "tinyblob" : "tinytext");
-          break;
-        case 16777215:
-          (void)desodbc_stpmov(buff, field_is_binary ? "mediumblob" : "mediumtext");
-          break;
-        case 4294967295UL:
-          (void)desodbc_stpmov(buff, field_is_binary ? "longblob" : "longtext");
-          break;
-        default:
-          (void)desodbc_stpmov(buff, field_is_binary ? "blob" : "text");
-      }
-    }
-    return field_is_binary ? SQL_LONGVARBINARY :
-      (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
-       SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
-
-  case DES_TYPE_MEDIUM_BLOB:
-    if (buff)
-      (void)desodbc_stpmov(buff, field_is_binary ? "mediumblob" : "mediumtext");
-
-    return field_is_binary ? SQL_LONGVARBINARY :
-      (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
-       SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
-
-  case DES_TYPE_LONG_BLOB:
-    if (buff)
-      (void)desodbc_stpmov(buff, field_is_binary ? "longblob" : "longtext");
-
-    return field_is_binary ? SQL_LONGVARBINARY :
-      (stmt->dbc->unicode && get_charset_maxlen(field->charsetnr) > 1 ?
-       SQL_WLONGVARCHAR : SQL_LONGVARCHAR);
-
-  case DES_TYPE_ENUM:
-    if (buff)
-      (void)desodbc_stpmov(buff, "enum");
-    return SQL_CHAR;
-
-  case DES_TYPE_SET:
-    if (buff)
-      (void)desodbc_stpmov(buff, "set");
-    return SQL_CHAR;
-
-  case DES_TYPE_GEOMETRY:
-    if (buff)
-      (void)desodbc_stpmov(buff, "geometry");
-    return SQL_LONGVARBINARY;
-
-  case DES_TYPE_JSON:
-    if (buff)
-      (void)desodbc_stpmov(buff, "json");
-    return stmt->dbc->unicode ? SQL_WLONGVARCHAR : SQL_LONGVARCHAR;
-
-  case DES_TYPE_VECTOR:
-    if (buff)
-      (void)desodbc_stpmov(buff, "vector");
-    return SQL_VARBINARY;
   }
 
   if (buff)
@@ -1218,82 +995,31 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
   length= cap_length(stmt, (unsigned long)length);
 
   switch (field->type) {
-  case DES_TYPE_TINY:
-    return (field->flags & NUM_FLAG) ? 3 : 1;
 
-  case DES_TYPE_SHORT:
-    return 5;
-
-  case DES_TYPE_LONG:
-    return 10;
-
-  case DES_TYPE_FLOAT:
-    return 7;
-
-  case DES_TYPE_DOUBLE:
-    return 15;
-
-  case DES_TYPE_NULL:
-    return 0;
-
-  case DES_TYPE_LONGLONG:
-    if (stmt->dbc->ds.opt_NO_BIGINT)
-      return 10; /* same as MYSQL_TYPE_LONG */
-    else
-      return (field->flags & UNSIGNED_FLAG) ? 20 : 19;
-
-  case DES_TYPE_INT24:
-    return 8;
-
-  case DES_TYPE_DATE:
-    return 10;
-
-  case DES_TYPE_TIME:
-    return 8;
-
-  case DES_TYPE_TIMESTAMP:
-  case DES_TYPE_DATETIME:
-  case DES_TYPE_NEWDATE:
-    return 19;
-
-  case DES_TYPE_YEAR:
-    return 4;
-
-  case DES_TYPE_DECIMAL:
-  case DES_TYPE_NEWDECIMAL:
-    return (length -
-            (!(field->flags & UNSIGNED_FLAG) ? 1:  0) - /* sign? */
-            (field->decimals ? 1 : 0));             /* decimal point? */
-
-  case DES_TYPE_BIT:
-    /*
-      We treat a BIT(n) as a SQL_BIT if n == 1, otherwise we treat it
-      as a SQL_BINARY, so length is (bits + 7) / 8.
-    */
-    if (length == 1)
-      return 1;
-    return (length + 7) / 8;
-
-  case DES_TYPE_ENUM:
-  case DES_TYPE_SET:
   case DES_TYPE_VARCHAR:
-  case DES_TYPE_VAR_STRING:
-  case DES_TYPE_STRING:
-  case DES_TYPE_TINY_BLOB:
-  case DES_TYPE_MEDIUM_BLOB:
-  case DES_TYPE_LONG_BLOB:
-  case DES_TYPE_BLOB:
-  case DES_TYPE_GEOMETRY:
+  case DES_TYPE_STRING:  
+  case DES_TYPE_CHAR_N:
+  case DES_TYPE_VARCHAR_N:
     // For LONGTEXT we must return 4G or 2G if it was capped.
-    if (length >= INT32_MAX)
-      return length;
+    if (length >= INT32_MAX) return length;
     // For BINARY charset the maxlen is 1, so the result
     // will be the byte length.
     return length / get_charset_maxlen(field->charsetnr);
-  case DES_TYPE_JSON:
-    return UINT32_MAX / 4; // Because JSON is always UTF8MB4
-  case DES_TYPE_VECTOR:
-    return length / 4; // Length should be the number of elements in VECTOR
+  case DES_TYPE_CHAR:
+    return 1;
+  case DES_TYPE_INTEGER:
+  case DES_TYPE_INT:
+    return 19;
+  case DES_TYPE_FLOAT:
+  case DES_TYPE_REAL:
+    return 53;
+  case DES_TYPE_DATE:
+    return 10;
+  case DES_TYPE_TIME:
+    return 8;
+  case DES_TYPE_DATETIME:
+  case DES_TYPE_TIMESTAMP:
+    return 19;
   }
 
   return SQL_NO_TOTAL;
@@ -1316,25 +1042,18 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
                           DES_FIELD *field)
 {
   switch (field->type) {
-  case DES_TYPE_DECIMAL:
-  case DES_TYPE_NEWDECIMAL:
-    return field->decimals;
+    case DES_TYPE_FLOAT:
+    case DES_TYPE_REAL:
+      return field->decimals;
+
 
   /* All exact numeric types. */
-  case DES_TYPE_TINY:
-  case DES_TYPE_SHORT:
-  case DES_TYPE_LONG:
-  case DES_TYPE_LONGLONG:
-  case DES_TYPE_INT24:
-  case DES_TYPE_YEAR:
-  case DES_TYPE_TIME:
-  case DES_TYPE_TIMESTAMP:
-  case DES_TYPE_DATETIME:
-    return 0;
-
-  /* We treat DES_TYPE_BIT as an exact numeric type only for BIT(1). */
-  case DES_TYPE_BIT:
-    if (field->length == 1)
+    case DES_TYPE_INTEGER:
+    case DES_TYPE_INT:
+    case DES_TYPE_DATE:
+    case DES_TYPE_TIME:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
       return 0;
 
   default:
@@ -1356,103 +1075,50 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
 
   @return  The transfer octet length
 */
-SQLLEN get_transfer_octet_length(STMT *stmt, DES_FIELD *field)
-{
-  int capint32= stmt->dbc->ds.opt_COLUMN_SIZE_S32 ? 1 : 0;
-  SQLLEN length;
-  /* cap at INT_MAX32 due to signed value */
-  if (field->length > INT_MAX32)
-    length= INT_MAX32;
-  else
-    length= field->length;
 
-  switch (field->type) {
-  case DES_TYPE_TINY:
-    return 1;
-
-  case DES_TYPE_SHORT:
-    return 2;
-
-  case DES_TYPE_INT24:
-    return 3;
-
-  case DES_TYPE_LONG:
-    return 4;
-
-  case DES_TYPE_FLOAT:
-    return 4;
-
-  case DES_TYPE_DOUBLE:
-    return 8;
-
-  case DES_TYPE_NULL:
-    return 1;
-
-  case DES_TYPE_LONGLONG:
-    return 20;
-
-  case DES_TYPE_DATE:
-    return sizeof(SQL_DATE_STRUCT);
-
-  case DES_TYPE_TIME:
-    return sizeof(SQL_TIME_STRUCT);
-
-  case DES_TYPE_TIMESTAMP:
-  case DES_TYPE_DATETIME:
-  case DES_TYPE_NEWDATE:
-    return sizeof(SQL_TIMESTAMP_STRUCT);
-
-  case DES_TYPE_YEAR:
-    return 1;
-
-  case DES_TYPE_DECIMAL:
-  case DES_TYPE_NEWDECIMAL:
-    return field->length;
-
-  case DES_TYPE_BIT:
-    /*
-      We treat a BIT(n) as a SQL_BIT if n == 1, otherwise we treat it
-      as a SQL_BINARY, so length is (bits + 7) / 8. field->length has
-      the number of bits.
-    */
-    return (field->length + 7) / 8;
-
-  case DES_TYPE_STRING:
-    if (stmt->dbc->ds.opt_PAD_SPACE)
-    {
-      unsigned int csmaxlen = get_charset_maxlen(field->charsetnr);
-      if (!csmaxlen)
-        return SQL_NO_TOTAL;
-
-      /*
-        We need to find out the real length using the database length and
-        the current mode (ANSI or UNICODE)
-      */
-      length= (field->max_length > field->length ? field->max_length : field->length) / csmaxlen;
-      return length;
+SQLLEN get_transfer_octet_length(TypeAndLength tal) {
+  switch (tal.simple_type) {
+    case DES_TYPE_VARCHAR:
+    case DES_TYPE_STRING:
+    case DES_TYPE_CHAR_N:
+    case DES_TYPE_VARCHAR_N: {
+      return tal.len;
     }
-    /* FALLTHROUGH */
-
-  case DES_TYPE_ENUM:
-  case DES_TYPE_SET:
-  case DES_TYPE_VARCHAR:
-  case DES_TYPE_VAR_STRING:
-  case DES_TYPE_TINY_BLOB:
-  case DES_TYPE_MEDIUM_BLOB:
-  case DES_TYPE_LONG_BLOB:
-  case DES_TYPE_BLOB:
-  case DES_TYPE_GEOMETRY:
-  case DES_TYPE_JSON:
-    {
-      if (capint32 && length > INT_MAX32)
-        length= INT_MAX32;
-      return length;
-  case DES_TYPE_VECTOR:
-    return length;
-    }
+    case DES_TYPE_CHAR:
+      return 1;
+    case DES_TYPE_INTEGER:
+    case DES_TYPE_INT:
+      return 8;
+    case DES_TYPE_FLOAT:
+    case DES_TYPE_REAL:
+      return 8;
+    case DES_TYPE_DATE:
+      return sizeof(SQL_DATE_STRUCT);
+    case DES_TYPE_TIME:
+      return sizeof(SQL_TIME_STRUCT);
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
+      return sizeof(SQL_TIMESTAMP_STRUCT);
   }
 
   return SQL_NO_TOTAL;
+}
+
+//Implemented for DES using the mapping DES data type -> SQL data type -> length, as defined in that url
+SQLLEN get_transfer_octet_length(STMT *stmt, DES_FIELD *field)
+{
+  SQLLEN length;
+  if (field->length > INT_MAX64)
+    length= INT_MAX64;
+  else
+    length= field->length;
+
+  TypeAndLength tal;
+  tal.simple_type = field->type;
+  tal.len = length;
+
+  return get_transfer_octet_length(tal);
+
 }
 
 
@@ -1471,89 +1137,34 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),DES_FIELD *field)
   unsigned int mbmaxlen = get_charset_maxlen(field->charsetnr);
 
   switch (field->type) {
-  case DES_TYPE_TINY:
-    return 3 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
-
-  case DES_TYPE_SHORT:
-    return 5 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
-
-  case DES_TYPE_INT24:
-    return 8 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
-
-  case DES_TYPE_LONG:
-    return 10 + (field->flags & UNSIGNED_FLAG ? 1 : 0);
-
-  case DES_TYPE_FLOAT:
-    return 14;
-
-  case DES_TYPE_DOUBLE:
-    return 24;
-
-  case DES_TYPE_NULL:
-    return 1;
-
-  case DES_TYPE_LONGLONG:
-    return 20;
-
-  case DES_TYPE_DATE:
-    return 10;
-
-  case DES_TYPE_TIME:
-    return 8;
-
-  case DES_TYPE_TIMESTAMP:
-  case DES_TYPE_DATETIME:
-  case DES_TYPE_NEWDATE:
-    return 19;
-
-  case DES_TYPE_YEAR:
-    return 4;
-
-  case DES_TYPE_DECIMAL:
-  case DES_TYPE_NEWDECIMAL:
-    return field->length;
-
-  case DES_TYPE_BIT:
-    /*
-      We treat a BIT(n) as a SQL_BIT if n == 1, otherwise we treat it
-      as a SQL_BINARY, so display length is (bits + 7) / 8 * 2.
-      field->length has the number of bits.
-    */
-    if (field->length == 1)
-      return 1;
-    return (field->length + 7) / 8 * 2;
-
-  case DES_TYPE_TINY_BLOB:
-  case DES_TYPE_MEDIUM_BLOB:
-  case DES_TYPE_LONG_BLOB:
-  case DES_TYPE_BLOB:
-    // For these types the storage is in bytes and it is fixed,
-    // not specified by the user.
-    // The driver must give the maximum possible display size.
-    mbmaxlen = 1;
-    // Fall through
-
-  case DES_TYPE_ENUM:
-  case DES_TYPE_SET:
-  case DES_TYPE_VARCHAR:
-  case DES_TYPE_VAR_STRING:
-  case DES_TYPE_STRING:
-  case DES_TYPE_GEOMETRY:
-    {
+    case DES_TYPE_VARCHAR:
+    case DES_TYPE_STRING:
+    case DES_TYPE_CHAR_N:
+    case DES_TYPE_VARCHAR_N: {
       unsigned long length;
       if (field->charsetnr == BINARY_CHARSET_NUMBER)
-        length= field->length * 2;
+        length = field->length * 2;
       else
-        length= field->length / mbmaxlen;
+        length = field->length / mbmaxlen;
 
-      if (capint32 && length > INT_MAX32)
-        length= INT_MAX32;
+      if (capint32 && length > INT_MAX32) length = INT_MAX32;
       return length;
     }
-  case DES_TYPE_JSON:
-    return UINT_MAX32 / 4; // 4 is the character size in UTF8MB4
-  case DES_TYPE_VECTOR:
-    return 15 * (field->length / 4) + 1;
+    case DES_TYPE_CHAR:
+      return 1;
+    case DES_TYPE_INTEGER:
+    case DES_TYPE_INT:
+      return 20;
+    case DES_TYPE_FLOAT:
+    case DES_TYPE_REAL:
+      return 24;
+    case DES_TYPE_DATE:
+      return 10;
+    case DES_TYPE_TIME:
+      return 8;
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
+      return 19;
   }
 
   return SQL_NO_TOTAL;
@@ -1714,46 +1325,34 @@ SQLSMALLINT get_type_from_concise_type(SQLSMALLINT concise_type)
   @purpose : returns internal type to C type
 */
 
+
+//See https://learn.microsoft.com/en-us/sql/odbc/reference/appendixes/c-data-types?view=sql-server-ver16
 int unireg_to_c_datatype(DES_FIELD *field)
 {
     switch ( field->type )
     {
-        case DES_TYPE_BIT:
-            /*
-              MySQL's BIT type can have more than one bit, in which case we
-              treat it as a BINARY field.
-            */
-            return (field->length > 1) ? SQL_C_BINARY : SQL_C_BIT;
-        case DES_TYPE_TINY:
-            return SQL_C_TINYINT;
-        case DES_TYPE_YEAR:
-        case DES_TYPE_SHORT:
-            return SQL_C_SHORT;
-        case DES_TYPE_INT24:
-        case DES_TYPE_LONG:
-            return SQL_C_LONG;
-        case DES_TYPE_FLOAT:
-            return SQL_C_FLOAT;
-        case DES_TYPE_DOUBLE:
-            return SQL_C_DOUBLE;
-        case DES_TYPE_TIMESTAMP:
-        case DES_TYPE_DATETIME:
-            return SQL_C_TIMESTAMP;
-        case DES_TYPE_NEWDATE:
-        case DES_TYPE_DATE:
-            return SQL_C_DATE;
-        case DES_TYPE_TIME:
-            return SQL_C_TIME;
-        case DES_TYPE_BLOB:
-        case DES_TYPE_TINY_BLOB:
-        case DES_TYPE_MEDIUM_BLOB:
-        case DES_TYPE_LONG_BLOB:
-        case DES_TYPE_JSON:
-        case DES_TYPE_VECTOR:
-            return SQL_C_BINARY;
-        case DES_TYPE_LONGLONG: /* Must be returned as char */
-        default:
-            return SQL_C_CHAR;
+      case DES_TYPE_VARCHAR:
+      case DES_TYPE_STRING:
+      case DES_TYPE_CHAR_N:
+      case DES_TYPE_VARCHAR_N:
+        return SQL_C_CHAR;
+      case DES_TYPE_CHAR:
+        return SQL_C_UTINYINT;
+      case DES_TYPE_INTEGER:
+      case DES_TYPE_INT:
+        return SQL_C_SBIGINT;
+      case DES_TYPE_FLOAT:
+      case DES_TYPE_REAL:
+        return SQL_C_DOUBLE;
+      case DES_TYPE_DATE:
+        return SQL_C_DATE;
+      case DES_TYPE_TIME:
+        return SQL_C_TIME;
+      case DES_TYPE_DATETIME:
+      case DES_TYPE_TIMESTAMP:
+        return SQL_C_TIMESTAMP;
+      default:
+        return SQL_C_CHAR;
     }
 }
 
@@ -2982,78 +2581,19 @@ char* proc_get_param_dbtype(char *proc, int len, char *ptype)
 SQLTypeMap SQL_TYPE_MAP_values[]=
 {
   /* SQL_CHAR= 1 */
-  {(SQLCHAR*)"char", 4, SQL_CHAR, DES_TYPE_STRING, 0, 0},
-  {(SQLCHAR*)"enum", 4, SQL_CHAR, DES_TYPE_STRING, 0, 0},
-  {(SQLCHAR*)"set", 3, SQL_CHAR, DES_TYPE_STRING, 0, 0},
-
-  /* SQL_BIT= -7 */
-  {(SQLCHAR*)"bit", 3, SQL_BIT, DES_TYPE_BIT, 1, 1},
-  {(SQLCHAR*)"bool", 4, SQL_BIT, DES_TYPE_BIT, 1, 1},
-
-  /* SQL_TINY= -6 */
-  {(SQLCHAR*)"tinyint", 7, SQL_TINYINT, DES_TYPE_TINY, 1, 1},
-
-  /* SQL_BIGINT= -5 */
-  {(SQLCHAR*)"bigint", 6, SQL_BIGINT, DES_TYPE_LONGLONG, 20, 1},
-
-  /* SQL_LONGVARBINARY= -4 */
-  {(SQLCHAR*)"long varbinary", 14, SQL_LONGVARBINARY, DES_TYPE_MEDIUM_BLOB, 16777215, 1},
-  {(SQLCHAR*)"blob", 4, SQL_LONGVARBINARY, DES_TYPE_BLOB, 65535, 1},
-  {(SQLCHAR*)"longblob", 8, SQL_LONGVARBINARY, DES_TYPE_LONG_BLOB, 4294967295UL, 1},
-  {(SQLCHAR*)"tinyblob", 8, SQL_LONGVARBINARY, DES_TYPE_TINY_BLOB, 255, 1},
-  {(SQLCHAR*)"mediumblob", 10, SQL_LONGVARBINARY, DES_TYPE_MEDIUM_BLOB, 16777215,1 },
-
-  /* SQL_VARBINARY= -3 */
-  {(SQLCHAR*)"varbinary", 9, SQL_VARBINARY, DES_TYPE_VAR_STRING, 0, 1},
-  {(SQLCHAR*)"vector", 9, SQL_VARBINARY, DES_TYPE_VECTOR, 16382 * 4, 1},
-
-  /* SQL_BINARY= -2 */
-  {(SQLCHAR*)"binary", 6, SQL_BINARY, DES_TYPE_STRING, 0, 1},
-
-  /* SQL_LONGVARCHAR= -1 */
-  {(SQLCHAR*)"long varchar", 12, SQL_LONGVARCHAR, DES_TYPE_MEDIUM_BLOB, 16777215, 0},
-  {(SQLCHAR*)"text", 4, SQL_LONGVARCHAR, DES_TYPE_BLOB, 65535, 0},
-  {(SQLCHAR*)"mediumtext", 10, SQL_LONGVARCHAR, DES_TYPE_MEDIUM_BLOB, 16777215, 0},
-  {(SQLCHAR*)"longtext", 8, SQL_LONGVARCHAR, DES_TYPE_LONG_BLOB, 4294967295UL, 0},
-  {(SQLCHAR*)"tinytext", 8, SQL_LONGVARCHAR, DES_TYPE_TINY_BLOB, 255, 0},
-
-  /* SQL_NUMERIC= 2 */
-  {(SQLCHAR*)"numeric", 7, SQL_NUMERIC, DES_TYPE_DECIMAL, 0, 1},
-
-  /* SQL_DECIMAL= 3 */
-  {(SQLCHAR*)"decimal", 7, SQL_DECIMAL, DES_TYPE_DECIMAL, 0, 1},
-
-  /* SQL_INTEGER= 4 */
-  {(SQLCHAR*)"int", 3, SQL_INTEGER, DES_TYPE_LONG, 10, 1},
-  {(SQLCHAR*)"mediumint", 9, SQL_INTEGER, DES_TYPE_INT24, 8, 1},
-
-  /* SQL_SMALLINT= 5 */
-  {(SQLCHAR*)"smallint", 8, SQL_SMALLINT, DES_TYPE_SHORT, 5, 1},
-
-  /* SQL_REAL= 7 */
-  {(SQLCHAR*)"float", 5, SQL_REAL, DES_TYPE_FLOAT, 7, 1},
-
-  /* SQL_DOUBLE= 8 */
-  {(SQLCHAR*)"double", 6, SQL_DOUBLE, DES_TYPE_DOUBLE, 15, 1},
-
-  /* SQL_DATETIME= 9 */
-  {(SQLCHAR*)"datetime", 8, SQL_TYPE_TIMESTAMP, DES_TYPE_DATETIME, 19, 1},
-
-  /* SQL_VARCHAR= 12 */
-  {(SQLCHAR*)"varchar", 7, SQL_VARCHAR, DES_TYPE_VARCHAR, 0, 0},
-
-  /* SQL_TYPE_DATE= 91 */
-  {(SQLCHAR*)"date", 4, SQL_TYPE_DATE, DES_TYPE_DATE, 10, 1},
-
-  /* YEAR - SQL_SMALLINT */
-  {(SQLCHAR*)"year", 4, SQL_SMALLINT, DES_TYPE_YEAR, 2, 1},
-
-  /* SQL_TYPE_TIMESTAMP= 93 */
-  {(SQLCHAR*)"timestamp", 9, SQL_TYPE_TIMESTAMP, DES_TYPE_TIMESTAMP, 19, 1},
-
-  /* SQL_TYPE_TIME= 92 */
-  {(SQLCHAR*)"time", 4, SQL_TYPE_TIME, DES_TYPE_TIME, 8, 1}
-
+    {(SQLCHAR *)"varchar", 7, SQL_LONGVARCHAR, DES_TYPE_VARCHAR, 0, 0},
+    {(SQLCHAR *)"string", 6, SQL_LONGVARCHAR, DES_TYPE_STRING, 0, 0},
+    {(SQLCHAR *)"char(N)", 7, SQL_CHAR, DES_TYPE_CHAR_N, 0, 0},
+    {(SQLCHAR *)"varchar(N)", 10, SQL_CHAR, DES_TYPE_VARCHAR_N, 0, 0},
+    {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR, 1, 0},
+    {(SQLCHAR *)"integer", 7, SQL_BIGINT, DES_TYPE_INTEGER, 19, 1},
+    {(SQLCHAR *)"int", 3, SQL_BIGINT, DES_TYPE_INT, 19, 1},
+    {(SQLCHAR *)"float", 5, SQL_DOUBLE, DES_TYPE_FLOAT, 53, 1},
+    {(SQLCHAR *)"real", 4, SQL_DOUBLE, DES_TYPE_REAL, 53, 1},
+    {(SQLCHAR *)"date", 4, SQL_TYPE_DATE, DES_TYPE_DATE, 10, 1},
+    {(SQLCHAR *)"time", 4, SQL_TYPE_TIME, DES_TYPE_TIME, 8, 1},
+    {(SQLCHAR *)"datetime", 8, SQL_DATETIME, DES_TYPE_DATETIME, 19, 1},
+    {(SQLCHAR *)"timestamp", 9, SQL_TYPE_TIMESTAMP, DES_TYPE_TIMESTAMP, 19, 1}
 };
 
 
@@ -3063,11 +2603,11 @@ enum enum_field_types map_sql2mysql_type(SQLSMALLINT sql_type)
   {
     if (elem.sql_type == sql_type)
     {
-      return (enum_field_types)elem.mysql_type;
+      return (enum_field_types)elem.des_type;
     }
   }
 
-  return DES_TYPE_BLOB;
+  return DES_UNKNOWN_TYPE;
 }
 
 /**
@@ -3218,53 +2758,26 @@ SQLUINTEGER proc_get_param_size(SQLCHAR *ptype, int len, int sql_type_index, SQL
   /* no decimal digits by default */
   *dec= SQL_NO_TOTAL;
 
-  switch (SQL_TYPE_MAP_values[sql_type_index].mysql_type)
+  switch (SQL_TYPE_MAP_values[sql_type_index].des_type)
   {
-    /* these type sizes need to be parsed */
-    case DES_TYPE_DECIMAL:
+    case DES_TYPE_REAL:
+    case DES_TYPE_FLOAT:
       param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
-      if(!param_size)
-        param_size= 10; /* by default */
+      if (!param_size) param_size = 10; /* by default */
       break;
-
-    case DES_TYPE_YEAR:
-      *dec= 0;
-      param_size= proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
-      if(!param_size)
-        param_size= 4; /* by default */
-      break;
-
+    case DES_TYPE_CHAR:
+    case DES_TYPE_VARCHAR_N:
+    case DES_TYPE_CHAR_N:
     case DES_TYPE_VARCHAR:
-    case DES_TYPE_VAR_STRING:
     case DES_TYPE_STRING:
-      if (!desodbc_strcasecmp((const char*)(SQL_TYPE_MAP_values[sql_type_index].type_name), "set"))
-      {
-        param_size = proc_parse_enum_set(start_pos, (int)(end_pos - start_pos), FALSE);
-      }
-      else if (!desodbc_strcasecmp((const char*)(SQL_TYPE_MAP_values[sql_type_index].type_name), "enum"))
-      {
-        param_size = proc_parse_enum_set(start_pos, (int)(end_pos - start_pos), TRUE);
-      }
-      else /* just normal character type */
-      {
-        param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
-        if (param_size == 0 &&
-            SQL_TYPE_MAP_values[sql_type_index].sql_type == SQL_BINARY)
-           param_size= 1;
-      }
-
-      break;
-    case DES_TYPE_BIT:
       param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
+      break;
 
       /* fall through*/
+    case DES_TYPE_INT:
+    case DES_TYPE_INTEGER:
+    case DES_TYPE_TIMESTAMP:
     case DES_TYPE_DATETIME:
-
-    case DES_TYPE_TINY:
-    case DES_TYPE_SHORT:
-    case DES_TYPE_INT24:
-    case DES_TYPE_LONG:
-    case DES_TYPE_LONGLONG:
       *dec= 0;
       break;
 
@@ -3290,9 +2803,7 @@ SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
 {
   DES_FIELD temp_fld;
 
-  temp_fld.length= (unsigned long)col_size +
-    (SQL_TYPE_MAP_values[sql_type_index].mysql_type == DES_TYPE_DECIMAL ?
-    1 + (flags & UNSIGNED_FLAG ? 0 : 1) : 0); /* add 1for sign, if needed, and 1 for decimal point */
+  temp_fld.length= (unsigned long)col_size; /* add 1for sign, if needed, and 1 for decimal point */
 
 
 
@@ -3302,11 +2813,13 @@ SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
   // Handle binary flag and binary charset number when required
   temp_fld.flags= flags + (SQL_TYPE_MAP_values[sql_type_index].binary ? BINARY_FLAG : 0);
 
-  temp_fld.type= (enum_field_types)(SQL_TYPE_MAP_values[sql_type_index].mysql_type);
+  temp_fld.type= (enum_field_types)(SQL_TYPE_MAP_values[sql_type_index].des_type);
 
   if (temp_fld.type == DES_TYPE_STRING ||
       temp_fld.type == DES_TYPE_VARCHAR ||
-      temp_fld.type == DES_TYPE_LONG_BLOB ||
+      temp_fld.type == DES_TYPE_CHAR_N ||
+      temp_fld.type == DES_TYPE_VARCHAR_N ||
+      temp_fld.type == DES_TYPE_CHAR ||
       SQL_TYPE_MAP_values[sql_type_index].binary)
   {
     // The types with specifiers for character lengths are CHAR(N) and VARCHAR(N).
@@ -3319,15 +2832,6 @@ SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
   else
   {
     temp_fld.charsetnr = stmt->dbc->cxn_charset_info->number;
-  }
-
-  if (temp_fld.type == DES_TYPE_TINY_BLOB ||
-      temp_fld.type == DES_TYPE_BLOB ||
-      temp_fld.type == DES_TYPE_MEDIUM_BLOB)
-  {
-    // We need to mimic the behavior of mysqlclient, which is
-    // multiplying the length by the max character length.
-    temp_fld.length *= get_charset_maxlen(temp_fld.charsetnr);
   }
 
   if (str_buff != NULL)
@@ -3357,9 +2861,7 @@ SQLLEN proc_get_param_octet_len(STMT *stmt, int sql_type_index, SQLULEN col_size
 {
   DES_FIELD temp_fld;
 
-  temp_fld.length= (unsigned long)col_size +
-    (SQL_TYPE_MAP_values[sql_type_index].mysql_type == DES_TYPE_DECIMAL ?
-    1 + (flags & UNSIGNED_FLAG ? 0 : 1) : 0); /* add 1for sign, if needed, and 1 for decimal point */
+  temp_fld.length = (unsigned long)col_size; /* add 1for sign, if needed, and 1 for decimal point */
 
   temp_fld.max_length = (unsigned long)col_size;
   temp_fld.decimals= decimal_digits;
@@ -3370,7 +2872,7 @@ SQLLEN proc_get_param_octet_len(STMT *stmt, int sql_type_index, SQLULEN col_size
     SQL_TYPE_MAP_values[sql_type_index].binary ?
       BINARY_CHARSET_NUMBER : stmt->dbc->cxn_charset_info->number;
 
-  temp_fld.type= (enum_field_types)(SQL_TYPE_MAP_values[sql_type_index].mysql_type);
+  temp_fld.type= (enum_field_types)(SQL_TYPE_MAP_values[sql_type_index].des_type);
 
   if (str_buff != NULL)
   {
@@ -3893,4 +3395,360 @@ int got_out_parameters(STMT *stmt)
   }
 
   return result;
+}
+
+std::vector<std::string> getLines(const std::string &str) {
+  std::vector<std::string> lines;
+  std::stringstream ss(str);
+  std::string line;
+
+  while (std::getline(ss, line, '\n')) {
+#ifdef _WIN32
+    lines.push_back(line.substr(
+        0, line.size() - 1));  // to remove the char '/r' of each line
+#else
+    // For the UNIX version, we need to remove the characters CR and
+    // non-printing space
+    line.erase(std::remove(line.begin(), line.end(), 13), line.end());  // CR
+    line.erase(std::remove(line.begin(), line.end(), 32),
+               line.end());  // non-printing space
+    lines.push_back(line);   // there seems that '/r' char isn't placed in the
+                             // DES unix version
+#endif
+  }
+  return lines;
+}
+
+std::vector<std::string> convertArrayNotationToStringVector(std::string str) {
+  std::vector<std::string> str_vector;
+
+  str.erase(std::remove(str.begin(), str.end(), '['), str.end());
+  str.erase(std::remove(str.begin(), str.end(), ']'), str.end());
+
+  std::stringstream ss(str);
+  std::string element_str;
+
+  while (std::getline(ss, element_str, ',')) {
+    str_vector.push_back(element_str.substr(0, element_str.size()));
+  }
+
+  return str_vector;
+}
+
+char *string_to_char_pointer(const std::string &str) {
+  char *ptr = new char[str.size() + 1];
+  std::strcpy(ptr, str.c_str());
+  return ptr;
+}
+
+TypeAndLength get_Type_from_str(const std::string &str) {
+  std::string type_str = str;
+  SQLULEN size = -1;
+
+  size_t first_parenthesis_pos = type_str.find('(', 0);
+  size_t pos = first_parenthesis_pos;
+  if (pos != std::string::npos) {
+    std::string size_str = "";
+
+    pos++;
+    while (pos < type_str.size() && type_str[pos] != ')') {
+      size_str += type_str[pos];
+      pos++;
+    }
+
+    size = stoi(size_str);
+
+    type_str = type_str.substr(0, first_parenthesis_pos + 1) + ')';
+  } else
+    size = get_type_size(typestr_simpletype_map.at(type_str));
+
+  enum_field_types simple_type = typestr_simpletype_map.at(type_str);
+
+  return {simple_type, size};
+};
+
+SQLULEN get_type_size(enum_field_types type) {
+  switch (type) {
+    case DES_TYPE_INTEGER:
+    case DES_TYPE_INT:
+      return 19;
+    case DES_TYPE_FLOAT:
+    case DES_TYPE_REAL:
+      return 59;
+    case DES_TYPE_DATE:
+      return 10;
+    case DES_TYPE_TIME:
+      return 8;
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
+      return 19;
+    // TODO: check the following. I am not sure wgucglimits
+    // I should pick.
+    case DES_TYPE_VARCHAR:  // theorically, it is infinite. Which value do I
+                            // return?
+    case DES_TYPE_STRING:
+      return NAME_LEN;
+    default:
+      return 0;
+  }
+}
+
+std::string Type_to_type_str(TypeAndLength type) {
+  for (auto pair : typestr_simpletype_map) {
+    std::string type_str = pair.first;
+    enum_field_types simple_type = pair.second;
+
+    type_str.erase(std::remove(type_str.begin(), type_str.end(), '('),
+                   type_str.end());
+    type_str.erase(std::remove(type_str.begin(), type_str.end(), ')'),
+                   type_str.end());
+
+    if (type.simple_type == simple_type) {
+      if (is_character_des_data_type(simple_type) &&
+          !is_time_des_data_type(simple_type)) {
+        if (type.len != -1) {  // TODO: study policies for
+                               // considering varchar() or varchar
+                               // depending on size.
+          return type_str + "(" + std::to_string(type.len) +
+                 ")";  // i'm not sure if I should return varchar() or
+                       // varchar(46), for example, given that
+                       // typestr_simpletype_map holds varchar(). TODO: check
+        } else {
+          return type_str;
+        }
+      } else
+        return type_str;
+    }
+  }
+
+  return "";
+}
+
+SQLULEN get_Type_size(TypeAndLength type) {
+  SQLULEN small_type_size = get_type_size(type.simple_type);
+  if (type.len != -1) {
+    return small_type_size * SYSTEM_CHARSET_MBMAXLEN;
+  } else
+    return small_type_size;
+}
+
+TypeAndLength get_Type(enum_field_types type) {
+  return {type, get_type_size(type)};
+}
+
+bool is_in_string(const std::string &str, const std::string &search) {
+  return str.find(search) != std::string::npos;
+}
+
+char *sqlcharptr_to_charptr(SQLCHAR* sql_str, SQLUSMALLINT sql_str_len) {
+  char *charptr = new char[sql_str_len+1];
+  memcpy(charptr, sql_str, sql_str_len);
+  charptr[sql_str_len] = '\0';
+  return charptr;
+}
+
+std::string sqlcharptr_to_str(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len) {
+  char *ptr = sqlcharptr_to_charptr(sql_str, sql_str_len);
+  std::string str(ptr);
+  delete ptr;
+  return str;
+}
+
+std::string des_type_2_str(enum_field_types des_type) {
+    for (SQLTypeMap value : SQL_TYPE_MAP_values) {
+        if (value.des_type == des_type) {
+            char *ptr = sqlcharptr_to_charptr(value.type_name, value.name_length);
+            std::string name_str = std::string(ptr);
+            delete ptr;
+            return name_str;
+        }
+    }
+    return "";
+}
+
+int des_type_2_sql_type(enum_field_types des_type) {
+  switch (des_type) {
+    case DES_TYPE_VARCHAR:
+      return SQL_LONGVARCHAR;
+    case DES_TYPE_STRING:
+      return SQL_LONGVARCHAR;
+    case DES_TYPE_CHAR_N:
+      return SQL_CHAR;
+    case DES_TYPE_VARCHAR_N:
+      return SQL_CHAR;
+    case DES_TYPE_CHAR:
+      return SQL_CHAR;
+    case DES_TYPE_INTEGER:
+      return SQL_BIGINT;
+    case DES_TYPE_INT:
+      return SQL_BIGINT;
+    case DES_TYPE_FLOAT:
+      return SQL_DOUBLE;
+    case DES_TYPE_REAL:
+      return SQL_DOUBLE;
+    case DES_TYPE_TIME:
+      return SQL_TYPE_TIME;
+    case DES_TYPE_DATETIME:
+      return SQL_DATETIME;
+    case DES_TYPE_TIMESTAMP:
+      return SQL_TYPE_TIMESTAMP;
+    default:
+      return SQL_UNKNOWN_TYPE;
+  }
+}
+
+bool is_numeric_des_data_type(enum_field_types type) {
+  switch (type) {
+    case DES_TYPE_INT:
+    case DES_TYPE_INTEGER:
+    case DES_TYPE_FLOAT:
+    case DES_TYPE_REAL:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool is_character_des_data_type(enum_field_types type) {
+  switch (type) {
+    case DES_TYPE_CHAR:
+    case DES_TYPE_CHAR_N:
+    case DES_TYPE_VARCHAR_N:
+    case DES_TYPE_VARCHAR:
+    case DES_TYPE_STRING:
+    case DES_TYPE_DATE:
+    case DES_TYPE_TIME:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool is_time_des_data_type(enum_field_types type) {
+  switch (type) {
+    case DES_TYPE_DATE:
+    case DES_TYPE_TIME:
+    case DES_TYPE_DATETIME:
+    case DES_TYPE_TIMESTAMP:
+      return true;
+    default:
+      return false;
+  }
+}
+bool is_character_sql_data_type(SQLSMALLINT sql_type) {
+  switch (sql_type) {
+    case SQL_NUMERIC:
+    case SQL_DECIMAL:
+    case SQL_INTEGER:
+    case SQL_SMALLINT:
+    case SQL_TINYINT:
+    case SQL_BIGINT:
+    case SQL_FLOAT:
+    case SQL_REAL:
+    case SQL_DOUBLE:
+      return false;
+    default:
+      return true;
+  }
+}
+#ifdef _WIN32
+std::string GetLastWinErrMessage() {
+  DWORD errorCode = GetLastError();
+  LPSTR errorMsg = nullptr;
+
+  FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                     FORMAT_MESSAGE_IGNORE_INSERTS,
+                 nullptr, errorCode,
+                 0,
+                 (LPSTR)&errorMsg, 0, nullptr);
+
+  if (errorMsg)
+    return std::string(errorMsg);
+  else
+    return "";
+}
+#endif
+
+#ifdef _WIN32
+void try_close(HANDLE h) {
+  if (h)
+      CloseHandle(h);
+}
+#else
+void try_close(int fd) {
+  ::close(fd);
+}
+#endif
+
+bool is_bulkable_statement(const std::string& query) {
+  bool bulkable = false;
+  std::string query_cp = query;
+  std::transform(query_cp.begin(), query_cp.end(), query_cp.begin(), [](unsigned char c){ return std::tolower(c); });
+  query_cp.erase(std::remove(query_cp.begin(), query_cp.end(), 13), query_cp.end());  // CR
+  query_cp.erase(std::remove(query_cp.begin(), query_cp.end(), 32), query_cp.end());  // non-printing space
+  query_cp.erase(std::remove(query_cp.begin(), query_cp.end(), ' '), query_cp.end());  // printing space
+
+  std::string keyword = query_cp.substr(0, 6); //position 0, 6 characters (all the words we check have six characters)
+  if (is_in_string(query_cp, "/sql")) {
+    std::string keyword = query_cp.substr(4, 6);
+  }
+
+  bulkable |= (keyword == "select");
+  bulkable |= (keyword == "insert");
+  bulkable |= (keyword == "update");
+  bulkable |= (keyword == "delete");
+
+  return bulkable;
+}
+
+std::string odbc_pattern_to_regex_pattern(const std::string &odbc_pattern) {
+  std::string regex_pattern = "";
+
+  //We need to know the special characters so we can escape them.
+  const std::string special_characters =
+      "^$\\.*+?()[]{}|";  //The default grammar for std::regex is https://en.cppreference.com/w/cpp/regex/ecmascript
+                          //The atom PatternCharacter shows that the special characters are these.
+  int i = 0;
+  while (i < odbc_pattern.size()) {
+    if (odbc_pattern[i] == '\\') {
+      if (i + 1 < odbc_pattern.size() && odbc_pattern[i + 1] == '_') {
+        regex_pattern += ".";
+        i += 2;
+      } else if (i + 1 < odbc_pattern.size() && odbc_pattern[i + 1] == '%') {
+        regex_pattern += ".*";
+        i += 2;
+      } else {
+        regex_pattern += "\\";
+        regex_pattern += odbc_pattern[i];  // '\' is a special character in regex
+        i += 1;
+      }
+    } else {
+      bool is_special_character =
+          special_characters.find(odbc_pattern[i]) != std::string::npos;
+
+      if (is_special_character) regex_pattern += "\\";
+      regex_pattern += odbc_pattern[i];
+
+      i += 1;
+    }
+  }
+  return regex_pattern;
+}
+
+std::vector<std::string> search_odbc_pattern(const std::string &pattern,
+                                        const std::vector<std::string> &v_str) {
+
+  std::string regex_pattern = odbc_pattern_to_regex_pattern(pattern);
+  std::regex rx(regex_pattern);
+
+  std::vector<std::string> coincidences;
+  for (int i = 0; i < v_str.size(); ++i) {
+    if (std::regex_match(v_str[i], rx)) {
+      coincidences.push_back(v_str[i]);
+    }
+  }
+
+  return coincidences;
 }

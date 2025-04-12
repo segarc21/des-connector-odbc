@@ -37,25 +37,24 @@
 #include "telemetry.h"
 
 #include <map>
-#include <vector>
-#include <sstream>
 #include <random>
+#include <sstream>
+#include <vector>
 
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <resolv.h>
 #else
-#include <winsock2.h>
 #include <windns.h>
+#include <winsock2.h>
 #endif
 
 #ifndef CLIENT_NO_SCHEMA
-# define CLIENT_NO_SCHEMA      16
+#define CLIENT_NO_SCHEMA 16
 #endif
 
-typedef BOOL (*PromptFunc)(SQLHWND, SQLWCHAR *, SQLUSMALLINT,
-                           SQLWCHAR *, SQLSMALLINT, SQLSMALLINT *,
-                           SQLSMALLINT);
+typedef BOOL (*PromptFunc)(SQLHWND, SQLWCHAR *, SQLUSMALLINT, SQLWCHAR *,
+                           SQLSMALLINT, SQLSMALLINT *, SQLSMALLINT);
 
 const char *my_os_charset_to_mysql_charset(const char *csname);
 
@@ -72,20 +71,14 @@ bool oci_plugin_is_loaded = false;
 
   @return Client flags suitable for @c mysql_real_connect().
 */
-unsigned long get_client_flags(DataSource *ds)
-{
-  unsigned long flags= CLIENT_MULTI_RESULTS;
+unsigned long get_client_flags(DataSource *ds) {
+  unsigned long flags = CLIENT_MULTI_RESULTS;
 
-  if (ds->opt_SAFE || ds->opt_FOUND_ROWS)
-    flags|= CLIENT_FOUND_ROWS;
-  if (ds->opt_COMPRESSED_PROTO)
-    flags|= CLIENT_COMPRESS;
-  if (ds->opt_IGNORE_SPACE)
-    flags|= CLIENT_IGNORE_SPACE;
-  if (ds->opt_MULTI_STATEMENTS)
-    flags|= CLIENT_MULTI_STATEMENTS;
-  if (ds->opt_CLIENT_INTERACTIVE)
-    flags|= CLIENT_INTERACTIVE;
+  if (ds->opt_SAFE || ds->opt_FOUND_ROWS) flags |= CLIENT_FOUND_ROWS;
+  if (ds->opt_COMPRESSED_PROTO) flags |= CLIENT_COMPRESS;
+  if (ds->opt_IGNORE_SPACE) flags |= CLIENT_IGNORE_SPACE;
+  if (ds->opt_MULTI_STATEMENTS) flags |= CLIENT_MULTI_STATEMENTS;
+  if (ds->opt_CLIENT_INTERACTIVE) flags |= CLIENT_INTERACTIVE;
 
   return flags;
 }
@@ -99,57 +92,45 @@ unsigned long get_client_flags(DataSource *ds)
   @return multimap containing list of SRV records
 */
 
-
-struct Prio
-{
+struct Prio {
   uint16_t prio;
   uint16_t weight;
-  operator uint16_t() const
-  {
-    return prio;
-  }
+  operator uint16_t() const { return prio; }
 
-  bool operator < (const Prio &other) const
-  {
-    return prio < other.prio;
-  }
+  bool operator<(const Prio &other) const { return prio < other.prio; }
 };
 
-struct Srv_host_detail
-{
+struct Srv_host_detail {
   std::string name;
   unsigned int port = MYSQL_PORT;
 };
-
 
 /*
   Parse a comma separated list of hosts, each optionally specifying a port after
   a colon. If port is not specified then the default port is used.
 */
-std::vector<Srv_host_detail> parse_host_list(const char* hosts_str,
-                                             unsigned int default_port)
-{
+std::vector<Srv_host_detail> parse_host_list(const char *hosts_str,
+                                             unsigned int default_port) {
   std::vector<Srv_host_detail> list;
 
-  //if hosts_str = nullprt will still add empty host, meaning it will use socket
+  // if hosts_str = nullprt will still add empty host, meaning it will use
+  // socket
   std::string hosts(hosts_str ? hosts_str : "");
 
   size_t pos_i = 0;
   size_t pos_f = std::string::npos;
 
-  do
-  {
+  do {
     pos_f = hosts.find_first_of(",:", pos_i);
 
     Srv_host_detail host_detail;
-    host_detail.name = hosts.substr(pos_i, pos_f-pos_i);
+    host_detail.name = hosts.substr(pos_i, pos_f - pos_i);
 
-    if( pos_f != std::string::npos && hosts[pos_f] == ':')
-    {
-      //port
-      pos_i = pos_f+1;
+    if (pos_f != std::string::npos && hosts[pos_f] == ':') {
+      // port
+      pos_i = pos_f + 1;
       pos_f = hosts.find_first_of(',', pos_i);
-      std::string tmp_port = hosts.substr(pos_i,pos_f-pos_i);
+      std::string tmp_port = hosts.substr(pos_i, pos_f - pos_i);
       long int val = std::atol(tmp_port.c_str());
 
       /*
@@ -158,59 +139,55 @@ std::vector<Srv_host_detail> parse_host_list(const char* hosts_str,
         by cheking if end pointer was updated.
       */
 
-      if ((val == 0 && tmp_port.length()==0) ||
-          (val > 65535 || val < 0))
-      {
+      if ((val == 0 && tmp_port.length() == 0) || (val > 65535 || val < 0)) {
         std::stringstream err;
         err << "Invalid port value in " << hosts;
         throw err.str();
       }
 
       host_detail.port = static_cast<uint16_t>(val);
-    }
-    else
-    {
+    } else {
       host_detail.port = default_port;
     }
 
-    pos_i = pos_f+1;
+    pos_i = pos_f + 1;
 
     list.push_back(host_detail);
-  }while (pos_f < hosts.size());
+  } while (pos_f < hosts.size());
 
   return list;
 }
 
-
-class dbc_guard
-{
+class dbc_guard {
   DBC *m_dbc;
   bool m_success = false;
-  public:
 
+ public:
   dbc_guard(DBC *dbc) : m_dbc(dbc) {}
   void set_success(bool success) { m_success = success; }
-  ~dbc_guard() { if (!m_success) m_dbc->close(); }
+  ~dbc_guard() {
+    if (!m_success) m_dbc->close();
+  }
 };
 
 SQLRETURN DBC::createPipes() {
-    /*
+  /*
 
-        We will create anonymous pipes so
-        the driver can communicate with a new DES process.
-        The idea is that the driver can read and write onto
-        an exclusive instance of DES, as its executable provides
-        a CLI.
+      We will create anonymous pipes so
+      the driver can communicate with a new DES process.
+      The idea is that the driver can read and write onto
+      an exclusive instance of DES, as its executable provides
+      a CLI.
 
-        For creating the pipes, we will follow this Microsoft article that shows
-        how to create a child process with redirected input and output:
-        https://learn.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
+      For creating the pipes, we will follow this Microsoft article that shows
+      how to create a child process with redirected input and output:
+      https://learn.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
 
-    */
+  */
 
   ENV *env = this->env;
-  
-  #ifdef _WIN32
+
+#ifdef _WIN32
 
   // We specify the security attributes of the pipe.
   SECURITY_ATTRIBUTES des_pipe_sec_attr;
@@ -226,12 +203,12 @@ SQLRETURN DBC::createPipes() {
                                 // size.
 
   // We create the pipe
-  if (!CreatePipe(&env->driver_to_des_out_rpipe, &env->driver_to_des_out_wpipe,
-                  &des_pipe_sec_attr,
+  if (!CreatePipe(&this->driver_to_des_out_rpipe,
+                  &this->driver_to_des_out_wpipe, &des_pipe_sec_attr,
                   des_pipe_buf_size)) {
-    CloseHandle(env->driver_to_des_out_rpipe);
-    CloseHandle(env->driver_to_des_out_wpipe);
-    return SQL_ERROR;
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    return this->set_win_error("Failing to create DES output pipe", true);
   }
 
   /* Now we need to specify to the read handle for STDOUT
@@ -239,311 +216,536 @@ SQLRETURN DBC::createPipes() {
    * having access to it is that the parent process (the driver)
    * doesn't have full control over it.*/
 
-  if (!SetHandleInformation(env->driver_to_des_out_rpipe, HANDLE_FLAG_INHERIT,
+  if (!SetHandleInformation(this->driver_to_des_out_rpipe, HANDLE_FLAG_INHERIT,
                             0)) {
-    CloseHandle(env->driver_to_des_out_rpipe);
-    CloseHandle(env->driver_to_des_out_wpipe);
-    return SQL_ERROR;
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    return this->set_win_error("Failing to set DES output pipe to be inheritable", true);
   }
 
   // Now, we do the same for the STDIN.
-  if (!CreatePipe(&env->driver_to_des_in_rpipe, &env->driver_to_des_in_wpipe,
+  if (!CreatePipe(&this->driver_to_des_in_rpipe, &this->driver_to_des_in_wpipe,
                   &des_pipe_sec_attr, des_pipe_buf_size)) {
-    CloseHandle(env->driver_to_des_in_rpipe);
-    CloseHandle(env->driver_to_des_out_wpipe);
-    return SQL_ERROR;
+    CloseHandle(this->driver_to_des_in_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    return this->set_win_error("Failing to create DES input pipe", true);
   }
 
-  if (!SetHandleInformation(env->driver_to_des_in_wpipe,
-                            HANDLE_FLAG_INHERIT,
+  if (!SetHandleInformation(this->driver_to_des_in_wpipe, HANDLE_FLAG_INHERIT,
                             0)) {
-    CloseHandle(env->driver_to_des_out_rpipe);
-    CloseHandle(env->driver_to_des_out_wpipe);
-    CloseHandle(env->driver_to_des_in_rpipe);
-    CloseHandle(env->driver_to_des_in_wpipe);
-    return SQL_ERROR;
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    CloseHandle(this->driver_to_des_in_rpipe);
+    CloseHandle(this->driver_to_des_in_wpipe);
+    return this->set_win_error(
+        "Failing to set DES input pipe to be inheritable", true);
   }
-  #else
+#else
 
-  //TODO: handle errors appropriately
+  // TODO: handle errors appropriately
   if (mkfifo(IN_WPIPE_NAME, 0666) == -1) {
-    perror("mkfifo");
-    return 1;
-}
-
+    return this->set_unix_error("Failing to create DES input pipe. Maybe is it already created? Check /tmp/ folder and remove named pipe if so", true);
+  }
 
   if (mkfifo(OUT_RPIPE_NAME, 0666) == -1) {
-      perror("mkfifo");
-      unlink(IN_WPIPE_NAME);
-      return 1;
+    return this->set_unix_error("Failing to create DES output pipe.  Maybe is it already created? Check /tmp/ folder and remove named pipe if so", true);
   }
-  #endif
+#endif
   return SQL_SUCCESS;
 }
 
-const char* get_executable_dir(const char* executable_path) {
+#ifdef _WIN32
+void DBC::remove_client_from_shmem(ConnectedClients &pids, size_t id) {
+  int index = 0;
+  while (index < pids.size) {
+    if (pids.connected_clients[index].id == id)
+      break;
+    else
+      index++;
+  }
+  if (index == pids.size) return;
 
-  std::string executable_path_str(executable_path);
-  size_t pos = executable_path_str.find_last_of("/"); //TODO: consider Windows ANSI (right now, I'm considering Unix)
+  int i = index;
+  while (i + 1 < pids.size) {
+    pids.connected_clients[i] = pids.connected_clients[i + 1];
+    i++;
+  }
 
-  if (pos != std::string::npos) {
-    std::string dir_str = executable_path_str.substr(0, pos);
+  pids.size -= 1;
+}
+#endif
+
+#ifdef _WIN32
+SQLRETURN DBC::getMutex(HANDLE h, const std::string& name) {
+  DWORD ret = WaitForSingleObject(h, MUTEX_TIMEOUT);
+  if (ret == WAIT_TIMEOUT) {
+    return this->set_win_error(
+        "Mutex " + std::string(name) + " time-outed",
+        false);
+  } else if (ret == WAIT_FAILED) {
+    return this->set_win_error(
+        "Fetching mutex " + std::string(name) + " failed",
+        true);
+  } else if (ret == WAIT_ABANDONED) {
+    return this->set_win_error("Mutex " +
+                                   std::string(name) +
+                                   " in non-consistent state",
+                               false);
+  }
+  return SQL_SUCCESS;
+}
+#else
+SQLRETURN DBC::getMutex(sem_t* s, const std::string& name) {
+  if (sem_wait(s) == -1) {
+    return this->set_unix_error(
+      "Fetching mutex " + std::string(name) + " failed",
+      true);
+  }
+  return SQL_SUCCESS;
+}
+#endif
+
+
+#ifdef _WIN32
+SQLRETURN DBC::releaseMutex(HANDLE h, const std::string& name) {
+  DWORD ret = ReleaseMutex(h);
+  if (ret == 0) {
+    return this->set_win_error(
+        "Failing to release mutex " + std::string(name), true);
+  }
+  return SQL_SUCCESS;
+}
+#else
+SQLRETURN DBC::releaseMutex(sem_t* s, const std::string& name) {
+  if (sem_post(s) == -1) {
+    return this->set_unix_error("Failing to release mutex " + std::string(name), true);
+  }
+  return SQL_SUCCESS;
+}
+#endif
+
+#ifdef _WIN32
+SQLRETURN DBC::setEvent(HANDLE h, const std::string &name) {
+  DWORD ret = SetEvent(h);
+  if (ret == 0) {
+    this->set_win_error("Failing to set event " + std::string(name), true);
+  }
+  return SQL_SUCCESS;
+}
+#endif
+
+SQLRETURN DBC::getSharedMemoryMutex() {
+#ifdef _WIN32
+  return getMutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
+#else
+  #ifdef __APPLE__
+  return getMutex(this->shared_memory_mutex, "shared memory");
+  #else
+  return getMutex(&this->shmem->shared_memory_mutex, "shared memory");
+  #endif
+#endif
+}
+
+SQLRETURN DBC::releaseSharedMemoryMutex() {
+#ifdef _WIN32
+  return releaseMutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
+#else
+  #ifdef __APPLE__
+  return releaseMutex(this->shared_memory_mutex, "shared memory");
+  #else
+  return releaseMutex(&this->shmem->shared_memory_mutex, "shared memory");
+  #endif
+#endif
+}
+
+#ifdef _WIN32
+SQLRETURN DBC::getRequestHandleMutex() {
+  return getMutex(this->request_handle_mutex, REQUEST_HANDLE_MUTEX_NAME);
+}
+
+SQLRETURN DBC::releaseRequestHandleMutex() {
+  return releaseMutex(this->request_handle_mutex, REQUEST_HANDLE_MUTEX_NAME);
+}
+#endif
+
+SQLRETURN DBC::getQueryMutex() {
+#ifdef _WIN32
+  return getMutex(this->query_mutex, QUERY_MUTEX_NAME);
+#else
+  #ifdef __APPLE__
+  return getMutex(this->query_mutex, "query");
+  #else
+  return getMutex(&this->shmem->query_mutex, "query");
+  #endif
+#endif
+}
+
+SQLRETURN DBC::releaseQueryMutex() {
+#ifdef _WIN32
+  return releaseMutex(this->query_mutex, QUERY_MUTEX_NAME);
+#else
+  #ifdef __APPLE__
+  return releaseMutex(this->query_mutex, "query");
+  #else
+  return releaseMutex(&this->shmem->query_mutex, "query");
+  #endif
+#endif
+}
+
+#ifdef _WIN32
+SQLRETURN DBC::setRequestHandleEvent() {
+  return setEvent(this->request_handle_event, REQUEST_HANDLE_EVENT_NAME);
+}
+
+SQLRETURN DBC::setFinishingEvent() {
+  return setEvent(this->finishing_event, FINISHING_EVENT_NAME);
+}
+#endif
+
+SQLRETURN DBC::getDESProcessPipes() {
+#ifdef _WIN32
+  bool finished = false;
+  SQLRETURN ret;
+  ret = getSharedMemoryMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+  ret = getRequestHandleMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    releaseSharedMemoryMutex();
+    return ret;
+  }
+
+  this->shmem->handle_sharing_info.handle_petitioner.pid =
+      GetCurrentProcessId();
+  this->shmem->handle_sharing_info.handle_petitioner.id = this->connection_id;
+
+  while (!finished) {
+    size_t random_id = -1;
+    if (this->shmem->connected_clients_struct.size == 0) {
+      releaseRequestHandleMutex();
+      releaseSharedMemoryMutex();
+      return this->set_error("HY000",
+                             "Failing to get DES process pipes: no available "
+                             "clients to share pipes",
+                             0);
+    }
+    else if (this->shmem->connected_clients_struct.size == 1)
+      random_id = this->shmem->connected_clients_struct.connected_clients[0].id;
+    else
+      random_id =
+          this->shmem->connected_clients_struct
+              .connected_clients[rand() %
+                                 (this->shmem->connected_clients_struct.size -
+                                  1)]
+              .id;  // we request the handles to a random peer
+                    // TODO: implement better criteria
+    this->shmem->handle_sharing_info.handle_petitionee.id = random_id;
+
+    ret = releaseSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      releaseRequestHandleMutex();
+      return ret;
+    }
+
+    ret = setRequestHandleEvent();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      releaseRequestHandleMutex();
+      return ret;
+    }
+    
+    DWORD handle_sent_event_signal = WaitForSingleObject(
+        this->handle_sent_event, EVENT_TIMEOUT);
+
+    ret = getSharedMemoryMutex();
+
+    switch (handle_sent_event_signal) {
+      case WAIT_ABANDONED:
+      case WAIT_TIMEOUT:
+        this->remove_client_from_shmem(
+            this->shmem->connected_clients_struct,
+            this->shmem->handle_sharing_info.handle_petitionee.id);
+        continue;
+      case WAIT_FAILED:
+        releaseSharedMemoryMutex();
+        releaseRequestHandleMutex();
+        return this->set_win_error(
+            "Failing to wait for event " + std::string(HANDLE_SENT_EVENT_NAME), true);
+      default:
+        break;
+    }
+
+    this->driver_to_des_out_rpipe = this->shmem->handle_sharing_info.out_handle;
+    this->driver_to_des_in_wpipe = this->shmem->handle_sharing_info.in_handle;
+
+    // we reset the structure once we have saved the handles
+    this->shmem->handle_sharing_info.in_handle = NULL;
+    this->shmem->handle_sharing_info.out_handle = NULL;
+
+    this->shmem->handle_sharing_info.handle_petitionee.id = 0;
+    this->shmem->handle_sharing_info.handle_petitionee.pid = 0;
+    this->shmem->handle_sharing_info.handle_petitioner.id = 0;
+    this->shmem->handle_sharing_info.handle_petitioner.pid = 0;
+
+    finished = true;
+  }
+
+  ret = releaseRequestHandleMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    releaseSharedMemoryMutex();
+    return ret;
+  }
+  
+  ret = releaseSharedMemoryMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+#else
+
+  this->driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_WRONLY);
+
+  if (this->driver_to_des_in_wpipe == -1) {
+    unlink(IN_WPIPE_NAME);
+    unlink(OUT_RPIPE_NAME);
+    return this->set_unix_error("Failing to open DES input pipe", true);
+  }
+
+  this->driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_RDONLY);
+  if (this->driver_to_des_out_rpipe == -1) {
+    ::close(this->driver_to_des_in_wpipe);
+    unlink(IN_WPIPE_NAME);
+    unlink(OUT_RPIPE_NAME);
+    return this->set_unix_error("Failing to open DES output pipe", true);
+  }
+
+#endif
+
+  return SQL_SUCCESS;
+}
+
+#ifndef _WIN32
+SQLRETURN DBC::createDESProcess(const char *des_exec_path,
+                                const char *des_working_dir) {
+  SQLRETURN ret = SQL_SUCCESS;
+
+  pid_t pid = fork();
+  if (pid == -1) {
+    return this->set_unix_error("Failing to fork to open DES", true);
+  } else if (pid == 0) {
+    this->driver_to_des_in_rpipe = open(IN_WPIPE_NAME, O_RDONLY);
+    if (this->driver_to_des_in_rpipe == -1) {
+      return this->set_unix_error("Failing to open DES input pipe", true);
+    }
+
+    this->driver_to_des_out_wpipe = open(OUT_RPIPE_NAME, O_WRONLY);
+    if (this->driver_to_des_out_wpipe == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      return this->set_unix_error("Failing to open DES output pipe", true);
+    }
+
+    if (dup2(this->driver_to_des_in_rpipe, STDIN_FILENO) == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      ::close(this->driver_to_des_out_wpipe);
+      return this->set_unix_error("Failing to dup2 on DES input pipe", true);
+    }
+
+    if (dup2(this->driver_to_des_out_wpipe, STDOUT_FILENO) == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      ::close(this->driver_to_des_out_wpipe);
+      return this->set_unix_error("Failing to dup2 on DES output pipe", true);
+    }
+
+    this->shmem->DES_pid = getpid();
+
+    if (chdir(des_working_dir) == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      ::close(this->driver_to_des_out_wpipe);
+      return this->set_unix_error("Failing to change dir on DES_WORKING_DIR", true);
+    }
+
+    if (execlp(des_exec_path, des_exec_path, nullptr) == -1) {
+      ::close(this->driver_to_des_in_wpipe);
+      ::close(this->driver_to_des_out_rpipe);
+      return this->set_unix_error("Failing to launch DES", true);
+    }
+    return SQL_ERROR;
+  } else {
+    this->shmem->des_process_created = true;
+
+    ret = releaseSharedMemoryMutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+    ret = getDESProcessPipes();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+    char buffer[4096];
+    ssize_t bytes_read;
+
+    bool finished_reading = false;
+    std::string complete_reading_str = "";
+    while (!finished_reading) {
+      BOOL success =
+          read(this->driver_to_des_out_rpipe, buffer, sizeof(buffer));
+      if (!success) {
+        return this->set_unix_error("Failing to read DES output pipe", true);
+      }
+      buffer[bytes_read] =
+          '/0';  // we need it to be zero-terminated, as advised by a warning
+                 // when tring to assign the char[] to a new std::string
+      std::string buffer_str = buffer;
+
+      complete_reading_str += buffer_str;
+
+      if (success == 0 ||
+          complete_reading_str.find("DES>") != std::string::npos) {
+        finished_reading = true;
+      }
+    }
+
+    this->shmem->des_process_created = true;
+  }
+
+  return SQL_SUCCESS;
+}
+#endif
+
+const char *prepare_working_dir(const char *working_dir) {
+  std::string working_dir_str(working_dir);
+  size_t pos;
+  if (working_dir_str.find("\\") != std::wstring::npos)
+    pos = working_dir_str.find_last_of("\\");
+  else
+    pos = working_dir_str.find_last_of("/");
+
+  if (pos != std::string::npos && pos == (working_dir_str.size() - 1)) {
+    std::string dir_str = working_dir_str.substr(0, pos);
     size_t dir_size = dir_str.size();
 
-    char *dir = new char[dir_size + 1]; //TODO: consider making an 'util' function out of this
+    char *dir =
+        new char[dir_size +
+                 1];  // TODO: consider making an 'util' function out of this
     dir_str.copy(dir, dir_size);
     dir[dir_size] = '\0';
 
     return dir;
 
-  } else { //Incorrect path. TODO: handle error appropiately.
-    exit(1);
-    return nullptr; //to prevent compiler errors
+  } else {
+    return working_dir;
   }
 }
 
-const wchar_t* get_executable_dir(const wchar_t *executable_path) {
+const wchar_t *prepare_working_dir(const wchar_t *working_dir) {
+  std::wstring working_dir_wstr(working_dir);
+  size_t pos;
+  if (working_dir_wstr.find(L"\\") != std::wstring::npos)
+    pos = working_dir_wstr.find_last_of(L"\\");
+  else
+    pos = working_dir_wstr.find_last_of(L"/");
 
-  std::wstring executable_path_wstr(executable_path);
-  size_t pos = executable_path_wstr.find_last_of(L"\\/");
-
-  if (pos != std::wstring::npos) {
-    std::wstring dir_wstr = executable_path_wstr.substr(0, pos);
+  if (pos != std::wstring::npos && pos == (working_dir_wstr.size() - 1)) {
+    std::wstring dir_wstr = working_dir_wstr.substr(0, pos);
     size_t dir_size = dir_wstr.size();
 
-    wchar_t *dir = new wchar_t[dir_size + 1]; //TODO: consider making an 'util' function out of this
+    wchar_t *dir =
+        new wchar_t[dir_size +
+                    1];  // TODO: consider making an 'util' function out of this
     dir_wstr.copy(dir, dir_size);
     dir[dir_size] = L'\0';
 
     return dir;
 
-  } else { //Incorrect path. TODO: handle error appropiately.
-    exit(1);
-    return nullptr; //to prevent compiler errors
-  }
-}
-
-void getDESProcessPipes() {
-  ENV *env = dbc_global_var->env;
-#ifdef _WIN32
-  bool finished = false;
-
-  WaitForSingleObject(env->shared_memory_mutex, INFINITE);
-  WaitForSingleObject(env->request_handle_mutex, INFINITE);
-
-  env->shmem->handle_sharing_info.pid_handle_petitioner = GetCurrentProcessId();
-
-  while (!finished) {
-    DWORD random_pid =
-        env->shmem->pids_connected_struct
-            .pids_connected[rand() %
-                            (env->shmem->pids_connected_struct.size -
-                             1)];  // we request the handles to a random peer
-                                   // TODO: impleemnt better criteria
-    if (random_pid != GetCurrentProcessId()) {
-      env->shmem->handle_sharing_info.pid_handle_petitionee = random_pid;
-
-      SetEvent(env->request_handle_event);
-      WaitForSingleObject(env->handle_sent_event,
-                          INFINITE);  // TODO: handle errors
-
-      env->driver_to_des_out_rpipe = env->shmem->handle_sharing_info.out_handle;
-      env->driver_to_des_in_wpipe = env->shmem->handle_sharing_info.in_handle;
-
-      // we reset the structure once we have saved the handles
-      env->shmem->handle_sharing_info.in_handle = NULL;
-      env->shmem->handle_sharing_info.out_handle = NULL;
-      env->shmem->handle_sharing_info.pid_handle_petitionee = 0;
-      env->shmem->handle_sharing_info.pid_handle_petitioner = 0;
-
-      finished = true;
-    }
-  }
-
-  ReleaseMutex(env->request_handle_mutex);
-  ReleaseMutex(env->shared_memory_mutex);
-  #else
-
-  env->driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_WRONLY);
-  
-  if (env->driver_to_des_in_wpipe == -1) {
-      unlink(IN_WPIPE_NAME);
-      unlink(OUT_RPIPE_NAME);
-      return; //TODO: handle errors appropriately
-  }
-  
-  env->driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_RDONLY);
-  if (env->driver_to_des_out_rpipe == -1) {
-      close(env->driver_to_des_in_wpipe);
-      unlink(IN_WPIPE_NAME);
-      unlink(OUT_RPIPE_NAME);
-      return; //TODO: handle errors appropriately
-  }
-
-  #endif
-}
-
-SQLRETURN DBC::createDESProcess(const char* des_path) {
-  ENV *env = this->env;
-  #ifdef _WIN32
-  #else
-
-  pid_t pid = fork();
-  if (pid == -1) {
-      perror("fork");
-      unlink(IN_WPIPE_NAME);
-      unlink(OUT_RPIPE_NAME);
-      return 1;
-  } else if (pid == 0) {
-    int driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_RDONLY);
-    if (driver_to_des_in_wpipe == -1) {
-        perror("open driver_to_des_in_wpipe");
-        unlink(IN_WPIPE_NAME);
-        unlink(OUT_RPIPE_NAME);
-        return 1;
-    }
-
-    int driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_WRONLY);
-    if (driver_to_des_out_rpipe == -1) {
-        perror("open child_to_parent");
-        ::close(driver_to_des_in_wpipe);
-        unlink(IN_WPIPE_NAME);
-        unlink(OUT_RPIPE_NAME);
-        return 1;
-    }
-
-    dup2(driver_to_des_in_wpipe, STDIN_FILENO);
-    dup2(driver_to_des_out_rpipe, STDOUT_FILENO);
-
-    env->shmem->DES_pid = getpid();
-
-    const char* exec_dir = get_executable_dir(des_path);
-    chdir(exec_dir); //TODO: handle possible errors
-
-    execlp(des_path, des_path, nullptr);
-
-    perror("execlp");
-    ::close(env->driver_to_des_in_wpipe);
-    ::close(env->driver_to_des_out_rpipe);
-    unlink(IN_WPIPE_NAME);
-    unlink(OUT_RPIPE_NAME);
-    return 1;
   } else {
-    env->shmem->des_process_created = true;
-
-    if (sem_post(env->shared_memory_mutex) == -1) {
-        perror("sem_post");
-    }
-
-    getDESProcessPipes();
-    
-    char buffer[4096];
-    ssize_t bytes_read;
-        
-    bool finished_reading = false;
-    std::string complete_reading_str = "";
-    while (!finished_reading) {
-      BOOL success = read(env->driver_to_des_out_rpipe, buffer, sizeof(buffer));
-      buffer[bytes_read] = '/0'; //we need it to be zero-terminated, as advised by a warning when tring to assign the char[] to a new std::string
-      std::string buffer_str = buffer;
-  
-      complete_reading_str += buffer_str;
-  
-      if (success == 0 || complete_reading_str.find("DES>") != std::string::npos) {
-        finished_reading = true;
-      }
-    }
-    
-    env->shmem->des_process_created = true;
+    return working_dir;
   }
-  #endif
-
-  return SQL_SUCCESS;
-
 }
 
-SQLRETURN DBC::createDESProcess(SQLWCHAR* des_path) {
-
-  ENV *env = this->env;
-  #ifdef _WIN32
+#ifdef _WIN32
+SQLRETURN DBC::createDESProcess(SQLWCHAR *des_exec_path,
+                                SQLWCHAR *des_working_dir) {
   // Before creating the process, we need to create STARTUPINFO and
   // PROCESS_INFORMATION structures. Piece of code extracted from the
   // Microsoft's child process creating tutorial
-  ZeroMemory(&env->startup_info_unicode, sizeof(env->startup_info_unicode));
-  ZeroMemory(&env->process_info, sizeof(env->process_info));
-  env->startup_info_unicode.cb = sizeof(env->startup_info_unicode);
-  env->startup_info_unicode.hStdError = env->driver_to_des_out_wpipe;
-  env->startup_info_unicode.hStdOutput = env->driver_to_des_out_wpipe;
-  env->startup_info_unicode.hStdInput = env->driver_to_des_in_rpipe;
-  env->startup_info_unicode.dwFlags |= STARTF_USESTDHANDLES;
-  env->startup_info_unicode.dwFlags |= STARTF_USESHOWWINDOW;
-  env->startup_info_unicode.wShowWindow = SW_HIDE;
+  ZeroMemory(&this->startup_info_unicode, sizeof(this->startup_info_unicode));
+  ZeroMemory(&this->process_info, sizeof(this->process_info));
+  this->startup_info_unicode.cb = sizeof(this->startup_info_unicode);
+  this->startup_info_unicode.hStdError = this->driver_to_des_out_wpipe;
+  this->startup_info_unicode.hStdOutput = this->driver_to_des_out_wpipe;
+  this->startup_info_unicode.hStdInput = this->driver_to_des_in_rpipe;
+  this->startup_info_unicode.dwFlags |= STARTF_USESTDHANDLES;
+  this->startup_info_unicode.dwFlags |= STARTF_USESHOWWINDOW;
+  this->startup_info_unicode.wShowWindow = SW_HIDE;
 
-    /* Now, we will call the function CreateProcessW (processthreadsapi.h).
+  /* Now, we will call the function CreateProcessW (processthreadsapi.h).
 *
 * From the win32 api manual:
 *
 * BOOL CreateProcessW(
-    [in, optional]      LPCWSTR               lpApplicationName,
-    [in, out, optional] LPWSTR                lpCommandLine,
-    [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
-    [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
-    [in]                BOOL                  bInheritHandles,
-    [in]                DWORD                 dwCreationFlags,
-    [in, optional]      LPVOID                lpEnvironment,
-    [in, optional]      LPCWSTR               lpCurrentDirectory,
-    [in]                LPSTARTUPINFOW        lpStartupInfo,
-    [out]               LPPROCESS_INFORMATION lpProcessInformation
-  );
+  [in, optional]      LPCWSTR               lpApplicationName,
+  [in, out, optional] LPWSTR                lpCommandLine,
+  [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  [in]                BOOL                  bInheritHandles,
+  [in]                DWORD                 dwCreationFlags,
+  [in, optional]      LPVOID                lpEnvironment,
+  [in, optional]      LPCWSTR               lpCurrentDirectory,
+  [in]                LPSTARTUPINFOW        lpStartupInfo,
+  [out]               LPPROCESS_INFORMATION lpProcessInformation
+);
 
-  - lpApplicationName: if NULL, it justs go for lpApplicationName (simpler).
-  - lpCommandLine: route of the DES executable.
-  - lpProcessAttributes: if NULL, the identifier of the new process cannot
-      be inherited (preferrable, as we have explained before)
-  - lpThreadAttributes: if NULL, it is not inheritable either.
-  - bInheritHandles: if TRUE, handlers are inheritable.
-  - dwCreationFlags: if 0, it has the default creation flags. We do not need
+- lpApplicationName: if NULL, it justs go for lpApplicationName (simpler).
+- lpCommandLine: route of the DES executable.
+- lpProcessAttributes: if NULL, the identifier of the new process cannot
+    be inherited (preferrable, as we have explained before)
+- lpThreadAttributes: if NULL, it is not inheritable either.
+- bInheritHandles: if TRUE, handlers are inheritable.
+- dwCreationFlags: if 0, it has the default creation flags. We do not need
 any special flags.
-  - lpEnvironment: if NULL, we use parent's environment block
-  - lpCurrentDirectory: if NULL, we use parent's starting directory
-  - lpStartupInfo: the pointer to a STARTUPINFO structure
-  - lpProcessInformation: the pointer to a PROCESS_INFORMATION structure
+- lpEnvironment: if NULL, we use parent's environment block
+- lpCurrentDirectory: if NULL, we use parent's starting directory
+- lpStartupInfo: the pointer to a STARTUPINFO structure
+- lpProcessInformation: the pointer to a PROCESS_INFORMATION structure
 
 */
 
-  //Setting the current directory -the folder in which the des executable is in-.
-  const wchar_t *des_dir = get_executable_dir(des_path);
-  
-  if (!CreateProcessW(NULL, des_path, NULL, NULL, TRUE, 0, NULL, des_dir,
-                      &env->startup_info_unicode,
-                      &env->process_info)) {
-    CloseHandle(env->driver_to_des_out_rpipe);
-    CloseHandle(env->driver_to_des_out_wpipe);
-    CloseHandle(env->driver_to_des_in_rpipe);
-    CloseHandle(env->driver_to_des_in_wpipe);
-    return ERROR;
+  if (!CreateProcessW(NULL, des_exec_path, NULL, NULL, TRUE, 0, NULL,
+                      des_working_dir, &this->startup_info_unicode,
+                      &this->process_info)) {
+    CloseHandle(this->driver_to_des_out_rpipe);
+    CloseHandle(this->driver_to_des_out_wpipe);
+    CloseHandle(this->driver_to_des_in_rpipe);
+    CloseHandle(this->driver_to_des_in_wpipe);
+    return this->set_win_error(
+        "Failing to create DES process given the info specified",
+                               true);
+    return SQL_ERROR;
   }
 
-  /* Now, the DES process has just been created. However, we need to remove all the startup messages
-  from DES that are allocated into the STDOUT read pipe. We read from this pipe using the ReadFile
-  function (fileapi.h), and it writes it into a buffer. When the buffer contains "DES>", the startup
-  messages will have ended. */
+  // We save the PID of the DES global process
+  this->shmem->DES_pid = this->process_info.dwProcessId;
 
-  CHAR buffer[4096]; //standard size
+  /* Now, the DES process has just been created. However, we need to remove all
+  the startup messages from DES that are allocated into the STDOUT read pipe. We
+  read from this pipe using the ReadFile function (fileapi.h), and it writes it
+  into a buffer. When the buffer contains "DES>", the startup messages will have
+  ended. */
+
+  CHAR buffer[4096];  // standard size
   DWORD bytes_read;
 
   bool finished_reading = false;
   std::string complete_reading_str = "";
   while (!finished_reading) {
     BOOL success =
-        ReadFile(env->driver_to_des_out_rpipe, buffer,
-                            sizeof(buffer) - sizeof(CHAR), &bytes_read, NULL);/* we don't write the final CHAR so as to put the '\0'
-                                                                                 char, like we will see.
-                                                                                 the final argument must be not null only when
-                                                                                 the pipe was created with overlapping */ 
+        ReadFile(this->driver_to_des_out_rpipe, buffer,
+                 sizeof(buffer) - sizeof(CHAR), &bytes_read,
+                 NULL); /* we don't write the final CHAR so as to put the '\0'
+                           char, like we will see.
+                           the final argument must be not null only when
+                           the pipe was created with overlapping */
+    if (!success) {
+      return this->set_win_error("Failing to read from DES output pipe", true);
+    }
 
-
-    buffer[bytes_read] = '/0'; //we need it to be zero-terminated, as advised by a warning when tring to assign the char[] to a new std::string
+    buffer[bytes_read] =
+        '/0';  // we need it to be zero-terminated, as advised by a warning when
+               // tring to assign the char[] to a new std::string
     std::string buffer_str = buffer;
 
     complete_reading_str += buffer_str;
@@ -553,51 +755,186 @@ any special flags.
     }
   }
 
-  env->shmem->des_process_created = true;
-  #endif
+  this->shmem->des_process_created = true;
   return SQL_SUCCESS;
 }
 
-void shareHandles() {
+#endif
+
 #ifdef _WIN32
-  ENV *env = dbc_global_var->env;
-  SharedMemoryWin *shmem = env->shmem;
+void DBC::sharePipes() {
+
+  DWORD ret;
+
+  SharedMemoryWin *shmem = this->shmem;
+  HANDLE handles[] = {this->request_handle_event, this->finishing_event};
 
   while (true) {
-    DWORD wait_event = WaitForSingleObject(env->request_handle_event, INFINITE);
-    // TODO: handle errors for wait_event != WAIT_OBJECT_0
-    if (wait_event == WAIT_OBJECT_0 &&
-        shmem->handle_sharing_info.pid_handle_petitioner != 0 &&
-        shmem->handle_sharing_info.pid_handle_petitionee ==
-            GetCurrentProcessId()) {
+    DWORD wait_event = WaitForMultipleObjects(
+        (sizeof(handles) / sizeof(handles[0])), handles, FALSE, INFINITE);
+
+    if (wait_event == WAIT_FAILED) {
+      break;
+    }
+
+    if (wait_event == WAIT_OBJECT_0 + 0 &&
+        shmem->handle_sharing_info.handle_petitioner.pid != 0 &&
+        shmem->handle_sharing_info.handle_petitionee.id ==
+            this->connection_id) {
       HANDLE petitioner_process_handle =
           OpenProcess(PROCESS_DUP_HANDLE, TRUE,
-                      shmem->handle_sharing_info.pid_handle_petitioner);
+                      shmem->handle_sharing_info.handle_petitioner.pid);
 
-      DuplicateHandle(GetCurrentProcess(), env->driver_to_des_out_rpipe,
+      if (petitioner_process_handle == NULL) break;
+
+      ret = DuplicateHandle(GetCurrentProcess(), this->driver_to_des_out_rpipe,
                       petitioner_process_handle,
                       &shmem->handle_sharing_info.out_handle, 0, TRUE,
                       DUPLICATE_SAME_ACCESS);
+      if (ret == 0) break;
 
-      DuplicateHandle(GetCurrentProcess(), env->driver_to_des_in_wpipe,
+      ret = DuplicateHandle(GetCurrentProcess(), this->driver_to_des_in_wpipe,
                       petitioner_process_handle,
                       &shmem->handle_sharing_info.in_handle, 0, TRUE,
                       DUPLICATE_SAME_ACCESS);
+      if (ret == 0) break;
 
-      ResetEvent(env->request_handle_event);
-      SetEvent(env->handle_sent_event);  // we notify the petitioner
+      ResetEvent(this->request_handle_event);
+      SetEvent(this->handle_sent_event);  // we notify the petitioner
+    } else if (wait_event ==
+               WAIT_OBJECT_0 + 1) {  // i.e. "finishing" has been signaled
+      if (this->shmem->handle_sharing_info.handle_petitioner.id ==
+          this->connection_id)
+        break;
     }
   }
-  #endif
 }
 
+#endif
+
 #ifndef _WIN32
-#include <iostream>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #include <cstdio>
+#include <iostream>
 #endif
+
+SQLRETURN DBC::initialize() {
+#ifdef _WIN32
+  HANDLE handle_map_file_shmem =
+      CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
+                         sizeof(SharedMemoryWin), SHARED_MEMORY_NAME);
+
+  if (handle_map_file_shmem == nullptr) {
+    return this->set_win_error(
+        "Failing to create/access shared memory file " +
+        std::string(SHARED_MEMORY_NAME), true);
+  }
+
+  shmem = (SharedMemoryWin *)MapViewOfFile(handle_map_file_shmem,
+                                           FILE_MAP_ALL_ACCESS, 0, 0,
+                                           sizeof(SharedMemoryWin));
+  if (shmem == nullptr) {
+    return this->set_win_error("Failing to map view of shared memory file " +
+                               std::string(SHARED_MEMORY_NAME), true);
+  }
+
+  SECURITY_ATTRIBUTES sa;
+  sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+  sa.lpSecurityDescriptor = NULL;
+  sa.bInheritHandle = TRUE;
+
+  this->query_mutex = CreateMutexExA(&sa, QUERY_MUTEX_NAME, 0, SYNCHRONIZE);
+  if (this->query_mutex == nullptr) {
+    return this->set_win_error("Failing to create mutex " +
+                               std::string(QUERY_MUTEX_NAME), true);
+  }
+
+  this->shared_memory_mutex =
+      CreateMutexExA(&sa, SHARED_MEMORY_MUTEX_NAME, 0, SYNCHRONIZE);
+  if (this->shared_memory_mutex == nullptr) {
+    return this->set_win_error("Failing to create mutex " +
+                               std::string(SHARED_MEMORY_MUTEX_NAME), true);
+  }
+
+  this->request_handle_mutex =
+      CreateMutexExA(&sa, REQUEST_HANDLE_MUTEX_NAME, 0, SYNCHRONIZE);
+  if (this->request_handle_mutex == nullptr) {
+    return this->set_win_error("Failing to create mutex " +
+                               std::string(REQUEST_HANDLE_MUTEX_NAME), true);
+  }
+
+  this->request_handle_event =
+      CreateEventA(NULL, TRUE, FALSE, REQUEST_HANDLE_EVENT_NAME);
+  if (this->request_handle_event == nullptr) {
+    return this->set_win_error("Failing to create event " +
+                               std::string(REQUEST_HANDLE_EVENT_NAME), true);
+  }
+
+  this->handle_sent_event =
+      CreateEventA(NULL, TRUE, FALSE, HANDLE_SENT_EVENT_NAME);
+  if (this->handle_sent_event == nullptr) {
+    return this->set_win_error("Failing to create event " +
+                               std::string(HANDLE_SENT_EVENT_NAME), true);
+  }
+
+  this->finishing_event = CreateEventA(NULL, TRUE, FALSE, FINISHING_EVENT_NAME);
+  if (this->finishing_event == nullptr) {
+    return this->set_win_error("Failing to create event " +
+                               std::string(FINISHING_EVENT_NAME), true);
+  }
+
+  SQLRETURN ret = getSharedMemoryMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+#else
+  this->shm_id = shmget(this->connection_hash_int, sizeof(SharedMemoryUnix), 0666 | IPC_CREAT);
+  if (this->shm_id == -1) {
+    return this->set_unix_error("Failing to create shared memory with key" + std::to_string(this->connection_hash_int), true);
+  }
+
+  void *ptr = shmat(this->shm_id, nullptr, 0);
+  if (ptr == (void *)-1) {
+    return this->set_unix_error("Failing to call shmat on shared memory with key" + std::to_string(this->connection_hash_int), true);
+    perror("shmat");
+    exit(1);
+  }
+
+  this->shmem = static_cast<SharedMemoryUnix *>(ptr);
+
+  #ifdef __APPLE__
+  this->shared_memory_mutex = sem_open(SHARED_MEMORY_MUTEX_NAME, O_CREAT, S_IRWXU, 1);
+
+  if (this->shared_memory_mutex == SEM_FAILED) {
+    std::string msg = "Failing to create or open mutex ";
+    msg += SHARED_MEMORY_MUTEX_NAME;
+    return this->set_unix_error(msg, true);
+  }
+
+  this->query_mutex = sem_open(QUERY_MUTEX_NAME, O_CREAT, S_IRWXU, 1);
+
+  if (this->query_mutex == SEM_FAILED) {
+    std::string msg = "Failing to create or open mutex ";
+    msg += QUERY_MUTEX_NAME;
+    return this->set_unix_error(msg, true);
+  }
+  #else
+  if (!this->shmem->des_process_created) {
+    if (sem_init(&this->shmem->shared_memory_mutex, 1, 1) == -1)
+      return this->set_unix_error("Failing to create shared memory mutex", true);
+    if (sem_init(&this->shmem->query_mutex, 1, 1) == -1)
+      return this->set_unix_error("Failing to create query mutex", true);
+  }
+  #endif
+
+  SQLRETURN ret = getSharedMemoryMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO)
+    return ret;
+
+#endif
+
+  return SQL_SUCCESS;
+}
 
 /**
   Try to establish a connection to a MySQL server based on the data source
@@ -608,69 +945,87 @@ void shareHandles() {
   @return Standard SQLRETURN code. If it is @c SQL_SUCCESS or @c
   SQL_SUCCESS_WITH_INFO, a connection has been established.
 */
-SQLRETURN DBC::connect(DataSource *dsrc)
-{
+SQLRETURN DBC::connect(DataSource *dsrc) {
   SQLRETURN rc = SQL_SUCCESS;
 
+  this->cxn_charset_info = desodbc::get_charset(48, DESF(0));  // latin1
+
 #ifdef _WIN32
-  WaitForSingleObject(this->env->shared_memory_mutex, INFINITE);
-  SharedMemoryWin *shmem = this->env->shmem;
-
-  shmem->pids_connected_struct
-      .pids_connected[shmem->pids_connected_struct.size] =
-      GetCurrentProcessId();
-
-  shmem->pids_connected_struct.size += 1;
-
-  ReleaseMutex(this->env->shared_memory_mutex);
-  // rc = dbc->connect(&ds);
-
-  // TODO: solution for only UTF-8, expand it to ANSI also.
-  this->cxn_charset_info = desodbc::get_charset(255, DESF(0));
 
   /* We now save the path to the DES executable in Unicode format (wchars). It
  reads the DES executable field from the Data Source (loaded previously with
  data from the Windows Registries).
  TODO: expand it to ANSI also. */
-  const SQLWSTRING &x = static_cast<const SQLWSTRING &>(dsrc->opt_DES_EXEC);
-  SQLWCHAR *unicode_path = const_cast<SQLWCHAR *>(x.c_str());
 
-  if (!this->env->shmem->des_process_created) {
-    rc = this->createPipes();
-    rc = this->createDESProcess(unicode_path);
-  } else {
-    getDESProcessPipes();
-    rc = SQL_SUCCESS;
-  }
+  if (!dsrc->opt_DES_EXEC || !dsrc->opt_DES_WORKING_DIR) return SQL_NEED_DATA;
 
-  this->env->share_handle_thread =
-      std::unique_ptr<std::thread>(new std::thread(shareHandles));
+  SQLWCHAR *des_exec_path = const_cast<SQLWCHAR *>(
+      static_cast<const SQLWSTRING &>(dsrc->opt_DES_EXEC).c_str());
+  SQLWCHAR *des_working_dir = const_cast<SQLWCHAR *>(
+      static_cast<const SQLWSTRING &>(dsrc->opt_DES_WORKING_DIR).c_str());
+  const wchar_t *prepared_working_dir = prepare_working_dir(des_working_dir);
 
-  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
-      this->connected = true;
 #else
-  SharedMemoryUnix *shmem = this->env->shmem;
-  this->cxn_charset_info = desodbc::get_charset(255, DESF(0));
-  const char *des_path = static_cast<const char*>(dsrc->opt_DES_EXEC);
+  const char *des_exec_path = static_cast<const char *>(dsrc->opt_DES_EXEC);
+  const char *des_working_dir =
+      static_cast<const char *>(dsrc->opt_DES_WORKING_DIR);
+  const char *prepared_working_dir = prepare_working_dir(des_working_dir);
+#endif
 
-  if (!this->env->shmem->des_process_created) {
+  this->getConcurrentObjects(des_exec_path, prepared_working_dir);
+
+  rc = this->initialize();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+#ifdef _WIN32
+  SharedMemoryWin *shmem = this->shmem;
+#else
+  SharedMemoryUnix *shmem = this->shmem;
+#endif
+  if (!this->shmem->des_process_created) {
     rc = this->createPipes();
-    rc = this->createDESProcess(des_path);
-    this->env->shmem->n_clients = 1;
+    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+#ifdef _WIN32
+    rc = this->createDESProcess(des_exec_path,
+                                &std::wstring(prepared_working_dir)[0]);
+    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+#else
+    rc = this->createDESProcess(des_exec_path, prepared_working_dir);
+    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+    shmem->n_clients = 1;
+#endif
   } else {
-    getDESProcessPipes();
-    this->env->shmem->n_clients += 1;
-    rc = SQL_SUCCESS;
+    rc = getDESProcessPipes();
+    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+#ifndef _WIN32
+    shmem->n_clients += 1;
+#endif
   }
 
-  if (sem_post(this->env->shared_memory_mutex) == -1) {
-    perror("sem_post");
-  }
+#ifdef _WIN32
+  this->share_pipes_thread =
+      std::unique_ptr<std::thread>(new std::thread(&DBC::sharePipes, this));
+
+  Client client;
+  client.id = this->connection_id;
+  client.pid = GetCurrentProcessId();
+  shmem->connected_clients_struct
+      .connected_clients[shmem->connected_clients_struct.size] = client;
+
+  shmem->connected_clients_struct.size += 1;
+
+  rc = releaseSharedMemoryMutex();
+  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) return rc;
+
+#else
+
+  rc = releaseSharedMemoryMutex();
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
 #endif
-  return rc;
+  this->connected = true;
+  return SQL_SUCCESS;
 }
-
 
 /**
   Establish a connection to a data source.
@@ -688,23 +1043,20 @@ SQLRETURN DBC::connect(DataSource *dsrc)
   @since ODBC 1.0
   @since ISO SQL 92
 */
-SQLRETURN SQL_API DESConnect(SQLHDBC   hdbc,
-                               SQLWCHAR *szDSN, SQLSMALLINT cbDSN,
-                               SQLWCHAR *szUID, SQLSMALLINT cbUID,
-                               SQLWCHAR *szAuth, SQLSMALLINT cbAuth)
-{
+SQLRETURN SQL_API DESConnect(SQLHDBC hdbc, SQLWCHAR *szDSN, SQLSMALLINT cbDSN,
+                             SQLWCHAR *szUID, SQLSMALLINT cbUID,
+                             SQLWCHAR *szAuth, SQLSMALLINT cbAuth) {
   SQLRETURN rc;
-  DBC *dbc= (DBC *)hdbc;
+  DBC *dbc = (DBC *)hdbc;
   DataSource ds;
 
 #ifdef NO_DRIVERMANAGER
-  return ((DBC*)dbc)->set_error("HY000",
-                       "SQLConnect requires DSN and driver manager", 0);
+  return ((DBC *)dbc)
+      ->set_error("HY000", "SQLConnect requires DSN and driver manager", 0);
 #else
 
   /* Can't connect if we're already connected. */
-  if (is_connected(dbc))
-    return ((DBC*)hdbc)->set_error(DESERR_08002, NULL, 0);
+  if (is_connected(dbc)) return ((DBC *)hdbc)->set_error(DESERR_08002, NULL, 0);
 
   /* Reset error state */
   CLEAR_DBC_ERROR(dbc);
@@ -712,17 +1064,18 @@ SQLRETURN SQL_API DESConnect(SQLHDBC   hdbc,
   ds.opt_DSN.set_remove_brackets(szDSN, cbDSN);
   ds.lookup();
 
-  rc= dbc->connect(&ds);
+  rc = dbc->connect(&ds);
 
   if (SQL_SUCCEEDED(rc) && (szUID || szAuth)) {
-    dbc->set_error("01000", "The user/password provided was ignored (DES doesn't need it).", 0);
+    dbc->set_error(
+        "01000",
+        "The user/password provided was ignored (DES doesn't need it).", 0);
     rc = SQL_SUCCESS_WITH_INFO;
   }
-  
+
   return rc;
 #endif
 }
-
 
 /**
   An alternative to SQLConnect that allows specifying more of the connection
@@ -752,23 +1105,33 @@ SQLRETURN SQL_API DESConnect(SQLHDBC   hdbc,
   @since ODBC 1.0
   @since ISO SQL 92
 */
-SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
-                                     SQLWCHAR *szConnStrIn,
-                                     SQLSMALLINT cbConnStrIn,
-                                     SQLWCHAR *szConnStrOut,
-                                     SQLSMALLINT cbConnStrOutMax,
-                                     SQLSMALLINT *pcbConnStrOut,
-                                     SQLUSMALLINT fDriverCompletion)
-{
-  SQLRETURN rc= SQL_SUCCESS;
-  DBC *dbc= (DBC *)hdbc;
+
+void safeCloseConnections() {
+  for (auto hdbc : active_dbcs_global_var) {
+    hdbc->close();
+  }
+}
+
+__attribute__((constructor))
+void init() {
+  atexit(safeCloseConnections);
+}
+
+
+SQLRETURN SQL_API DESDriverConnect(
+    SQLHDBC hdbc, SQLHWND hwnd, SQLWCHAR *szConnStrIn, SQLSMALLINT cbConnStrIn,
+    SQLWCHAR *szConnStrOut, SQLSMALLINT cbConnStrOutMax,
+    SQLSMALLINT *pcbConnStrOut, SQLUSMALLINT fDriverCompletion) {
+
+  SQLRETURN rc = SQL_SUCCESS;
+  DBC *dbc = (DBC *)hdbc;
   DataSource ds;
   /* We may have to read driver info to find the setup library. */
   Driver driver;
   /* We never know how many new parameters might come out of the prompt */
   SQLWCHAR prompt_outstr[4096];
-  BOOL bPrompt= FALSE;
-  HMODULE hModule= NULL;
+  BOOL bPrompt = FALSE;
+  HMODULE hModule = NULL;
   SQLWSTRING conn_str_in, conn_str_out;
   SQLWSTRING prompt_instr;
 
@@ -778,10 +1141,9 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
     conn_str_in = szConnStrIn;
 
   /* Parse the incoming string */
-  if (ds.from_kvpair(conn_str_in.c_str(), (SQLWCHAR)';'))
-  {
-    rc= dbc->set_error( "HY000",
-                      "Failed to parse the incoming connect string.", 0);
+  if (ds.from_kvpair(conn_str_in.c_str(), (SQLWCHAR)';')) {
+    rc = dbc->set_error("HY000", "Failed to parse the incoming connect string.",
+                        0);
     goto error;
   }
 
@@ -793,22 +1155,20 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
 
    This also allows us to get pszDRIVER (if not already given).
   */
-  if (ds.opt_DSN)
-  {
-     ds.lookup();
+  if (ds.opt_DSN) {
+    ds.lookup();
 
     /*
       If DSN is used:
       1 - we want the connection string options to override DSN options
       2 - no need to check for parsing erros as it was done before
     */
-     ds.from_kvpair(conn_str_in.c_str(), (SQLWCHAR)';');
+    ds.from_kvpair(conn_str_in.c_str(), (SQLWCHAR)';');
   }
 #endif
 
   /* If FLAG_NO_PROMPT is not set, force prompting off. */
-  if (ds.opt_NO_PROMPT)
-    fDriverCompletion= SQL_DRIVER_NOPROMPT;
+  if (ds.opt_NO_PROMPT) fDriverCompletion = SQL_DRIVER_NOPROMPT;
 
   /*
     We only prompt if we need to.
@@ -820,56 +1180,56 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
     try to connect and if it works we say its ok otherwise we go to
     a prompt.
   */
-  switch (fDriverCompletion)
-  {
-  case SQL_DRIVER_PROMPT:
-    bPrompt= TRUE;
-    break;
+  switch (fDriverCompletion) {
+    case SQL_DRIVER_PROMPT:
+      bPrompt = TRUE;
+      break;
 
-  case SQL_DRIVER_COMPLETE:
-  case SQL_DRIVER_COMPLETE_REQUIRED:
-    rc = dbc->connect(&ds);
-    //TODO: this code I put doesn't compile in linux...
-    /*
-    if (SQL_SUCCEEDED(rc) &&
-        ((conn_str_in.find(L"UID=") != std::wstring::npos) ||
-         (conn_str_in.find(L"PWD=") != std::wstring::npos))) {
-        dbc->set_error(
-            "01000",
-            "The user/password provided was ignored (DES doesn't need it).", 0);
-        rc = SQL_SUCCESS_WITH_INFO;
-    }
-    */
-    if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
-      goto connected;
-    bPrompt= TRUE;
-    break;
+    case SQL_DRIVER_COMPLETE:
+    case SQL_DRIVER_COMPLETE_REQUIRED:
+      rc = dbc->connect(&ds);
+      // TODO: this code I put doesn't compile in linux...
+      /*
+      if (SQL_SUCCEEDED(rc) &&
+          ((conn_str_in.find(L"UID=") != std::wstring::npos) ||
+           (conn_str_in.find(L"PWD=") != std::wstring::npos))) {
+          dbc->set_error(
+              "01000",
+              "The user/password provided was ignored (DES doesn't need it).",
+      0); rc = SQL_SUCCESS_WITH_INFO;
+      }
+      */
+      if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO)
+        goto connected;
+      else if (rc == SQL_NEED_DATA)
+        bPrompt = true;
+      else
+        goto error;
+      break;
 
-  case SQL_DRIVER_NOPROMPT:
-    bPrompt= FALSE;
-    break;
+    case SQL_DRIVER_NOPROMPT:
+      bPrompt = FALSE;
+      break;
 
-  default:
-    rc= dbc->set_error("HY110", "Invalid driver completion.", 0);
-    goto error;
+    default:
+      rc = dbc->set_error("HY110", "Invalid driver completion.", 0);
+      goto error;
   }
 
 #ifdef __APPLE__
   /*
     We don't support prompting on Mac OS X.
   */
-  if (bPrompt)
-  {
-    rc= dbc->set_error("HY000",
-                       "Prompting is not supported on this platform. "
-                       "Please provide all required connect information.",
-                       0);
+  if (bPrompt) {
+    rc = dbc->set_error("HY000",
+                        "Prompting is not supported on this platform. "
+                        "Please provide all required connect information.",
+                        0);
     goto error;
   }
 #endif
 
-  if (bPrompt)
-  {
+  if (bPrompt) {
     PromptFunc pFunc;
 
     /*
@@ -881,48 +1241,43 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
      connect with a DSN which does not exist. A possible solution would be to
      hard-code some fall-back value for ds->pszDRIVER.
     */
-    if (!ds.opt_DRIVER)
-    {
+    if (!ds.opt_DRIVER) {
       char szError[1024];
       sprintf(szError,
               "Could not determine the driver name; "
               "could not lookup setup library. DSN=(%s)\n",
-              (const char*)ds.opt_DSN);
-      rc= dbc->set_error("HY000", szError, 0);
+              (const char *)ds.opt_DSN);
+      rc = dbc->set_error("HY000", szError, 0);
       goto error;
     }
 
 #ifndef NO_DRIVERMANAGER
     /* We can not present a prompt if we have a null window handle. */
-    if (!hwnd)
-    {
-      rc= dbc->set_error("IM008", "Invalid window handle", 0);
+    if (!hwnd) {
+      rc = dbc->set_error("IM008", "Invalid window handle", 0);
       goto error;
     }
 
     /* if given a named DSN, we will have the path in the DRIVER field */
-    if (ds.opt_DSN)
-      driver.lib = ds.opt_DRIVER;
+    if (ds.opt_DSN) driver.lib = ds.opt_DRIVER;
     /* otherwise, it's the driver name */
     else
       driver.name = ds.opt_DRIVER;
 
-    if (driver.lookup())
-    {
+    if (driver.lookup()) {
       char sz[1024];
       sprintf(sz, "Could not find driver '%s' in system information.",
-              (const char*)ds.opt_DRIVER);
+              (const char *)ds.opt_DRIVER);
 
-      rc= dbc->set_error("IM003", sz, 0);
+      rc = dbc->set_error("IM003", sz, 0);
       goto error;
     }
 
     if (!driver.setup_lib)
 #endif
     {
-      rc= dbc->set_error("HY000",
-                        "Could not determine the file name of setup library.",
-                        0);
+      rc = dbc->set_error(
+          "HY000", "Could not determine the file name of setup library.", 0);
       goto error;
     }
 
@@ -931,30 +1286,28 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
      depend on GUI libraries.
     */
 
-    if (!(hModule= LoadLibrary(driver.setup_lib)))
-    {
+    if (!(hModule = LoadLibrary(driver.setup_lib))) {
       char sz[1024];
       sprintf(sz, "Could not load the setup library '%s'.",
               (const char *)driver.setup_lib);
-      rc= dbc->set_error("HY000", sz, 0);
+      rc = dbc->set_error("HY000", sz, 0);
       goto error;
     }
 
-    pFunc= (PromptFunc)GetProcAddress(hModule, "Driver_Prompt");
+    pFunc = (PromptFunc)GetProcAddress(hModule, "Driver_Prompt");
 
-    if (pFunc == NULL)
-    {
+    if (pFunc == NULL) {
 #ifdef WIN32
       LPVOID pszMsg;
 
       FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                     NULL, GetLastError(),
-                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                    (LPTSTR)&pszMsg, 0, NULL);
-      rc= dbc->set_error("HY000", (char *)pszMsg, 0);
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&pszMsg,
+                    0, NULL);
+      rc = dbc->set_error("HY000", (char *)pszMsg, 0);
       LocalFree(pszMsg);
 #else
-      rc= dbc->set_error("HY000", dlerror(), 0);
+      rc = dbc->set_error("HY000", dlerror(), 0);
 #endif
       goto error;
     }
@@ -962,28 +1315,26 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
     /* create a string for prompting, and add driver manually */
     prompt_instr = ds.to_kvpair(';');
     prompt_instr.append(W_DRIVER_PARAM);
-    SQLWSTRING drv = (const SQLWSTRING&)ds.opt_DRIVER;
+    SQLWSTRING drv = (const SQLWSTRING &)ds.opt_DRIVER;
     prompt_instr.append(drv);
 
     /*
       In case the client app did not provide the out string we use our
       inner buffer prompt_outstr
     */
-    if (!pFunc(hwnd, (SQLWCHAR*)prompt_instr.c_str(), fDriverCompletion,
+    if (!pFunc(hwnd, (SQLWCHAR *)prompt_instr.c_str(), fDriverCompletion,
                prompt_outstr, sizeof(prompt_outstr), pcbConnStrOut,
-               (SQLSMALLINT)dbc->unicode))
-    {
+               (SQLSMALLINT)dbc->unicode)) {
       dbc->set_error("HY000", "User cancelled.", 0);
-      rc= SQL_NO_DATA;
+      rc = SQL_NO_DATA;
       goto error;
     }
 
     /* refresh our DataSource */
     ds.reset();
-    if (ds.from_kvpair(prompt_outstr, ';'))
-    {
-      rc= dbc->set_error( "HY000",
-                        "Failed to parse the prompt output string.", 0);
+    if (ds.from_kvpair(prompt_outstr, ';')) {
+      rc = dbc->set_error("HY000", "Failed to parse the prompt output string.",
+                          0);
       goto error;
     }
 
@@ -991,23 +1342,23 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
       We don't need prompt_outstr after the new DataSource is created.
       Copy its contents into szConnStrOut if possible
     */
-    if (szConnStrOut)
-    {
-      *pcbConnStrOut= (SQLSMALLINT)desodbc_min(cbConnStrOutMax, *pcbConnStrOut);
-      memcpy(szConnStrOut, prompt_outstr, (size_t)*pcbConnStrOut*sizeof(SQLWCHAR));
+    if (szConnStrOut) {
+      *pcbConnStrOut =
+          (SQLSMALLINT)desodbc_min(cbConnStrOutMax, *pcbConnStrOut);
+      memcpy(szConnStrOut, prompt_outstr,
+             (size_t)*pcbConnStrOut * sizeof(SQLWCHAR));
       /* term needed if possibly truncated */
       szConnStrOut[*pcbConnStrOut - 1] = 0;
     }
-
   }
 
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO)
-  {
+  rc = dbc->connect(&ds);
+
+  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     goto error;
   }
 
-  if (ds.opt_SAVEFILE)
-  {
+  if (ds.opt_SAVEFILE) {
     /* We must disconnect if File DSN is created */
     dbc->close();
   }
@@ -1015,12 +1366,10 @@ SQLRETURN SQL_API DESDriverConnect(SQLHDBC hdbc, SQLHWND hwnd,
 connected:
 
   /* copy input to output if connected without prompting */
-  if (!bPrompt)
-  {
+  if (!bPrompt) {
     size_t copylen;
     conn_str_out = conn_str_in;
-    if (ds.opt_SAVEFILE)
-    {
+    if (ds.opt_SAVEFILE) {
       SQLWSTRING pwd_temp = (const SQLWSTRING &)ds.opt_PWD;
 
       /* make sure the password does not go into the output buffer */
@@ -1033,10 +1382,10 @@ connected:
     }
 
     size_t inlen = conn_str_out.length();
-    copylen = desodbc_min((size_t)cbConnStrOutMax, inlen + 1) * sizeof(SQLWCHAR);
+    copylen =
+        desodbc_min((size_t)cbConnStrOutMax, inlen + 1) * sizeof(SQLWCHAR);
 
-    if (szConnStrOut && copylen)
-    {
+    if (szConnStrOut && copylen) {
       memcpy(szConnStrOut, conn_str_out.c_str(), copylen);
       /* term needed if possibly truncated */
       szConnStrOut[(copylen / sizeof(SQLWCHAR)) - 1] = 0;
@@ -1050,38 +1399,31 @@ connected:
       OutConnectionString.
       https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqldriverconnect-function?view=sql-server-ver16
     */
-    if (pcbConnStrOut)
-      *pcbConnStrOut = (SQLSMALLINT)inlen;
+    if (pcbConnStrOut) *pcbConnStrOut = (SQLSMALLINT)inlen;
   }
 
   /* return SQL_SUCCESS_WITH_INFO if truncated output string */
   if (pcbConnStrOut && cbConnStrOutMax &&
-      cbConnStrOutMax - sizeof(SQLWCHAR) <= *pcbConnStrOut * sizeof(SQLWCHAR))
-  {
+      cbConnStrOutMax - sizeof(SQLWCHAR) <= *pcbConnStrOut * sizeof(SQLWCHAR)) {
     dbc->set_error("01004", "String data, right truncated.", 0);
-    rc= SQL_SUCCESS_WITH_INFO;
+    rc = SQL_SUCCESS_WITH_INFO;
   }
 
 error:
 
-  if (hModule)
-    FreeLibrary(hModule);
+  if (hModule) FreeLibrary(hModule);
 
   return rc;
 }
 
-
-void DBC::free_connection_stmts()
-{
-  for (auto it = stmt_list.begin(); it != stmt_list.end(); )
-  {
-      STMT *stmt = *it;
-      it = stmt_list.erase(it);
-      DES_SQLFreeStmt((SQLHSTMT)stmt, SQL_DROP);
+void DBC::free_connection_stmts() {
+  for (auto it = stmt_list.begin(); it != stmt_list.end();) {
+    STMT *stmt = *it;
+    it = stmt_list.erase(it);
+    DES_SQLFreeStmt((SQLHSTMT)stmt, SQL_DROP);
   }
   stmt_list.clear();
 }
-
 
 /**
   Disconnect a connection.
@@ -1093,21 +1435,19 @@ void DBC::free_connection_stmts()
   @since ODBC 1.0
   @since ISO SQL 92
 */
-SQLRETURN SQL_API SQLDisconnect(SQLHDBC hdbc)
-{
-  DBC *dbc= (DBC *) hdbc;
+SQLRETURN SQL_API SQLDisconnect(SQLHDBC hdbc) {
+  DBC *dbc = (DBC *)hdbc;
 
   CHECK_HANDLE(hdbc);
 
   dbc->free_connection_stmts();
 
-  dbc->close();
+  SQLRETURN ret = dbc->close();
 
-  if (dbc->ds.opt_LOG_QUERY)
-    end_query_log(dbc->query_log);
+  if (dbc->ds.opt_LOG_QUERY) end_query_log(dbc->query_log);
 
   /* free allocated packet buffer */
 
   dbc->database.clear();
-  return SQL_SUCCESS;
+  return ret;
 }

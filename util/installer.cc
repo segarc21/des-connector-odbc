@@ -88,6 +88,7 @@ static SQLWCHAR W_Driver[] = {'D', 'r', 'i', 'v', 'e', 'r', 0};
 static SQLWCHAR W_DESCRIPTION[] =
   {'D', 'E', 'S', 'C', 'R', 'I', 'P', 'T', 'I', 'O', 'N', 0};
 static SQLWCHAR W_DES_EXEC[] = {'D', 'E', 'S', '_', 'E', 'X', 'E', 'C', 0};
+static SQLWCHAR W_DES_WORKING_DIR[] = {'D', 'E', 'S', '_', 'W', 'O', 'R', 'K', 'I', 'N', 'G', '_', 'D', 'I', 'R', 0};
 static SQLWCHAR W_UID[]= {'U', 'I', 'D', 0};
 static SQLWCHAR W_USER[]= {'U', 'S', 'E', 'R', 0};
 static SQLWCHAR W_PWD[]= {'P', 'W', 'D', 0};
@@ -907,7 +908,7 @@ void DataSource::reset() {
 #define SET_DEFAULT_BOOL_OPTION(X) opt_##X.set_default(false);
   BOOL_OPTIONS_LIST(SET_DEFAULT_BOOL_OPTION);
 
-  opt_PORT.set_default(3306);
+  //opt_PORT.set_default(3306);
   opt_NO_SCHEMA = 1;
 }
 

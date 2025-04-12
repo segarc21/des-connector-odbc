@@ -224,19 +224,7 @@ void syncData(HWND hwnd, DataSource *params)
   GET_STRING(DSN);
   GET_STRING(DESCRIPTION);
   GET_STRING(DES_EXEC);
-  GET_STRING(SOCKET);
-  GET_UNSIGNED(PORT);
-  GET_STRING(UID);
-  GET_STRING(PWD);
-  GET_COMBO(DATABASE);
-
-#ifdef _WIN32
-  /* use this flag exclusively for Windows */
-  if (READ_BOOL(hwnd, IDC_RADIO_NAMED_PIPE))
-    params->opt_NAMED_PIPE = true;
-  else
-    params->opt_NAMED_PIPE.set_default(false);
-#endif
+  GET_STRING(DES_WORKING_DIR);
 }
 
 
@@ -246,37 +234,7 @@ void syncForm(HWND hwnd, DataSource *params)
   SET_STRING(DSN);
   SET_STRING(DESCRIPTION);
   SET_STRING(DES_EXEC);
-  SET_UNSIGNED(PORT);
-  SET_STRING(UID);
-  SET_STRING(PWD);
-  SET_STRING(SOCKET);
-  SET_COMBO(DATABASE);
-
-#ifdef _WIN32
-  if (params->opt_NAMED_PIPE)
-  {
-    SET_RADIO(hwnd, IDC_RADIO_NAMED_PIPE, TRUE);
-  }
-  else
-  {
-    SET_RADIO(hwnd, IDC_RADIO_tcp, TRUE);
-  }
-  SwitchTcpOrPipe(hwnd, params->opt_NAMED_PIPE);
-#else
-  if (params->opt_SOCKET)
-  {
-    /* this flag means the socket file in Linux */
-    SET_CHECKED(__UNUSED, use_socket_file, TRUE);
-    SET_SENSITIVE(SERVER, FALSE);
-    SET_SENSITIVE(SOCKET, TRUE);
-  }
-  else
-  {
-    SET_CHECKED(__UNUSED, use_tcp_ip_server, TRUE);
-    SET_SENSITIVE(SERVER, TRUE);
-    SET_SENSITIVE(SOCKET, FALSE);
-  }
-#endif
+  SET_STRING(DES_WORKING_DIR);
 }
 
 #undef CLIENT_INTERACTIVE

@@ -64,8 +64,8 @@ static const char *find_used_table(STMT *stmt)
     char *table_name = nullptr;
     DES_RESULT *result= stmt->result;
 
-    if ( stmt->table_name.size() )
-        return stmt->table_name.c_str();
+    if ( stmt->params_for_table.table_name.size() )
+        return stmt->params_for_table.table_name.c_str();
 
     for ( field= result->fields, end= field+ result->field_count;
         field < end ; ++field )
@@ -89,8 +89,8 @@ static const char *find_used_table(STMT *stmt)
     */
     if (table_name)
     {
-      stmt->table_name= table_name;
-      return stmt->table_name.c_str();
+      stmt->params_for_table.table_name= table_name;
+      return stmt->params_for_table.table_name.c_str();
     }
 
     return nullptr;
@@ -464,10 +464,12 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
     Get the list of all of the columns of the underlying table by using
     SELECT * FROM <table> LIMIT 0.
   */
-  select = "/sql SELECT * FROM `" + stmt->table_name + "` LIMIT 0";
+  select = "/sql SELECT * FROM `" + stmt->params_for_table.table_name + "` LIMIT 0";
 
-  presultAllColumns = do_internal_query(select);
-  if (!presultAllColumns) {
+  auto pair = stmt->dbc->send_query_and_get_results(SELECT, select);
+  SQLRETURN ret = pair.first;
+  presultAllColumns = pair.second;
+  if (ret == SQL_ERROR || !presultAllColumns) {
     stmt->set_error(DESERR_S1000);
     return SQL_ERROR;
   }
@@ -493,9 +495,7 @@ static SQLRETURN append_all_fields_std(STMT *stmt, std::string &str)
       We also can't handle floating-point fields because their comparison
       is inexact.
     */
-    if (table_field->type == DES_TYPE_FLOAT ||
-        table_field->type == DES_TYPE_DOUBLE ||
-        table_field->type == DES_TYPE_DECIMAL)
+    if (table_field->type == DES_TYPE_FLOAT || table_field->type == DES_TYPE_REAL)
     {
       stmt->set_error(DESERR_S1000,
                 "Invalid use of floating point comparision in positioned operations");
@@ -708,7 +708,7 @@ SQLRETURN des_pos_delete_std(STMT *stmt, STMT *stmtParam,
         return nReturn;
 
     /* DELETE the row(s) */
-    nReturn = do_quiet_internal_query(stmt, str);
+    nReturn = stmt->send_update_and_fetch_info(str);
     if ( nReturn == SQL_SUCCESS || nReturn == SQL_SUCCESS_WITH_INFO )
     {
         stmtParam->affected_rows= des_affected_rows(stmt);
@@ -878,7 +878,7 @@ static SQLRETURN setpos_delete_bookmark_std(STMT *stmt, std::string &query)
   }
 
   /* appened our table name to our DELETE statement */
-  desodbc_append_quoted_name_std(query, table_name);
+  query.append(table_name);
   query_length = query.size();
 
   IS_BOOKMARK_VARIABLE(stmt);
@@ -917,7 +917,7 @@ static SQLRETURN setpos_delete_bookmark_std(STMT *stmt, std::string &query)
     }
 
     /* execute our DELETE statement */
-      if (!(nReturn = do_quiet_internal_query(stmt, query)))
+    if (!(nReturn = stmt->send_update_and_fetch_info(query)))
     {
         affected_rows += des_affected_rows(stmt);
     }
@@ -991,7 +991,7 @@ static SQLRETURN setpos_delete_std(STMT *stmt, SQLUSMALLINT irow,
     }
 
     /* execute our DELETE statement */
-    if (!(nReturn = do_quiet_internal_query(stmt, query))) {
+    if (!(nReturn = stmt->send_update_and_fetch_info(query))) {
       affected_rows += des_affected_rows(stmt);
     } else if (!SQL_SUCCEEDED(nReturn)) {
       stmt->error = stmt->dbc->error;
@@ -1036,8 +1036,8 @@ static SQLRETURN setpos_update_bookmark_std(STMT *stmt, std::string &query)
     return SQL_ERROR;
   }
 
-  desodbc_append_quoted_name_std(query, table_name);
-  query_length= query.size();
+  query.append(table_name);
+  query_length = query.size();
 
   IS_BOOKMARK_VARIABLE(stmt);
   arrec= desc_get_rec(stmt->ard, -1, FALSE);
@@ -1083,7 +1083,7 @@ static SQLRETURN setpos_update_bookmark_std(STMT *stmt, std::string &query)
     if (!SQL_SUCCEEDED(nReturn))
       return nReturn;
 
-    if (!(nReturn = do_quiet_internal_query(stmt, query)))
+    if (!(nReturn = stmt->send_update_and_fetch_info(query)))
     {
         affected += des_affected_rows(stmt);
     }
@@ -1165,7 +1165,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
       if (!SQL_SUCCEEDED(nReturn))
         return nReturn;
 
-      if (!(nReturn = do_quiet_internal_query(stmt, query)))
+      if (!(nReturn = stmt->send_update_and_fetch_info(query)))
       {
         affected+= des_affected_rows(stmt);
       }
@@ -1344,7 +1344,7 @@ static SQLRETURN batch_insert_std( STMT *stmt, SQLULEN irow, std::string &query 
         }  /* END OF while(count < insert_count) */
 
         query.erase(query.size() - 1);
-        if (do_quiet_internal_query(stmt, query) !=
+        if (stmt->send_update_and_fetch_info(query) !=
              SQL_SUCCESS )
             return(SQL_ERROR);
 

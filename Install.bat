@@ -48,8 +48,8 @@ REM # be exported to the environment and pollute it
 SETLOCAL
 
 SET    driver_name=%*
-SET    driver_lib=myodbc9
-SET    driver_lib_setup=myodbc9S
+SET    driver_lib=myodbc1
+SET    driver_lib_setup=myodbc1S
 SET    installer=myodbc-installer
 SET    do_pause=no
 
@@ -124,7 +124,7 @@ goto :doSuccess
 
 ECHO Registering %1 driver
 
-IF "%driver_name%" == "" SET name="MySQL ODBC 9.0 %1 Driver"
+IF "%driver_name%" == "" SET name="MySQL ODBC 1.0 %1 Driver"
 IF NOT "%driver_name%" == "" IF NOT 2 == 1 SET name="%driver_name% %1"
 
 IF %1 == Unicode SET lib=%driver_lib%w.dll

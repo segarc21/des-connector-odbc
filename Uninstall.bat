@@ -121,7 +121,7 @@ SET bindir=none
 GOTO :eof
 
 :lookup_deregister
-IF "%driver_name%" == "" FOR %%d IN (Unicode ANSI) DO CALL :driverLookup "MySQL ODBC 9.0 %%d% Driver"
+IF "%driver_name%" == "" FOR %%d IN (Unicode ANSI) DO CALL :driverLookup "MySQL ODBC 1.0 %%d% Driver"
 IF NOT "%driver_name%" == "" CALL :driverLookup "%driver_name%"
 
 IF %driver_found% == yes GOTO doSuccess

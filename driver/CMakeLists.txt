@@ -11,7 +11,7 @@
 # permission to link the program and your derivative works with the
 # separately licensed software that they have either included with
 # the program or referenced in the documentation.
-#
+# 
 # Without limiting anything contained in the foregoing, this file,
 # which is part of Connector/ODBC, is also subject to the
 # Universal FOSS Exception, version 1.0, a copy of which can be found at
