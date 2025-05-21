@@ -1,4 +1,6 @@
 // Copyright (c) 2009, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,20 +28,31 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 #ifndef MYODBC_MYSQL_H
 #define MYODBC_MYSQL_H
 
 #define DONT_DEFINE_VOID
 
-#define des_bool bool
+#define my_bool bool
 #define TRUE 1
 #define FALSE 0
 
 #define WIN32_LEAN_AND_MEAN
 
-#include "include/mysql-8.0/des_config.h"
+#include "include/mysql-8.0/my_config.h"
 #include "include/mysql-8.0/my_sys.h"
-#include "include/mysql-8.0/mysql.h"
+//#include "include/mysql-8.0/mysql.h"
 #include "include/mysql-8.0/mysqld_error.h"
 #include "include/mysql-8.0/my_alloc.h"
 #include "include/mysql-8.0/mysql/service_mysql_alloc.h"
@@ -55,7 +68,7 @@ extern "C"
 
 #define MIN_MYSQL_VERSION 40100L
 
-#if !MYSQLCLIENT_STATIC_LINKING || DES_VERSION_ID >= 80018
+#if !MYSQLCLIENT_STATIC_LINKING
 
   /*
     Note: Things no longer defined in client library headers, but still used
@@ -75,15 +88,15 @@ extern "C"
 #endif
 
 
-#define des_sys_init desodbc::des_init
+#define my_sys_init desodbc::my_init
 #define mysys_end desodbc::my_end
 #define x_free(A) { void *tmp= (A); if (tmp) free((char *) tmp); }
-#define desodbc_malloc(A, B) (B == DES_ZEROFILL ? calloc(A, 1) : malloc(A))
+#define myodbc_malloc(A, B) (B == MY_ZEROFILL ? calloc(A, 1) : malloc(A))
 #define myodbc_realloc(A, B) realloc(A, B)
-#define desodbc_snprintf snprintf
+#define myodbc_snprintf snprintf
 
 
-/* Get rid of defines from des_config.h that conflict with our myconf.h */
+/* Get rid of defines from my_config.h that conflict with our myconf.h */
 #ifdef VERSION
 # undef VERSION
 #endif

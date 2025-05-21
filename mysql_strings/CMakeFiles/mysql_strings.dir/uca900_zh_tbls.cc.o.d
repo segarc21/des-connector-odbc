@@ -2,7 +2,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/uca900_zh_tbls.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/uca900_zh_tbls.cc \
  /usr/include/stdc-predef.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \

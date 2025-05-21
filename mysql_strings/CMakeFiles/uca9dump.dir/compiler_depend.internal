@@ -4,8 +4,8 @@
 mysql_strings/CMakeFiles/uca9dump.dir/uca9-dump.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/uca9-dump.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h

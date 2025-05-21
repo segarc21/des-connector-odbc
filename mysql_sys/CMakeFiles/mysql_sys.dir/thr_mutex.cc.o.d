@@ -51,7 +51,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/thr_mutex.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/13/bits/std_abs.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
@@ -75,7 +75,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/thr_mutex.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/components/services/thr_mutex_bits.h \
  /usr/include/stdio.h /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \

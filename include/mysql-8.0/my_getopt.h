@@ -32,7 +32,7 @@
 #include <sys/types.h>
 
 #include <mysql/components/services/system_variable_source_type.h> /* enum_variable_source */
-#include "des_config.h"
+#include "my_config.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_macros.h"

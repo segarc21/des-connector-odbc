@@ -1,4 +1,6 @@
 // Copyright (c) 2012, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  parse.h
   @brief utilities to parse queries
@@ -36,18 +49,23 @@
 
 #include <vector>
 
-typedef struct des_string
+typedef struct my_string
 {
   char *str;
   uint chars; /* probably it is not needed and is useless */
   uint bytes;
-} DES_STRING;
+} MY_STRING;
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 typedef enum desodbcQueryType
 {
   desqtSelect= 0,
   desqtInsert,
   desqtUpdate,
+  desqtDelete,
   desqtCall,
   desqtShow,
   desqtUse,        /*5*/
@@ -64,7 +82,7 @@ typedef enum desodbcQueryType
 
 typedef struct qt_resolving
 {
-  const DES_STRING *           keyword;
+  const MY_STRING *           keyword;
   uint                        pos_from;
   uint                        pos_thru;
   QUERY_TYPE_ENUM             query_type;
@@ -74,46 +92,50 @@ typedef struct qt_resolving
 
 typedef struct
 {
-  des_bool       returns_rs;
-  des_bool       preparable_on_server;
-  const char *  server_version;
+  my_bool       returns_rs;
 } DES_QUERY_TYPE;
 
+/* DESODBC:
+    Rename and modifications were made.
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+    */
 /* To organize constant data needed for parsing - to keep it in required encoding */
 typedef struct syntax_markers
 {
-  const DES_STRING quote[3];
-  const DES_STRING query_sep[2];
-  const DES_STRING *escape;
-  const DES_STRING *odbc_escape_open;
-  const DES_STRING *odbc_escape_close;
-  const DES_STRING *param_marker;
-  const DES_STRING hash_comment;
-  const DES_STRING dash_comment;
-  const DES_STRING c_style_open_comment;
-  const DES_STRING c_style_close_comment;
-  const DES_STRING c_var_open_comment;
-  const DES_STRING new_line_end;
+  const MY_STRING quote[3];
+  const MY_STRING query_sep[2];
+  const MY_STRING *escape;
+  const MY_STRING *odbc_escape_open;
+  const MY_STRING *odbc_escape_close;
+  const MY_STRING *param_marker;
+  const MY_STRING hash_comment;
+  const MY_STRING dash_comment;
+  const MY_STRING c_style_open_comment;
+  const MY_STRING c_style_close_comment;
+  const MY_STRING c_var_open_comment;
+  const MY_STRING new_line_end;
 
   struct des_keywords
   {
-    const DES_STRING *process;
-    const DES_STRING * select;
-    const DES_STRING * insert;
-    const DES_STRING * update;
-    const DES_STRING * call;
-    const DES_STRING * show;
-    const DES_STRING * use;
-    const DES_STRING * create;
-    const DES_STRING * drop;
-    const DES_STRING * table;
-    const DES_STRING * procedure;
-    const DES_STRING * function;
+    const MY_STRING *process;
+    const MY_STRING * select;
+    const MY_STRING * insert;
+    const MY_STRING * update;
+    const MY_STRING *del;
+    const MY_STRING * call;
+    const MY_STRING * show;
+    const MY_STRING * use;
+    const MY_STRING * create;
+    const MY_STRING * drop;
+    const MY_STRING * table;
+    const MY_STRING * procedure;
+    const MY_STRING * function;
 
-    const DES_STRING * where_;
-    const DES_STRING * current;
-    const DES_STRING * of;
-    const DES_STRING * limit;
+    const MY_STRING * where_;
+    const MY_STRING * current;
+    const MY_STRING * of;
+    const MY_STRING * limit;
 
   } keyword;
   /* TODO: comments */
@@ -171,21 +193,27 @@ struct DES_PARSED_QUERY
   const char *get_token(uint index);
   const char *get_param_pos(uint index);
   bool returns_result();
-  bool preparable_on_server(const char *server_version);
   const char *get_cursor_name();
   size_t token_count();
   bool is_select_statement();
+  bool is_insert_statement();
+  bool is_update_statement();
+  bool is_delete_statement();
   bool is_process_statement();
   size_t length() { return query_end - query; }
 };
 
-
+/* DESODBC:
+    Renamed from the original MY_PARSER.
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 typedef struct parser
 {
   const char        *pos;
   int               bytes_at_pos;
   int               ctype;
-  const DES_STRING   *quote;  /* If quote was open - pointer to the quote char */
+  const MY_STRING   *quote;  /* If quote was open - pointer to the quote char */
   DES_PARSED_QUERY   *query;
   BOOL hash_comment;      /* Comment starts with "#" and end with end of line */
   BOOL dash_comment;      /* Comment starts with "-- " and end with end of line  */
@@ -215,8 +243,8 @@ int               get_ctype(DES_PARSER *parser);
 BOOL              skip_spaces(DES_PARSER *parser);
 void              add_token(DES_PARSER *parser);
 BOOL              is_escape(DES_PARSER *parser);
-const DES_STRING * is_quote(DES_PARSER *parser);
-BOOL              open_quote(DES_PARSER *parser, const DES_STRING * quote);
+const MY_STRING * is_quote(DES_PARSER *parser);
+BOOL              open_quote(DES_PARSER *parser, const MY_STRING * quote);
 BOOL              is_query_separator(DES_PARSER *parser);
 /* Installs position on the character next after closing quote */
 const char *            find_closing_quote(DES_PARSER *parser);
@@ -227,14 +255,14 @@ BOOL              tokenize(DES_PARSER *parser);
 QUERY_TYPE_ENUM   detect_query_type(DES_PARSER *parser,
                                     const QUERY_TYPE_RESOLVING *rule);
 
-BOOL              parser_compare     (DES_PARSER *parser, const DES_STRING *str);
+BOOL              parser_compare     (DES_PARSER *parser, const MY_STRING *str);
 BOOL              case_compare(DES_PARSED_QUERY *parser, const char *pos,
-                               const DES_STRING *str);
+                               const MY_STRING *str);
 
 BOOL              parse(DES_PARSED_QUERY *pq);
 
 
-const char *desstr_get_prev_token(desodbc::CHARSET_INFO *charset,
+const char *mystr_get_prev_token(desodbc::CHARSET_INFO *charset,
                                         const char **query, const char *start);
 const char *mystr_get_next_token(desodbc::CHARSET_INFO *charset,
                                         const char **query, const char *end);

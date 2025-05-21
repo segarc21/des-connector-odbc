@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <des_compiler.h>
+#include <my_compiler.h>
 #if defined(MYSQL_SERVER) && !defined(MYSQL_DYNAMIC_PLUGIN)
 #include "sql/log.h"
 #endif

@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  error.c
   @brief Error handling functions.
@@ -33,138 +46,10 @@
 
 #include "driver.h"
 
-/*
-  @type    : myodbc3 internal error structure
-  @purpose : set of internal errors, in the following order
-  - SQLSTATE2 (when version is SQL_OV_ODBC2)
-  - SQLSTATE3 (when version is SQL_OV_ODBC3)
-  - error message text
-  - return code
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
 */
-
-static DESODBC3_ERR_STR desodbc3_errors[]=
-{
-  {"01000","General warning", SQL_SUCCESS_WITH_INFO},
-  {"01004","String data, right truncated", SQL_SUCCESS_WITH_INFO},
-  {"01S02","Option value changed", SQL_SUCCESS_WITH_INFO},
-  {"01S03","No rows updated/deleted", SQL_SUCCESS_WITH_INFO},
-  {"01S04","More than one row updated/deleted", SQL_SUCCESS_WITH_INFO},
-  {"01S06","Attempt to fetch before the result set returned the first rowset",
-    SQL_SUCCESS_WITH_INFO},
-  {"07001","SQLBindParameter not used for all parameters", SQL_ERROR},
-  {"07005","Prepared statement not a cursor-specification", SQL_ERROR},
-  {"07006","Restricted data type attribute violation", SQL_ERROR},
-  {"07009","Invalid descriptor index", SQL_ERROR},
-  {"08002","Connection name in use", SQL_ERROR},
-  {"08003","Connection does not exist", SQL_ERROR},
-  {"24000","Invalid cursor state", SQL_ERROR},
-  {"25000","Invalid transaction state", SQL_ERROR},
-  {"25S01","Transaction state unknown", SQL_ERROR},
-  {"34000","Invalid cursor name", SQL_ERROR},
-  {"HYT00","Timeout expired", SQL_ERROR},
-  {"HY000","General driver defined error", SQL_ERROR},
-  {"HY001","Memory allocation error", SQL_ERROR},
-  {"HY002","Invalid column number", SQL_ERROR},
-  {"HY003","Invalid application buffer type", SQL_ERROR},
-  {"HY004","Invalid SQL data type", SQL_ERROR},
-  {"HY007","Associated statement is not prepared", SQL_ERROR},
-  {"HY009","Invalid use of null pointer", SQL_ERROR},
-  {"HY010","Function sequence error", SQL_ERROR},
-  {"HY011","Attribute can not be set now", SQL_ERROR},
-  {"HY012","Invalid transaction operation code", SQL_ERROR},
-  {"HY013","Memory management error", SQL_ERROR},
-  {"HY015","No cursor name available", SQL_ERROR},
-  {"HY016","Cannot modify an implementation row descriptor", SQL_ERROR},
-  {"HY017","Invalid use of an automatically allocated descriptor handle", SQL_ERROR},
-  {"HY024","Invalid attribute value", SQL_ERROR},
-  {"HY090","Invalid string or buffer length", SQL_ERROR},
-  {"HY091","Invalid descriptor field identifier", SQL_ERROR},
-  {"HY092","Invalid attribute/option identifier", SQL_ERROR},
-  {"HY093","Invalid parameter number", SQL_ERROR},
-  {"HY095","Function type out of range", SQL_ERROR},
-  {"HY106","Fetch type out of range", SQL_ERROR},
-  {"HY107","Row value out of range", SQL_ERROR},
-  {"HY109","Invalid cursor position", SQL_ERROR},
-  {"HYC00","Optional feature not implemented", SQL_ERROR},
-  /* server related..*/
-  {"21S01","Column count does not match value count", SQL_ERROR},
-  {"23000","Integrity constraint violation", SQL_ERROR},
-  {"42000","Syntax error or access violation", SQL_ERROR},
-  {"42S01","Base table or view already exists ", SQL_ERROR},
-  {"42S02","Base table or view not found", SQL_ERROR},
-  {"42S12","Index not found", SQL_ERROR},
-  {"42S21","Column already exists", SQL_ERROR},
-  {"42S22","Column not found", SQL_ERROR},
-  {"08S01","Communication link failure", SQL_ERROR},
-  {"08004","Server rejected the connection", SQL_ERROR},
-};
-
-
-/*
-  @type    : myodbc3 internal
-  @purpose : If ODBC version is SQL_OV_ODBC2, initialize old SQLSTATEs
-*/
-
-void desodbc_sqlstate2_init(void)
-{
-    /*
-      As accessing the SQLSTATE2 is very rare, set this to
-      global when required .. one time ..for quick processing
-      in set_error/set_conn_error
-    */
-    uint  i;
-    for ( i= DESERR_S1000; i <= DESERR_S1C00; ++i )
-    {
-        desodbc3_errors[i].sqlstate[0]= 'S';
-        desodbc3_errors[i].sqlstate[1]= '1';
-    }
-    desodbc_stpmov(desodbc3_errors[DESERR_07005].sqlstate,"24000");
-    desodbc_stpmov(desodbc3_errors[DESERR_42000].sqlstate,"37000");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S01].sqlstate,"S0001");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S02].sqlstate,"S0002");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S12].sqlstate,"S0012");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S21].sqlstate,"S0021");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S22].sqlstate,"S0022");
-}
-
-
-/*
-  @type    : myodbc3 internal
-  @purpose : If ODBC version is SQL_OV_ODBC3, initialize to original SQLSTATEs
-*/
-
-void desodbc_sqlstate3_init(void)
-{
-    uint i;
-
-    for ( i= DESERR_S1000; i <= DESERR_S1C00; ++i )
-    {
-        desodbc3_errors[i].sqlstate[0]= 'H';
-        desodbc3_errors[i].sqlstate[1]= 'Y';
-    }
-    desodbc_stpmov(desodbc3_errors[DESERR_07005].sqlstate,"07005");
-    desodbc_stpmov(desodbc3_errors[DESERR_42000].sqlstate,"42000");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S01].sqlstate,"42S01");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S02].sqlstate,"42S02");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S12].sqlstate,"42S12");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S21].sqlstate,"42S21");
-    desodbc_stpmov(desodbc3_errors[DESERR_42S22].sqlstate,"42S22");
-}
-
-DESERROR::DESERROR(desodbc_errid errid, const char* errtext)
-{
-  std::string errmsg;
-
-  errmsg = (errtext ? errtext : desodbc3_errors[errid].message);
-
-  retcode = desodbc3_errors[errid].retcode;
-  sqlstate = desodbc3_errors[errid].sqlstate;
-  if (errtext)
-    message = errtext + errmsg;
-  else
-    message = errmsg;
-}
-
 DESERROR::DESERROR(const char* state, const char* msg)
 {
   sqlstate = state ? state : "";
@@ -176,7 +61,6 @@ DESERROR::DESERROR(const char* state, const char* msg)
   @type    : myodbc3 internal
   @purpose : sets the descriptor level errors
 */
-
 SQLRETURN set_desc_error(DESC *        desc,
                          char *        state,
                          const char *  message)
@@ -186,167 +70,37 @@ SQLRETURN set_desc_error(DESC *        desc,
 }
 
 
-/*
-  @type    : myodbc3 internal
-  @purpose : translates SQL error to ODBC error
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
 */
-
-void translate_error(char *save_state, desodbc_errid errid, uint mysql_err)
-{
-    const char *state= desodbc3_errors[errid].sqlstate;
-
-    switch (mysql_err)
-    {
-        case ER_WRONG_VALUE_COUNT:
-            state= "21S01";
-            break;
-        case ER_DUP_ENTRY:
-        case ER_DUP_KEY:
-            state= "23000";
-            break;
-        case ER_NO_DB_ERROR:
-            state= "3D000";
-            break;
-        case ER_PARSE_ERROR:
-#ifdef ER_SP_DOES_NOT_EXIST
-        case ER_SP_DOES_NOT_EXIST:
-#endif
-            state= desodbc3_errors[DESERR_42000].sqlstate;
-            break;
-        case ER_TABLE_EXISTS_ERROR:
-            state= desodbc3_errors[DESERR_42S01].sqlstate;
-            break;
-        case ER_FILE_NOT_FOUND:
-        case ER_NO_SUCH_TABLE:
-        case ER_CANT_OPEN_FILE:
-        case ER_BAD_TABLE_ERROR:
-            state= desodbc3_errors[DESERR_42S02].sqlstate;
-            break;
-        case ER_NO_SUCH_INDEX:
-        case ER_CANT_DROP_FIELD_OR_KEY:
-            state= desodbc3_errors[DESERR_42S12].sqlstate;
-            break;
-        case ER_DUP_FIELDNAME:
-            state= desodbc3_errors[DESERR_42S21].sqlstate;
-            break;
-        case ER_BAD_FIELD_ERROR:
-            state= desodbc3_errors[DESERR_42S22].sqlstate;
-            break;
-        case CR_CONNECTION_ERROR:
-        case CR_SERVER_LOST:
-#if DES_VERSION_ID > 80023
-        case ER_CLIENT_INTERACTION_TIMEOUT:
-#endif
-            state= "08S01";
-            break;
-        case ER_MUST_CHANGE_PASSWORD_LOGIN:
-        case CR_AUTH_PLUGIN_CANNOT_LOAD_ERROR:
-            state= "08004"; /* Server rejected the connection */
-                            /* The data source rejected the establishment of the
-                               connection for implementation-defined reasons. */
-            break;
-        default: break;
-    }
-    desodbc_stpmov(save_state, state);
-}
-
-
-/*
-  @type    : myodbc3 internal
-  @purpose : sets the error information to environment handle.
-*/
-
-SQLRETURN set_env_error(ENV *env, desodbc_errid errid, const char *errtext,
-                        SQLINTEGER errcode)
-{
-  env->error = DESERROR(errid, errtext);
-  return env->error.retcode;
-}
-
-
-/*
-  @type    : myodbc3 internal
-  @purpose : sets a desodbc_malloc() failure on a DES* connection
-*/
-void set_mem_error(DES *des)
-{
-  des->net.last_errno= CR_OUT_OF_MEMORY;
-  desodbc_stpmov(des->net.last_error, "Memory allocation failed");
-  desodbc_stpmov(des->net.sqlstate, "HY001");
-}
-
-
-/**
-  Handle a connection-related error.
-
-  @param[in]  stmt  Statement
-*/
-SQLRETURN handle_connection_error(STMT *stmt)
-{
-    /*
-    TODO: depending on the error, we should return, for example
-    return stmt->set_error("08S01", "placeholder text", err);
-    */
-  return SQL_SUCCESS; //placeholder return
-}
-
-
-/*
-  Little helper to check if error code means that we have lost connection
-  @param[in]  errcode  code of the last error
-*/
-des_bool is_connection_lost(uint errcode)
-{
-  if (errcode==CR_SERVER_LOST
-#if DES_VERSION_ID > 80023
-    || errcode==ER_CLIENT_INTERACTION_TIMEOUT
-#endif
-  )
-  {
-    return 1;
-  }
-
-  return 0;
-}
-
 /*
   @type    : myodbc3 internal
   @purpose : sets the error information to appropriate handle.
   it also sets the SQLSTATE based on the ODBC VERSION
 */
-
 SQLRETURN set_handle_error(SQLSMALLINT HandleType, SQLHANDLE handle,
-                           desodbc_errid errid, const char *errtext,
-                           SQLINTEGER errcode)
-{
-  switch ( HandleType )
-  {
+                           const char* state, const char *errtext) {
+  switch (HandleType) {
     case SQL_HANDLE_ENV:
-      return set_env_error((ENV*)handle, errid, errtext, errcode);
+      return ((ENV *)handle)->set_error(state, errtext);
     case SQL_HANDLE_DBC:
-      return ((DBC*)handle)->set_error(errid, errtext, errcode);
-    case SQL_HANDLE_STMT:
-    {
-      STMT *stmt = (STMT*)handle;
-      stmt->error = DESERROR(errid, errtext);
-      return stmt->error.retcode;
+      return ((DBC *)handle)->set_error(state, errtext);
+    case SQL_HANDLE_STMT: {
+      return ((STMT *)handle)->set_error(state, errtext);
     }
-    case SQL_HANDLE_DESC:
-    {
-      DESC* desc = (DESC*)handle;
-      desc->error = DESERROR(errid, errtext);
-      return desc->error.retcode;
+    case SQL_HANDLE_DESC: {
+      return ((DESC *)handle)->set_error(state, errtext);
     }
     default:
       return SQL_INVALID_HANDLE;
   }
 }
 
-
 /**
 */
 SQLRETURN SQL_API
-DESGetDiagRec(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
+MySQLGetDiagRec(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
                 SQLCHAR **sqlstate, SQLINTEGER *native, SQLCHAR **message)
 {
   DESERROR *error;
@@ -413,6 +167,15 @@ bool is_odbc3_subclass(std::string sqlstate)
 }
 
 
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLGetDiagField, which was
+    MySQLGetDiagField in MyODBC. We have reused
+    most of it.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 3.0 API
   @purpose : returns the current value of a field of a record of the
@@ -420,7 +183,7 @@ bool is_odbc3_subclass(std::string sqlstate)
   that contains error, warning, and status information
 */
 SQLRETURN SQL_API
-DESGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
+DES_SQLGetDiagField(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT record,
                   SQLSMALLINT identifier, SQLCHAR **char_value,
                   SQLPOINTER num_value)
 {

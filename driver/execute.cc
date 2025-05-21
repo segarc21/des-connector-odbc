@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,79 +28,57 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
-  @file  execute.c
-  @brief Statement execution functions.
+@file  execute.c
+@brief Statement execution functions.
 */
 
 #include <locale.h>
 #include "driver.h"
 
-const int BUFFER_SIZE = 4096;
 const long long TIMEOUT = 1000;
 
-/*
+char buffer[BUFFER_SIZE];
+DWORD bytes_read = 0;
 
-    This function tries to read from a reading pipe.
-    If we get an error or there are no bytes left
-    to read, we return false; else, we return true.
-
-    This implies that, until we investigate the consequences of getting a
-   reading error, we will asume that an error means that the message is
-   finished.
-
-    TODO: research
-
-*/
 #ifdef _WIN32
-void clear_pipe(HANDLE rpipe) {
-  BOOL finished = false;
-  BOOL peek_success, read_success;
-  DWORD left_to_read_bytes = 0;
-  CHAR buffer[BUFFER_SIZE];
-  DWORD bytes_read;
+DWORD WINAPI read_process(LPVOID lpParam) {
+  HANDLE read_pipe = (HANDLE)lpParam;
 
-  /*
-      The PeakNamedPipe function allows us to look into a pipe and see if there
-     are any bytes left to read.
-  */
-  while (!finished) {
-    peek_success =
-        PeekNamedPipe(rpipe, NULL, 0, NULL, &left_to_read_bytes, NULL);
-    if (!peek_success) {
-      finished = true;
+  if (!ReadFile(read_pipe, buffer, sizeof(buffer) - sizeof(char), &bytes_read,
+                NULL)) {
+    DWORD err = GetLastError();
+    if (err == ERROR_OPERATION_ABORTED) {
+      return 0;  // forced abortion
     } else {
-      if (left_to_read_bytes) {
-        read_success = ReadFile(rpipe, buffer, BUFFER_SIZE - sizeof(CHAR),
-                                &bytes_read, NULL);
-
-        if (!read_success || bytes_read == 0) finished = true;
-
-      } else
-        finished = true;
+      return -1;  // real error
     }
   }
-}
-#else
-void clear_pipe(int fd) {
-  int bytes_read;
-  bool finished = false;
 
-  char buffer[BUFFER_SIZE];
-
-  while (!finished) {
-    ioctl(fd, FIONREAD, &bytes_read);
-    if (bytes_read == 0)
-      finished = true;
-    else {
-      read(fd, buffer, BUFFER_SIZE);
-    }
-  }
+  buffer[bytes_read] = '\0';
+  return 0;  // success
 }
 #endif
 
-std::pair<SQLRETURN, DES_RESULT *> DBC::send_query_and_get_results(COMMAND_TYPE type,
-                                            const std::string& query) {
+/* DESODBC:
+  This function sends a query and buils the resulting
+  DES_RESULT* structure.
+
+  Original author: DESODBC Developer
+*/
+std::pair<SQLRETURN, DES_RESULT *> DBC::send_query_and_get_results(
+    COMMAND_TYPE type, const std::string &query) {
   SQLRETURN ret = SQL_SUCCESS;
   DES_RESULT *res = nullptr;
 
@@ -115,25 +95,31 @@ std::pair<SQLRETURN, DES_RESULT *> DBC::send_query_and_get_results(COMMAND_TYPE 
 
   ret = this->releaseQueryMutex();
   if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, nullptr};
-  
+  /*
+   We do not have to worry to free memory, as it will be done automatically
+   thanks to the DBC* attribute.
+ */
   STMT *temp_stmt = new STMT(this);
   temp_stmt->type = type;
   temp_stmt->last_output = tapi_output;
   temp_stmt->result = get_result_metadata(temp_stmt);
   if (!temp_stmt->result) {
-    DES_SQLFreeStmt(temp_stmt, SQL_CLOSE);
     return {SQL_ERROR, nullptr};
   } else {
     res = copy(temp_stmt->result);
-    des_free_result(temp_stmt->result);
   }
 
-  DES_SQLFreeStmt(temp_stmt, SQL_CLOSE);
   return {SQL_SUCCESS, res};
 }
 
-SQLRETURN STMT::send_update_and_fetch_info(std::string query) {
-  SQLRETURN ret = SQL_SUCCESS;
+/* DESODBC:
+  This function sends a SELECT COUNT query and fetches
+  the number in the resulting output.
+
+  Original author: DESODBC Developer
+*/
+int STMT::send_select_count(std::string query) {
+  int ret = -1;  // if error
 
   ret = this->dbc->getQueryMutex();
   if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
@@ -150,37 +136,83 @@ SQLRETURN STMT::send_update_and_fetch_info(std::string query) {
   if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 
   if (tapi_output.find("$error") != std::string::npos)
-    return SQL_ERROR;  // TODO: handle errors appropriately, providing DES'
-                       // messages.
-  else {
-    this->affected_rows = stoll(tapi_output);
-    return SQL_SUCCESS;
-  }
-  return SQL_SUCCESS;
+    return this->set_error("HY000", "Internal query error");
+
+  std::vector<std::string> lines = getLines(tapi_output);
+
+  ret = stoi(lines[4]);
+
+  return ret;
 }
 
-bool check_stop(const std::string& query, const std::string &tapi_output, DWORD bytes_read) {
+/* DESODBC:
+  This function sends a insert/update/delete query and acommodates
+  the number of rows affected into its affected rows attribute.
 
-  /*
-    Note: doing something like "if bytes_read < BUFFER_SIZE - 1  --> true" when not calling /process,
-    is not problematic. The read pipe ensure reading while there are no sensible time gaps between
-    the printing characteres. For instance, executing /ls may have a enormous output; however, it
-    will read it at once since there will not be any "pauses". However, /process is an exception to this rule.
-    In between some parts of the output, it can wait the enough time necessary so that the pipe thinks
-    that the output is already fetched. Fortunately, the /process output ensures a sentinel:
-    that of "Info: Batch file processed.", "Unknown command or incorrect number of arguments.",
-    "When processing file". Note: "$eot" is not a valid sentinel: it appears at the end when
-    there was an error, but it appears early at the beginning when the command is correct, before
-    all the processing.
-  */
+  Original author: DESODBC Developer
+*/
+std::pair<SQLRETURN, std::string> STMT::send_update_and_fetch_info(
+    std::string query) {
+  SQLRETURN ret = SQL_SUCCESS;
 
-   bool is_process = is_in_string(query, "/process");
+  ret = this->dbc->getQueryMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
 
-  if (!is_process && bytes_read < BUFFER_SIZE - 1) {
-      return true;
+  auto pair = this->dbc->send_query_and_read(query);
+  ret = pair.first;
+  std::string tapi_output = pair.second;
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    this->dbc->releaseQueryMutex();
+    return {ret, tapi_output};
   }
 
-  if (is_process) { // TODO: what happens with nested /process commands?
+  ret = this->dbc->releaseQueryMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
+
+  if (tapi_output.find("$error") != std::string::npos) {
+    return {SQL_ERROR, tapi_output};
+  } else {
+    this->affected_rows = stoll(tapi_output);
+    return {SQL_SUCCESS, tapi_output};
+  }
+  return {SQL_SUCCESS, tapi_output};
+}
+
+/* DESODBC:
+  This function checks, given the output we have just read,
+  whether we should stop or try to read more output.
+
+  Original author: DESODBC Developer
+*/
+bool check_stop(const std::string &query, const std::string &tapi_output) {
+  /*
+    Note: doing something like "if bytes_read < BUFFER_SIZE - 1  --> true" when
+    not calling /process, is not problematic. The read pipe ensure reading while
+    there are no sensible time gaps between the printing characteres. For
+    instance, executing /ls may have a enormous output; however, it will read it
+    at once since there will not be any "pauses". However, /process is an
+    exception to this rule. In between some parts of the output, it can wait the
+    enough time necessary so that the pipe thinks that the output is already
+    fetched. Fortunately, the /process output ensures a sentinel: that of "Info:
+    Batch file processed.", "Unknown command or incorrect number of arguments.",
+    "When processing file". Note: "$eot" is not a valid sentinel: it appears at
+    the end when there was an error, but it appears early at the beginning when
+    the command is correct, before all the processing.
+
+    In /dbschema occurs the same when the ODBC application is DES itself,
+    and connects to a DES process which connects to an external database.
+  */
+
+  bool is_process = is_in_string(query, "/process");
+  bool is_dbschema = is_in_string(query, "/dbschema");
+
+  if (!is_process && !is_dbschema && bytes_read < BUFFER_SIZE - 1) {
+    return true;
+  }
+
+  if (is_process) {
+    //The following messages will be fetched completely, as there are not sufficient delay
+    //between reading each of these characters (the pipe reads them at once)
     if (is_in_string(tapi_output, "Info: Batch file processed.")) return true;
     if (is_in_string(tapi_output,
                      "Unknown command or incorrect number of arguments."))
@@ -192,11 +224,101 @@ bool check_stop(const std::string& query, const std::string &tapi_output, DWORD 
      * that do not have a sentinel (i.e. /write $computation_time$).*/
   }
 
+  if (is_dbschema) {
+    if (is_in_string(tapi_output, "$eot")) return true;
+  }
+
   return false;
 }
 
-std::pair<SQLRETURN, std::string> DBC::send_query_and_read(const std::string &query) {
+#ifdef _WIN32
+std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(const std::string& query) {
+  SQLRETURN err = SQL_SUCCESS;
+  std::string tapi_output = "";
+  bool finished_reading = false;
 
+  bytes_read = 0;
+
+  while (!finished_reading) {
+    int ms = 0;
+    while (ms < MAX_OUTPUT_WAIT_MS && bytes_read == 0) {
+      HANDLE read_thread = CreateThread(NULL, 0, read_process,
+                                        this->driver_to_des_out_rpipe, 0, NULL);
+      if (!read_thread) {
+        err = this->set_win_error("Failed to peek DES output", true);
+        return {err, ""};
+      }
+
+      Sleep(10);
+      ms += 10;
+
+      //We will not handle errors for these because I/O is highly unpredictable.
+      CancelSynchronousIo(read_thread); //if it is reading actual data, it will not interrupt the reading pipe.
+      WaitForSingleObject(read_thread, MUTEX_TIMEOUT);
+
+      DWORD code;
+      if (GetExitCodeThread(read_thread, &code) != 0) {
+        if (code == -1) {
+          err = this->set_win_error("Failed to read DES output", true);
+          return {err, ""};
+        }
+      }
+      
+    }
+    if (bytes_read > 0) {
+      std::string buffer_str = buffer;
+      tapi_output += buffer_str;
+
+      finished_reading = check_stop(query, tapi_output);
+      bytes_read = 0;
+    } else
+      finished_reading = true;
+  }
+    return {err, tapi_output};
+}
+#else
+std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(const std::string& query) {
+  SQLRETURN err = SQL_SUCCESS;
+  std::string tapi_output = "";
+  bool finished_reading = false;
+  bytes_read = 0;
+
+  while (!finished_reading) {
+    int ms = 0;
+    while (ms < MAX_OUTPUT_WAIT_MS && bytes_read == 0) {
+      usleep(10000);
+      ms += 10;
+      ioctl(this->driver_to_des_out_rpipe, FIONREAD, &bytes_read);
+    }
+    if (bytes_read > 0) {
+      bytes_read = read(this->driver_to_des_out_rpipe, buffer, sizeof(buffer));
+      if (bytes_read == -1) {
+        return {this->set_unix_error("Error reading DES output pipe", true), ""};
+      }
+      buffer[bytes_read] = '\0';
+      std::string buffer_str = buffer;
+      tapi_output += buffer_str;
+
+      finished_reading = check_stop(query, tapi_output);
+
+      bytes_read = 0;
+
+    } else
+      finished_reading = true;
+  }
+
+  return {err, tapi_output};
+
+}
+#endif
+/* DESODBC:
+  This function sends a query and reads the output. It returns the output
+  and whether there was a success or not.
+
+  Original author: DESODBC Developer
+*/
+std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
+    const std::string &query) {
   int error = SQL_ERROR, native_error = 0;
   bool read_success = false;
   bool finished_reading = false;
@@ -210,98 +332,57 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(const std::string &qu
   // We convert the string to a char*.
   full_query_arr =
       new char[full_query.size() +
-                sizeof(char)];  // we hold a final char for the delimiter '\0'
+               sizeof(char)];  // we hold a final char for the delimiter '\0'
   std::copy(full_query.begin(), full_query.end(), full_query_arr);
   full_query_arr[full_query.size()] = '\0';
 
-  #ifdef _WIN32
+#ifdef _WIN32
+  while (!this->driver_to_des_in_wpipe || !this->driver_to_des_out_rpipe)
+    this->getDESProcessPipes();
   if (!WriteFile(this->driver_to_des_in_wpipe, full_query_arr,
-                strlen(full_query_arr), &bytes_written,
-                NULL)) {  // as we explained in the connection part,
-                          // the final argument must be not null only when the
-                          // pipe was created with overlapping
-    error = this->set_win_error("Failing to send data to DES input", true);
+                 strlen(full_query_arr), &bytes_written,
+                 NULL)) {  // as we explained in the connection part,
+                           // the final argument must be not null only when the
+                           // pipe was created with overlapping
+    error = this->set_win_error("Failed to send data to DES input", true);
     return {error, ""};
   }
-  #else
+#else
   if (write(this->driver_to_des_in_wpipe, full_query_arr,
-    strlen(full_query_arr)) == -1) {
+            strlen(full_query_arr)) == -1) {
     perror("write");
   }
-  #endif
+#endif
+
+  delete[] full_query_arr;
+  full_query_arr = nullptr;
+
+  // If we send /q, we cannot read anything after that.
+  if (query == "/q") return {SQL_SUCCESS, ""};
 
   /*
       Same considerations as those we took when reading the startup DES message.
       However, that output message had a fixed length and behavior. We introduce
       some new logic when treating a command output.
   */
-  char buffer[BUFFER_SIZE];
-  DWORD bytes_read;
 
-  // We first have to see whether there are data in the pipe or not.
-  // Sometimes, there are not: for example, inputting /duplicates on
-  // throws no output. We need to consider this case so that we don't get
-  // stuck indefinitely in ReadFile.
   #ifdef _WIN32
-  bool success =
-      PeekNamedPipe(this->driver_to_des_out_rpipe, buffer,
-                    BUFFER_SIZE - sizeof(char), &bytes_read, NULL, NULL);
-  if (!success) {
-    error = this->set_win_error("Failing to peek DES output", true);
-    return {error, ""};
-  }
+  auto pair = this->read_DES_output_win(query);
   #else
-  ioctl(this->driver_to_des_out_rpipe, FIONREAD, &bytes_read);
+  auto pair = this->read_DES_output_unix(query);
   #endif
+  error = pair.first;
+  tapi_output = pair.second;
 
-  /*
-  If we are doing bulk select, insert, update or delete,
-  we can be sure that there will always be an output. We don't wait that 100ms
-  because in these bulk cases, it will be much slower
-  */
-  bool bulkable = is_bulkable_statement(query);
-  
-  if (!bulkable && bytes_read == 0) {
-    #ifdef _WIN32
-    Sleep(200);  // enough time to get something on the output, if it happens
-    success =
-        PeekNamedPipe(this->driver_to_des_out_rpipe, buffer,
-                      BUFFER_SIZE - sizeof(char), &bytes_read, NULL, NULL);
-    if (!success) {
-      error = this->set_win_error("Failing to peek DES output", true);
-      return {error, ""};
-    }
-    #else
-    usleep(200000);
-    ioctl(this->driver_to_des_out_rpipe, FIONREAD, &bytes_read);
-    #endif
-  }
-
-  if (bulkable || bytes_read > 0) {
-    while (!finished_reading) {
-      #ifdef _WIN32
-      BOOL success = ReadFile(this->driver_to_des_out_rpipe, buffer,
-               BUFFER_SIZE - sizeof(char), &bytes_read, NULL);
-      if (!success) {
-        error = this->set_win_error("Failing to read DES output", true);
-        return {error, ""};
-      }
-      #else
-      bytes_read = read(this->driver_to_des_out_rpipe, buffer, sizeof(buffer));
-      #endif
-      buffer[bytes_read] = '\0';
-      std::string buffer_str = buffer;
-      tapi_output += buffer_str;
-
-      finished_reading = check_stop(query, tapi_output, bytes_read);
-    }
-    clear_pipe(this->driver_to_des_out_rpipe);
-  }
-
-  return {SQL_SUCCESS, tapi_output};
-
+  return {error, tapi_output};
 }
 
+/* DESODBC:
+  This function gets the statement to build the result set
+  based on the last output given (attribute of the STMT).
+
+  Original author: DESODBC Developer
+*/
 SQLRETURN STMT::build_results() {
   if (!get_result_metadata(this)) {
     this->state = ST_EXECUTED;
@@ -309,17 +390,21 @@ SQLRETURN STMT::build_results() {
   } else
     fix_result_types(this);
 
-  return this->check_and_set_errors(this->last_output);
+  return check_and_set_errors(SQL_HANDLE_STMT, this, this->last_output);
 }
-    /*
-Function that executes a query into the DES executable (through its
-STDIN pipe), and loads its result into a internal table, structure held by the
-stmt.
+
+/* DESODBC:
+  Function that executes a query into the DES executable (through its
+  STDIN pipe), and loads its result into a internal table, structure held by the
+  stmt.
+
+  Original author: DESODBC Developer
 */
 SQLRETURN DES_do_query(STMT *stmt, std::string query) {
   std::pair<SQLRETURN, std::string> pair = {SQL_ERROR, ""};
   SQLRETURN error = SQL_SUCCESS;
   std::string tapi_output = "";
+  SQLRETURN release_mutex_err = SQL_SUCCESS;
 
   assert(stmt);
   LOCK_STMT_DEFER(stmt);
@@ -332,22 +417,35 @@ SQLRETURN DES_do_query(STMT *stmt, std::string query) {
   error = stmt->dbc->getQueryMutex();
   if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) return error;
 
-  pair = stmt->dbc->send_query_and_read(query);
-  error = pair.first;
-  tapi_output = pair.second;
+  switch (stmt->type) {
+    case INSERT:
+    case UPDATE:
+    case DEL:
+      pair = stmt->send_update_and_fetch_info(query);
+      error = pair.first;
+      tapi_output = pair.second;
+      break;
+    default:
+      pair = stmt->dbc->send_query_and_read(query);
+      error = pair.first;
+      tapi_output = pair.second;
+      break;
+  }
+
+  // We parse the TAPI output and create an internal table from the result view
+  stmt->last_output = tapi_output;
+
+  error = stmt->build_results();
 
   if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) {
     stmt->dbc->releaseQueryMutex();
     return error;
   }
 
-  error = stmt->dbc->releaseQueryMutex();
-  if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) return error;
-
-  // We parse the TAPI output and create an internal table from the result view
-  stmt->last_output = tapi_output;
-
-  error = stmt->build_results();
+  release_mutex_err = stmt->dbc->releaseQueryMutex();
+  if (release_mutex_err != SQL_SUCCESS &&
+      release_mutex_err != SQL_SUCCESS_WITH_INFO)
+    return error;
 
 exit:
   /*
@@ -362,15 +460,15 @@ exit:
 }
 
 /*
-  @type    : myodbc3 internal
-  @purpose : insert sql params at parameter positions
-  @param[in]      stmt        Statement
-  @param[in]      row         Parameters row
-  @param[in,out]  finalquery  if NULL, final query is not copied
-  @param[in,out]  length      Length of the query. Pointed value is used as
-  initial offset
-  @comment : it allocates and modifies finalquery (when finalquery!=NULL),
-             so passing stmt->query->query can lead to memory leak.
+@type    : myodbc3 internal
+@purpose : insert sql params at parameter positions
+@param[in]      stmt        Statement
+@param[in]      row         Parameters row
+@param[in,out]  finalquery  if NULL, final query is not copied
+@param[in,out]  length      Length of the query. Pointed value is used as
+initial offset
+@comment : it allocates and modifies finalquery (when finalquery!=NULL),
+           so passing stmt->query->query can lead to memory leak.
 */
 
 SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery) {
@@ -391,7 +489,7 @@ SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery) {
 
     if (stmt->dummy_state != ST_DUMMY_PREPARED &&
         (!aprec || !aprec->par.real_param_done)) {
-      rc = stmt->set_error(DESERR_07001,
+      rc = stmt->set_error("07001",
                            "The number of parameter markers is not equal "
                            "to the number of parameters provided");
       goto error;
@@ -437,7 +535,7 @@ SQLRETURN insert_params(STMT *stmt, SQLULEN row, std::string &finalquery) {
   return rc;
 
 memerror: /* Too much data */
-  rc = stmt->set_error(DESERR_S1001, NULL);
+  rc = stmt->set_error("HY001", "Memory allocation error");
 
 error:
   return rc;
@@ -447,6 +545,10 @@ static void put_null_param(STMT *stmt, DES_BIND *bind) {
   stmt->add_to_buffer("NULL", 4);
 }
 
+/* DESODBC:
+  Original author: MyODBC
+  Modified by: DESODBC Developer
+*/
 static void put_default_value(STMT *stmt, DES_BIND *bind) {
   stmt->add_to_buffer("null",
                       4);  // DES doesn't seem to support the "DEFAULT" keyword.
@@ -460,7 +562,7 @@ static BOOL allocate_param_buffer(DES_BIND *bind, unsigned long length) {
   /* have to be very careful with that. it is probably better to put into
        a separate data structure. and free right after use */
   if (bind->buffer == NULL) {
-    bind->buffer = desodbc_malloc(length, DESF(0));
+    bind->buffer = myodbc_malloc(length, MYF(0));
     bind->buffer_length = length;
   } else if (bind->buffer_length < length) {
     bind->buffer = myodbc_realloc(bind->buffer, length);
@@ -539,13 +641,13 @@ SQLRETURN check_c2sql_conversion_supported(STMT *stmt, DESCREC *aprec,
 }
 
 /*
-              stmt
-              ctype       Input(parameter) value C type
-              iprec
-    [in,out]  rec         Pointer input and output value
-              length      Pointer for result length
-              buff        Pointer to a buffer for result value
-              buff_max    Size of the buffer
+            stmt
+            ctype       Input(parameter) value C type
+            iprec
+  [in,out]  rec         Pointer input and output value
+            length      Pointer for result length
+            buff        Pointer to a buffer for result value
+            buff_max    Size of the buffer
 
 */
 static SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype,
@@ -644,10 +746,10 @@ static SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype,
       DATE_STRUCT *date = (DATE_STRUCT *)*res;
       if (stmt->dbc->ds.opt_MIN_DATE_TO_ZERO && !date->year &&
           (date->month == date->day == 1)) {
-        *length = desodbc_snprintf(buff, buff_max, "0000-00-00");
+        *length = myodbc_snprintf(buff, buff_max, "0000-00-00");
       } else {
-        *length = desodbc_snprintf(buff, buff_max, "%04d-%02d-%02d", date->year,
-                                   date->month, date->day);
+        *length = myodbc_snprintf(buff, buff_max, "%04d-%02d-%02d", date->year,
+                                  date->month, date->day);
       }
       *res = buff;
       break;
@@ -660,8 +762,8 @@ static SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype,
         return stmt->set_error("22008", "Not a valid time value supplied");
       }
 
-      *length = desodbc_snprintf(buff, buff_max, "%02d:%02d:%02d", time->hour,
-                                 time->minute, time->second);
+      *length = myodbc_snprintf(buff, buff_max, "%02d:%02d:%02d", time->hour,
+                                time->minute, time->second);
       *res = buff;
       break;
     }
@@ -671,10 +773,10 @@ static SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype,
 
       if (stmt->dbc->ds.opt_MIN_DATE_TO_ZERO && !time->year &&
           (time->month == time->day == 1)) {
-        *length = desodbc_snprintf(buff, buff_max, "0000-00-00 %02d:%02d:%02d",
-                                   time->hour, time->minute, time->second);
+        *length = myodbc_snprintf(buff, buff_max, "0000-00-00 %02d:%02d:%02d",
+                                  time->hour, time->minute, time->second);
       } else {
-        *length = desodbc_snprintf(
+        *length = myodbc_snprintf(
             buff, buff_max, "%04d-%02d-%02d %02d:%02d:%02d", time->year,
             time->month, time->day, time->hour, time->minute, time->second);
       }
@@ -685,7 +787,7 @@ static SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype,
         /* Start cleaning from the end */
         int tmp_pos = 9;
 
-        desodbc_snprintf(tmp_buf, buff_max - *length, ".%09d", time->fraction);
+        myodbc_snprintf(tmp_buf, buff_max - *length, ".%09d", time->fraction);
 
         /*
           ODBC specification defines nanoseconds granularity for
@@ -728,14 +830,14 @@ static SQLRETURN convert_c_type2str(STMT *stmt, SQLSMALLINT ctype,
       SQL_INTERVAL_STRUCT *interval = (SQL_INTERVAL_STRUCT *)*res;
 
       if (ctype == SQL_C_INTERVAL_HOUR_TO_MINUTE) {
-        *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:00'",
-                                   interval->intval.day_second.hour,
-                                   interval->intval.day_second.minute);
+        *length = myodbc_snprintf(buff, buff_max, "'%d:%02d:00'",
+                                  interval->intval.day_second.hour,
+                                  interval->intval.day_second.minute);
       } else {
-        *length = desodbc_snprintf(buff, buff_max, "'%d:%02d:%02d'",
-                                   interval->intval.day_second.hour,
-                                   interval->intval.day_second.minute,
-                                   interval->intval.day_second.second);
+        *length = myodbc_snprintf(buff, buff_max, "'%d:%02d:%02d'",
+                                  interval->intval.day_second.hour,
+                                  interval->intval.day_second.minute,
+                                  interval->intval.day_second.second);
       }
 
       *res = buff;
@@ -757,8 +859,8 @@ static const std::string ts_chars{"0123456789-:"};
 inline bool is_ts_char(char c) { return std::string::npos != ts_chars.find(c); }
 
 /*
-  Returns the date-time component of ODBC string like
-  {dt yyyy-mm-dd hh:mm:ss}
+Returns the date-time component of ODBC string like
+{dt yyyy-mm-dd hh:mm:ss}
 */
 const char *get_date_time_substr(const char *data, long &len) {
   const char *d_start = data;
@@ -780,14 +882,14 @@ const char *get_date_time_substr(const char *data, long &len) {
 }
 
 /*
-  Add the value of parameter to a string buffer.
+Add the value of parameter to a string buffer.
 
-  @param[in]      mysql
-  @param[in,out]  toptr - either pointer to a string where to write
-                  parameter value, or a pointer to DES_BIND structure.
-  @param[in]      apd The APD of the current statement
-  @param[in]      aprec The APD record of the parameter
-  @param[in]      iprec The IPD record of the parameter
+@param[in]      mysql
+@param[in,out]  toptr - either pointer to a string where to write
+                parameter value, or a pointer to DES_BIND structure.
+@param[in]      apd The APD of the current statement
+@param[in]      aprec The APD record of the parameter
+@param[in]      iprec The IPD record of the parameter
 */
 SQLRETURN insert_param(STMT *stmt, DES_BIND *bind, DESC *apd, DESCREC *aprec,
                        DESCREC *iprec, SQLULEN row) {
@@ -850,6 +952,9 @@ SQLRETURN insert_param(STMT *stmt, DES_BIND *bind, DESC *apd, DESCREC *aprec,
     We may see SQL_COLUMN_IGNORE from bulk INSERT operations, where we
     may have been told to ignore a column in one particular row. So we
     try to insert DEFAULT, or NULL for really old servers.
+
+
+
 
     In case there are less parameters than result columns we have to
     insert NULL or DEFAULT.
@@ -994,11 +1099,11 @@ SQLRETURN insert_param(STMT *stmt, DES_BIND *bind, DESC *apd, DESCREC *aprec,
         }
 
         if (bind != NULL) {
-          length = desodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d",
-                                    time->hour, time->minute, time->second);
+          length = myodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d",
+                                   time->hour, time->minute, time->second);
         } else {
-          length = desodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'",
-                                    time->hour, time->minute, time->second);
+          length = myodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'",
+                                   time->hour, time->minute, time->second);
         }
 
         if (put_param_value(stmt, bind, buff, length)) {
@@ -1026,12 +1131,12 @@ SQLRETURN insert_param(STMT *stmt, DES_BIND *bind, DESC *apd, DESCREC *aprec,
         }
 
         if (bind != NULL) {
-          length = desodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d", hours,
-                                    (int)time / 100 % 100, (int)time % 100);
+          length = myodbc_snprintf(buff, sizeof(buff), "%02d:%02d:%02d", hours,
+                                   (int)time / 100 % 100, (int)time % 100);
         } else {
           length =
-              desodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'", hours,
-                               (int)time / 100 % 100, (int)time % 100);
+              myodbc_snprintf(buff, sizeof(buff), "'%02d:%02d:%02d'", hours,
+                              (int)time / 100 % 100, (int)time % 100);
         }
 
         if (put_param_value(stmt, bind, buff, length)) {
@@ -1125,13 +1230,12 @@ memerror:
   if (free_data) {
     x_free(data);
   }
-  return stmt->set_error(DESERR_S1001, NULL);
+  return stmt->set_error("HY001", "Memory allocation error");
 }
 
-
 /*
-  @type    : myodbc3 internal
-  @purpose : positioned cursor update/delete
+@type    : myodbc3 internal
+@purpose : positioned cursor update/delete
 */
 
 SQLRETURN do_my_pos_cursor_std(STMT *pStmt, STMT *pStmtCursor) {
@@ -1147,13 +1251,13 @@ SQLRETURN do_my_pos_cursor_std(STMT *pStmt, STMT *pStmtCursor) {
 
   query = pszQuery;
 
-  if (!desodbc_casecmp(pszQuery, "delete", 6)) {
+  if (!myodbc_casecmp(pszQuery, "delete", 6)) {
     nReturn = des_pos_delete_std(pStmtCursor, pStmt, 1, query);
-  } else if (!desodbc_casecmp(pszQuery, "update", 6)) {
+  } else if (!myodbc_casecmp(pszQuery, "update", 6)) {
     nReturn = des_pos_update_std(pStmtCursor, pStmt, 1, query);
   } else {
     nReturn =
-        pStmt->set_error(DESERR_S1000, "Specified SQL syntax is not supported");
+        pStmt->set_error("HY000", "Specified SQL syntax is not supported");
   }
 
   if (SQL_SUCCEEDED(nReturn)) pStmt->state = ST_EXECUTED;
@@ -1162,10 +1266,10 @@ SQLRETURN do_my_pos_cursor_std(STMT *pStmt, STMT *pStmtCursor) {
 }
 
 /*
-  @type    : ODBC 1.0 API
-  @purpose : executes a prepared statement, using the current values
-  of the parameter marker variables if any parameter markers
-  exist in the statement
+@type    : ODBC 1.0 API
+@purpose : executes a prepared statement, using the current values
+of the parameter marker variables if any parameter markers
+exist in the statement
 */
 
 SQLRETURN SQL_API SQLExecute(SQLHSTMT hstmt) {
@@ -1195,11 +1299,19 @@ BOOL map_error_to_param_status(SQLUSMALLINT *param_status_ptr, SQLRETURN rc) {
   return FALSE;
 }
 
+/* DESODBC:
+  Renamed from the original my_SQLExecute and modified
+  according to DES' needs.
+
+  Original author: MyODBC
+  Modified by: DESODBC Developer
+*/
 SQLRETURN DES_SQLExecute(STMT *pStmt) {
   std::string query;
   char *cursor_pos;
   int dae_rec, one_of_params_not_succeded = 0;
-  bool is_select_stmt, is_process_stmt;
+  bool is_select_stmt, is_process_stmt, is_delete_stmt, is_update_stmt,
+      is_insert_stmt;
   int connection_failure = 0;
   STMT *pStmtCursor = pStmt;
   SQLRETURN rc = 0;
@@ -1218,12 +1330,12 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
   pStmt->clear_attr_names();
 
   if (!GET_QUERY(&pStmt->query)) {
-    rc = pStmt->set_error(DESERR_S1010, "No previous SQLPrepare done");
+    rc = pStmt->set_error("HY010", "No previous SQLPrepare done");
     throw pStmt->error;
   }
 
   if (is_set_names_statement(GET_QUERY(&pStmt->query))) {
-    rc = pStmt->set_error(DESERR_42000, "SET NAMES not allowed by driver");
+    rc = pStmt->set_error("42000", "SET NAMES not allowed by driver");
     throw pStmt->error;
   }
 
@@ -1234,7 +1346,7 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
     /* Cursor statement use mysql_use_result - thus any operation
     will couse commands out of sync */
     if (if_forward_cache(pStmtCursor)) {
-      rc = pStmt->set_error(DESERR_S1010, NULL);
+      rc = pStmt->set_error("HY010", "Function sequence error");
       throw pStmt->error;
     }
 
@@ -1255,10 +1367,20 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
   // TODO: do this more elegantly.
   is_select_stmt = pStmt->query.is_select_statement();
   is_process_stmt = pStmt->query.is_process_statement();
+  is_insert_stmt = pStmt->query.is_insert_statement();
+  is_update_stmt = pStmt->query.is_update_statement();
+  is_delete_stmt = pStmt->query.is_delete_statement();
 
-  if (is_select_stmt) pStmt->type = SELECT;
-  else if (is_process_stmt) pStmt->type = PROCESS;
-  else pStmt->type = UNKNOWN;
+  if (is_select_stmt)
+    pStmt->type = SELECT;
+  else if (is_process_stmt)
+    pStmt->type = PROCESS;
+  else if (is_insert_stmt)
+    pStmt->type = INSERT;
+  else if (is_delete_stmt)
+    pStmt->type = DEL;
+  else
+    pStmt->type = UNKNOWN;
 
   if (pStmt->ipd->rows_processed_ptr) {
     *pStmt->ipd->rows_processed_ptr = (SQLULEN)0;
@@ -1358,7 +1480,12 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
 
     if (!is_select_stmt || row == pStmt->apd->array_size - 1) {
       if (!connection_failure) {
-        rc = DES_do_query(pStmt, query);
+        try {
+          rc = DES_do_query(pStmt, query);
+        } catch (const std::bad_alloc &e) {
+          return pStmt->set_error("HY001", "Memory allocation error");
+        }
+
       } else {
         /*
         If the original query was modified, we reset stmt->query so that the
@@ -1372,11 +1499,6 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
         /* with broken connection we always return error for all next queries
          */
         rc = SQL_ERROR;
-      }
-
-      if (is_connection_lost(pStmt->error.native_error) &&
-          handle_connection_error(pStmt)) {
-        connection_failure = 1;
       }
 
       if (map_error_to_param_status(param_status_ptr, rc)) {
@@ -1485,41 +1607,53 @@ static SQLRETURN find_next_dae_param(STMT *stmt, SQLPOINTER *token) {
   return SQL_SUCCESS;
 }
 
-/*
-  @type    : ODBC 1.0 API
-  @purpose : is used in conjunction with SQLPutData to supply parameter
-  data at statement execution time
+/* DESODBC:
+  Original author: MyODBC
+  Modified by: DESODBC Developer
 */
-
+/*
+@type    : ODBC 1.0 API
+@purpose : is used in conjunction with SQLPutData to supply parameter
+data at statement execution time
+*/
 SQLRETURN SQL_API SQLParamData(SQLHSTMT hstmt, SQLPOINTER *prbgValue) {
-  //Data-at-execution not supported in DES.
-  return SQL_ERROR;
+  return ((STMT *)hstmt)
+      ->set_error("IM001", "Data-at-execution is not supported in DES");
 }
 
+/* DESODBC:
+  Original author: MyODBC
+  Modified by: DESODBC Developer
+*/
 /*
-  @type    : ODBC 1.0 API
-  @purpose : allows an application to send data for a parameter or column to
-  the driver at statement execution time. This function can be used
-  to send character or binary data values in parts to a column with
-  a character, binary, or data source specific data type.
+@type    : ODBC 1.0 API
+@purpose : allows an application to send data for a parameter or column to
+the driver at statement execution time. This function can be used
+to send character or binary data values in parts to a column with
+a character, binary, or data source specific data type.
 */
 
 SQLRETURN SQL_API SQLPutData(SQLHSTMT hstmt, SQLPOINTER rgbValue,
                              SQLLEN cbValue) {
-  //Data-at-execution not supported in DES.
-  return SQL_ERROR;
+  return ((STMT *)hstmt)
+      ->set_error("IM001", "Data-at-execution is not supported in DES");
 }
 
+/* DESODBC:
+
+  Original author: MyODBC
+  Modified by: DESODBC Developer
+*/
 /**
-  Cancel the query by opening another connection and using KILL when called
-  from another thread while the query lock is being held. Otherwise, treat as
-  SQLFreeStmt(hstmt, SQL_CLOSE).
+Cancel the query by opening another connection and using KILL when called
+from another thread while the query lock is being held. Otherwise, treat as
+SQLFreeStmt(hstmt, SQL_CLOSE).
 
-  @param[in]  hstmt  Statement handle
+@param[in]  hstmt  Statement handle
 
-  @return Standard ODBC result code
+@return Standard ODBC result code
 */
 SQLRETURN SQL_API SQLCancel(SQLHSTMT hstmt) {
-  //It is not possible to implement this function given DES characteristics.
-  return SQL_ERROR;
+  return ((STMT *)hstmt)
+      ->set_error("IM001", "DESODBC does not support this function");
 }

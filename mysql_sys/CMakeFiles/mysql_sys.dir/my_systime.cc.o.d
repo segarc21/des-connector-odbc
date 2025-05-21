@@ -89,12 +89,12 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_systime.cc.o: \
  /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/x86_64-linux-gnu/sys/time.h \
  /usr/include/x86_64-linux-gnu/sys/select.h \
  /usr/include/x86_64-linux-gnu/bits/select.h \
  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/assert.h /usr/include/c++/13/algorithm \
  /usr/include/c++/13/bits/stl_algobase.h \
  /usr/include/c++/13/bits/functexcept.h \

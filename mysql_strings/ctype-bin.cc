@@ -44,7 +44,7 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "des_compiler.h"
+#include "my_compiler.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 #include "template_utils.h"
@@ -514,7 +514,7 @@ CHARSET_INFO my_charset_bin = {
     63,
     0,
     0,                                              /* number        */
-    MY_CS_COMPILED | MY_CS_BINSORT | DES_CS_PRIMARY, /* state */
+    MY_CS_COMPILED | MY_CS_BINSORT | MY_CS_PRIMARY, /* state */
     "binary",                                       /* cs name    */
     "binary",                                       /* name          */
     "Binary pseudo charset",                        /* comment       */

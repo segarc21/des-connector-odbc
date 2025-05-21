@@ -1,4 +1,6 @@
 // Copyright (c) 2007, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -25,6 +27,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 #include "MYODBC_CONF.h"
 #ifndef _WIN32
@@ -104,7 +117,10 @@ exit:
   return rc;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
    Add, edit, or remove a Data Source Name (DSN). This function is
    called by "Data Source Administrator" on Windows, or similar
@@ -118,9 +134,9 @@ BOOL INSTAPI ConfigDSNW(HWND hWnd, WORD nRequest, LPCWSTR pszDriver,
   SQLWSTRING origdsn;
 
   if (!utf8_charset_info) {
-    des_sys_init();
+    my_sys_init();
     utf8_charset_info =
-      desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY), DESF(0));
+      desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY), MYF(0));
   }
 
   if (pszAttributes && *pszAttributes)
@@ -167,7 +183,7 @@ BOOL INSTAPI ConfigDSNW(HWND hWnd, WORD nRequest, LPCWSTR pszDriver,
     // it will allow editing a CHARSET option, which normally should be
     // disabled for Unicode version of the driver.
     if (static_cast<std::string>(driver.lib).find(
-          "myodbc" + std::to_string(DESODBC_MAJOR_VERSION) + "w."
+          "desodbcw."
         ) != std::string::npos)
     {
       is_unicode = 1;
@@ -233,10 +249,10 @@ BOOL INSTAPI ConfigDSN(HWND hWnd, WORD nRequest, LPCSTR pszDriverA,
   size_t lenAttrib = strlen(pszAttributesA);
 
   /* We will assume using one-byte Latin string as a subset of UTF-8 */
-  SQLWCHAR *pszDriverW= (SQLWCHAR *) desodbc_malloc((lenDriver + 1) *
-                                                sizeof(SQLWCHAR), DESF(0));
-  SQLWCHAR *pszAttributesW= (SQLWCHAR *)desodbc_malloc((lenAttrib + 1) *
-                                                  sizeof(SQLWCHAR), DESF(0));
+  SQLWCHAR *pszDriverW= (SQLWCHAR *) myodbc_malloc((lenDriver + 1) *
+                                                sizeof(SQLWCHAR), MYF(0));
+  SQLWCHAR *pszAttributesW= (SQLWCHAR *)myodbc_malloc((lenAttrib + 1) *
+                                                  sizeof(SQLWCHAR), MYF(0));
 
   utf8_as_sqlwchar(pszDriverW, lenDriver, (SQLCHAR* )pszDriverA, lenDriver);
   utf8_as_sqlwchar(pszAttributesW, lenAttrib, (SQLCHAR* )pszAttributesA,

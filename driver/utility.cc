@@ -1,4 +1,6 @@
 // Copyright (c) 2007, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  utility.c
   @brief Utility functions
@@ -40,61 +53,6 @@
 #define DATETIME_DIGITS 14
 
 const SQLULEN sql_select_unlimited= (SQLULEN)-1;
-
-/**
-  Link a list of fields to the current statement result.
-
-  @todo This is a terrible idea. We need to purge this.
-
-  @param[in] stmt        The statement to modify
-  @param[in] fields      The fields to attach to the statement
-  @param[in] field_count The number of fields
-*/
-void desodbc_link_fields(STMT *stmt, DES_FIELD *fields, uint field_count)
-{
-    DES_RESULT *result;
-    assert(stmt);
-    LOCK_DBC(stmt->dbc);
-    result= stmt->result;
-    result->fields= fields;
-    result->field_count= field_count;
-    result->current_field= 0;
-    fix_result_types(stmt);
-}
-
-
-/**
-Fills STMT's lengths array for given row. Makes use of desodbc_link_fields a bit
-less terrible.
-
-@param[in,out] stmt     The statement to modify
-@param[in] fix_rules    Describes how to calculate lengths. For each element value
-                        N > 0 - length is taken of field #N from original results
-                                (counting from 1)
-                        N <=0 - constant length (-N)
-@param[in] row          Row for which to fix lengths
-@param[in] field_count  The number of fields
-*/
-void fix_row_lengths(STMT *stmt, const long* fix_rules, uint row, uint field_count)
-{
-  unsigned long* orig_lengths, *row_lengths;
-  uint i;
-
-  if (!stmt->lengths)
-    return;
-
-  row_lengths =  stmt->lengths.get() + row * field_count;
-  orig_lengths= des_fetch_lengths(stmt);
-
-  for (i= 0; i < field_count; ++i)
-  {
-    if (fix_rules[i] > 0)
-      row_lengths[i]= orig_lengths[fix_rules[i] - 1];
-    else
-      row_lengths[i]= -fix_rules[i];
-  }
-}
-
 
 /**
   Figure out the ODBC result types for each column in the result set.
@@ -262,29 +220,6 @@ void fix_result_types(STMT *stmt)
   }
 }
 
-
-/**
-  Change a string with a length to a NUL-terminated string.
-
-  @param[in,out] to      A buffer to write the string into, which must be at
-                         at least length + 1 bytes long.
-  @param[in]     from    A pointer to the beginning of the source string.
-  @param[in]     length  The length of the string, or SQL_NTS if it is
-                         already NUL-terminated.
-
-  @return A pointer to a NUL-terminated string.
-*/
-char *fix_str(char *to, const char *from, int length)
-{
-    if ( !from )
-        return "";
-    if ( length == SQL_NTS )
-        return (char *)from;
-    desodbc::strmake(to,from,length);
-    return to;
-}
-
-
 /*
   Copy a field to a byte string.
 
@@ -342,7 +277,7 @@ copy_binary_result(STMT *stmt,
 
   if (src_bytes > (unsigned long)result_bytes)
   {
-    stmt->set_error("01004", NULL);
+    stmt->set_error("01004", "String data, right truncated");
     rc= SQL_SUCCESS_WITH_INFO;
   }
 
@@ -381,7 +316,7 @@ copy_ansi_result(STMT *stmt,
   if (!result_bytes && !stmt->getdata.source)
   {
     *avail_bytes= src_bytes;
-    stmt->set_error("01004", NULL);
+    stmt->set_error("01004", "String data, right truncated");
     return SQL_SUCCESS_WITH_INFO;
   }
 
@@ -592,14 +527,14 @@ convert_to_out:
   /* Did we truncate the data? */
   if (!result_len || stmt->getdata.dst_bytes > stmt->getdata.dst_offset)
   {
-    stmt->set_error("01004", NULL);
+    stmt->set_error("01004", "String data, right truncated");
     rc= SQL_SUCCESS_WITH_INFO;
   }
 
   /* Did we encounter any character conversion problems? */
   if (error_count)
   {
-    stmt->set_error("22018", NULL);
+    stmt->set_error("22018", "Invalid character value for cast specification");
     rc= SQL_SUCCESS_WITH_INFO;
   }
 
@@ -673,7 +608,7 @@ SQLRETURN copy_binhex_result(STMT *stmt,
   if ( *offset * sizeof(T) >= src_length )
       return SQL_SUCCESS;
 
-  stmt->set_error(DESERR_01004, NULL);
+  stmt->set_error("01004", "String data, right truncated");
   return SQL_SUCCESS_WITH_INFO;
 }
 
@@ -743,15 +678,6 @@ SQLRETURN do_copy_bit_result(STMT *stmt,
   return SQL_SUCCESS;
 }
 
-SQLRETURN copy_bit_result(STMT *stmt,
-                          SQLCHAR *result, SQLLEN result_bytes, SQLLEN *avail_bytes,
-                          DES_FIELD *field __attribute__((unused)),
-                          char *src, unsigned long src_bytes)
-{
-  return do_copy_bit_result<SQLCHAR>(stmt, result, result_bytes, avail_bytes, field,
-                            src, src_bytes);
-}
-
 SQLRETURN wcopy_bit_result(STMT *stmt,
                           SQLWCHAR *result, SQLLEN result_bytes, SQLLEN *avail_bytes,
                           DES_FIELD *field __attribute__((unused)),
@@ -761,6 +687,10 @@ SQLRETURN wcopy_bit_result(STMT *stmt,
                             src, src_bytes);
 }
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 std::map<std::string, int> sql_data_types_map = {
     {"varchar", SQL_LONGVARCHAR},
     {"string", SQL_LONGVARCHAR},
@@ -777,58 +707,10 @@ std::map<std::string, int> sql_data_types_map = {
     {"timestamp", SQL_TYPE_TIMESTAMP}
 };
 
-SQLSMALLINT get_sql_data_type_from_str(const char *mysql_type_name)
-{
-  try
-  {
-    return sql_data_types_map.at(mysql_type_name);
-  }
-  catch(const std::out_of_range&)
-  {
-    return SQL_UNKNOWN_TYPE;
-  }
-  // Keep compiler happy
-  return SQL_UNKNOWN_TYPE;
-}
-
-SQLSMALLINT compute_sql_data_type(STMT *stmt, SQLSMALLINT sql_type,
-  char octet_length, size_t col_size)
-{
-  switch(sql_type)
-  {
-    case SQL_TIMESTAMP:
-      if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
-        sql_type = SQL_TYPE_TIMESTAMP;
-      break;
-    case SQL_TYPE_DATE:
-      if (stmt->dbc->env->odbc_ver < SQL_OV_ODBC3)
-        sql_type = SQL_DATE;
-      break;
-    case SQL_TIME:
-      if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3)
-        sql_type = SQL_TYPE_TIME;
-      break;
-    case SQL_CHAR:
-      if (octet_length > '1' && stmt->dbc->unicode)
-        sql_type = SQL_WCHAR;
-      break;
-    case SQL_VARCHAR:
-      if (octet_length > '1' && stmt->dbc->unicode)
-        sql_type = SQL_WVARCHAR;
-      break;
-    case SQL_LONGVARCHAR:
-      if (octet_length > '1' && stmt->dbc->unicode)
-        sql_type = SQL_WLONGVARCHAR;
-      break;
-    case SQL_BIT:
-      if (col_size > 1)
-        sql_type = SQL_BINARY;
-      break;
-  }
-  return sql_type;
-}
-
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
   Get the SQL data type and (optionally) type name for a DES_FIELD.
 
@@ -840,7 +722,7 @@ SQLSMALLINT compute_sql_data_type(STMT *stmt, SQLSMALLINT sql_type,
 */
 SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
 {
-  des_bool field_is_binary= (field->charsetnr == BINARY_CHARSET_NUMBER ? 1 : 0) &&
+  my_bool field_is_binary= (field->charsetnr == BINARY_CHARSET_NUMBER ? 1 : 0) &&
                            ((field->org_table_length > 0 ? 1 : 0) ||
                             !stmt->dbc->ds.opt_NO_BINARY_RESULT);
 
@@ -852,10 +734,10 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
       if (buff) (void)desodbc_stpmov(buff, "string");
       return SQL_LONGVARCHAR;
     case DES_TYPE_CHAR_N:
-      if (buff) (void)desodbc_stpmov(buff, "char(N)");
+      if (buff) (void)desodbc_stpmov(buff, "char");
       return SQL_CHAR;
     case DES_TYPE_VARCHAR_N:
-      if (buff) (void)desodbc_stpmov(buff, "varchar(N)");
+      if (buff) (void)desodbc_stpmov(buff, "varchar");
       return SQL_VARCHAR;
     case DES_TYPE_CHAR:
       if (buff) (void)desodbc_stpmov(buff, "char");
@@ -892,24 +774,6 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
   if (buff)
     *buff= '\0';
   return SQL_UNKNOWN_TYPE;
-}
-
-
-/**
-  Fill the display size buffer accordingly to size of SQLLEN
-  @param[in,out]  buff
-  @param[in]      stmt
-  @param[in]      field
-
-  @return  void
-*/
-SQLLEN fill_display_size_buff(char *buff, STMT *stmt, DES_FIELD *field)
-{
-  /* See comment for fill_transfer_oct_len_buff()*/
-  SQLLEN size= get_display_size(stmt, field);
-  sprintf(buff,size == SQL_NO_TOTAL ? "%d" : (sizeof(SQLLEN) == 4 ? "%lu" : "%lld"), size);
-
-  return size;
 }
 
 
@@ -964,18 +828,10 @@ static SQLLEN cap_length(STMT *stmt, unsigned long real_length)
   return real_length;
 }
 
-
-/**
-  Getting column size from string number
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
 */
-SQLULEN get_column_size_from_str(STMT *stmt, const char *size_str)
-{
-  SQLULEN length = size_str ?
-    (SQLULEN)std::strtoll(size_str, nullptr, 10) : 0;
-  return cap_length(stmt, (unsigned long)length);
-}
-
-
 /**
   Get the column size (in characters) of a field, as defined at:
     http://msdn2.microsoft.com/en-us/library/ms711786.aspx
@@ -992,7 +848,7 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
   if (field->max_length > field->length)
     length= field->max_length;
 
-  length= cap_length(stmt, (unsigned long)length);
+  //length= cap_length(stmt, (unsigned long)length);
 
   switch (field->type) {
 
@@ -1000,11 +856,7 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
   case DES_TYPE_STRING:  
   case DES_TYPE_CHAR_N:
   case DES_TYPE_VARCHAR_N:
-    // For LONGTEXT we must return 4G or 2G if it was capped.
-    if (length >= INT32_MAX) return length;
-    // For BINARY charset the maxlen is 1, so the result
-    // will be the byte length.
-    return length / get_charset_maxlen(field->charsetnr);
+    return DES_MAX_STRLEN;
   case DES_TYPE_CHAR:
     return 1;
   case DES_TYPE_INTEGER:
@@ -1025,7 +877,10 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
   return SQL_NO_TOTAL;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
   Get the decimal digits of a field, as defined at:
     http://msdn2.microsoft.com/en-us/library/ms709314.aspx
@@ -1065,7 +920,10 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
   }
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
   Get the transfer octet length of a field, as defined at:
     http://msdn2.microsoft.com/en-us/library/ms713979.aspx
@@ -1104,7 +962,12 @@ SQLLEN get_transfer_octet_length(TypeAndLength tal) {
   return SQL_NO_TOTAL;
 }
 
-//Implemented for DES using the mapping DES data type -> SQL data type -> length, as defined in that url
+/* DESODBC:
+    Implemented for DES using the mapping DES data type
+    -> SQL data type -> length, as defined in that url.
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLLEN get_transfer_octet_length(STMT *stmt, DES_FIELD *field)
 {
   SQLLEN length;
@@ -1121,7 +984,10 @@ SQLLEN get_transfer_octet_length(STMT *stmt, DES_FIELD *field)
 
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
   Get the display size of a field, as defined at:
     http://msdn2.microsoft.com/en-us/library/ms713974.aspx
@@ -1320,12 +1186,14 @@ SQLSMALLINT get_type_from_concise_type(SQLSMALLINT concise_type)
 }
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc internal
   @purpose : returns internal type to C type
 */
-
-
 //See https://learn.microsoft.com/en-us/sql/odbc/reference/appendixes/c-data-types?view=sql-server-ver16
 int unireg_to_c_datatype(DES_FIELD *field)
 {
@@ -1597,7 +1465,7 @@ int str_to_ts(SQL_TIMESTAMP_STRUCT *ts, const char *str, int len, int zeroToMin,
   @purpose : convert a possible string to a time value
 */
 
-des_bool str_to_time_st(SQL_TIME_STRUCT *ts, const char *str)
+my_bool str_to_time_st(SQL_TIME_STRUCT *ts, const char *str)
 {
     char buff[24],*to, *tokens[3] = {0, 0, 0};
     int num= 0, int_hour=0, int_min= 0, int_sec= 0;
@@ -1662,7 +1530,7 @@ des_bool str_to_time_st(SQL_TIME_STRUCT *ts, const char *str)
              converted to the min valid ODBC date
 */
 
-des_bool str_to_date(SQL_DATE_STRUCT *rgbValue, const char *str,
+my_bool str_to_date(SQL_DATE_STRUCT *rgbValue, const char *str,
                     uint length, int zeroToMin)
 {
     uint field_length,year_length,digits,i,date[3];
@@ -1759,41 +1627,12 @@ ulong str_to_time_as_long(const char *str, uint length)
     return(ulong) date[0] * 10000L + (ulong) (date[1]*100L+date[2]);
 }
 
-
-/*
-  @type    : myodbc internal
-  @purpose : if there was a long time since last question, check that
-  the server is up with mysql_ping (to force a reconnect)
-*/
-
-int check_if_server_is_alive( DBC *dbc )
-{
-    //TODO: implement
-    int result= 0;
-
-    return result;
-}
-
-
-/*
-  @type    : myodbc3 internal
-  @purpose : appends quoted string to dynamic string
-*/
-
-bool desodbc_append_quoted_name_std(std::string &str, const char *name)
-{
-  size_t namelen = strlen(name);
-  str.reserve(str.length() + namelen + 4);
-  str.append(1, '`').append(name).append(1, '`');
-  return false;
-}
-
 /*
   @type    : myodbc internal
   @purpose : compare strings without regarding to case
 */
 
-int desodbc_strcasecmp(const char *s, const char *t)
+int myodbc_strcasecmp(const char *s, const char *t)
 {
   if (!s && !t)
   {
@@ -1817,7 +1656,7 @@ int desodbc_strcasecmp(const char *s, const char *t)
   @purpose : compare strings without regarding to case
 */
 
-int desodbc_casecmp(const char *s, const char *t, uint len)
+int myodbc_casecmp(const char *s, const char *t, uint len)
 {
   if (!s && !t)
   {
@@ -1836,215 +1675,6 @@ int desodbc_casecmp(const char *s, const char *t, uint len)
     ;
   return (int)len + 1;
 }
-
-
-/*
-  @type    : myodbc3 internal
-  @purpose : logs the queries sent to server
-*/
-
-void query_print(FILE *log_file,char *query)
-{
-    if ( log_file && query )
-    {
-      /*
-        because of bug 68201 we bring the result of time() call
-        to 64-bits in any case
-      */
-      long long time_now= time(NULL);
-
-      fprintf(log_file, "%lld:%s;\n", time_now, query);
-    }
-}
-
-
-FILE *init_query_log(void)
-{
-    FILE *query_log;
-#ifdef _WIN32
-    char filename[MAX_PATH];
-    size_t buffsize;
-
-    getenv_s(&buffsize, filename, sizeof(filename), "TEMP");
-
-    if (buffsize)
-    {
-      sprintf(filename + buffsize - 1, "\\%s", DRIVER_QUERY_LOGFILE);
-    }
-    else
-    {
-      sprintf(filename, "c:\\%s", DRIVER_QUERY_LOGFILE);
-    }
-
-    if ( (query_log= fopen(filename, "a+")) )
-#else
-    if ( (query_log= fopen(DRIVER_QUERY_LOGFILE, "a+")) )
-#endif
-    {
-        fprintf(query_log,"-- Query logging\n");
-        fprintf(query_log,"--\n");
-        fprintf(query_log,"--  Driver name: %s  Version: %s\n",DRIVER_NAME,
-                DRIVER_VERSION);
-#ifdef HAVE_LOCALTIME_R
-        {
-            time_t now= time(NULL);
-            struct tm start;
-            localtime_r(&now,&start);
-
-            fprintf(query_log,"-- Timestamp: %02d%02d%02d %2d:%02d:%02d\n",
-                    start.tm_year % 100,
-                    start.tm_mon+1,
-                    start.tm_mday,
-                    start.tm_hour,
-                    start.tm_min,
-                    start.tm_sec);
-        }
-#endif /* HAVE_LOCALTIME_R */
-      fprintf(query_log,"\n");
-    }
-    return query_log;
-}
-
-
-void end_query_log(FILE *query_log)
-{
-  if ( query_log )
-  {
-      fclose(query_log);
-      query_log= 0;
-  }
-}
-
-
-des_bool is_minimum_version(const char *server_version,const char *version)
-{
-  /*
-    Variables have to be initialized if we don't want to get random
-    values after sscanf
-  */
-  uint major1= 0, major2= 0, minor1= 0, minor2= 0, build1= 0, build2= 0;
-
-  sscanf(server_version, "%u.%u.%u", &major1, &minor1, &build1);
-  sscanf(version, "%u.%u.%u", &major2, &minor2, &build2);
-
-  if ( major1 > major2 ||
-      major1 == major2 && (minor1 > minor2 ||
-                          minor1 ==  minor2 && build1 >= build2))
-  {
-    return TRUE;
-  }
-  return FALSE;
-}
-
-
-/**
- Escapes a string that may contain wildcard characters (%, _) and other
- problematic characters (", ', \n, etc). Like mysql_real_escape_string() but
- also including % and _. Can be used with an identified by passing escape_id.
-
- @param[in]   mysql         Pointer to DES structure
- @param[out]  to            Buffer for escaped string
- @param[in]   to_length     Length of destination buffer, or 0 for "big enough"
- @param[in]   from          The string to escape
- @param[in]   length        The length of the string to escape
- @param[in]   escape_id     Escaping an identified that will be quoted
-
-*/
-ulong desodbc_escape_string(STMT *stmt,
-                           char *to, ulong to_length,
-                           const char *from, ulong length, int escape_id)
-{
-  const char *to_start= to;
-  const char *end, *to_end=to_start + (to_length ? to_length-1 : 2*length);
-  des_bool overflow= FALSE;
-  /*get_charset_by_csname(charset,
-                        DESF(DES_CS_PRIMARY),
-                        DESF(0));*/
-  desodbc::CHARSET_INFO *charset_info= stmt->dbc->cxn_charset_info;
-  des_bool use_mb_flag= use_mb(charset_info);
-  for (end= from + length; from < end; ++from)
-  {
-    char escape= 0;
-    int tmp_length;
-    if (use_mb_flag && (tmp_length= my_ismbchar(charset_info, from, end)))
-    {
-      if (to + tmp_length > to_end)
-      {
-        overflow= TRUE;
-        break;
-      }
-      while (tmp_length--)
-        *to++= *from++;
-      --from;
-      continue;
-    }
-    /*
-     If the next character appears to begin a multi-byte character, we
-     escape that first byte of that apparent multi-byte character. (The
-     character just looks like a multi-byte character -- if it were actually
-     a multi-byte character, it would have been passed through in the test
-     above.)
-
-     Without this check, we can create a problem by converting an invalid
-     multi-byte character into a valid one. For example, 0xbf27 is not
-     a valid GBK character, but 0xbf5c is. (0x27 = ', 0x5c = \)
-    */
-    if (use_mb_flag && (tmp_length= my_mbcharlen(charset_info, *from)) > 1)
-      escape= *from;
-    else
-    switch (*from) {
-    case 0:         /* Must be escaped for 'mysql' */
-      escape= '0';
-      break;
-    case '\n':      /* Must be escaped for logs */
-      escape= 'n';
-      break;
-    case '\r':
-      escape= 'r';
-      break;
-    case '\\':
-    case '\'':
-    case '"':       /* Better safe than sorry */
-    case '_':
-    case '%':
-      escape= *from;
-      break;
-    case '\032':    /* This gives problems on Win32 */
-      escape= 'Z';
-      break;
-    }
-    /* if escaping an id, only handle back-tick */
-    if (escape_id)
-    {
-      if (*from == '`')
-        escape= *from;
-      else
-        escape= 0;
-    }
-    if (escape)
-    {
-      if (to + 2 > to_end)
-      {
-        overflow= TRUE;
-        break;
-      }
-      *to++= escape != '`' ? '\\' : '`';
-      *to++= escape;
-    }
-    else
-    {
-      if (to + 1 > to_end)
-      {
-        overflow= TRUE;
-        break;
-      }
-      *to++= *from;
-    }
-  }
-  *to= 0;
-  return overflow ? (ulong)~0 : (ulong) (to - to_start);
-}
-
 
 /**
   Scale an int[] representing SQL_C_NUMERIC
@@ -2472,119 +2102,17 @@ void *ptr_offset_adjust(void *ptr, SQLULEN *bind_offset_ptr,
   return ptr ? ((SQLCHAR *) ptr) + offset : NULL;
 }
 
-
-/**
-  Detects the parameter type.
-
-  @param[in]  proc        procedure parameter string
-  @param[in]  len         param string length
-  @param[out] ptype       pointer where to write the param type
-
-  Returns position in the param string after parameter type
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
 */
-char *proc_get_param_type(char *proc, int len, SQLSMALLINT *ptype)
-{
-  while (isspace(*proc) && (len--))
-    ++proc;
-
-  if (len >= 6 && !desodbc_casecmp(proc, "INOUT ", 6))
-  {
-    *ptype= (SQLSMALLINT) SQL_PARAM_INPUT_OUTPUT;
-    return proc + 6;
-  }
-
-  if (len >= 4 && !desodbc_casecmp(proc, "OUT ", 4))
-  {
-    *ptype= (SQLSMALLINT) SQL_PARAM_OUTPUT;
-    return proc + 4;
-  }
-
-  if (len >= 3 && !desodbc_casecmp(proc, "IN ", 3))
-  {
-    *ptype= (SQLSMALLINT) SQL_PARAM_INPUT;
-    return proc + 3;
-  }
-
-  *ptype= (SQLSMALLINT)SQL_PARAM_INPUT;
-  return proc;
-}
-
-
-/**
-  Detects the parameter name
-
-  @param[in]  proc        procedure parameter string
-  @param[in]  len         param string length
-  @param[out] cname       pointer where to write the param name
-
-  Returns position in the param string after parameter name
-*/
-char* proc_get_param_name(char *proc, int len, char *cname)
-{
-  char quote_symbol= '\0';
-
-  while (isspace(*proc) && (len--))
-    ++proc;
-
-  /* can be '"' if ANSI_QUOTE is enabled */
-  if (*proc == '`' || *proc == '"')
-  {
-    quote_symbol= *proc;
-    ++proc;
-  }
-
-  while ((len--) && (quote_symbol != '\0' ? *proc != quote_symbol : !isspace(*proc)))
-    *(cname++)= *(proc++);
-
-  return quote_symbol ? proc + 1 : proc;
-}
-
-
-/**
-  Detects the parameter data type
-
-  @param[in]  proc        procedure parameter string
-  @param[in]  len         param string length
-  @param[out] cname       pointer where to write the param type name
-
-  Returns position in the param string after parameter type name
-*/
-char* proc_get_param_dbtype(char *proc, int len, char *ptype)
-{
-  char *trim_str, *start_pos= ptype;
-
-  while (isspace(*proc) && (len--))
-    ++proc;
-
-  while (*proc && (len--) )
-    *(ptype++)= *(proc++);
-
-  /* remove the character set definition */
-  if (trim_str= strstr( myodbc_strlwr(start_pos, (size_t)-1),
-                        " charset "))
-  {
-    ptype= trim_str;
-    (*ptype)= 0;
-  }
-
-  /* trim spaces from the end */
-  ptype-=1;
-  while (isspace(*(ptype)))
-  {
-    *ptype= 0;
-    --ptype;
-  }
-
-  return proc;
-}
-
 SQLTypeMap SQL_TYPE_MAP_values[]=
 {
   /* SQL_CHAR= 1 */
     {(SQLCHAR *)"varchar", 7, SQL_LONGVARCHAR, DES_TYPE_VARCHAR, 0, 0},
     {(SQLCHAR *)"string", 6, SQL_LONGVARCHAR, DES_TYPE_STRING, 0, 0},
-    {(SQLCHAR *)"char(N)", 7, SQL_CHAR, DES_TYPE_CHAR_N, 0, 0},
-    {(SQLCHAR *)"varchar(N)", 10, SQL_CHAR, DES_TYPE_VARCHAR_N, 0, 0},
+    {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR_N, 0, 0},
+    {(SQLCHAR *)"varchar", 7, SQL_CHAR, DES_TYPE_VARCHAR_N, 0, 0},
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR, 1, 0},
     {(SQLCHAR *)"integer", 7, SQL_BIGINT, DES_TYPE_INTEGER, 19, 1},
     {(SQLCHAR *)"int", 3, SQL_BIGINT, DES_TYPE_INT, 19, 1},
@@ -2596,7 +2124,10 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
     {(SQLCHAR *)"timestamp", 9, SQL_TYPE_TIMESTAMP, DES_TYPE_TIMESTAMP, 19, 1}
 };
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 enum enum_field_types map_sql2mysql_type(SQLSMALLINT sql_type)
 {
   for (auto &elem : SQL_TYPE_MAP_values)
@@ -2610,361 +2141,7 @@ enum enum_field_types map_sql2mysql_type(SQLSMALLINT sql_type)
   return DES_UNKNOWN_TYPE;
 }
 
-/**
-  Gets the parameter index in the type map array
 
-  @param[in]  ptype       procedure parameter type name
-  @param[in]  len         param string length
-
-  Returns position in the param string after parameter type name
-*/
-int proc_get_param_sql_type_index(const char *ptype, int len)
-{
-  int i = 0;
-  for (auto &elem : SQL_TYPE_MAP_values)
-  {
-    if (len >= elem.name_length &&
-        (!desodbc_casecmp(ptype, (const char*)elem.type_name,
-         elem.name_length)))
-      return i;
-    ++i;
-  }
-
-  return 0; /* "char" */
-}
-
-
-/**
-  Gets the parameter info array from the map using index
-
-  @param[in]  index       index in the param info array
-
-  Pointer to the structure that contains parameter info
-*/
-SQLTypeMap *proc_get_param_map_by_index(int index)
-{
-  return &SQL_TYPE_MAP_values[index];
-}
-
-
-/**
-  Parses parameter size and decimal digits
-
-  @param[in]  ptype       parameter type name
-  @param[in]  len         type string length
-  @param[out] dec         pointer where to write decimal digits
-
-  Returns parsed size
-*/
-SQLUINTEGER proc_parse_sizes(SQLCHAR *ptype, int len, SQLSMALLINT *dec)
-{
-  int parsed= 0;
-  SQLUINTEGER param_size= 0;
-
-  if (ptype == NULL)
-  {
-    /* That shouldn't happen though */
-    return 0;
-  }
-
-  while ((len > 0) && (*ptype!= ')') && (parsed < 2))
-  {
-    int n_index= 0;
-    char number_to_parse[16]= "\0";
-
-    /* skip all non-digit characters */
-    while (!isdigit(*ptype) && (len-- >= 0) && (*ptype!= ')'))
-      ++ptype;
-
-    /* add digit characters to the buffer for parsing */
-    while (isdigit(*ptype) && (len-- >= 0))
-    {
-      number_to_parse[n_index++]= *ptype;
-      ++ptype;
-    }
-
-    /* 1st number is column size, 2nd is decimal digits */
-    if (!parsed)
-      param_size= atoi(number_to_parse);
-    else
-      *dec= (SQLSMALLINT)atoi(number_to_parse);
-
-    ++parsed;
-  }
-
-  return param_size;
-}
-
-
-/**
-  Determines the length of ENUM/SET
-
-  @param[in]  ptype       parameter type name
-  @param[in]  len         type string length
-  @param[in]  is_enum     flag to treat string as ENUM
-                          instead of SET
-
-  Returns size of ENUM/SET
-*/
-SQLUINTEGER proc_parse_enum_set(SQLCHAR *ptype, int len, BOOL is_enum)
-{
-  SQLUINTEGER total_len= 0, elem_num= 0, max_len= 0, cur_len= 0;
-  char quote_symbol= '\0';
-
-  /* theoretically ')' can be inside quotes as part of enum value */
-  while ((len > 0) && (quote_symbol != '\0' || *ptype!= ')'))
-  {
-    if (*ptype == quote_symbol)
-    {
-      quote_symbol= '\0';
-      max_len= myodbc_max(cur_len, max_len);
-    }
-    else if (*ptype == '\'' || *ptype == '"')
-    {
-      quote_symbol= *ptype;
-      cur_len= 0;
-      ++elem_num;
-    }
-    else if (quote_symbol)
-    {
-      ++cur_len;
-      ++total_len;
-    }
-
-    ++ptype;
-    --len;
-  }
-
-  return is_enum ? max_len : total_len + elem_num - 1;
-}
-
-
-/**
-  Returns parameter size and decimal digits
-
-  @param[in]  ptype          parameter type name
-  @param[in]  len            type string length
-  @param[in]  sql_type_index index in the param info array
-  @param[out] dec            pointer where to write decimal digits
-
-  Returns parameter size
-*/
-SQLUINTEGER proc_get_param_size(SQLCHAR *ptype, int len, int sql_type_index, SQLSMALLINT *dec)
-{
-  SQLUINTEGER param_size= SQL_TYPE_MAP_values[sql_type_index].type_length;
-  SQLCHAR *start_pos= (SQLCHAR*)strchr((const char*)ptype, '(');
-  SQLCHAR *end_pos= (SQLCHAR*)strrchr((const char*)ptype, ')');
-
-  /* no decimal digits by default */
-  *dec= SQL_NO_TOTAL;
-
-  switch (SQL_TYPE_MAP_values[sql_type_index].des_type)
-  {
-    case DES_TYPE_REAL:
-    case DES_TYPE_FLOAT:
-      param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
-      if (!param_size) param_size = 10; /* by default */
-      break;
-    case DES_TYPE_CHAR:
-    case DES_TYPE_VARCHAR_N:
-    case DES_TYPE_CHAR_N:
-    case DES_TYPE_VARCHAR:
-    case DES_TYPE_STRING:
-      param_size = proc_parse_sizes(start_pos, (int)(end_pos - start_pos), dec);
-      break;
-
-      /* fall through*/
-    case DES_TYPE_INT:
-    case DES_TYPE_INTEGER:
-    case DES_TYPE_TIMESTAMP:
-    case DES_TYPE_DATETIME:
-      *dec= 0;
-      break;
-
-  }
-
-  return param_size;
-}
-
-
-/**
-Gets parameter columns size
-
-@param[in]  stmt           statement
-@param[in]  sql_type_index index in the param info array
-@param[in]  col_size       parameter size
-@param[in]  decimal_digits write decimal digits
-@param[in]  flags          field flags
-
-Returns parameter octet length
-*/
-SQLLEN proc_get_param_col_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
-                              SQLSMALLINT decimal_digits, unsigned int flags, char * str_buff)
-{
-  DES_FIELD temp_fld;
-
-  temp_fld.length= (unsigned long)col_size; /* add 1for sign, if needed, and 1 for decimal point */
-
-
-
-  temp_fld.max_length = (unsigned long)col_size;
-  temp_fld.decimals= decimal_digits;
-
-  // Handle binary flag and binary charset number when required
-  temp_fld.flags= flags + (SQL_TYPE_MAP_values[sql_type_index].binary ? BINARY_FLAG : 0);
-
-  temp_fld.type= (enum_field_types)(SQL_TYPE_MAP_values[sql_type_index].des_type);
-
-  if (temp_fld.type == DES_TYPE_STRING ||
-      temp_fld.type == DES_TYPE_VARCHAR ||
-      temp_fld.type == DES_TYPE_CHAR_N ||
-      temp_fld.type == DES_TYPE_VARCHAR_N ||
-      temp_fld.type == DES_TYPE_CHAR ||
-      SQL_TYPE_MAP_values[sql_type_index].binary)
-  {
-    // The types with specifiers for character lengths are CHAR(N) and VARCHAR(N).
-    // Instead of trying to deduce their character length it should take N
-    // as it is. This is done by a trick of setting BINARY charset.
-    // For LONGTEXT we also should take its max length without trying to
-    // divide by character byte size.
-    temp_fld.charsetnr = BINARY_CHARSET_NUMBER;
-  }
-  else
-  {
-    temp_fld.charsetnr = stmt->dbc->cxn_charset_info->number;
-  }
-
-  if (str_buff != NULL)
-  {
-    return fill_column_size_buff(str_buff, stmt, &temp_fld);
-  }
-  else
-  {
-    return get_column_size( stmt, &temp_fld);
-  }
-}
-
-
-/**
-  Gets parameter octet length
-
-  @param[in]  stmt           statement
-  @param[in]  sql_type_index index in the param info array
-  @param[in]  col_size       parameter size
-  @param[in]  decimal_digits write decimal digits
-  @param[in]  flags          field flags
-
-  Returns parameter octet length
-*/
-SQLLEN proc_get_param_octet_len(STMT *stmt, int sql_type_index, SQLULEN col_size,
-                                SQLSMALLINT decimal_digits, unsigned int flags, char * str_buff)
-{
-  DES_FIELD temp_fld;
-
-  temp_fld.length = (unsigned long)col_size; /* add 1for sign, if needed, and 1 for decimal point */
-
-  temp_fld.max_length = (unsigned long)col_size;
-  temp_fld.decimals= decimal_digits;
-
-  // Handle binary flag and binary charset number when required
-  temp_fld.flags= flags + (SQL_TYPE_MAP_values[sql_type_index].binary ? BINARY_FLAG : 0);
-  temp_fld.charsetnr =
-    SQL_TYPE_MAP_values[sql_type_index].binary ?
-      BINARY_CHARSET_NUMBER : stmt->dbc->cxn_charset_info->number;
-
-  temp_fld.type= (enum_field_types)(SQL_TYPE_MAP_values[sql_type_index].des_type);
-
-  if (str_buff != NULL)
-  {
-    return fill_transfer_oct_len_buff(str_buff, stmt, &temp_fld);
-  }
-  else
-  {
-    return get_transfer_octet_length(stmt, &temp_fld);
-  }
-}
-
-
-/**
-  tokenize the string by putting \0 bytes to separate params
-
-  @param[in]  str        parameters string
-  @param[out] params_num number of detected parameters
-
-  Returns pointer to the first param
-*/
-char *proc_param_tokenize(char *str, int *params_num)
-{
-  BOOL bracket_open= 0;
-  char *str_begin= str, quote_symbol='\0';
-  int len = (int)strlen(str);
-
-  *params_num= 0;
-
-  /* if no params at all */
-  while (len > 0 && isspace(*str))
-  {
-    ++str;
-    --len;
-  }
-
-  if (len && *str && *str != ')')
-    *params_num= 1;
-
-  while (len > 0)
-  {
-    /* Making sure that a bracket is not inside quotes. that's possible for SET
-       or ENUM values */
-    if (quote_symbol == '\0')
-    {
-      if (!bracket_open && *str == ',')
-      {
-        *str= '\0';
-        ++(*params_num);
-      }
-      else if (*str == '(')
-      {
-        bracket_open= 1;
-      }
-      else if (*str == ')')
-      {
-        bracket_open= 0;
-      }
-      else if (*str == '"' || *str == '\'')
-      {
-        quote_symbol= *str;
-      }
-    }
-    else if( *str == quote_symbol)
-    {
-      quote_symbol= '\0';
-    }
-
-    ++str;
-    --len;
-  }
-  return str_begin;
-}
-
-
-/**
-  goes to the next token in \0-terminated string sequence
-
-  @param[in]  str        parameters string
-  @param[in]  str_end    end of the sequence
-
-  Returns pointer to the next token in sequence
-*/
-char *proc_param_next_token(char *str, char *str_end)
-{
-  size_t end_token = strlen(str);
-
-  /* return the next string after \0 byte */
-  if (str + end_token + 1 < str_end)
-    return (char*)(str + end_token + 1);
-
-  return 0;
-}
 
 /**
    Gets fractional time of a second from datetime or time string.
@@ -3219,11 +2396,11 @@ const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, cons
   int index_pos = 0;
 
   // Skip spaces after LIMIT
-  while ((query_end > query) && desodbc_isspace(cs, query, query_end))
+  while ((query_end > query) && myodbc_isspace(cs, query, query_end))
     ++query;
 
   // Collect all numbers for the offset
-  while ((query_end > query) && desodbc_isnum(cs, query, query_end))
+  while ((query_end > query) && myodbc_isnum(cs, query, query_end))
   {
     digit_buf[index_pos] = *query;
     ++index_pos;
@@ -3240,7 +2417,7 @@ const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, cons
   *offs_out = (unsigned long long)atoll(digit_buf);
 
   // Find the row number for "LIMIT offset, row_number"
-  while ((query_end > query) && !desodbc_isnum(cs, query, query_end))
+  while ((query_end > query) && !myodbc_isnum(cs, query, query_end))
     ++query;
 
   if (query == query_end)
@@ -3255,7 +2432,7 @@ const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, cons
   index_pos = 0; // reset index to use with another number
 
   // Collect all numbers for the row number
-  while ((query_end > query) && desodbc_isnum(cs, query, query_end))
+  while ((query_end > query) && myodbc_isnum(cs, query, query_end))
   {
     digit_buf[index_pos] = *query;
     ++index_pos;
@@ -3267,90 +2444,7 @@ const char* get_limit_numbers(desodbc::CHARSET_INFO* cs, const char *query, cons
   return query;
 }
 
-/*
-  Check if SELECT query requests the row locking
-
-  @param[in] cs          charset
-  @param[in] query       query
-  @param[in] query_end   query end
-  @param[in] is_share    flag to check the share mode otherwise for update
-
-  @return position of "FOR UPDATE" or "LOCK IN SHARE MODE" inside a query.
-          Otherwise returns NULL.
-*/
-const char* check_row_locking(desodbc::CHARSET_INFO* cs, const char * query, const char * query_end, BOOL is_share_mode)
-{
-  const char *before_token= query_end;
-  const char *token= NULL;
-  int i = 0;
-  const char *for_update[2] = { "UPDATE", "FOR" };
-  const char *lock_in_share_mode[4] = { "MODE", "SHARE", "IN", "LOCK" };
-  const char **check = for_update;
-  int index_max = 2;
-
-  if (is_share_mode)
-  {
-    check = lock_in_share_mode;
-    index_max = 4;
-  }
-
-  for (i = 0; i < index_max; ++i)
-  {
-    token = desstr_get_prev_token(cs, &before_token, query);
-    if (desodbc_casecmp(token, check[i], (uint)strlen(check[i])))
-      return NULL;
-  }
-  return token;
-}
-
-
-DES_LIMIT_CLAUSE find_position4limit(desodbc::CHARSET_INFO* cs, const char *query, const char * query_end)
-{
-  DES_LIMIT_CLAUSE result(0,0,NULL,NULL);
-  char *limit_pos = NULL;
-
-  result.begin= result.end= query_end;
-
-  assert(query && query_end && query_end >= query);
-
-  if ((limit_pos = (char*)find_token(cs, query, query_end, "LIMIT")))
-  {
-    // Found LIMIT in the query
-    result.end = get_limit_numbers(cs, limit_pos + 5, query_end,
-                                   &result.offset, &result.row_count);
-    // We will start again from the position of LIMIT to simplify the logic
-    result.begin = limit_pos;
-  }
-  else // No LIMIT in SELECT
-  {
-    const char *locking_pos = NULL;
-
-    if ((locking_pos = check_row_locking(cs, query, query_end, FALSE)) ||
-        (locking_pos = check_row_locking(cs, query, query_end, TRUE)))
-    {
-      // FOR UPDATE or LOCK IN SHARE MODE was detected
-      result.begin= result.end = (char*)locking_pos - 1; // With a previous space
-    }
-    else
-    {
-      while(query_end > query && (!*query_end ||
-                desodbc_isspace(cs, query_end, result.end)))
-      {
-        --query_end;
-      }
-
-      if (*query_end==';')
-      {
-        result.begin= result.end= query_end;
-      }
-    }
-  }
-
-  return result;
-}
-
-
-BOOL desodbc_isspace(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
+BOOL myodbc_isspace(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
 {
   int ctype;
   cs->cset->ctype(cs, &ctype, (const uchar*) begin, (const uchar*) end);
@@ -3358,7 +2452,7 @@ BOOL desodbc_isspace(desodbc::CHARSET_INFO* cs, const char * begin, const char *
   return ctype & _MY_SPC;
 }
 
-BOOL desodbc_isnum(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
+BOOL myodbc_isnum(desodbc::CHARSET_INFO* cs, const char * begin, const char *end)
 {
   int ctype;
   cs->cset->ctype(cs, &ctype, (const uchar*)begin, (const uchar*)end);
@@ -3366,37 +2460,9 @@ BOOL desodbc_isnum(desodbc::CHARSET_INFO* cs, const char * begin, const char *en
   return ctype & _MY_NMR;
 }
 
-
-int got_out_parameters(STMT *stmt)
-{
-  uint i;
-  DESCREC *iprec;
-  int result= NO_OUT_PARAMETERS;
-
-  for(i= 0; i < stmt->param_count; ++i)
-  {
-    iprec= desc_get_rec(stmt->ipd, i, '\0');
-
-    if (iprec)
-    {
-      if(iprec->parameter_type == SQL_PARAM_INPUT_OUTPUT
-                || iprec->parameter_type == SQL_PARAM_OUTPUT)
-      {
-        result|= GOT_OUT_PARAMETERS;
-      }
-#ifndef USE_IODBC
-      else if (iprec->parameter_type == SQL_PARAM_INPUT_OUTPUT_STREAM
-                || iprec->parameter_type == SQL_PARAM_OUTPUT_STREAM)
-      {
-        result|= GOT_OUT_STREAM_PARAMETERS;
-      }
-#endif
-    }
-  }
-
-  return result;
-}
-
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::vector<std::string> getLines(const std::string &str) {
   std::vector<std::string> lines;
   std::stringstream ss(str);
@@ -3419,6 +2485,9 @@ std::vector<std::string> getLines(const std::string &str) {
   return lines;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::vector<std::string> convertArrayNotationToStringVector(std::string str) {
   std::vector<std::string> str_vector;
 
@@ -3435,19 +2504,47 @@ std::vector<std::string> convertArrayNotationToStringVector(std::string str) {
   return str_vector;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 char *string_to_char_pointer(const std::string &str) {
   char *ptr = new char[str.size() + 1];
+  if (!ptr) throw std::bad_alloc();
   std::strcpy(ptr, str.c_str());
   return ptr;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+wchar_t *string_to_wchar_pointer(const std::wstring &w_str) {
+  wchar_t *ptr = new wchar_t[w_str.size() + 1];
+  if (!ptr) throw std::bad_alloc();
+
+  w_str.copy(ptr, w_str.size());
+  ptr[w_str.size()] = L'\0';
+
+  return ptr;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 TypeAndLength get_Type_from_str(const std::string &str) {
   std::string type_str = str;
   SQLULEN size = -1;
 
+  std::transform(type_str.begin(), type_str.end(), type_str.begin(),
+               [](unsigned char c) { return std::tolower(c); });
+
+  //Special cases in external databases.
+  if (is_in_string(type_str, "integer(") ||
+      is_in_string(type_str, "varbinary("))
+    return {DES_TYPE_INTEGER, get_type_size(DES_TYPE_INTEGER)};
+
   size_t first_parenthesis_pos = type_str.find('(', 0);
   size_t pos = first_parenthesis_pos;
-  if (pos != std::string::npos) {
+  if (pos != std::string::npos && !is_in_string(type_str, "datetime")) {
     std::string size_str = "";
 
     pos++;
@@ -3467,6 +2564,9 @@ TypeAndLength get_Type_from_str(const std::string &str) {
   return {simple_type, size};
 };
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 SQLULEN get_type_size(enum_field_types type) {
   switch (type) {
     case DES_TYPE_INTEGER:
@@ -3482,17 +2582,19 @@ SQLULEN get_type_size(enum_field_types type) {
     case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
       return 19;
-    // TODO: check the following. I am not sure wgucglimits
-    // I should pick.
-    case DES_TYPE_VARCHAR:  // theorically, it is infinite. Which value do I
-                            // return?
+    // "Variable-length string of up to the maximum length of the underlying Prolog atom."
+    // which is infinite. Therefore, I will pick the standard 255 (inspired by PostgreSQL)
+    case DES_TYPE_VARCHAR:
     case DES_TYPE_STRING:
-      return NAME_LEN;
+      return DES_MAX_STRLEN;
     default:
       return 0;
   }
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string Type_to_type_str(TypeAndLength type) {
   for (auto pair : typestr_simpletype_map) {
     std::string type_str = pair.first;
@@ -3506,13 +2608,9 @@ std::string Type_to_type_str(TypeAndLength type) {
     if (type.simple_type == simple_type) {
       if (is_character_des_data_type(simple_type) &&
           !is_time_des_data_type(simple_type)) {
-        if (type.len != -1) {  // TODO: study policies for
-                               // considering varchar() or varchar
-                               // depending on size.
+        if (type.len != -1) {
           return type_str + "(" + std::to_string(type.len) +
-                 ")";  // i'm not sure if I should return varchar() or
-                       // varchar(46), for example, given that
-                       // typestr_simpletype_map holds varchar(). TODO: check
+                 ")";
         } else {
           return type_str;
         }
@@ -3524,6 +2622,9 @@ std::string Type_to_type_str(TypeAndLength type) {
   return "";
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 SQLULEN get_Type_size(TypeAndLength type) {
   SQLULEN small_type_size = get_type_size(type.simple_type);
   if (type.len != -1) {
@@ -3532,14 +2633,23 @@ SQLULEN get_Type_size(TypeAndLength type) {
     return small_type_size;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 TypeAndLength get_Type(enum_field_types type) {
   return {type, get_type_size(type)};
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_in_string(const std::string &str, const std::string &search) {
   return str.find(search) != std::string::npos;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 char *sqlcharptr_to_charptr(SQLCHAR* sql_str, SQLUSMALLINT sql_str_len) {
   char *charptr = new char[sql_str_len+1];
   memcpy(charptr, sql_str, sql_str_len);
@@ -3547,6 +2657,19 @@ char *sqlcharptr_to_charptr(SQLCHAR* sql_str, SQLUSMALLINT sql_str_len) {
   return charptr;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+SQLCHAR *str_to_sqlcharptr(const std::string &str) {
+  SQLCHAR *ptr = new SQLCHAR[str.size() + 1];
+  memcpy(ptr, str.c_str(), str.size());
+  ptr[str.size()] = '\0';
+  return ptr;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string sqlcharptr_to_str(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len) {
   char *ptr = sqlcharptr_to_charptr(sql_str, sql_str_len);
   std::string str(ptr);
@@ -3554,6 +2677,9 @@ std::string sqlcharptr_to_str(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len) {
   return str;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string des_type_2_str(enum_field_types des_type) {
     for (SQLTypeMap value : SQL_TYPE_MAP_values) {
         if (value.des_type == des_type) {
@@ -3566,6 +2692,9 @@ std::string des_type_2_str(enum_field_types des_type) {
     return "";
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 int des_type_2_sql_type(enum_field_types des_type) {
   switch (des_type) {
     case DES_TYPE_VARCHAR:
@@ -3586,6 +2715,8 @@ int des_type_2_sql_type(enum_field_types des_type) {
       return SQL_DOUBLE;
     case DES_TYPE_REAL:
       return SQL_DOUBLE;
+    case DES_TYPE_DATE:
+      return SQL_TYPE_DATE;
     case DES_TYPE_TIME:
       return SQL_TYPE_TIME;
     case DES_TYPE_DATETIME:
@@ -3597,6 +2728,22 @@ int des_type_2_sql_type(enum_field_types des_type) {
   }
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+bool is_decimal_des_data_type(enum_field_types type) {
+  switch (type) {
+    case DES_TYPE_FLOAT:
+    case DES_TYPE_REAL:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_numeric_des_data_type(enum_field_types type) {
   switch (type) {
     case DES_TYPE_INT:
@@ -3609,6 +2756,9 @@ bool is_numeric_des_data_type(enum_field_types type) {
   }
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_character_des_data_type(enum_field_types type) {
   switch (type) {
     case DES_TYPE_CHAR:
@@ -3626,6 +2776,9 @@ bool is_character_des_data_type(enum_field_types type) {
   }
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_time_des_data_type(enum_field_types type) {
   switch (type) {
     case DES_TYPE_DATE:
@@ -3637,6 +2790,10 @@ bool is_time_des_data_type(enum_field_types type) {
       return false;
   }
 }
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_character_sql_data_type(SQLSMALLINT sql_type) {
   switch (sql_type) {
     case SQL_NUMERIC:
@@ -3654,6 +2811,9 @@ bool is_character_sql_data_type(SQLSMALLINT sql_type) {
   }
 }
 #ifdef _WIN32
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string GetLastWinErrMessage() {
   DWORD errorCode = GetLastError();
   LPSTR errorMsg = nullptr;
@@ -3672,16 +2832,25 @@ std::string GetLastWinErrMessage() {
 #endif
 
 #ifdef _WIN32
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void try_close(HANDLE h) {
   if (h)
       CloseHandle(h);
 }
 #else
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void try_close(int fd) {
   ::close(fd);
 }
 #endif
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_bulkable_statement(const std::string& query) {
   bool bulkable = false;
   std::string query_cp = query;
@@ -3695,48 +2864,56 @@ bool is_bulkable_statement(const std::string& query) {
     std::string keyword = query_cp.substr(4, 6);
   }
 
-  bulkable |= (keyword == "select");
+  //bulkable |= (keyword == "select");
   bulkable |= (keyword == "insert");
   bulkable |= (keyword == "update");
   bulkable |= (keyword == "delete");
+  bulkable |= (keyword == "create");
+  bulkable |= (keyword == "/dbsch");
+  bulkable |= (keyword == "/show_");
+  bulkable |= (keyword == "/curre");
+  //bulkable |= (keyword == "/use_d"); It is dangerous to not put delay in /use_db. Sometimes it has some computation time.
 
   return bulkable;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string odbc_pattern_to_regex_pattern(const std::string &odbc_pattern) {
   std::string regex_pattern = "";
 
   //We need to know the special characters so we can escape them.
   const std::string special_characters =
-      "^$\\.*+?()[]{}|";  //The default grammar for std::regex is https://en.cppreference.com/w/cpp/regex/ecmascript
-                          //The atom PatternCharacter shows that the special characters are these.
+      "^$.*+?()[]{}|";  //The default grammar for std::regex is https://en.cppreference.com/w/cpp/regex/ecmascript
+                          //The atom PatternCharacter shows that the special characters are these. '\' has been omitted
+                          //because the preconditions establish that '_' and '%' is escaped when treating it as a literal.
   int i = 0;
   while (i < odbc_pattern.size()) {
-    if (odbc_pattern[i] == '\\') {
-      if (i + 1 < odbc_pattern.size() && odbc_pattern[i + 1] == '_') {
-        regex_pattern += ".";
-        i += 2;
-      } else if (i + 1 < odbc_pattern.size() && odbc_pattern[i + 1] == '%') {
-        regex_pattern += ".*";
-        i += 2;
-      } else {
-        regex_pattern += "\\";
-        regex_pattern += odbc_pattern[i];  // '\' is a special character in regex
-        i += 1;
-      }
-    } else {
-      bool is_special_character =
-          special_characters.find(odbc_pattern[i]) != std::string::npos;
+    bool is_special_character =
+        special_characters.find(odbc_pattern[i]) != std::string::npos;
 
-      if (is_special_character) regex_pattern += "\\";
+    if (is_special_character) regex_pattern += "\\";
+    
+    if (odbc_pattern[i] == '%')
+      regex_pattern += ".*";
+    else if (odbc_pattern[i] == '_')
+      regex_pattern += ".";
+    else if (odbc_pattern[i] == '\\' && i + 1 < odbc_pattern.size()) {
+      regex_pattern += odbc_pattern[i];
+      regex_pattern += odbc_pattern[i+1];
+      i += 1; //the other i +=1 will be done at the end of this iteration
+    } else
       regex_pattern += odbc_pattern[i];
 
-      i += 1;
-    }
+    i += 1;
   }
   return regex_pattern;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::vector<std::string> search_odbc_pattern(const std::string &pattern,
                                         const std::vector<std::string> &v_str) {
 
@@ -3751,4 +2928,187 @@ std::vector<std::string> search_odbc_pattern(const std::string &pattern,
   }
 
   return coincidences;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::vector<std::string> get_attrs(const std::string &str) {
+  std::vector<std::string> attrs;
+  size_t start = 0, end = 0;
+  int i = 0;
+  while (i < str.size()) {
+    if (str[i] == '=') {
+      std::string attr = "";
+      i++;
+      while (i < str.size() && str[i] != ' ') {
+        attr += str[i];
+        i++;
+      }
+      attrs.push_back(attr);
+    } else
+      i++;
+  }
+  return attrs;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string convert2identifier(const std::string &arg) {
+
+  const size_t first = arg.find_first_not_of(" \t\r");
+  const size_t last = arg.find_last_not_of(" \t\r");
+
+  std::string cleaned_str = arg;
+
+  //All the following characters are valid delimiters in DES.
+  if (cleaned_str.find_first_of("\'\"`") ==
+      std::string::npos) {  // i.e., it is not quoted
+    cleaned_str = cleaned_str.substr(0, last + 1);
+    std::transform(cleaned_str.begin(), cleaned_str.end(), cleaned_str.begin(),
+                   [](unsigned char c) { return std::toupper(c); });
+  } else {
+    cleaned_str = arg.substr(first + 1, last - first - 1);
+  }
+
+  return cleaned_str;
+
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string get_prepared_arg(STMT *stmt, SQLCHAR *name, SQLSMALLINT len) {
+  std::string str = sqlcharptr_to_str(name, len);
+  if (stmt->stmt_options.metadata_id)
+    return convert2identifier(str);
+  else
+    return str;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string get_catalog(STMT *stmt, SQLCHAR *name, SQLSMALLINT len) {
+  if (!name || !(*name) || len == 0)
+    return "$des";
+  else
+    return get_prepared_arg(stmt, name, len);
+}
+
+/* DESODBC:
+    This function sets possible errors
+    given the TAPI output.
+
+    Original author: DESODBC Developer
+*/
+SQLRETURN set_error_from_tapi_output(SQLSMALLINT HandleType, SQLHANDLE Handle,
+                                     const std::string &tapi_output) {
+
+  /* Note: there are multiple ways to parse the info messages depending on the
+  command.
+  * There is not a standard syntax for every command: in 5.18.1.2 (DES v6.7
+  manual), it says that the answers can be defined specifically for some
+  commands. For instance, it can be checked an error of /process should be
+  parsed differently than an "$error" notified by /ls. We then throw the full
+  TAPI msg. It is not a bad idea: after all, the application using this
+  connector may find it useful to work on the TAPI notation, since the
+  application itself can be a computer program that uses this TAPI to its
+  advantage.
+  */
+
+  std::vector<std::string> lines = getLines(tapi_output);
+
+  /*
+    We already know there is a $error. But only when we find
+    a $error followed by a 0, we can know there is a real error.
+    If not, all the $error keywords are followed by 1 or 2 (i.e.,
+    info message). Check DES manual 5.18.1.2
+  */
+
+  bool real_error = false;
+  int i = 0;
+  while (i < lines.size()) {
+    if (i + 1 < lines.size()) {
+      if (lines[i] == "$error" && lines[i + 1] == "0") {
+        real_error = true;
+        break;
+      }
+      
+    }
+    i += 1;
+  }
+
+  std::string msg_str = "Full TAPI output: ";
+  msg_str += tapi_output;
+  const char *msg = string_to_char_pointer(msg_str);
+
+  if (real_error) {
+    if (HandleType == SQL_HANDLE_STMT)
+      ((STMT *)Handle)->set_error("HY000", msg);
+    else if (HandleType == SQL_HANDLE_DBC)
+      ((DBC *)Handle)->set_error("HY000", msg);
+  } else {
+    if (HandleType == SQL_HANDLE_STMT)
+      ((STMT *)Handle)->set_error("01000", msg);
+    else if (HandleType == SQL_HANDLE_DBC)
+      ((DBC *)Handle)->set_error("01000", msg);
+  }
+
+  delete msg;
+
+  if (real_error)
+      return SQL_ERROR;
+  else
+    return SQL_SUCCESS_WITH_INFO;
+}
+
+/* DESODBC:
+    This function checks the TAPI output and sets
+    errors if so.
+
+    Original author: DESODBC Developer
+*/
+SQLRETURN check_and_set_errors(SQLSMALLINT HandleType, SQLHANDLE Handle,
+                               const std::string &tapi_output) {
+  if (is_in_string(tapi_output, "$error")) {
+    return set_error_from_tapi_output(HandleType, Handle, tapi_output);
+  } else if (is_in_string(tapi_output, "$success")) {
+    return SQL_SUCCESS;
+  } else {
+    if (tapi_output.size() == 0) return SQL_SUCCESS;
+
+    std::string msg_str = "Full TAPI output: ";
+    msg_str += tapi_output;
+    const char *msg = string_to_char_pointer(msg_str);
+    if (HandleType == SQL_HANDLE_STMT)
+      ((STMT *)Handle)->set_error("01000", msg);
+    else if (HandleType == SQL_HANDLE_DBC)
+      ((DBC *)Handle)->set_error("01000", msg);
+    delete msg;
+    return SQL_SUCCESS_WITH_INFO;
+  }
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::vector<std::string> filter_candidates(std::vector<std::string>& candidates, const std::string &key, bool metadata_id) {
+  std::vector<std::string> res;
+  if (key.size() == 0)
+    res = candidates;
+  else {
+    if (!metadata_id) {
+      res = search_odbc_pattern(key, candidates);
+    } else {
+      for (int i = 0; i < candidates.size(); ++i) {
+        if (candidates[i] == key) {
+          res = {key};
+          break;
+        }
+      }
+    }
+  }
+  return res;
 }

@@ -37,7 +37,7 @@
 #include <algorithm>
 
 #include "m_ctype.h"
-#include "des_compiler.h"
+#include "my_compiler.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 
@@ -6537,7 +6537,7 @@ CHARSET_INFO my_charset_big5_chinese_ci = {
     1,
     0,
     0,                                               /* number     */
-    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM, /* state      */
+    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM, /* state      */
     "big5",                                          /* cs name    */
     "big5_chinese_ci",                               /* name       */
     "Big5 Traditional Chinese",                      /* comment    */

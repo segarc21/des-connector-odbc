@@ -1,5 +1,8 @@
 /* Copyright (c) 2000, 2021, Oracle and/or its affiliates.
 
+	Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+	(see the next block comment below).
+	
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 2.0,
    as published by the Free Software Foundation.
@@ -20,6 +23,17 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 #ifndef M_CTYPE_INCLUDED
 #define M_CTYPE_INCLUDED
 
@@ -34,13 +48,16 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-#include "des_compiler.h"
+#include "my_compiler.h"
 #include "my_inttypes.h"
 #include "my_loglevel.h"
 #include "my_macros.h"
 #include "my_sharedlib.h"
 #include "template_utils.h"
 
+/*
+DESODBC: renaming myodbc to desodbc
+*/
 namespace desodbc
 {
 
@@ -114,7 +131,7 @@ extern MY_UNI_CTYPE my_uni_ctype[256];
 #define MY_CS_INDEX 4    /* sets listed in the Index file  */
 #define MY_CS_LOADED 8   /* sets that are currently loaded */
 #define MY_CS_BINSORT 16 /* if binary sort order           */
-#define DES_CS_PRIMARY 32 /* if primary collation           */
+#define MY_CS_PRIMARY 32 /* if primary collation           */
 #define MY_CS_STRNXFRM                                                         \
   64                                   /*                                      \
                                          if _not_ set, sort_order will         \

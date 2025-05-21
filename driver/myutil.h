@@ -1,4 +1,6 @@
 // Copyright (c) 2001, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /***************************************************************************
  * MYUTIL.H								   *
  *									   *
@@ -43,6 +56,18 @@
 
 #include "field_types.h"
 
+
+//Values extracted from mysql_com.h
+#define NOT_NULL_FLAG 1     /**< Field can't be NULL */
+#define PRI_KEY_FLAG 2      /**< Field is part of a primary key */
+#define UNIQUE_KEY_FLAG 4   /**< Field is part of a unique key */
+#define MULTIPLE_KEY_FLAG 8 /**< Field is part of a key */
+#define BLOB_FLAG 16        /**< Field is a blob */
+#define UNSIGNED_FLAG 32    /**< Field is unsigned */
+#define ZEROFILL_FLAG 64    /**< Field is zerofill */
+#define BINARY_FLAG 128     /**< Field is binary   */
+#define AUTO_INCREMENT_FLAG 512 /**< field is a autoincrement field */
+
 /*
   Utility macros
 */
@@ -52,12 +77,6 @@
 #define is_connected(dbc)    ((dbc)->connected)
 #define reset_ptr(x) {if (x) x= 0;}
 #define digit(A) ((int) (A - '0'))
-
-#define DESLOG_QUERY(A,B) {if ((A)->dbc->ds.opt_LOG_QUERY) \
-               query_print((A)->dbc->query_log,(char*) B);}
-
-#define DESLOG_DBC_QUERY(A,B) {if((A)->ds.opt_LOG_QUERY) \
-               query_print((A)->query_log,(char*) B);}
 
 /* truncation types in SQL_NUMERIC_STRUCT conversions */
 #define SQLNUM_TRUNC_FRAC 1
@@ -89,51 +108,200 @@ typedef char * DYNAMIC_ELEMENT;
 */
 
 #ifdef _WIN32
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void try_close(HANDLE h);
 #else
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void try_close(int fd);
 #endif
 
 #ifdef _WIN32
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string GetLastWinErrMessage();
 #endif
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string convert2identifier(const std::string &arg);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string get_prepared_arg(STMT *stmt, SQLCHAR *name, SQLSMALLINT len);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string get_catalog(STMT *stmt, SQLCHAR *name, SQLSMALLINT len);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string odbc_pattern_to_regex_pattern(const std::string &odbc_pattern);
 
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::vector<std::string> search_odbc_pattern(
     const std::string &pattern, const std::vector<std::string> &v_str);
 
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_character_sql_data_type(SQLSMALLINT sql_type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+bool is_decimal_des_data_type(enum_field_types type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_numeric_des_data_type(enum_field_types type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_character_des_data_type(enum_field_types type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_time_des_data_type(enum_field_types type);
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::vector<std::string> get_attrs(const std::string &str);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 int des_type_2_sql_type(enum_field_types des_type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string des_type_2_str(enum_field_types des_type);
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+SQLCHAR *str_to_sqlcharptr(const std::string &str);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 char *sqlcharptr_to_charptr(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string sqlcharptr_to_str(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len);
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_bulkable_statement(const std::string& query);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_in_string(const std::string &str, const std::string &search);
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 TypeAndLength get_Type_from_str(const std::string &str);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 SQLULEN get_type_size(enum_field_types type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::string Type_to_type_str(TypeAndLength type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 SQLULEN get_Type_size(TypeAndLength type);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 TypeAndLength get_Type(enum_field_types type);
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 char *string_to_char_pointer(const std::string &str);
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+wchar_t *string_to_wchar_pointer(const std::wstring &w_str);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::vector<std::string> getLines(const std::string &str);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 std::vector<std::string> convertArrayNotationToStringVector(std::string str);
 
+/* DESODBC:
+    This function sets possible errors
+    given the TAPI output.
+
+    Original author: DESODBC Developer
+*/
+SQLRETURN set_error_from_tapi_output(SQLSMALLINT HandleType, SQLHANDLE Handle,
+                                     const std::string &tapi_output);
+
+/* DESODBC:
+    This function checks the TAPI output and sets
+    errors if so.
+
+    Original author: DESODBC Developer
+*/
+SQLRETURN check_and_set_errors(SQLSMALLINT HandleType, SQLHANDLE Handle,
+                               const std::string &tapi_output);
+
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::vector<std::string> filter_candidates(std::vector<std::string> &candidates,
+                                           const std::string &key,
+                                           bool metadata_id);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 inline const std::vector<enum_field_types> supported_types = {
     DES_TYPE_VARCHAR,  DES_TYPE_STRING,   DES_TYPE_CHAR_N,  DES_TYPE_VARCHAR_N,
     DES_TYPE_INTEGER,  DES_TYPE_CHAR,     DES_TYPE_INTEGER, DES_TYPE_INT,
     DES_TYPE_FLOAT,    DES_TYPE_REAL,     DES_TYPE_DATE,    DES_TYPE_TIME,
     DES_TYPE_DATETIME, DES_TYPE_TIMESTAMP};
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 inline const std::unordered_map<std::string, SQLSMALLINT> typestr_sqltype_map = {
     {"varchar()", SQL_VARCHAR},
     {"string", SQL_LONGVARCHAR},
@@ -149,39 +317,91 @@ inline const std::unordered_map<std::string, SQLSMALLINT> typestr_sqltype_map = 
     {"datetime", SQL_TYPE_TIMESTAMP},
     {"timestamp", SQL_TYPE_TIMESTAMP}};
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 inline const std::unordered_map<std::string, enum_field_types> typestr_simpletype_map =
     {{"varchar()", DES_TYPE_VARCHAR_N},
      {"string", DES_TYPE_STRING},
      {"varchar", DES_TYPE_VARCHAR},
      {"char", DES_TYPE_CHAR},  // we will use it with size_str=1
      {"char()", DES_TYPE_CHAR_N},
-     {"integer", DES_TYPE_INTEGER},
+     //{"integer", DES_TYPE_INTEGER},
      {"int", DES_TYPE_INT},
      {"float", DES_TYPE_FLOAT},
-     {"real", DES_TYPE_REAL},
-     {"date", DES_TYPE_DATE},
-     {"time", DES_TYPE_TIME},
-     {"datetime", DES_TYPE_DATETIME},
-     {"timestamp", DES_TYPE_TIMESTAMP}};
+     //{"real", DES_TYPE_REAL},
+     {"datetime(date)", DES_TYPE_DATE},
+     {"datetime(time)", DES_TYPE_TIME},
+     {"datetime(datetime)", DES_TYPE_DATETIME}};
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+inline const std::vector<std::string> supported_table_types = {"TABLE", "VIEW"};
+
+/* DESODBC:
+    Renamed from the original my_SQLPrepare()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN         DES_SQLPrepare (SQLHSTMT hstmt, SQLCHAR *szSqlStr,
                                  SQLINTEGER cbSqlStr,
                                  bool reset_select_limit,
                                  bool force_prepare);
+
+/* DESODBC:
+
+    Renamed from the original my_SQLExecute and modified
+    according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN         DES_SQLExecute         (STMT * stmt);
+
+/* DESODBC:
+    Renamed from the original my_SQLFreeStmt()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLFreeStmt        (SQLHSTMT hstmt,SQLUSMALLINT fOption);
+
+/* DESODBC:
+
+    Renamed from the original my_SQLFreeStmtExtended
+    and modified according to DESODBC's needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT fOption,
                                          SQLUSMALLINT fExtra);
+
+/* DESODBC:
+    Renamed from the original my_SQLAllocStmt
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLAllocStmt       (SQLHDBC hdbc,SQLHSTMT *phstmt);
-SQLRETURN         do_query              (STMT *stmt, std::string query);
+
+
 SQLRETURN         insert_params         (STMT *stmt, SQLULEN row, std::string &finalquery);
-void      desodbc_link_fields (STMT *stmt,DES_FIELD *fields,uint field_count);
-void      fix_row_lengths   (STMT *stmt, const long* fix_rules, uint row, uint field_count);
 void      fix_result_types  (STMT *stmt);
-char *    fix_str           (char *to,const char *from,int length);
-char *    dupp_str          (char *from,int length);
+
+/* DESODBC:
+    Renamed from the original my_pos_delete_std
+    and modified according to DES' needs.
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN des_pos_delete_std (STMT *stmt,STMT *stmtParam,
                         SQLUSMALLINT irow, std::string &str);
+
+/* DESODBC:
+    Renamed from the original my_pos_update_std.
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN des_pos_update_std (STMT *stmt,STMT *stmtParam,
                         SQLUSMALLINT irow, std::string &str);
 
@@ -189,7 +409,6 @@ char *    check_if_positioned_cursor_exists (STMT *stmt, STMT **stmtNew);
 SQLRETURN insert_param  (STMT *stmt, DES_BIND *bind, DESC *apd,
                         DESCREC *aprec, DESCREC *iprec, SQLULEN row);
 
-SQLRETURN set_sql_select_limit(DBC *dbc, SQLULEN new_value, des_bool reqLock);
 
 
 SQLRETURN
@@ -205,9 +424,6 @@ SQLRETURN copy_binhex_result(STMT *stmt,
            T *rgbValue, SQLINTEGER cbValueMax,
            SQLLEN *pcbValue, char *src,
            ulong src_length);
-SQLRETURN copy_bit_result(STMT *stmt,
-                          SQLCHAR *result, SQLLEN result_bytes, SQLLEN *used_bytes,
-                          DES_FIELD *field, char *src, unsigned long src_bytes);
 SQLRETURN wcopy_bit_result(STMT *stmt,
                           SQLWCHAR *result, SQLLEN result_bytes, SQLLEN *used_bytes,
                           DES_FIELD *field, char *src, unsigned long src_bytes);
@@ -218,24 +434,49 @@ SQLRETURN copy_wchar_result(STMT *stmt,
 
 SQLRETURN set_desc_error  (DESC *desc, char *state,
                           const char *message);
-SQLRETURN handle_connection_error (STMT *stmt);
-des_bool   is_connection_lost      (uint errcode);
-void      set_mem_error           (DES *des);
-void      translate_error         (char *save_state, desodbc_errid errid, uint mysql_err);
 
-SQLSMALLINT get_sql_data_type_from_str(const char *mysql_type_name);
-SQLSMALLINT compute_sql_data_type(STMT *stmt, SQLSMALLINT sql_type,
-  char octet_length, size_t col_size);
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLSMALLINT get_sql_data_type           (STMT *stmt, DES_FIELD *field, char *buff);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLULEN     get_column_size             (STMT *stmt, DES_FIELD *field);
-SQLULEN     get_column_size_from_str    (STMT *stmt, const char *size_str);
+
 SQLULEN     fill_column_size_buff       (char *buff, STMT *stmt, DES_FIELD *field);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLSMALLINT get_decimal_digits          (STMT *stmt, DES_FIELD *field);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLLEN get_transfer_octet_length(TypeAndLength tal);
+
+/* DESODBC:
+    Implemented for DES using the mapping DES data type
+    -> SQL data type -> length, as defined in that url.
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLLEN get_transfer_octet_length(STMT *stmt, DES_FIELD *field);
+
 SQLLEN      fill_transfer_oct_len_buff  (char *buff, STMT *stmt, DES_FIELD *field);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLLEN      get_display_size            (STMT *stmt, DES_FIELD *field);
-SQLLEN      fill_display_size_buff      (char *buff, STMT *stmt, DES_FIELD *field);
+
 SQLSMALLINT get_dticode_from_concise_type       (SQLSMALLINT concise_type);
 SQLSMALLINT get_concise_type_from_datetime_code (SQLSMALLINT dticode);
 SQLSMALLINT get_concise_type_from_interval_code (SQLSMALLINT dticode);
@@ -250,16 +491,28 @@ SQLLEN      get_bookmark_value                  (SQLSMALLINT fCType, SQLPOINTER 
   ((type) == SQL_BINARY || (type) == SQL_VARBINARY || \
    (type) == SQL_LONGVARBINARY)
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 #define is_numeric_des_type(field) \
   ((field)->type == DES_TYPE_INTEGER || (field)->type == DES_TYPE_INT || \
    (field)->type == DES_TYPE_FLOAT || \
    ((field)->type == DES_TYPE_REAL)
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 #define is_character_des_type(field)                                       \
   ((field)->type == DES_TYPE_VARCHAR || (field)->type == DES_TYPE_STRING || \
    (field)->type == DES_TYPE_CHAR_N || \
    ((field)->type == DES_TYPE_VARCHAR_N)
 
+
+/* DESODBC:
+    Renamed from the original my_SQLBindParameter
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLBindParameter(SQLHSTMT hstmt,SQLUSMALLINT ipar,
               SQLSMALLINT fParamType,
               SQLSMALLINT fCType, SQLSMALLINT fSqlType,
@@ -268,12 +521,18 @@ SQLRETURN SQL_API DES_SQLBindParameter(SQLHSTMT hstmt,SQLUSMALLINT ipar,
               SQLPOINTER  rgbValue,
               SQLLEN cbValueMax,
               SQLLEN *pcbValue);
+
+/* DESODBC:
+    Renamed from the original my_SQLExtendedFetch
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLExtendedFetch(SQLHSTMT hstmt, SQLUSMALLINT fFetchType,
               SQLLEN irow, SQLULEN *pcrow,
-              SQLUSMALLINT *rgfRowStatus, des_bool upd_status);
+              SQLUSMALLINT *rgfRowStatus, my_bool upd_status);
 SQLRETURN SQL_API myodbc_single_fetch( SQLHSTMT hstmt, SQLUSMALLINT fFetchType,
               SQLLEN irow, SQLULEN *pcrow,
-              SQLUSMALLINT *rgfRowStatus, des_bool upd_status);
+              SQLUSMALLINT *rgfRowStatus, my_bool upd_status);
 SQLRETURN SQL_API sql_get_data(STMT *stmt, SQLSMALLINT fCType,
               uint column_number, SQLPOINTER rgbValue,
               SQLLEN cbValueMax, SQLLEN *pcbValue,
@@ -287,49 +546,98 @@ void fix_padded_length(STMT *stmt, SQLSMALLINT fCType,
               SQLLEN cbValueMax, SQLLEN *pcbValue, ulong data_len,
               DESCREC *irrec);
 
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLSetPos, which was
+    my_SQLSetPos in MyODBC. We have reused much of the
+    original function.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLSetPos(SQLHSTMT hstmt, SQLSETPOSIROW irow,
                                SQLUSMALLINT fOption, SQLUSMALLINT fLock);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 int       unireg_to_c_datatype  (DES_FIELD *field);
+
+
 int       default_c_type        (int sql_data_type);
 ulong     bind_length           (int sql_data_type,ulong length);
-des_bool   str_to_date           (SQL_DATE_STRUCT *rgbValue, const char *str,
+my_bool   str_to_date           (SQL_DATE_STRUCT *rgbValue, const char *str,
                                 uint length, int zeroToMin);
 int       str_to_ts             (SQL_TIMESTAMP_STRUCT *ts, const char *str, int len,
                                 int zeroToMin, BOOL dont_use_set_locale);
-des_bool str_to_time_st          (SQL_TIME_STRUCT *ts, const char *str);
+my_bool str_to_time_st          (SQL_TIME_STRUCT *ts, const char *str);
 ulong str_to_time_as_long       (const char *str,uint length);
 void  init_getfunctions         (void);
+
+/* DESODBC:
+    Renamed from the original myodbc_end()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 void  desodbc_init               (void);
+
+
 void  desodbc_ov_init            (SQLINTEGER odbc_version);
-void  desodbc_sqlstate2_init     (void);
-void  desodbc_sqlstate3_init     (void);
-int   check_if_server_is_alive  (DBC *dbc);
 
-bool   desodbc_append_quoted_name_std(std::string &str, const char *name);
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+SQLRETURN set_handle_error          (SQLSMALLINT HandleType, SQLHANDLE handle, const char* state, const char *errtext);
 
-SQLRETURN set_handle_error          (SQLSMALLINT HandleType, SQLHANDLE handle,
-                                    desodbc_errid errid, const char *errtext, SQLINTEGER errcode);
-SQLRETURN set_env_error (ENV * env,desodbc_errid errid, const char *errtext,
-                        SQLINTEGER errcode);
-SQLRETURN copy_str_data (SQLSMALLINT HandleType, SQLHANDLE Handle,
-                        SQLCHAR *rgbValue, SQLSMALLINT cbValueMax,
-                        SQLSMALLINT *pcbValue,char *src);
+/* DESODBC:
+    Renamed from the original my_SQLAllocEnv()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLAllocEnv      (SQLHENV * phenv);
+
+/* DESODBC:
+
+    Renamed from the original my_SQLAllocConnect and
+    modified according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLAllocConnect  (SQLHENV henv, SQLHDBC *phdbc);
+
+/* DESODBC:
+
+    Renamed from the original my_SQLFreeConnect and
+    modified according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLFreeConnect   (SQLHDBC hdbc);
+
+/* DESODBC:
+    Renamed from the original my_SQLFreeEnv()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API DES_SQLFreeEnv       (SQLHENV henv);
 
+/* DESODBC:
+    Renamed and modified from the original desodbc_end()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 void desodbc_end();
-des_bool set_dynamic_result        (STMT *stmt);
+
 void    set_current_cursor_data   (STMT *stmt,SQLUINTEGER irow);
-des_bool is_minimum_version        (const char *server_version,const char *version);
-int     desodbc_strcasecmp         (const char *s, const char *t);
-int     desodbc_casecmp            (const char *s, const char *t, uint len);
+int     myodbc_strcasecmp         (const char *s, const char *t);
+int     myodbc_casecmp            (const char *s, const char *t, uint len);
 
-ulong   desodbc_escape_string      (STMT *stmt, char *to, ulong to_length,
-                                  const char *from, ulong length, int escape_id);
 
-DESCREC*  desc_get_rec            (DESC *desc, int recnum, des_bool expand);
+DESCREC*  desc_get_rec            (DESC *desc, int recnum, my_bool expand);
 
 DESC*     desc_alloc              (STMT *stmt, SQLSMALLINT alloc_type,
                                   desc_ref_type ref_type, desc_desc_type desc_type);
@@ -354,92 +662,159 @@ void *ptr_offset_adjust   (void *ptr, SQLULEN *bind_offset,
                           SQLINTEGER bind_type, SQLINTEGER default_size,
                           SQLULEN row);
 
-/* Functions used when debugging */
-void query_print          (FILE *log_file,char *query);
-FILE *init_query_log      (void);
-void end_query_log        (FILE *query_log);
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 enum enum_field_types map_sql2mysql_type(SQLSMALLINT sql_type);
 
-/* proc_* functions - used to parse prcedures headers in SQLProcedureColumns */
-char *      proc_param_tokenize   (char *str, int *params_num);
-char *      proc_get_param_type   (char *proc, int len, SQLSMALLINT *ptype);
-char *    proc_get_param_name   (char *proc, int len, char *cname);
-char *      proc_get_param_dbtype (char *proc, int len, char *ptype);
-SQLUINTEGER proc_get_param_size   (SQLCHAR *ptype, int len, int sql_type_index,
-                                  SQLSMALLINT *dec);
-SQLLEN      proc_get_param_octet_len  (STMT *stmt, int sql_type_index,
-                                      SQLULEN col_size, SQLSMALLINT decimal_digits,
-                                      unsigned int flags, char * str_buff);
-SQLLEN      proc_get_param_col_len    (STMT *stmt, int sql_type_index, SQLULEN col_size,
-                                      SQLSMALLINT decimal_digits, unsigned int flags,
-                                      char * str_buff);
-int         proc_get_param_sql_type_index (const char*ptype, int len);
-SQLTypeMap *proc_get_param_map_by_index   (int index);
-char *      proc_param_next_token         (char *str, char *str_end);
 
-void        set_row_count         (STMT * stmt, des_ulonglong rows);
 const char *get_fractional_part   (const char * str, int len,
                                   BOOL dont_use_set_locale,
                                   SQLUINTEGER * fraction);
 /* Convert MySQL timestamp to full ANSI timestamp format. */
 char *          complete_timestamp  (const char * value, ulong length, char buff[21]);
-BOOL            desodbc_isspace      (desodbc::CHARSET_INFO* cs, const char * begin, const char *end);
-BOOL            desodbc_isnum        (desodbc::CHARSET_INFO* cs, const char * begin, const char *end);
+BOOL            myodbc_isspace      (desodbc::CHARSET_INFO* cs, const char * begin, const char *end);
+BOOL            myodbc_isnum        (desodbc::CHARSET_INFO* cs, const char * begin, const char *end);
 
 #define NO_OUT_PARAMETERS         0
 #define GOT_OUT_PARAMETERS        1
 #define GOT_OUT_STREAM_PARAMETERS 2
 
-int           got_out_parameters  (STMT *stmt);
 
 /* handle.c*/
 int           adjust_param_bind_array (STMT *stmt);
-/* Actions taken when connection is put to the pool. Used in connection freeing as well */
-int           reset_connection        (DBC *dbc);
-
-long long binary2ll(char* src, uint64 srcLen);
-unsigned long long binary2ull(char* src, uint64 srcLen);
 
 void fill_ird_data_lengths (DESC *ird, ulong *lengths, uint fields);
 
 /* my_stmt.c */
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 BOOL              returned_result     (STMT *stmt);
-des_bool           free_current_result (STMT *stmt);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+my_bool           free_current_result (STMT *stmt);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DES_RESULT *       get_result_metadata (STMT *stmt);
-int               bind_result         (STMT *stmt);
-int               get_result          (STMT *stmt);
-des_ulonglong      affected_rows       (STMT *stmt);
-des_ulonglong      update_affected_rows(STMT *stmt);
-des_ulonglong      num_rows            (STMT *stmt);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+my_ulonglong      affected_rows       (STMT *stmt);
+
+
+my_ulonglong      update_affected_rows(STMT *stmt);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+my_ulonglong      num_rows            (STMT *stmt);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 unsigned long*    fetch_lengths       (STMT *stmt);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DES_ROW_OFFSET  row_seek            (STMT *stmt, DES_ROW_OFFSET offset);
-void              data_seek           (STMT *stmt, des_ulonglong offset);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+void              data_seek           (STMT *stmt, my_ulonglong offset);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DES_ROW_OFFSET  row_tell            (STMT *stmt);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 int               next_result         (STMT *stmt);
-SQLRETURN         send_long_data      (STMT *stmt, unsigned int param_num, DESCREC * aprec,
-                                      const char *chunk, unsigned long length);
 
 #define IGNORE_THROW(A) try{ A; }catch(...){}
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 int           get_int     (STMT *stmt, ulong column_number, char *value,
                           ulong length);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 unsigned int  get_uint    (STMT *stmt, ulong column_number, char *value,
                           ulong length);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 long long     get_int64   (STMT *stmt, ulong column_number, char *value,
                           ulong length);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 unsigned long long get_uint64(STMT * stmt, ulong column_number, char* value,
                           ulong length);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 char *        get_string  (STMT *stmt, ulong column_number, char *value,
                           ulong *length, char * buffer);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 double        get_double  (STMT *stmt, ulong column_number, char *value,
                           ulong length);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 BOOL          is_null     (STMT *stmt, ulong column_number, char *value);
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN     prepare     (STMT *stmt, char * query, SQLINTEGER query_length,
                            bool reset_sql_limit, bool force_prepare);
 
 void free_result_bind(STMT *stmt);
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 inline
 void stmt_result_free(STMT * stmt)
 {
@@ -450,29 +825,12 @@ void stmt_result_free(STMT * stmt)
   {
     x_free(stmt->result);
   }
-  else
-    delete(stmt->result);
 
   stmt->result = NULL;
 }
 
-
-/* scroller-related functions */
-unsigned int  calc_prefetch_number(unsigned int selected, SQLULEN app_fetchs,
-                                   SQLULEN max_rows);
-BOOL          scroller_exists     (STMT * stmt);
-void          scroller_create     (STMT * stmt, const char *query, SQLULEN len);
-
-unsigned long long  scroller_move (STMT * stmt);
-
-SQLRETURN     scroller_prefetch   (STMT * stmt);
-bool          scrollable          (STMT * stmt, const char * query,
-                                  const char * query_end);
-
-bool is_varlen_type(enum enum_field_types type);
-
 #ifdef __WIN__
-#define cmp_database(A,B) desodbc_strcasecmp((const char *)(A),(const char *)(B))
+#define cmp_database(A,B) myodbc_strcasecmp((const char *)(A),(const char *)(B))
 #else
 #define cmp_database(A,B) strcmp((A),(B))
 #endif
@@ -524,7 +882,7 @@ bool is_varlen_type(enum enum_field_types type);
 #define GET_NAME_LEN(S, N, L) L = (L == SQL_NTS ? (N ? (SQLSMALLINT)strlen((char *)N) : 0) : L); \
   if (L > NAME_LEN) \
     return S->set_error("HY090", \
-           "One or more parameters exceed the maximum allowed name length", 0);
+           "One or more parameters exceed the maximum allowed name length");
 
 #define CHECK_HANDLE(h) if (h == NULL) return SQL_INVALID_HANDLE
 
@@ -536,13 +894,29 @@ bool is_varlen_type(enum enum_field_types type);
 
 #define CHECK_ENV_OUTPUT(e) if(e == NULL) return SQL_ERROR
 
-#define CHECK_DBC_OUTPUT(e, d) if(d == NULL) return set_env_error((ENV *)e, DESERR_S1009, NULL, 0)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+#define CHECK_DBC_OUTPUT(e, d) \
+  if (d == NULL) return ((ENV *)e)->set_error("HY009", "Invalid use of null pointer")
 
-#define CHECK_STMT_OUTPUT(d, s) if(s == NULL) return ((DBC *)d)->set_error(DESERR_S1009, NULL, 0)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+#define CHECK_STMT_OUTPUT(d, s) \
+  if (s == NULL)                \
+  return ((DBC *)d)->set_error("HY009", "Invalid use of null pointer")
 
 #define CHECK_DESC_OUTPUT(d, s) CHECK_STMT_OUTPUT(d, s)
 
-#define CHECK_DATA_OUTPUT(s, d) if(d == NULL) return ((STMT *)s)->set_error(DESERR_S1000, "Invalid output buffer")
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+#define CHECK_DATA_OUTPUT(s, d) \
+  if (d == NULL) return ((STMT *)s)->set_error("HY000", "Invalid output buffer")
 
 #define IF_NOT_NULL(v, x) if (v != NULL) x
 

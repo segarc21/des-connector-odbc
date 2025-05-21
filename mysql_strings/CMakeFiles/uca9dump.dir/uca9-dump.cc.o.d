@@ -121,7 +121,7 @@ mysql_strings/CMakeFiles/uca9dump.dir/uca9-dump.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_macros.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/mysql_lex_string.h \
@@ -150,10 +150,10 @@ mysql_strings/CMakeFiles/uca9dump.dir/uca9-dump.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/13/bits/charconv.h \
  /usr/include/c++/13/bits/basic_string.tcc \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/mb_wc.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_sharedlib.h \
  /usr/include/dlfcn.h /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
@@ -187,7 +187,7 @@ mysql_strings/CMakeFiles/uca9dump.dir/uca9-dump.cc.o: \
  /usr/include/c++/13/typeinfo /usr/include/c++/13/bits/nested_exception.h \
  /usr/include/c++/13/bits/streambuf.tcc /usr/include/c++/13/optional \
  /usr/include/c++/13/bits/enable_special_members.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/uca900_data.h \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/str_uca_type.h \
  /usr/include/c++/13/vector /usr/include/c++/13/bits/stl_uninitialized.h \

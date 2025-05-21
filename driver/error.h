@@ -1,4 +1,6 @@
 // Copyright (c) 2001, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /***************************************************************************
  * ERROR.H								   *
  *									   *
@@ -48,8 +61,10 @@
 #define ER_INVALID_CURSOR_NAME	 514
 #define ER_ALL_COLUMNS_IGNORED	 537
 
-/*
-  myodbc error prefix
+/* DESODBC:
+   Renamed and modified.
+   Original author: MyODBC
+   Modified by: DESODBC Developer
 */
 #define DESODBC_ERROR_PREFIX	 "[DES][ODBC " DESODBC_STRDRIVERID " Driver]"
 #define DESODBC_ERROR_CODE_START  500
@@ -67,65 +82,6 @@
 #define NEXT_STMT_ERROR(stmt) NEXT_ERROR(((STMT *)stmt)->error)
 #define NEXT_DESC_ERROR(desc) NEXT_ERROR(((DESC *)desc)->error)
 
-/*
-  list of MyODBC3 error codes
-*/
-typedef enum desodbc_errid
-{
-    DESERR_01000 = 0,
-    DESERR_01004,
-    DESERR_01S02,
-    DESERR_01S03,
-    DESERR_01S04,
-    DESERR_01S06,
-    DESERR_07001,
-    DESERR_07005,
-    DESERR_07006,
-    DESERR_07009,
-    DESERR_08002,
-    DESERR_08003,
-    DESERR_24000,
-    DESERR_25000,
-    DESERR_25S01,
-    DESERR_34000,
-    DESERR_HYT00,
-    DESERR_S1000,
-    DESERR_S1001,
-    DESERR_S1002,
-    DESERR_S1003,
-    DESERR_S1004,
-    DESERR_S1007,
-    DESERR_S1009,
-    DESERR_S1010,
-    DESERR_S1011,
-    DESERR_S1012,
-    DESERR_S1013,
-    DESERR_S1015,
-    DESERR_S1016,
-    DESERR_S1017,
-    DESERR_S1024,
-    DESERR_S1090,
-    DESERR_S1091,
-    DESERR_S1092,
-    DESERR_S1093,
-    DESERR_S1095,
-    DESERR_S1106,
-    DESERR_S1107,
-    DESERR_S1109,
-    DESERR_S1C00,
-
-    DESERR_21S01,
-    DESERR_23000,
-    DESERR_42000,
-    DESERR_42S01,
-    DESERR_42S02,
-    DESERR_42S12,
-    DESERR_42S21,
-    DESERR_42S22,
-    DESERR_08S01,
-    /* Please add new errors to the end of enum, and not in alphabet order */
-    DESERR_08004,
-} desodbc_errid;
 
 /*
   error handler structure
@@ -135,7 +91,7 @@ struct DESERROR
   SQLRETURN   retcode = 0;
   char        current = 0;
   std::string message;
-  SQLINTEGER  native_error = 0;
+  SQLINTEGER  native_error = 0; //DESODBC: we will only use this when reading the TAPI output. There is no more error codes in DES that we need.
   std::string sqlstate;
 
   DESERROR()
@@ -145,8 +101,6 @@ struct DESERROR
   {
     retcode = rc;
   }
-
-  DESERROR(desodbc_errid errid, const char *errtext);
 
   DESERROR(const char *state, const char *msg);
 

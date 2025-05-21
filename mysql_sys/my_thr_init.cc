@@ -38,7 +38,7 @@
 #endif
 #include <time.h>
 
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_loglevel.h"
 #include "my_macros.h"
@@ -71,16 +71,16 @@ static thread_local int THR_myerrno = 0;
 static thread_local int THR_winerrno = 0;
 #endif
 
-repl_des_mutex_t THR_LOCK_myisam_mmap;
-repl_des_mutex_t THR_LOCK_myisam;
-repl_des_mutex_t THR_LOCK_heap;
-repl_des_mutex_t THR_LOCK_malloc;
-repl_des_mutex_t THR_LOCK_open;
-repl_des_mutex_t THR_LOCK_lock;
-repl_des_mutex_t THR_LOCK_net;
-repl_des_mutex_t THR_LOCK_charset;
+repl_mysql_mutex_t THR_LOCK_myisam_mmap;
+repl_mysql_mutex_t THR_LOCK_myisam;
+repl_mysql_mutex_t THR_LOCK_heap;
+repl_mysql_mutex_t THR_LOCK_malloc;
+repl_mysql_mutex_t THR_LOCK_open;
+repl_mysql_mutex_t THR_LOCK_lock;
+repl_mysql_mutex_t THR_LOCK_net;
+repl_mysql_mutex_t THR_LOCK_charset;
 #ifndef NDEBUG
-repl_des_mutex_t THR_LOCK_threads;
+repl_mysql_mutex_t THR_LOCK_threads;
 mysql_cond_t THR_COND_threads;
 #endif
 
@@ -124,27 +124,27 @@ void my_thread_global_reinit() {
   my_init_mysys_psi_keys();
 #endif
 
-  des_mutex_destroy(&THR_LOCK_heap);
-  des_mutex_init(key_THR_LOCK_heap, &THR_LOCK_heap, DES_MUTEX_INIT_FAST);
+  mysql_mutex_destroy(&THR_LOCK_heap);
+  mysql_mutex_init(key_THR_LOCK_heap, &THR_LOCK_heap, MY_MUTEX_INIT_FAST);
 
-  des_mutex_destroy(&THR_LOCK_net);
-  des_mutex_init(key_THR_LOCK_net, &THR_LOCK_net, DES_MUTEX_INIT_FAST);
+  mysql_mutex_destroy(&THR_LOCK_net);
+  mysql_mutex_init(key_THR_LOCK_net, &THR_LOCK_net, MY_MUTEX_INIT_FAST);
 
-  des_mutex_destroy(&THR_LOCK_myisam);
-  des_mutex_init(key_THR_LOCK_myisam, &THR_LOCK_myisam, DES_MUTEX_INIT_SLOW);
+  mysql_mutex_destroy(&THR_LOCK_myisam);
+  mysql_mutex_init(key_THR_LOCK_myisam, &THR_LOCK_myisam, MY_MUTEX_INIT_SLOW);
 
-  des_mutex_destroy(&THR_LOCK_malloc);
-  des_mutex_init(key_THR_LOCK_malloc, &THR_LOCK_malloc, DES_MUTEX_INIT_FAST);
+  mysql_mutex_destroy(&THR_LOCK_malloc);
+  mysql_mutex_init(key_THR_LOCK_malloc, &THR_LOCK_malloc, MY_MUTEX_INIT_FAST);
 
-  des_mutex_destroy(&THR_LOCK_open);
-  des_mutex_init(key_THR_LOCK_open, &THR_LOCK_open, DES_MUTEX_INIT_FAST);
+  mysql_mutex_destroy(&THR_LOCK_open);
+  mysql_mutex_init(key_THR_LOCK_open, &THR_LOCK_open, MY_MUTEX_INIT_FAST);
 
-  des_mutex_destroy(&THR_LOCK_charset);
-  des_mutex_init(key_THR_LOCK_charset, &THR_LOCK_charset, DES_MUTEX_INIT_FAST);
+  mysql_mutex_destroy(&THR_LOCK_charset);
+  mysql_mutex_init(key_THR_LOCK_charset, &THR_LOCK_charset, MY_MUTEX_INIT_FAST);
 
 #ifndef NDEBUG
-  des_mutex_destroy(&THR_LOCK_threads);
-  des_mutex_init(key_THR_LOCK_threads, &THR_LOCK_threads, MY_MUTEX_INIT_FAST);
+  mysql_mutex_destroy(&THR_LOCK_threads);
+  mysql_mutex_init(key_THR_LOCK_threads, &THR_LOCK_threads, MY_MUTEX_INIT_FAST);
 
   des_cond_destroy(&THR_COND_threads);
   des_cond_init(key_THR_COND_threads, &THR_COND_threads);
@@ -188,17 +188,17 @@ bool my_thread_global_init() {
   pthread_mutexattr_settype(&my_errorcheck_mutexattr, PTHREAD_MUTEX_ERRORCHECK);
 #endif
 
-  des_mutex_init(key_THR_LOCK_malloc, &THR_LOCK_malloc, DES_MUTEX_INIT_FAST);
-  des_mutex_init(key_THR_LOCK_open, &THR_LOCK_open, DES_MUTEX_INIT_FAST);
-  des_mutex_init(key_THR_LOCK_charset, &THR_LOCK_charset, DES_MUTEX_INIT_FAST);
-  des_mutex_init(key_THR_LOCK_lock, &THR_LOCK_lock, DES_MUTEX_INIT_FAST);
-  des_mutex_init(key_THR_LOCK_myisam, &THR_LOCK_myisam, DES_MUTEX_INIT_SLOW);
-  des_mutex_init(key_THR_LOCK_myisam_mmap, &THR_LOCK_myisam_mmap,
-                   DES_MUTEX_INIT_FAST);
-  des_mutex_init(key_THR_LOCK_heap, &THR_LOCK_heap, DES_MUTEX_INIT_FAST);
-  des_mutex_init(key_THR_LOCK_net, &THR_LOCK_net, DES_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_malloc, &THR_LOCK_malloc, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_open, &THR_LOCK_open, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_charset, &THR_LOCK_charset, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_lock, &THR_LOCK_lock, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_myisam, &THR_LOCK_myisam, MY_MUTEX_INIT_SLOW);
+  mysql_mutex_init(key_THR_LOCK_myisam_mmap, &THR_LOCK_myisam_mmap,
+                   MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_heap, &THR_LOCK_heap, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_net, &THR_LOCK_net, MY_MUTEX_INIT_FAST);
 #ifndef NDEBUG
-  des_mutex_init(key_THR_LOCK_threads, &THR_LOCK_threads, MY_MUTEX_INIT_FAST);
+  mysql_mutex_init(key_THR_LOCK_threads, &THR_LOCK_threads, MY_MUTEX_INIT_FAST);
   des_cond_init(key_THR_COND_threads, &THR_COND_threads);
 #endif
 
@@ -211,7 +211,7 @@ void my_thread_global_end() {
   bool all_threads_killed = true;
 
   set_timespec(&abstime, my_thread_end_wait_time);
-  def_des_mutex_lock(&THR_LOCK_threads);
+  def_mysql_mutex_lock(&THR_LOCK_threads);
   while (THR_thread_count > 0) {
     int error =
         mysql_cond_timedwait(&THR_COND_threads, &THR_LOCK_threads, &abstime);
@@ -231,7 +231,7 @@ void my_thread_global_end() {
       break;
     }
   }
-  def_des_mutex_unlock(&THR_LOCK_threads);
+  def_mysql_mutex_unlock(&THR_LOCK_threads);
 #endif
 
 #ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
@@ -240,14 +240,14 @@ void my_thread_global_end() {
 #ifdef PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP
   pthread_mutexattr_destroy(&my_errorcheck_mutexattr);
 #endif
-  des_mutex_destroy(&THR_LOCK_malloc);
-  des_mutex_destroy(&THR_LOCK_open);
-  des_mutex_destroy(&THR_LOCK_lock);
-  des_mutex_destroy(&THR_LOCK_myisam);
-  des_mutex_destroy(&THR_LOCK_myisam_mmap);
-  des_mutex_destroy(&THR_LOCK_heap);
-  des_mutex_destroy(&THR_LOCK_net);
-  des_mutex_destroy(&THR_LOCK_charset);
+  mysql_mutex_destroy(&THR_LOCK_malloc);
+  mysql_mutex_destroy(&THR_LOCK_open);
+  mysql_mutex_destroy(&THR_LOCK_lock);
+  mysql_mutex_destroy(&THR_LOCK_myisam);
+  mysql_mutex_destroy(&THR_LOCK_myisam_mmap);
+  mysql_mutex_destroy(&THR_LOCK_heap);
+  mysql_mutex_destroy(&THR_LOCK_net);
+  mysql_mutex_destroy(&THR_LOCK_charset);
 #ifndef NDEBUG
   if (all_threads_killed) {
     mysql_mutex_destroy(&THR_LOCK_threads);
@@ -285,10 +285,10 @@ bool my_thread_init() {
 
   if (!(tmp = (struct st_des_thread_var *)calloc(1, sizeof(*tmp)))) return true;
 
-  def_des_mutex_lock(&THR_LOCK_threads);
+  def_mysql_mutex_lock(&THR_LOCK_threads);
   tmp->id = ++thread_id;
   ++THR_thread_count;
-  def_des_mutex_unlock(&THR_LOCK_threads);
+  def_mysql_mutex_unlock(&THR_LOCK_threads);
   set_dessys_thread_var(tmp);
 #endif
 
@@ -333,10 +333,10 @@ void my_thread_end() {
       my_thread_end and thus freed all memory they have allocated in
       des_thread_init() and DBUG_xxxx
     */
-    def_des_mutex_lock(&THR_LOCK_threads);
+    def_mysql_mutex_lock(&THR_LOCK_threads);
     assert(THR_thread_count != 0);
     if (--THR_thread_count == 0) mysql_cond_signal(&THR_COND_threads);
-    def_des_mutex_unlock(&THR_LOCK_threads);
+    def_mysql_mutex_unlock(&THR_LOCK_threads);
   }
   set_dessys_thread_var(nullptr);
 #endif

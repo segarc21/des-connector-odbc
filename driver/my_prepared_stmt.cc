@@ -1,4 +1,6 @@
 // Copyright (c) 2012, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  ssps.c
   @brief Functions to support use of Server Side Prepared Statements.
@@ -35,31 +48,6 @@
 #include "driver.h"
 #include "errmsg.h"
 
-/* {{{ my_l_to_a() -I- */
-static char *my_l_to_a(char *buf, size_t buf_size, long long a) {
-  desodbc_snprintf(buf, buf_size, "%lld", (long long)a);
-  return buf;
-}
-/* }}} */
-
-/* {{{ my_ul_to_a() -I- */
-static char *my_ul_to_a(char *buf, size_t buf_size, unsigned long long a) {
-  desodbc_snprintf(buf, buf_size, "%llu", (unsigned long long)a);
-  return buf;
-}
-/* }}} */
-
-char *numeric2binary(char *dst, long long src, unsigned int byte_count) {
-  char byte;
-
-  while (byte_count) {
-    byte = src & 0xff;
-    *(dst + (--byte_count)) = byte;
-    src = src >> 8;
-  }
-
-  return dst;
-}
 
 void free_result_bind(STMT *stmt) {
   if (stmt->result_bind != NULL) {
@@ -80,139 +68,6 @@ void free_result_bind(STMT *stmt) {
   }
 }
 
-void ssps_close(STMT *stmt) {
-  stmt->buf_set_pos(0);
-}
-
-bool is_varlen_type(enum enum_field_types type) {
-  /*
-  return (type == DES_TYPE_BLOB || type == DES_TYPE_TINY_BLOB ||
-          type == DES_TYPE_MEDIUM_BLOB || type == DES_TYPE_LONG_BLOB ||
-          type == DES_TYPE_VAR_STRING || type == DES_TYPE_JSON ||
-          type == DES_TYPE_VECTOR);
-  */
-  return true; //TODO: implement
-}
-
-/* The structure and following allocation function are borrowed from c/c++ and
- * adopted */
-typedef struct tagBST {
-  char *buffer = NULL;
-  size_t size = 0;
-  enum enum_field_types type;
-
-  tagBST(char *b, size_t s, enum enum_field_types t)
-      : buffer(b), size(s), type(t) {}
-
-  /*
-    To bind blob parameters the fake 1 byte allocation has to be made
-    otherwise libmysqlclient throws the assertion.
-    This will be reallocated later.
-  */
-  bool is_varlen_alloc() { return is_varlen_type(type); }
-} st_buffer_size_type;
-
-/* {{{ allocate_buffer_for_field() -I- */
-static st_buffer_size_type allocate_buffer_for_field(
-    const DES_FIELD *const field, BOOL outparams) {
-  st_buffer_size_type result(NULL, 0, field->type);
-
-  switch (field->type) {
-    case DES_TYPE_FLOAT:
-      result.size = 24;
-      result.type = DES_TYPE_STRING;
-      break;
-
-    case DES_TYPE_TIMESTAMP:
-    case DES_TYPE_DATE:
-    case DES_TYPE_TIME:
-    case DES_TYPE_DATETIME:
-      result.size = sizeof(MYSQL_TIME);
-      break;
-
-    case DES_TYPE_STRING:
-      /* We will get length with fetch and then fetch column */
-      if (field->length > 0 && field->length < 1025)
-        result.size = field->length + 1;
-      else {
-        // This is to keep mysqlclient library happy.
-        // The buffer will be reallocated later.
-        result.size = 1024;
-      }
-      break;
-
-#if A1
-    case DES_TYPE_TIMESTAMP:
-    case DES_TYPE_YEAR:
-      result.size = 10;
-      break;
-#endif
-#if A0
-    // There two are not sent over the wire
-    case DES_TYPE_ENUM:
-    case DES_TYPE_SET:
-#endif
-
-    default:
-      /* Error? */
-      1;
-  }
-
-  if (result.size > 0) {
-    result.buffer = (char *)desodbc_malloc(result.size, DESF(0));
-  }
-
-  return result;
-}
-/* }}} */
-
-static DES_ROW fetch_varlength_columns(STMT *stmt, DES_ROW values) {
-  const size_t num_fields = stmt->field_count();
-  unsigned int i;
-  uint desc_index = ~0L, stream_column = ~0L;
-
-  // Only do something if values have not been fetched yet
-  if (values) return values;
-
-  if (stmt->out_params_state == OPS_STREAMS_PENDING) {
-    desc_find_outstream_rec(stmt, &desc_index, &stream_column);
-  }
-
-  bool reallocated_buffers = false;
-  for (i = 0; i < num_fields; ++i) {
-    if (i == stream_column) {
-      /* Skipping this column */
-      desc_find_outstream_rec(stmt, &desc_index, &stream_column);
-    } else {
-      if (!(*stmt->result_bind[i].is_null) &&
-          is_varlen_type(stmt->result_bind[i].buffer_type) &&
-          stmt->result_bind[i].buffer_length < *stmt->result_bind[i].length) {
-        /* TODO Realloc error proc */
-        stmt->array[i] = (char *)myodbc_realloc(stmt->array[i],
-                                                *stmt->result_bind[i].length);
-
-        stmt->lengths[i] = *stmt->result_bind[i].length;
-        stmt->result_bind[i].buffer_length = *stmt->result_bind[i].length;
-        reallocated_buffers = true;
-      }
-
-      // Result bind buffer should already be freed by now.
-      stmt->result_bind[i].buffer = stmt->array[i];
-
-      if (stmt->lengths[i] > 0) {
-        // For fixed-length types we should not set zero length
-        stmt->result_bind[i].buffer_length = stmt->lengths[i];
-      }
-
-    }
-  }
-
-  fill_ird_data_lengths(stmt->ird, stmt->result_bind[0].length,
-                        stmt->result->field_count);
-
-  return stmt->array;
-}
-
 char *STMT::extend_buffer(char *to, size_t len) {
   return tempbuf.extend_buffer(to, len);
 }
@@ -230,10 +85,6 @@ void STMT::alloc_lengths(size_t num) {
 }
 
 void STMT::reset_setpos_apd() { setpos_apd.reset(); }
-
-bool STMT::is_dynamic_cursor() {
-  return stmt_options.cursor_type == SQL_CURSOR_DYNAMIC;
-}
 
 void STMT::free_unbind() { ard->reset(); }
 
@@ -262,6 +113,11 @@ void STMT::free_reset_params() {
   apd->records2.clear();
 }
 
+/* DESODBC:
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 void STMT::free_fake_result(bool clear_all_results) {
   if (!fake_result) {
     return;  // TODO: provisional solution.
@@ -309,69 +165,6 @@ void STMT::reset_getdata_position() {
   getdata.dst_offset = (ulong)~0L;
   getdata.src_offset = (ulong)~0L;
   getdata.latest_bytes = getdata.latest_used = 0;
-}
-
-SQLRETURN STMT::set_error(desodbc_errid errid, const char *errtext) {
-  error = DESERROR(errid, errtext);
-  return error.retcode;
-}
-
-SQLRETURN STMT::set_error(desodbc_errid errid) {
-  error = DESERROR(errid);
-  return error.retcode;
-}
-
-SQLRETURN STMT::set_error(const char *state, const char *msg) {
-  error = DESERROR(state, msg);
-  return error.retcode;
-}
-
-SQLRETURN STMT::set_error(const char *state) {
-  error = DESERROR(state, ""); //TODO: research what to do
-  return error.retcode;
-}
-
-SQLRETURN STMT::set_error_from_tapi_output(const std::string &tapi_output) {
-  auto lines = getLines(tapi_output);
-  /* Note: there are multiple ways to parse the info messages depending on the command.
-  * There is not a standard syntax for every command: in 5.18.1.2 (DES v6.7 manual), it says
-  that the answers can be defined specifically for some commands.
-  For instance, it can be checked an error of /process should be parsed differently than an "$error" notified
-  by /ls.
-  We then throw the full TAPI msg. It is not a bad idea: after all, the application using this connector
-  may find it useful to work on the TAPI notation, since the application itself can be a computer program that
-  uses this TAPI to its advantage.
-  */
-  const char *msg = string_to_char_pointer(tapi_output);
-
-  this->set_error("HY000", msg);
-
-  if (std::all_of(lines[1].begin(), lines[1].end(), ::isdigit)) {
-    uint native_error = stoi(lines[1]);
-    this->error.native_error = native_error;
-
-    switch (native_error) {  // DES manual 5.18.1.2
-      case 0:
-        return SQL_ERROR;
-      case 1:
-      case 2:
-        return SQL_SUCCESS_WITH_INFO;
-    }
-  }
-  return SQL_ERROR;
-}
-
-SQLRETURN STMT::check_and_set_errors(const std::string &tapi_output) {
-  if (is_in_string(tapi_output, "$error")) {
-    return this->set_error_from_tapi_output(tapi_output);
-  } else if (is_in_string(tapi_output, "$success")) {
-    return SQL_SUCCESS;
-  } else {
-    if (tapi_output.size() == 0) return SQL_SUCCESS;
-    const char *msg = string_to_char_pointer(tapi_output);
-    this->set_error("HY000", msg);
-    return SQL_SUCCESS_WITH_INFO;
-  }   
 }
 
 long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow) {
@@ -422,7 +215,7 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow) {
     } break;
 
     default:
-      set_error(DESERR_S1106, "Fetch type out of range");
+      set_error("HY106", "Fetch type out of range");
       throw error;
   }
 
@@ -433,20 +226,7 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow) {
     throw DESERROR(SQL_NO_DATA_FOUND);
   }
   if (cur_row > max_row) {
-    if (scroller_exists(this)) {
-      while (cur_row > (max_row = (long)scroller_move(this)))
-        ;
-
-      switch (scroller_prefetch(this)) {
-        case SQL_NO_DATA:
-          throw DESERROR(SQL_NO_DATA_FOUND);
-        case SQL_ERROR:
-          set_error(DESERR_S1000);
-          throw error;
-      }
-    } else {
-      cur_row = max_row;
-    }
+    cur_row = max_row;
   }
 
   if (!result_array && !if_forward_cache(this)) {
@@ -463,135 +243,4 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow) {
   }
   current_row = (long)cur_row;
   return current_row;
-}
-
-bool bind_param(DES_BIND *bind, const char *value, unsigned long length,
-                enum enum_field_types buffer_type);
-
-void STMT::add_query_attr(const char *name, std::string val) {
-  query_attr_names.emplace_back(name);
-  size_t num = query_attr_names.size();
-  // Consolidate the size of attribute names and param binds vectors.
-  allocate_param_bind(num);
-
-  DES_BIND *bind = &param_bind[num - 1];
-  bind_param(bind, val.c_str(), val.length(), DES_TYPE_STRING);
-}
-
-bool STMT::query_attr_exists(const char *name) {
-  if (m_ipd.rcount() == 0 || name == nullptr) return false;
-
-  size_t len = strlen(name);
-  for (auto &c : m_ipd.records2) {
-    const char *v = c.par.val();
-    if (v == nullptr || c.par.val_length() < len) continue;
-
-    if (strncmp(name, v, len) == 0) return true;
-  }
-  return false;
-}
-
-SQLRETURN STMT::bind_query_attrs(bool use_ssps) {
-  uint rcount = (uint)apd->rcount();
-  if (rcount < param_count) {
-    return set_error(DESERR_07001,
-                     "The number of parameter markers is larger "
-                     "than he number of parameters provided");
-  } else if (!dbc->has_query_attrs) {
-    return set_error(DESERR_01000,
-                     "The server does not support query attributes");
-  }
-
-  uint num = param_count;
-
-  // If anything is added to query_attr_names it means the parameter was added
-  // as well. All other attributes go after it.
-  uint param_idx = query_attr_names.size();
-
-  allocate_param_bind(rcount + 1);
-
-  while (num < rcount) {
-    DESCREC *aprec = desc_get_rec(apd, num, false);
-    DESCREC *iprec = desc_get_rec(ipd, num, false);
-
-    /*
-      IPREC and APREC should both be not NULL if query attributes
-      or parameters are set.
-    */
-    if (!aprec || !iprec) return SQL_SUCCESS;  // Nothing to do
-
-    DES_BIND *bind = &param_bind[param_idx];
-
-    query_attr_names.emplace_back(iprec->par.val());
-
-    // This will just fill the bind structure and do the param data conversion
-    if (insert_param(this, bind, apd, aprec, iprec, 0) == SQL_ERROR) {
-      return set_error("HY000",
-                       "The number of attributes is larger than the "
-                       "number of attribute values provided");
-    }
-    ++num;
-    ++param_idx;
-  }
-
-  DES_BIND *bind = param_bind.data();
-  const char **names = (const char **)query_attr_names.data();
-
-  //TODO: implement
-  /*
-  if (mysql_bind_param(dbc->des, (unsigned int)query_attr_names.size(), bind,
-                       names)) {
-    set_error("HY000");
-    // Clear only attr names. Params will be reused.
-    clear_attr_names();
-    return SQL_SUCCESS_WITH_INFO;
-  }
-  */
-  return SQL_SUCCESS;
-}
-
-/* --------------- Type conversion functions -------------- */
-
-#define ALLOC_IFNULL(buff, size) \
-  ((buff) == NULL ? (char *)desodbc_malloc(size, DESF(0)) : buff)
-
-template <typename T>
-T binary2numeric(char *src, uint64 srcLen) {
-  T dst = 0;
-
-  while (srcLen) {
-    /* if source binary data is longer than 8 bytes(size of long long)
-       we consider only minor 8 bytes */
-    if (srcLen > sizeof(T)) continue;
-    dst += ((T)(0xff & *src)) << (--srcLen) * 8;
-    ++src;
-  }
-
-  return dst;
-}
-
-long long binary2ll(char *src, uint64 srcLen) {
-  return binary2numeric<long long>(src, srcLen);
-}
-
-unsigned long long binary2ull(char *src, uint64 srcLen) {
-  return binary2numeric<unsigned long long>(src, srcLen);
-}
-
-
-/* }}} */
-
-DES_BIND *get_param_bind(STMT *stmt, unsigned int param_number, int reset) {
-  DES_BIND *bind = &stmt->param_bind[param_number];
-
-  if (reset) {
-    bind->is_null_value = 0;
-    bind->is_unsigned = 0;
-
-    /* as far as looked - this trick is safe */
-    bind->is_null = &bind->is_null_value;
-    bind->length = &bind->length_value;
-  }
-
-  return bind;
 }

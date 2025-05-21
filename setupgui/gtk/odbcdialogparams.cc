@@ -120,7 +120,7 @@ on_cancel_clicked(GtkButton *button, gpointer user_data)
 }
 
 
-void on_help_clicked(GtkButton *button, gpointer user_data)
+void on_about_clicked(GtkButton *button, gpointer user_data)
 {
   g_spawn_command_line_async ("xdg-open https://dev.mysql.com/doc/connector-odbc"
                               "/en/connector-odbc-configuration.html",
@@ -660,9 +660,9 @@ int ShowOdbcParamsDialog(DataSource* params, HWND ParentWnd, BOOL isPrompt)
   g_signal_connect ((gpointer) dummy, "clicked",
                     G_CALLBACK (on_cancel_clicked), NULL);
 
-  dummy= GTK_WIDGET (gtk_builder_get_object (builder, "help"));
+  dummy= GTK_WIDGET (gtk_builder_get_object (builder, "about"));
   g_signal_connect ((gpointer) dummy, "clicked",
-                    G_CALLBACK (on_help_clicked), NULL);
+                    G_CALLBACK (on_about_clicked), NULL);
 
   dummy= GTK_WIDGET (gtk_builder_get_object (builder, "test"));
   g_signal_connect ((gpointer) dummy, "clicked",

@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -25,6 +27,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 /*!
   @brief  This program will aid installers when installing/uninstalling
@@ -54,6 +67,10 @@
 #include <iostream>
 #include <iomanip>
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 const char usage[] =
 "+---                                                                   \n"
 "| desodbc-installer v" DESODBC_VERSION "                               \n"
@@ -200,6 +217,10 @@ void main_usage(FILE *out_file)
 }
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
  * Print an error retrieved from SQLInstallerError.
  */
@@ -332,7 +353,7 @@ SQLInstallDriverExW(const MyODBC_LPCWSTR lpszDriver, const MyODBC_LPCWSTR lpszPa
   pathin= (char *)sqlwchar_as_utf8(lpszPathIn, &len);
 
   if (cbPathOutMax > 0)
-    pathout= (char *)desodbc_malloc(cbPathOutMax * 4 + 1, DESF(0)); /* 4 = max utf8 charlen */
+    pathout= (char *)myodbc_malloc(cbPathOutMax * 4 + 1, MYF(0)); /* 4 = max utf8 charlen */
 
   rc= SQLInstallDriverEx(driver, pathin, pathout, cbPathOutMax * 4,
                          pcbPathOut, fRequest, lpdwUsageCount);
@@ -478,7 +499,10 @@ end:
   return rc;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
  * Handler for "list data source" command (-s -l -n drivername)
  */
@@ -623,7 +647,10 @@ int list_datasources()
   return 0;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
  * Handler for "add data source" command (-s -a -n drivername -t attrs)
  */
@@ -652,15 +679,6 @@ int add_datasource(DataSource *ds, const SQLWCHAR *attrs)
             "[ERROR] Data source entry failed, remove or try again\n");
     return 1;
   }
-
-#if DES_VERSION_ID >= 80300
-  if (ds->opt_AUTO_RECONNECT)
-  {
-    // We will not return the error code 1, just print a warning to stderr.
-    fprintf(stderr, "[WARNING] The option AUTO_RECONNECT is not "
-      "supported by MySQL ODBC Driver version 8.3 and newer.\n");
-  }
-#endif
 
   printf("Success\n");
   return 0;
@@ -862,9 +880,9 @@ int main(int argc, char **argv)
   }
 
   /* init libmysqlclient */
-  des_sys_init();
-  utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY),
-                                           DESF(0));
+  my_sys_init();
+  utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
+                                           MYF(0));
 
   /* convert to SQLWCHAR for installer API */
   convlen= SQL_NTS;

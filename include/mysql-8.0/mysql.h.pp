@@ -370,7 +370,7 @@ static inline const char *ER_CLIENT(int client_errno) {
 }
 extern unsigned int mysql_port;
 extern char *mysql_unix_port;
-typedef struct DES_FIELD {
+typedef struct MYSQL_FIELD {
   char *name;
   char *org_name;
   char *table;
@@ -392,7 +392,7 @@ typedef struct DES_FIELD {
   unsigned int charsetnr;
   enum enum_field_types type;
   void *extension;
-} DES_FIELD;
+} MYSQL_FIELD;
 typedef char **MYSQL_ROW;
 typedef unsigned int MYSQL_FIELD_OFFSET;
 typedef struct MYSQL_ROWS {
@@ -523,7 +523,7 @@ typedef struct MYSQL {
   char *host, *user, *passwd, *unix_socket, *server_version, *host_info;
   char *info, *db;
   struct CHARSET_INFO *charset;
-  DES_FIELD *fields;
+  MYSQL_FIELD *fields;
   struct MEM_ROOT *field_alloc;
   uint64_t affected_rows;
   uint64_t insert_id;
@@ -551,7 +551,7 @@ typedef struct MYSQL {
 } MYSQL;
 typedef struct MYSQL_RES {
   uint64_t row_count;
-  DES_FIELD *fields;
+  MYSQL_FIELD *fields;
   struct MYSQL_DATA *data;
   MYSQL_ROWS *data_cursor;
   unsigned long *lengths;
@@ -585,9 +585,9 @@ void mysql_thread_end(void);
 uint64_t mysql_num_rows(MYSQL_RES *res);
 unsigned int mysql_num_fields(MYSQL_RES *res);
 bool mysql_eof(MYSQL_RES *res);
-DES_FIELD * mysql_fetch_field_direct(MYSQL_RES *res,
+MYSQL_FIELD * mysql_fetch_field_direct(MYSQL_RES *res,
                                               unsigned int fieldnr);
-DES_FIELD * mysql_fetch_fields(MYSQL_RES *res);
+MYSQL_FIELD * mysql_fetch_fields(MYSQL_RES *res);
 MYSQL_ROW_OFFSET mysql_row_tell(MYSQL_RES *res);
 MYSQL_FIELD_OFFSET mysql_field_tell(MYSQL_RES *res);
 enum enum_resultset_metadata mysql_result_metadata(MYSQL_RES *result);
@@ -683,7 +683,7 @@ MYSQL_ROW mysql_fetch_row(MYSQL_RES *result);
 enum net_async_status mysql_fetch_row_nonblocking(MYSQL_RES *res,
                                                           MYSQL_ROW *row);
 unsigned long * mysql_fetch_lengths(MYSQL_RES *result);
-DES_FIELD * mysql_fetch_field(MYSQL_RES *result);
+MYSQL_FIELD * mysql_fetch_field(MYSQL_RES *result);
 MYSQL_RES * mysql_list_fields(MYSQL *mysql, const char *table,
                                      const char *wild);
 unsigned long mysql_escape_string(char *to, const char *from,
@@ -718,8 +718,8 @@ typedef struct MYSQL_BIND {
   bool *error;
   unsigned char *row_ptr;
   void (*store_param_func)(NET *net, struct MYSQL_BIND *param);
-  void (*fetch_result)(struct MYSQL_BIND *, DES_FIELD *, unsigned char **row);
-  void (*skip_result)(struct MYSQL_BIND *, DES_FIELD *, unsigned char **row);
+  void (*fetch_result)(struct MYSQL_BIND *, MYSQL_FIELD *, unsigned char **row);
+  void (*skip_result)(struct MYSQL_BIND *, MYSQL_FIELD *, unsigned char **row);
   unsigned long buffer_length;
   unsigned long offset;
   unsigned long length_value;
@@ -739,7 +739,7 @@ typedef struct MYSQL_STMT {
   MYSQL *mysql;
   MYSQL_BIND *params;
   MYSQL_BIND *bind;
-  DES_FIELD *fields;
+  MYSQL_FIELD *fields;
   MYSQL_DATA result;
   MYSQL_ROWS *data_cursor;
   int (*read_row_func)(struct MYSQL_STMT *stmt, unsigned char **row);

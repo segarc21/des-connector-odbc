@@ -1,6 +1,6 @@
 #include "mysql/psi/psi_transaction.h"
 #include "my_inttypes.h"
-#include "des_config.h"
+#include "my_config.h"
 typedef unsigned char uchar;
 typedef long long int longlong;
 typedef unsigned long long int ulonglong;

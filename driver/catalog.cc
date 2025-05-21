@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,24 +28,44 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
-  @file  catalog.c
+  @file  catalog.cc
   @brief Catalog functions.
 */
 
 #include "driver.h"
 #include "catalog.h"
 
-static char SC_type[10],SC_typename[20],SC_precision[10],SC_length[10],SC_scale[10],
-SC_nullable[10], SC_coldef[10], SC_sqltype[10],SC_octlen[10],
-SC_isnull[10];
+/*
+****************************************************************************
+SQLColumns
+****************************************************************************
+*/
+static char SC_type[10], SC_typename[20], SC_precision[10], SC_length[10],
+    SC_scale[10], SC_nullable[10], SC_coldef[10], SC_sqltype[10], SC_octlen[10],
+    SC_isnull[10];
 
-static char *SQLCOLUMNS_values[]= {
-    (char*)"", (char*)"", NullS, NullS, SC_type, SC_typename,
-    SC_precision,
-    SC_length, SC_scale, (char*)"10", SC_nullable, (char*)"DES column", //TODO: DES column?
-    SC_coldef, SC_sqltype, NullS, SC_octlen, NullS, SC_isnull
-};
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+static char *SQLCOLUMNS_values[] = {
+    (char *)"",  (char *)"",           NullS,     NullS,     SC_type,
+    SC_typename, SC_precision,         SC_length, SC_scale,  (char *)"10",
+    SC_nullable, (char *)"DES column",
+    SC_coldef,   SC_sqltype,           NullS,     SC_octlen, NullS,
+    SC_isnull};
 
 static DES_FIELD SQLCOLUMNS_fields[] = {
     DESODBC_FIELD_NAME("TABLE_CAT", 0),
@@ -66,13 +88,17 @@ static DES_FIELD SQLCOLUMNS_fields[] = {
     DESODBC_FIELD_STRING("IS_NULLABLE", 3, 0),
 };
 
+const uint SQLCOLUMNS_FIELDS = (uint)array_elements(SQLCOLUMNS_values);
 
-const uint SQLCOLUMNS_FIELDS= (uint)array_elements(SQLCOLUMNS_values);
+/* DESODBC:
+    This function inserts the SQLColumns fields
+    into the corresponding ResultTable.
 
+    Original author: DESODBC Developer
+*/
 void ResultTable::insert_SQLColumns_cols() {
   insert_cols(SQLCOLUMNS_fields, array_elements(SQLCOLUMNS_fields));
 }
-
 
 DES_FIELD SQLSPECIALCOLUMNS_fields[] = {
     DESODBC_FIELD_SHORT("SCOPE", 0),
@@ -90,24 +116,18 @@ static char *SQLSPECIALCOLUMNS_values[] = {0, NULL, 0, NULL, 0, 0, 0, 0};
 const uint SQLSPECIALCOLUMNS_FIELDS =
     (uint)array_elements(SQLSPECIALCOLUMNS_fields);
 
-
-size_t ROW_STORAGE::set_size(size_t rnum, size_t cnum)
-{
+size_t ROW_STORAGE::set_size(size_t rnum, size_t cnum) {
   size_t new_size = rnum * cnum;
   m_rnum = rnum;
   m_cnum = cnum;
 
-  if (new_size)
-  {
+  if (new_size) {
     m_data.resize(new_size, "");
     m_pdata.resize(new_size, nullptr);
 
     // Move the current row back if the array had shrunk
-    if (m_cur_row >= rnum)
-      m_cur_row = rnum - 1;
-  }
-  else
-  {
+    if (m_cur_row >= rnum) m_cur_row = rnum - 1;
+  } else {
     // Clear if the size is zero
     m_data.clear();
     m_pdata.clear();
@@ -117,12 +137,10 @@ size_t ROW_STORAGE::set_size(size_t rnum, size_t cnum)
   return new_size;
 }
 
-bool ROW_STORAGE::next_row()
-{
+bool ROW_STORAGE::next_row() {
   ++m_cur_row;
 
-  if (m_cur_row < m_rnum - 1)
-  {
+  if (m_cur_row < m_rnum - 1) {
     return true;
   }
   // if not enough rows - add one more
@@ -130,30 +148,25 @@ bool ROW_STORAGE::next_row()
   return false;
 }
 
-const xstring & ROW_STORAGE::operator=(const xstring &val)
-{
+const xstring &ROW_STORAGE::operator=(const xstring &val) {
   size_t offs = m_cur_row * m_cnum + m_cur_col;
   m_data[offs] = val;
   m_pdata[offs] = m_data[offs].c_str();
   return m_data[offs];
 }
 
-xstring& ROW_STORAGE::operator[](size_t idx)
-{
-  if (idx >= m_cnum)
-    throw ("Column number is out of bounds");
+xstring &ROW_STORAGE::operator[](size_t idx) {
+  if (idx >= m_cnum) throw("Column number is out of bounds");
 
   m_cur_col = idx;
   return m_data[m_cur_row * m_cnum + m_cur_col];
 }
 
-const char** ROW_STORAGE::data()
-{
+const char **ROW_STORAGE::data() {
   auto m_data_it = m_data.begin();
   auto m_pdata_it = m_pdata.begin();
 
-  while(m_data_it != m_data.end())
-  {
+  while (m_data_it != m_data.end()) {
     *m_pdata_it = m_data_it->c_str();
     ++m_pdata_it;
     ++m_data_it;
@@ -161,102 +174,17 @@ const char** ROW_STORAGE::data()
   return m_pdata.size() ? m_pdata.data() : nullptr;
 }
 
-/*
-  @type    : internal
-  @purpose : returns the next token
+/* DESODBC:
+    Structure that checks that:
+    - A catalog has been specified,
+    - Schemas have not been specified
+
+    Original Autor: MyODBC
+    Modified by: DESODBC Developer
 */
-
-const char *des_next_token(const char *prev_token,
-                          const char **token,
-                                char *data,
-                          const char chr)
-{
-    const char *cur_token;
-
-    if ( (cur_token= strchr(*token, chr)) )
-    {
-        if ( prev_token )
-        {
-            uint len= (uint)(cur_token-prev_token);
-            strncpy(data,prev_token, len);
-            data[len]= 0;
-        }
-        *token= (char *)cur_token+1;
-        prev_token= cur_token;
-        return cur_token+1;
-    }
-    return 0;
-}
-
-
-/**
-  Create a fake result set in the current statement
-
-  @param[in] stmt           Handle to statement
-  @param[in] rowval         Row array
-  @param[in] rowsize        sizeof(row array)
-  @param[in] rowcnt         Number of rows
-  @param[in] fields         Field array
-  @param[in] fldcnt         Number of fields
-
-  @return SQL_SUCCESS or SQL_ERROR (and diag is set)
-*/
-
-/*
-  Check if no_catalog is set, but catalog is specified:
-  CN is non-NULL pointer AND *CN is not an empty string AND
-  CL the length is not zero
-
-  Check if no_schema is set, but schema is specified:
-  SN is non-NULL pointer AND *SN is not an empty string AND
-  SL the length is not zero
-
-  Check if catalog and schema were specified together and
-  return an error if they were.
-*/
-#define CHECK_CATALOG_SCHEMA(ST, CN, CL, SN, SL) \
-  if (ST->dbc->ds.opt_NO_CATALOG && CN && *CN && CL) \
-    return ST->set_error("HY000", "Support for catalogs is disabled by " \
-           "NO_CATALOG option, but non-empty catalog is specified."); \
-  if (ST->dbc->ds.opt_NO_SCHEMA && SN && *SN && SL) \
-    return ST->set_error("HY000", "Support for schemas is disabled by " \
-           "NO_SCHEMA option, but non-empty schema is specified."); \
-  if (CN && *CN && CL && SN && *SN && SL) \
-    return ST->set_error("HY000", "Catalog and schema cannot be specified " \
-           "together in the same function call.");
-
-
-SQLRETURN SQL_API DESColumnPrivileges(
-    SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
-    SQLCHAR *schema_name, SQLSMALLINT schema_len, SQLCHAR *table_name,
-    SQLSMALLINT table_len, SQLCHAR *column_name, SQLSMALLINT column_len) {
-  STMT *stmt = (STMT *)hstmt;
-
-  CLEAR_STMT_ERROR(hstmt);
-  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
-
-  return SQL_ERROR; //TODO: mark as not implemented
-}
-
-/*
-  @type    : ODBC 1.0 API
-  @purpose : returns a list of tables and the privileges associated with
-             each table. The driver returns the information as a result
-             set on the specified statement.
-*/
-SQLRETURN SQL_API DESTablePrivileges(SQLHSTMT hstmt, SQLCHAR *catalog_name,
-                                       SQLSMALLINT catalog_len,
-                                       SQLCHAR *schema_name,
-                                       SQLSMALLINT schema_len,
-                                       SQLCHAR *table_name,
-                                       SQLSMALLINT table_len) {
-  STMT *stmt = (STMT *)hstmt;
-
-  CLEAR_STMT_ERROR(hstmt);
-  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
-
-  return SQL_ERROR; //TODO: implement as "unimplemented"
-}
+#define CHECK_SCHEMA(ST, SN, SL)                           \
+  if (SN && SL > 0)                                                        \
+    return ST->set_error("HYC00", "Schemas are not supported in DESODBC");
 
 /*
 ****************************************************************************
@@ -275,71 +203,71 @@ DES_FIELD SQLTABLES_fields[] = {
     DESODBC_FIELD_STRING("REMARKS", 80, 0),
 };
 
+/* DESODBC:
+    This function inserts the SQLTables fields
+    into the corresponding ResultTable.
+
+    Original author: DESODBC Developer
+*/
 void ResultTable::insert_metadata_cols() {
   insert_cols(SQLTABLES_fields, array_elements(SQLTABLES_fields));
 }
 
-SQLRETURN SQL_API
-DESTables(SQLHSTMT hstmt,
-            SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
-            SQLCHAR *schema_name, SQLSMALLINT schema_len,
-            SQLCHAR *table_name, SQLSMALLINT table_len,
-            SQLCHAR *type_name, SQLSMALLINT type_len)
-{
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLTables, which was
+    MySQLTables in MyODBC. We have reused
+    some of its skeleton.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+SQLRETURN SQL_API DES_SQLTables(SQLHSTMT hstmt, SQLCHAR *catalog_name,
+                                SQLSMALLINT catalog_len, SQLCHAR *schema_name,
+                                SQLSMALLINT schema_len, SQLCHAR *table_name,
+                                SQLSMALLINT table_len, SQLCHAR *type_name,
+                                SQLSMALLINT type_len) {
   SQLRETURN rc = SQL_SUCCESS;
   std::pair<SQLRETURN, std::string> pair;
-  STMT *stmt= (STMT *)hstmt;
+  STMT *stmt = (STMT *)hstmt;
   DBC *dbc = stmt->dbc;
 
   CLEAR_STMT_ERROR(hstmt);
   DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
+  GET_NAME_LEN(stmt, catalog_name, catalog_len);
+  GET_NAME_LEN(stmt, schema_name, schema_len);
+  GET_NAME_LEN(stmt, table_name, table_len);
+  GET_NAME_LEN(stmt, type_name, type_len);
+
+  CHECK_SCHEMA(stmt, schema_name, schema_len);
+
+  std::string catalog_name_str =
+      get_prepared_arg(stmt, catalog_name, catalog_len);
+
   rc = dbc->getQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
-  pair = dbc->send_query_and_read("/current_db");
-  rc = pair.first;
-  std::string current_db_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
-    return rc;
+  if (catalog_name) {
+    stmt->params_for_table.catalog_name = catalog_name_str;
   }
-  std::string previous_db = getLines(current_db_output)[0];
-
-  pair = dbc->send_query_and_read("/use_db $des");
-  rc = pair.first;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read("/use_db " + previous_db); //trying to revert the database change
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
   if (table_name) {
-    std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+    std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
     stmt->params_for_table.table_name = table_name_str;
+  }
+  if (type_name) {
+    std::string table_type_str = get_prepared_arg(stmt, type_name, type_len);
+    stmt->params_for_table.table_type = table_type_str;
   }
   stmt->type = SQLTABLES;
 
   rc = stmt->build_results();
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
-  pair = dbc->send_query_and_read("/use_db " + previous_db);
-  rc = pair.first;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
-    return rc;
-  }
 
   rc = dbc->releaseQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
 }
-
 
 /*
 ****************************************************************************
@@ -353,11 +281,9 @@ SQLColumns
   NULL.
 */
 SQLLEN get_buffer_length(const char *type_name, const char *ch_size,
-  const char *ch_buflen, SQLSMALLINT sqltype, size_t col_size,
-  bool is_null)
-{
-  switch (sqltype)
-  {
+                         const char *ch_buflen, SQLSMALLINT sqltype,
+                         size_t col_size, bool is_null) {
+  switch (sqltype) {
     case SQL_DECIMAL:
       return std::strtoll(ch_buflen, nullptr, 10);
 
@@ -392,13 +318,21 @@ SQLLEN get_buffer_length(const char *type_name, const char *ch_size,
       return col_size;
   }
 
-  if (is_null)
-    return 0;
+  if (is_null) return 0;
 
   return (SQLULEN)std::strtoll(ch_buflen, nullptr, 10);
 }
 
-/**
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLColumns, which was
+    MySQLColumns in MyODBC. We have reused
+    some of its skeleton.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+/** MyODBC comment:
   Get information about the columns in one or more tables.
 
   @param[in] hstmt            Handle of statement
@@ -411,20 +345,25 @@ SQLLEN get_buffer_length(const char *type_name, const char *ch_size,
   @param[in] column_name      Pattern of column names to match
   @param[in] column_len       Length of column pattern
 */
-SQLRETURN SQL_API
-DESColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
-             SQLCHAR *schema_name,
-             SQLSMALLINT schema_len,
-             SQLCHAR *table_name, SQLSMALLINT table_len,
-             SQLCHAR *column_name, SQLSMALLINT column_len)
+SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
+                                 SQLSMALLINT catalog_len, SQLCHAR *schema_name,
+                                 SQLSMALLINT schema_len, SQLCHAR *table_name,
+                                 SQLSMALLINT table_len, SQLCHAR *column_name,
+                                 SQLSMALLINT column_len)
 
 {
   SQLRETURN rc = SQL_SUCCESS;
   std::pair<SQLRETURN, std::string> pair;
-  STMT *stmt= (STMT *)hstmt;
+  STMT *stmt = (STMT *)hstmt;
   DBC *dbc = stmt->dbc;
   CLEAR_STMT_ERROR(hstmt);
   DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+
+  GET_NAME_LEN(stmt, catalog_name, catalog_len);
+  GET_NAME_LEN(stmt, schema_name, schema_len);
+  GET_NAME_LEN(stmt, table_name, table_len);
+  GET_NAME_LEN(stmt, column_name, column_len);
+  CHECK_SCHEMA(stmt, schema_name, schema_len);
 
   rc = dbc->getQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
@@ -438,23 +377,43 @@ DESColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
   }
   std::string previous_db = getLines(current_db_output)[0];
 
-  pair = dbc->send_query_and_read("/use_db $des");
+  std::string catalog_name_str =
+      get_prepared_arg(stmt, catalog_name, catalog_len);
+  
+  std::string use_db_query = "/use_db ";
+  if (catalog_name_str.size() == 0) use_db_query += "$des";
+  else
+    use_db_query += catalog_name_str;
+
+  pair = dbc->send_query_and_read(use_db_query);
   rc = pair.first;
+  std::string use_db_output = pair.second;
+
+  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
+    // We do not want to return an error when receiving this message.
+    if (!is_in_string(use_db_output, "Database already in use")) {
+      rc = check_and_set_errors(SQL_HANDLE_STMT, stmt, use_db_output);
+    }
+  }
+
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->send_query_and_read(
-        "/use_db " + previous_db);  // trying to revert the database change
+        "/use_db " +
+        previous_db);  // DESODBC: trying to revert the database change
     dbc->releaseQueryMutex();
     return rc;
   }
 
-  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+  std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
   stmt->params_for_table.table_name = table_name_str;
-  if (column_name) {
-    std::string column_str = sqlcharptr_to_str(column_name, column_len);
-    stmt->params_for_table.column_name = column_str;
 
+  if (column_name) {
+    std::string column_str = get_prepared_arg(stmt, column_name, column_len);
+    stmt->params_for_table.column_name = column_str;
   }
+
   stmt->type = SQLCOLUMNS;
+  stmt->params_for_table.catalog_name = catalog_name_str;
 
   rc = stmt->build_results();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
@@ -475,7 +434,6 @@ DESColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
 
   return rc;
 }
-
 
 /*
 ****************************************************************************
@@ -499,34 +457,52 @@ DES_FIELD SQLSTAT_fields[] = {
     DESODBC_FIELD_STRING("FILTER_CONDITION", 10, 0),
 };
 
+/* DESODBC:
+    This function inserts the SQLStatistics fields
+    into the corresponding ResultTable.
+
+    Original author: DESODBC Developer
+*/
 void ResultTable::insert_SQLStatistics_cols() {
   insert_cols(SQLSTAT_fields, array_elements(SQLSTAT_fields));
 }
 
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLStatistics, which was
+    MySQLStatistics in MyODBC. We have reused
+    some of its skeleton.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 1.0 API
   @purpose : retrieves a list of statistics about a single table and the
        indexes associated with the table. The driver returns the
        information as a result set.
 */
-
-SQLRETURN SQL_API
-DESStatistics(SQLHSTMT hstmt,
-                SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
-                SQLCHAR *schema_name,
-                SQLSMALLINT schema_len,
-                SQLCHAR *table_name, SQLSMALLINT table_len,
-                SQLUSMALLINT fUnique,
-                SQLUSMALLINT fAccuracy)
-{
+SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
+                                    SQLSMALLINT catalog_len,
+                                    SQLCHAR *schema_name,
+                                    SQLSMALLINT schema_len, SQLCHAR *table_name,
+                                    SQLSMALLINT table_len, SQLUSMALLINT fUnique,
+                                    SQLUSMALLINT fAccuracy) {
   SQLRETURN rc = SQL_SUCCESS;
   std::pair<SQLRETURN, std::string> pair;
-  STMT *stmt= (STMT *)hstmt;
+  STMT *stmt = (STMT *)hstmt;
+
   CLEAR_STMT_ERROR(hstmt);
   DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+
+  GET_NAME_LEN(stmt, catalog_name, catalog_len);
+  GET_NAME_LEN(stmt, schema_name, schema_len);
+  GET_NAME_LEN(stmt, table_name, table_len);
+  CHECK_SCHEMA(stmt, schema_name, schema_len);
+
   DBC *dbc = stmt->dbc;
 
-  /*
+  /* DESODBC:
     In DES, we cannot check statistics relative to indexes nor pages.
     We may only return the row relative to the cardinality of the table
     if requested.
@@ -544,16 +520,33 @@ DESStatistics(SQLHSTMT hstmt,
   }
   std::string previous_db = getLines(current_db_output)[0];
 
-  pair = dbc->send_query_and_read("/use_db $des");
+  std::string catalog_name_str = get_catalog(stmt, catalog_name, catalog_len);
+
+  std::string use_db_query = "/use_db ";
+  use_db_query += catalog_name_str;
+
+  pair = dbc->send_query_and_read(use_db_query);
   rc = pair.first;
+  std::string use_db_output = pair.second;
+
+  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
+    // We do not want to return an error when receiving this message.
+    if (!is_in_string(use_db_output, "Database already in use")) {
+      rc = check_and_set_errors(SQL_HANDLE_STMT, stmt, use_db_output);
+    }
+  }
+
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->send_query_and_read(
-        "/use_db " + previous_db);  // trying to revert the database change
+        "/use_db " +
+        previous_db);  // DESODBC: trying to revert the database change
     dbc->releaseQueryMutex();
     return rc;
   }
 
-  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
+  std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
+
+  stmt->params_for_table.catalog_name = catalog_name_str;
   stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLSTATISTICS;
 
@@ -574,14 +567,36 @@ DESStatistics(SQLHSTMT hstmt,
   rc = dbc->releaseQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
+  if (catalog_name_str != "$des") {
+    stmt->set_error("01000",
+                    "Some attributes of the given external database that are "
+                    "not shared with DES might "
+                    "have been omitted");
+    return SQL_SUCCESS_WITH_INFO;
+  }
   return rc;
 }
 
+/*
+    This function inserts the SQLSpecialColumns fields
+    into the corresponding ResultTable.
+
+    Original author: DESODBC Developer
+*/
 void ResultTable::insert_SQLSpecialColumns_cols() {
   insert_cols(SQLSPECIALCOLUMNS_fields,
               array_elements(SQLSPECIALCOLUMNS_fields));
 }
 
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLSpecialColumns, which was
+    MySQLSpecialColumns in MyODBC. We have reused
+    some of its skeleton.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 1.0 API
   @purpose : retrieves the following information about columns within a
@@ -591,20 +606,16 @@ void ResultTable::insert_SQLSpecialColumns_cols() {
        - Columns that are automatically updated when any value in the
          row is updated by a transaction
 */
-
-SQLRETURN SQL_API
-DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
-                    SQLCHAR *catalog, SQLSMALLINT catalog_len,
-                    SQLCHAR *schema, SQLSMALLINT schema_len,
-                    SQLCHAR *table_name, SQLSMALLINT table_len,
-                    SQLUSMALLINT fScope,
-                    SQLUSMALLINT fNullable)
-{
-  /*
+SQLRETURN SQL_API DES_SQLSpecialColumns(
+    SQLHSTMT hstmt, SQLUSMALLINT fColType, SQLCHAR *catalog,
+    SQLSMALLINT catalog_len, SQLCHAR *schema, SQLSMALLINT schema_len,
+    SQLCHAR *table_name, SQLSMALLINT table_len, SQLUSMALLINT fScope,
+    SQLUSMALLINT fNullable) {
+  /* DESODBC:
     As DES does not support indexing nor pseudocolumns, we will only return
     the primary keys when dealing with the SQLSPECIALCOLUMNS statement type.
     It will be necesary to call /dbschema table_name to do so.
-  */ 
+  */
   SQLRETURN rc = SQL_SUCCESS;
   std::pair<SQLRETURN, std::string> pair;
   DBC *dbc;
@@ -613,10 +624,26 @@ DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
   CLEAR_STMT_ERROR(hstmt);
   DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
-  dbc = ((STMT *)hstmt)->dbc;
+  GET_NAME_LEN(stmt, catalog, catalog_len);
+  GET_NAME_LEN(stmt, schema, schema_len);
+  GET_NAME_LEN(stmt, table_name, table_len);
+  CHECK_SCHEMA(stmt, schema, schema_len);
+
   /*
-   * In this preliminar version we will ignore the catalog and schema inputs.
-   */
+  if (fColType == SQL_ROWVER) {
+    return stmt->set_error("HYC00",
+                           "The specified information cannot be retrieved by "
+                           "DES in either local or external databases");
+  }
+  */
+
+  std::string catalog_name_str = get_catalog(stmt, catalog, catalog_len);
+  if (catalog_name_str != "$des")
+    return stmt->set_error("HYC00",
+                           "DESODBC cannot retrieve primary keys for external "
+                           "databases, nor indexing or pseudocolumns");
+
+  dbc = ((STMT *)hstmt)->dbc;
 
   rc = dbc->getQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
@@ -634,25 +661,15 @@ DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
   rc = pair.first;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->send_query_and_read(
-        "/use_db " + previous_db);  // trying to revert the database change
+        "/use_db " +
+        previous_db);  // DESODBC: trying to revert the database change
     dbc->releaseQueryMutex();
     return rc;
   }
 
-  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
-  std::string main_query = "/dbschema " + table_name_str;
-  pair = dbc->send_query_and_read(main_query);
-  rc = pair.first;
-  std::string main_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
+  std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
   stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLSPECIALCOLUMNS;
-  stmt->last_output = main_output;
 
   rc = stmt->build_results();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
@@ -670,6 +687,12 @@ DESSpecialColumns(SQLHSTMT hstmt, SQLUSMALLINT fColType,
 
   rc = dbc->releaseQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+  rc = SQL_SUCCESS_WITH_INFO;
+  stmt->set_error("HY000",
+                  "Primary indexes have been returned. Information regarding "
+                  "indexes might have been omitted due "
+                  "to DES capabilities");
 
   return rc;
 }
@@ -683,10 +706,25 @@ DES_FIELD SQLPRIM_KEYS_fields[] = {
     DESODBC_FIELD_STRING("PK_NAME", 128, 0),
 };
 
+/* DESODBC:
+    This function inserts the SQLPrimaryKeys fields
+    into the corresponding ResultTable.
+
+    Original author: DESODBC Developer
+*/
 void ResultTable::insert_SQLPrimaryKeys_cols() {
   insert_cols(SQLPRIM_KEYS_fields, array_elements(SQLPRIM_KEYS_fields));
 };
 
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLPrimaryKeys, which was
+    MySQLPrimaryKeys in MyODBC. We have reused
+    some of its skeleton.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 1.0 API
   @purpose : returns the column names that make up the primary key for a table.
@@ -694,71 +732,61 @@ void ResultTable::insert_SQLPrimaryKeys_cols() {
        does not support returning primary keys from multiple tables in
        a single call
 */
-SQLRETURN SQL_API
-DESPrimaryKeys(SQLHSTMT hstmt,
-                 SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
-                 SQLCHAR *schema_name,
-                 SQLSMALLINT schema_len,
-                 SQLCHAR *table_name, SQLSMALLINT table_len)
-{
+SQLRETURN SQL_API DES_SQLPrimaryKeys(SQLHSTMT hstmt, SQLCHAR *catalog_name,
+                                     SQLSMALLINT catalog_len,
+                                     SQLCHAR *schema_name,
+                                     SQLSMALLINT schema_len,
+                                     SQLCHAR *table_name,
+                                     SQLSMALLINT table_len) {
   SQLRETURN rc = SQL_SUCCESS;
   std::pair<SQLRETURN, std::string> pair;
   DBC *dbc;
-  STMT *stmt= (STMT *) hstmt;
+  STMT *stmt = (STMT *)hstmt;
 
   CLEAR_STMT_ERROR(hstmt);
   DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
 
   dbc = ((STMT *)hstmt)->dbc;
-  /*
-   * In this preliminar version we will ignore the catalog and schema inputs.
-   */
+
+  GET_NAME_LEN(stmt, catalog_name, catalog_len);
+  GET_NAME_LEN(stmt, schema_name, schema_len);
+  GET_NAME_LEN(stmt, table_name, table_len);
+  CHECK_SCHEMA(stmt, schema_name, schema_len);
+
+  std::string catalog_name_str = get_catalog(stmt, catalog_name, catalog_len);
+
+  if (catalog_name_str != "$des")
+    return stmt->set_error("HYC00",
+                           "DESODBC cannot retrieve primary or foreign keys "
+                           "for external databases");
 
   rc = dbc->getQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
-  pair = dbc->send_query_and_read("/current_db");
-  rc = pair.first;
-  std::string current_db_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-  std::string previous_db = getLines(current_db_output)[0];
-
-  pair = dbc->send_query_and_read("/use_db $des");
-  rc = pair.first;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read(
-        "/use_db " + previous_db);  // trying to revert the database change
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
-  std::string table_name_str = sqlcharptr_to_str(table_name, table_len);
-  std::string main_query = "/dbschema " + table_name_str;
+  std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
+  std::string main_query = "/dbschema ";
+  main_query += catalog_name_str;
+  main_query += ":";
+  main_query += table_name_str;
   pair = dbc->send_query_and_read(main_query);
   rc = pair.first;
   std::string main_output = pair.second;
+
+  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
+    rc = check_and_set_errors(SQL_HANDLE_STMT, stmt, main_output);
+  }
+
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read("/use_db " + previous_db);
     dbc->releaseQueryMutex();
     return rc;
   }
 
+  stmt->params_for_table.catalog_name = catalog_name_str;
   stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLPRIMARYKEYS;
   stmt->last_output = main_output;
 
   rc = stmt->build_results();
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
-  pair = dbc->send_query_and_read("/use_db " + previous_db);
-  rc = pair.first;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->releaseQueryMutex();
     return rc;
@@ -769,7 +797,6 @@ DESPrimaryKeys(SQLHSTMT hstmt,
 
   return rc;
 }
-
 
 /*
 ****************************************************************************
@@ -794,10 +821,25 @@ DES_FIELD SQLFORE_KEYS_fields[] = {
     DESODBC_FIELD_SHORT("DEFERRABILITY", 0),
 };
 
+/* DESODBC:
+    This function inserts the SQLForeignKeys fields
+    into the corresponding ResultTable.
+
+    Original author: DESODBC Developer
+*/
 void ResultTable::insert_SQLForeignKeys_cols() {
   insert_cols(SQLFORE_KEYS_fields, array_elements(SQLFORE_KEYS_fields));
 };
 
+/* DESODBC:
+    This function corresponds to the
+    implementation of SQLForeignKeys, which was
+    MySQLForeignKeys in MyODBC. We have reused
+    some of its skeleton.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
   Retrieve either a list of foreign keys in a specified table, or the list
   of foreign keys in other tables that refer to the primary key in the
@@ -826,31 +868,48 @@ void ResultTable::insert_SQLForeignKeys_cols() {
 
   @since ODBC 1.0
 */
-SQLRETURN SQL_API
-DESForeignKeys(SQLHSTMT hstmt,
-                 SQLCHAR *pk_catalog_name,
-                 SQLSMALLINT pk_catalog_len,
-                 SQLCHAR *pk_schema_name,
-                 SQLSMALLINT pk_schema_len,
-                 SQLCHAR *pk_table_name, SQLSMALLINT pk_table_len,
-                 SQLCHAR *fk_catalog_name, SQLSMALLINT fk_catalog_len,
-                 SQLCHAR *fk_schema_name,
-                 SQLSMALLINT fk_schema_len,
-                 SQLCHAR *fk_table_name, SQLSMALLINT fk_table_len) {
+SQLRETURN SQL_API DES_SQLForeignKeys(
+    SQLHSTMT hstmt, SQLCHAR *pk_catalog_name, SQLSMALLINT pk_catalog_len,
+    SQLCHAR *pk_schema_name, SQLSMALLINT pk_schema_len, SQLCHAR *pk_table_name,
+    SQLSMALLINT pk_table_len, SQLCHAR *fk_catalog_name,
+    SQLSMALLINT fk_catalog_len, SQLCHAR *fk_schema_name,
+    SQLSMALLINT fk_schema_len, SQLCHAR *fk_table_name,
+    SQLSMALLINT fk_table_len) {
   SQLRETURN rc = SQL_SUCCESS;
   std::pair<SQLRETURN, std::string> pair;
   DBC *dbc;
 
   LOCK_STMT(hstmt);
 
-  dbc = ((STMT *)hstmt)->dbc;
-  /*
-   * In this preliminar version we will ignore the catalog and schema inputs.
-   */
-
   STMT *stmt = (STMT *)hstmt;
 
-  /*
+  CLEAR_STMT_ERROR(hstmt);
+  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
+
+  GET_NAME_LEN(stmt, pk_catalog_name, pk_catalog_len);
+  GET_NAME_LEN(stmt, fk_catalog_name, fk_catalog_len);
+  GET_NAME_LEN(stmt, pk_schema_name, pk_schema_len);
+  GET_NAME_LEN(stmt, fk_schema_name, fk_schema_len);
+  GET_NAME_LEN(stmt, pk_table_name, pk_table_len);
+  GET_NAME_LEN(stmt, fk_table_name, fk_table_len);
+
+  CHECK_SCHEMA(stmt, pk_schema_name,
+                       pk_schema_len);
+  CHECK_SCHEMA(stmt, fk_schema_name,
+                       fk_schema_len);
+
+  dbc = ((STMT *)hstmt)->dbc;
+
+  std::string pk_catalog_str = get_catalog(stmt, pk_catalog_name, pk_catalog_len);
+  std::string fk_catalog_str =
+      get_catalog(stmt, fk_catalog_name, fk_catalog_len);
+
+  if (pk_catalog_str != "$des" || fk_catalog_str != "$des")
+    return stmt->set_error("HYC00",
+                           "DESODBC cannot retrieve primary or foreign keys "
+                           "for external databases");
+
+  /* DESODBC:
     Important comments for the implementation of this function:
     (source:
     https://learn.microsoft.com/en-us/sql/odbc/reference/syntax/sqlforeignkeys-function?view=sql-server-ver16)
@@ -876,78 +935,50 @@ DESForeignKeys(SQLHSTMT hstmt,
 
   */
 
-  // TODO: check whether "contain table names" is equivalent to the field being
-  // non-null.
-  // TODO: check possible loss of data if converting to string (as warned by the
-  // compiler).
-  if (pk_table_name != NULL && fk_table_name != NULL) {
-    std::string pk_table_str = sqlcharptr_to_str(pk_table_name, pk_table_len);
-    std::string fk_table_str = sqlcharptr_to_str(fk_table_name, fk_table_len);
+  stmt->params_for_table.catalog_name =
+      pk_catalog_str;  // DESODBC: could also be fk_catalog_str. Both values are
+                       // "$des".
 
+  std::string pk_table_str = "";
+  std::string fk_table_str = "";
+  if (pk_table_name != NULL)
+    pk_table_str = get_prepared_arg(stmt, pk_table_name, pk_table_len);
+  if (fk_table_name != NULL)
+    fk_table_str = get_prepared_arg(stmt, fk_table_name, fk_table_len);
+
+  
+  if (pk_table_str.size() > 0 && fk_table_str.size() > 0) {
     stmt->params_for_table.pk_table_name = pk_table_str;
     stmt->params_for_table.fk_table_name = fk_table_str;
     stmt->type = SQLFOREIGNKEYS_PKFK;
 
-  } else if (pk_table_name != NULL) {
-    std::string pk_table_str = sqlcharptr_to_str(pk_table_name, pk_table_len);
-
+  } else if (pk_table_str.size() > 0) {
     stmt->params_for_table.pk_table_name = pk_table_str;
 
     stmt->type = SQLFOREIGNKEYS_PK;
   }
 
-  else if (fk_table_name != NULL) {
-    std::string fk_table_str = sqlcharptr_to_str(fk_table_name, fk_table_len);
-
+  else if (fk_table_str.size() > 0) {
     stmt->params_for_table.fk_table_name = fk_table_str;
 
     stmt->type = SQLFOREIGNKEYS_FK;
 
   } else
-    return SQL_ERROR;
+    return stmt->set_error("HY000", "Not any tables have been specified");
+
+  std::string main_query = "/dbschema ";
+  main_query += pk_catalog_str;  // DESODBC: could also be fk_catalog_str. Both
+                                 // values are "$des".
+  pair = dbc->send_query_and_read(main_query);
+  rc = pair.first;
+  std::string main_output = pair.second;
 
   rc = dbc->getQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
-  pair = dbc->send_query_and_read("/current_db");
-  rc = pair.first;
-  std::string current_db_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-  std::string previous_db = getLines(current_db_output)[0];
-
-  pair = dbc->send_query_and_read("/use_db $des");
-  rc = pair.first;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read(
-        "/use_db " + previous_db);  // trying to revert the database change
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
-  std::string main_query = "/dbschema";
-  pair = dbc->send_query_and_read(main_query);
-  rc = pair.first;
-  std::string main_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
   stmt->last_output = main_output;
 
   rc = stmt->build_results();
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
-    return rc;
-  }
-
-  pair = dbc->send_query_and_read("/use_db " + previous_db);
-  rc = pair.first;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->releaseQueryMutex();
     return rc;
@@ -957,70 +988,4 @@ DESForeignKeys(SQLHSTMT hstmt,
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
-}
-
-/*
-****************************************************************************
-SQLProcedures and SQLProcedureColumns
-****************************************************************************
-*/
-
-/**
-  Get the list of procedures stored in a catalog (database). This is done by
-  generating the appropriate query against INFORMATION_SCHEMA. If no
-  database is specified, the current database is used.
-
-  @param[in] hstmt            Handle of statement
-  @param[in] catalog_name     Name of catalog (database)
-  @param[in] catalog_len      Length of catalog
-  @param[in] schema_name      Pattern of schema (unused)
-  @param[in] schema_len       Length of schema name
-  @param[in] proc_name        Pattern of procedure names to fetch
-  @param[in] proc_len         Length of procedure name
-*/
-SQLRETURN SQL_API
-DESProcedures(SQLHSTMT hstmt,
-                SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
-                SQLCHAR *schema_name,
-                SQLSMALLINT schema_len,
-                SQLCHAR *proc_name, SQLSMALLINT proc_len)
-{
-  SQLRETURN rc;
-  STMT *stmt= (STMT *)hstmt;
-
-  CLEAR_STMT_ERROR(hstmt);
-  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
-
-  return SQL_ERROR; //TODO: handle appropriately
-}
-
-
-/*
-****************************************************************************
-SQLProcedure Columns
-****************************************************************************
-*/
-
-/*
-  @type    : ODBC 1.0 API
-  @purpose : returns the list of input and output parameters, as well as
-  the columns that make up the result set for the specified
-  procedures. The driver returns the information as a result
-  set on the specified statement
-*/
-
-SQLRETURN SQL_API
-DESProcedureColumns(SQLHSTMT hstmt,
-                    SQLCHAR *catalog_name, SQLSMALLINT catalog_len,
-                    SQLCHAR *schema_name,
-                    SQLSMALLINT schema_len,
-                    SQLCHAR *proc_name, SQLSMALLINT proc_len,
-                    SQLCHAR *column_name, SQLSMALLINT column_len)
-{
-  STMT *stmt= (STMT *)hstmt;
-
-  CLEAR_STMT_ERROR(hstmt);
-  DES_SQLFreeStmt(hstmt, FREE_STMT_RESET);
-
-  return SQL_ERROR; //TODO: handle appropriately
 }

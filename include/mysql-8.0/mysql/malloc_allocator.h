@@ -1,5 +1,8 @@
 /* Copyright (c) 2014, 2021, Oracle and/or its affiliates.
 
+	Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+	(see the next block comment below).
+	
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 2.0,
    as published by the Free Software Foundation.
@@ -20,6 +23,17 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 #ifndef MALLOC_ALLOCATOR_INCLUDED
 #define MALLOC_ALLOCATOR_INCLUDED
 
@@ -32,6 +46,9 @@
 #include "mysql/service_mysql_alloc.h"
 //#include "sql/psi_memory_key.h"
 
+/*
+DESODBC: renaming myodbc to desodbc
+*/
 namespace desodbc
 {
 
@@ -97,7 +114,7 @@ class Malloc_allocator {
     if (n > max_size()) throw std::bad_alloc();
 
     pointer p = static_cast<pointer>(
-        my_malloc(m_key, n * sizeof(T), DESF(MY_WME | ME_FATALERROR)));
+        my_malloc(m_key, n * sizeof(T), MYF(MY_WME | ME_FATALERROR)));
     if (p == nullptr) throw std::bad_alloc();
     return p;
   }

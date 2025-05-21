@@ -1,7 +1,7 @@
 mysql_sys/CMakeFiles/mysql_sys.dir/my_fstream.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/my_fstream.cc \
  /usr/include/stdc-predef.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/errno.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -52,7 +52,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_fstream.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
  /usr/include/c++/13/stdlib.h /usr/include/c++/13/cstdlib \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
@@ -64,9 +64,9 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_fstream.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/alloca.h /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/13/bits/std_abs.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /usr/include/assert.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/string.h /usr/include/strings.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \

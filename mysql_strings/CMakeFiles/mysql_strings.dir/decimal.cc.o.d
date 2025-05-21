@@ -50,7 +50,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/decimal.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/13/bits/std_abs.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
@@ -117,7 +117,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/decimal.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/integer_digits.h \
  /usr/include/assert.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_sharedlib.h \
  /usr/include/dlfcn.h /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
@@ -201,8 +201,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/decimal.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/mysql_lex_string.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_sys.h \
  /usr/include/unistd.h /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \

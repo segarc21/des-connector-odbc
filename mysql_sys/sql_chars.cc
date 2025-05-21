@@ -73,14 +73,14 @@ bool init_state_maps(CHARSET_INFO *cs) {
   enum my_lex_states *state_map = nullptr;
 
   lex_state_maps_st *lex_state_maps = (lex_state_maps_st *)my_once_alloc(
-      sizeof(lex_state_maps_st), DESF(MY_WME));
+      sizeof(lex_state_maps_st), MYF(MY_WME));
 
   if (lex_state_maps == nullptr) return true;  // OOM
 
   cs->state_maps = lex_state_maps;
   state_map = lex_state_maps->main_map;
 
-  if (!(cs->ident_map = ident_map = (uchar *)my_once_alloc(256, DESF(MY_WME))))
+  if (!(cs->ident_map = ident_map = (uchar *)my_once_alloc(256, MYF(MY_WME))))
     return true;  // OOM
 
   hint_lex_init_maps(cs, lex_state_maps->hint_map);

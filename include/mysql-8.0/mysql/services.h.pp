@@ -100,7 +100,7 @@ int srv_session_server_is_available();
 int srv_session_attach(MYSQL_SESSION session, MYSQL_THD *ret_previous_thd);
 #include "decimal.h"
 #include "my_inttypes.h"
-#include "des_config.h"
+#include "my_config.h"
 typedef unsigned char uchar;
 typedef long long int longlong;
 typedef unsigned long long int ulonglong;

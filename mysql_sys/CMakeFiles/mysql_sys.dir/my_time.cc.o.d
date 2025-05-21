@@ -2,7 +2,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_time.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/my_time.cc \
  /usr/include/stdc-predef.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_time.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/assert.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -104,7 +104,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_time.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/integer_digits.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_byteorder.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /usr/include/arpa/inet.h /usr/include/netinet/in.h \
  /usr/include/x86_64-linux-gnu/sys/socket.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \

@@ -38,7 +38,7 @@
 #include <cstdlib>
 #include <cstring>
 
-static const char *MYODBC_OPTIONS[][3] = {
+static const char *DESODBC_OPTIONS[][3] = {
   {"DES_EXEC",          "T", "The path of the DES executable"},
   {"DES_WORKING_DIR",   "T", "The working directory specified for DES"},
   {NULL, NULL, NULL}
@@ -59,13 +59,13 @@ int ODBCINSTGetProperties(HODBCINSTPROPERTY propertyList)
     memset(propertyList, 0, sizeof(ODBCINSTPROPERTY));
 
     /* copy the option name */
-    strncpy( propertyList->szName, MYODBC_OPTIONS[i][0],
-             strlen(MYODBC_OPTIONS[i][0]));
+    strncpy( propertyList->szName, DESODBC_OPTIONS[i][0],
+             strlen(DESODBC_OPTIONS[i][0]));
 
     /* We make the value always empty by default */
     propertyList->szValue[0]= '\0';
 
-    switch(MYODBC_OPTIONS[i][1][0])
+    switch(DESODBC_OPTIONS[i][1][0])
     {
       /* COMBOBOX */
       case 'C':
@@ -87,10 +87,10 @@ int ODBCINSTGetProperties(HODBCINSTPROPERTY propertyList)
         propertyList->nPromptType= ODBCINST_PROMPTTYPE_TEXTEDIT;
     }
 
-    /* Finally, set the help text */
-    propertyList->pszHelp= strdup(MYODBC_OPTIONS[i][2]);
+    /* DESODBC: we will use the "Help" field as an "About..." field */
+    propertyList->pszHelp= strdup(DESODBC_OPTIONS[i][2]);
 
-  }while (MYODBC_OPTIONS[++i][0]);
+  }while (DESODBC_OPTIONS[++i][0]);
 
   return 1;
 }

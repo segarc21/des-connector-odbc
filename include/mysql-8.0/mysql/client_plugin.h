@@ -105,16 +105,16 @@ struct st_mysql_client_plugin {
   MYSQL_CLIENT_PLUGIN_HEADER
 };
 
-struct DES;
+struct MYSQL;
 
 /******** authentication plugin specific declarations *********/
 #include "plugin_auth_common.h"
 
 struct auth_plugin_t {
   MYSQL_CLIENT_PLUGIN_HEADER
-  int (*authenticate_user)(MYSQL_PLUGIN_VIO *vio, struct DES *des);
+  int (*authenticate_user)(MYSQL_PLUGIN_VIO *vio, struct MYSQL *des);
   enum net_async_status (*authenticate_user_nonblocking)(MYSQL_PLUGIN_VIO *vio,
-                                                         struct DES *des,
+                                                         struct MYSQL *des,
                                                          int *result);
 };
 
@@ -126,7 +126,7 @@ typedef struct auth_plugin_t st_mysql_client_plugin_AUTHENTICATION;
 /**
   loads a plugin and initializes it
 
-  @param mysql  DES structure.
+  @param mysql  MYSQL structure.
   @param name   a name of the plugin to load
   @param type   type of plugin that should be loaded, -1 to disable type check
   @param argc   number of arguments to pass to the plugin initialization
@@ -136,7 +136,7 @@ typedef struct auth_plugin_t st_mysql_client_plugin_AUTHENTICATION;
   @retval
   a pointer to the loaded plugin, or NULL in case of a failure
 */
-struct st_mysql_client_plugin *mysql_load_plugin(struct DES *des,
+struct st_mysql_client_plugin *mysql_load_plugin(struct MYSQL *des,
                                                  const char *name, int type,
                                                  int argc, ...);
 
@@ -146,7 +146,7 @@ struct st_mysql_client_plugin *mysql_load_plugin(struct DES *des,
   This is the same as mysql_load_plugin, but take va_list instead of
   a list of arguments.
 
-  @param mysql  DES structure.
+  @param mysql  MYSQL structure.
   @param name   a name of the plugin to load
   @param type   type of plugin that should be loaded, -1 to disable type check
   @param argc   number of arguments to pass to the plugin initialization
@@ -156,21 +156,21 @@ struct st_mysql_client_plugin *mysql_load_plugin(struct DES *des,
   @retval
   a pointer to the loaded plugin, or NULL in case of a failure
 */
-struct st_mysql_client_plugin *mysql_load_plugin_v(struct DES *des,
+struct st_mysql_client_plugin *mysql_load_plugin_v(struct MYSQL *des,
                                                    const char *name, int type,
                                                    int argc, va_list args);
 
 /**
   finds an already loaded plugin by name, or loads it, if necessary
 
-  @param mysql  DES structure.
+  @param mysql  MYSQL structure.
   @param name   a name of the plugin to load
   @param type   type of plugin that should be loaded
 
   @retval
   a pointer to the plugin, or NULL in case of a failure
 */
-struct st_mysql_client_plugin *mysql_client_find_plugin(struct DES *des,
+struct st_mysql_client_plugin *mysql_client_find_plugin(struct MYSQL *des,
                                                         const char *name,
                                                         int type);
 
@@ -182,14 +182,14 @@ struct st_mysql_client_plugin *mysql_client_find_plugin(struct DES *des,
   the application binary. It can use this function to register the plugin
   directly, avoiding the need to factor it out into a shared object.
 
-  @param mysql  DES structure. It is only used for error reporting
+  @param mysql  MYSQL structure. It is only used for error reporting
   @param plugin an st_mysql_client_plugin structure to register
 
   @retval
   a pointer to the plugin, or NULL in case of a failure
 */
 struct st_mysql_client_plugin *mysql_client_register_plugin(
-    struct DES *des, struct st_mysql_client_plugin *plugin);
+    struct MYSQL *des, struct st_mysql_client_plugin *plugin);
 
 /**
   set plugin options

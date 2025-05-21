@@ -50,7 +50,7 @@
 // If you get warnings from printf, use the PRIu64 macro, or, if you need
 // compatibility with older versions of the client library, cast
 // before printing.
-typedef uint64_t des_ulonglong;
+typedef uint64_t my_ulonglong;
 
 #ifndef my_socket_defined
 #define my_socket_defined
@@ -59,14 +59,14 @@ typedef uint64_t des_ulonglong;
 #ifdef WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #endif
-#define des_socket SOCKET
+#define my_socket SOCKET
 #else
-typedef int des_socket;
+typedef int my_socket;
 #endif /* _WIN32 */
 #endif /* my_socket_defined */
 
-// Small extra definition to avoid pulling in des_compiler.h in client code.
-// IWYU pragma: no_include "des_compiler.h"
+// Small extra definition to avoid pulling in my_compiler.h in client code.
+// IWYU pragma: no_include "my_compiler.h"
 #ifndef MY_COMPILER_INCLUDED
 #if !defined(_WIN32)
 #define STDCALL
@@ -98,8 +98,6 @@ typedef int des_socket;
 extern "C" {
 #endif
 
-#include "my_list.h" //TODO ARREGLAR
-
 extern unsigned int mysql_port;
 extern char *mysql_unix_port;
 
@@ -115,11 +113,11 @@ extern char *mysql_unix_port;
    the sql_lex.cc parser to parse correctly.
 */
 #define IS_NUM(t)                                              \
-  (((t) <= DES_TYPE_INT24 && (t) != DES_TYPE_TIMESTAMP) || \
-   (t) == DES_TYPE_YEAR || (t) == MYSQL_TYPE_NEWDECIMAL)
-#define IS_LONGDATA(t) ((t) >= DES_TYPE_TINY_BLOB && (t) <= DES_TYPE_STRING)
+  (((t) <= MYSQL_TYPE_INT24 && (t) != MYSQL_TYPE_TIMESTAMP) || \
+   (t) == MYSQL_TYPE_YEAR || (t) == MYSQL_TYPE_NEWDECIMAL)
+#define IS_LONGDATA(t) ((t) >= MYSQL_TYPE_TINY_BLOB && (t) <= MYSQL_TYPE_STRING)
 
-typedef struct DES_FIELD {
+typedef struct MYSQL_FIELD {
   char *name;               /* Name of column */
   char *org_name;           /* Original column name, if an alias */
   char *table;              /* Table of column if column was a field */
@@ -141,94 +139,94 @@ typedef struct DES_FIELD {
   unsigned int charsetnr;     /* Character set */
   enum enum_field_types type; /* Type of field. See mysql_com.h for types */
   void *extension;
-} DES_FIELD;
+} MYSQL_FIELD;
 
-typedef char **DES_ROW;                /* return data as array of strings */
-typedef unsigned int DES_FIELD_OFFSET; /* offset to current field */
+typedef char **MYSQL_ROW;                /* return data as array of strings */
+typedef unsigned int MYSQL_FIELD_OFFSET; /* offset to current field */
 
-#define DES_COUNT_ERROR (~(uint64_t)0)
+#define MYSQL_COUNT_ERROR (~(uint64_t)0)
 
 /* backward compatibility define - to be removed eventually */
 #define ER_WARN_DATA_TRUNCATED WARN_DATA_TRUNCATED
 
-typedef struct DES_ROWS {
-  struct DES_ROWS *next; /* list of rows */
-  DES_ROW data;
+typedef struct MYSQL_ROWS {
+  struct MYSQL_ROWS *next; /* list of rows */
+  MYSQL_ROW data;
   unsigned long length;
-} DES_ROWS;
+} MYSQL_ROWS;
 
-typedef DES_ROWS *DES_ROW_OFFSET; /* offset to current row */
+typedef MYSQL_ROWS *MYSQL_ROW_OFFSET; /* offset to current row */
 
 struct MEM_ROOT;
 
-typedef struct DES_DATA {
-  DES_ROWS *data;
+typedef struct MYSQL_DATA {
+  MYSQL_ROWS *data;
   struct MEM_ROOT *alloc;
   uint64_t rows;
   unsigned int fields;
-} DES_DATA;
+} MYSQL_DATA;
 
-enum des_option {
-  DES_OPT_CONNECT_TIMEOUT,
-  DES_OPT_COMPRESS,
-  DES_OPT_NAMED_PIPE,
-  DES_INIT_COMMAND,
-  DES_READ_DEFAULT_FILE,
-  DES_READ_DEFAULT_GROUP,
-  DES_SET_CHARSET_DIR,
-  DES_SET_CHARSET_NAME,
-  DES_OPT_LOCAL_INFILE,
-  DES_OPT_PROTOCOL,
-  DES_SHARED_MEMORY_BASE_NAME,
-  DES_OPT_READ_TIMEOUT,
-  DES_OPT_WRITE_TIMEOUT,
-  DES_OPT_USE_RESULT,
-  DES_REPORT_DATA_TRUNCATION,
-  DES_OPT_RECONNECT,
-  DES_PLUGIN_DIR,
-  DES_DEFAULT_AUTH,
-  DES_OPT_BIND,
-  DES_OPT_SSL_KEY,
-  DES_OPT_SSL_CERT,
-  DES_OPT_SSL_CA,
-  DES_OPT_SSL_CAPATH,
-  DES_OPT_SSL_CIPHER,
-  DES_OPT_SSL_CRL,
-  DES_OPT_SSL_CRLPATH,
-  DES_OPT_CONNECT_ATTR_RESET,
-  DES_OPT_CONNECT_ATTR_ADD,
-  DES_OPT_CONNECT_ATTR_DELETE,
-  DES_SERVER_PUBLIC_KEY,
-  DES_ENABLE_CLEARTEXT_PLUGIN,
-  DES_OPT_CAN_HANDLE_EXPIRED_PASSWORDS,
-  DES_OPT_MAX_ALLOWED_PACKET,
-  DES_OPT_NET_BUFFER_LENGTH,
-  DES_OPT_TLS_VERSION,
-  DES_OPT_SSL_MODE,
-  DES_OPT_GET_SERVER_PUBLIC_KEY,
-  DES_OPT_RETRY_COUNT,
-  DES_OPT_OPTIONAL_RESULTSET_METADATA,
-  DES_OPT_SSL_FIPS_MODE,
-  DES_OPT_TLS_CIPHERSUITES,
-  DES_OPT_COMPRESSION_ALGORITHMS,
-  DES_OPT_ZSTD_COMPRESSION_LEVEL,
-  DES_OPT_LOAD_DATA_LOCAL_DIR,
-  DES_OPT_USER_PASSWORD,
+enum mysql_option {
+  MYSQL_OPT_CONNECT_TIMEOUT,
+  MYSQL_OPT_COMPRESS,
+  MYSQL_OPT_NAMED_PIPE,
+  MYSQL_INIT_COMMAND,
+  MYSQL_READ_DEFAULT_FILE,
+  MYSQL_READ_DEFAULT_GROUP,
+  MYSQL_SET_CHARSET_DIR,
+  MYSQL_SET_CHARSET_NAME,
+  MYSQL_OPT_LOCAL_INFILE,
+  MYSQL_OPT_PROTOCOL,
+  MYSQL_SHARED_MEMORY_BASE_NAME,
+  MYSQL_OPT_READ_TIMEOUT,
+  MYSQL_OPT_WRITE_TIMEOUT,
+  MYSQL_OPT_USE_RESULT,
+  MYSQL_REPORT_DATA_TRUNCATION,
+  MYSQL_OPT_RECONNECT,
+  MYSQL_PLUGIN_DIR,
+  MYSQL_DEFAULT_AUTH,
+  MYSQL_OPT_BIND,
+  MYSQL_OPT_SSL_KEY,
+  MYSQL_OPT_SSL_CERT,
+  MYSQL_OPT_SSL_CA,
+  MYSQL_OPT_SSL_CAPATH,
+  MYSQL_OPT_SSL_CIPHER,
+  MYSQL_OPT_SSL_CRL,
+  MYSQL_OPT_SSL_CRLPATH,
+  MYSQL_OPT_CONNECT_ATTR_RESET,
+  MYSQL_OPT_CONNECT_ATTR_ADD,
+  MYSQL_OPT_CONNECT_ATTR_DELETE,
+  MYSQL_SERVER_PUBLIC_KEY,
+  MYSQL_ENABLE_CLEARTEXT_PLUGIN,
+  MYSQL_OPT_CAN_HANDLE_EXPIRED_PASSWORDS,
+  MYSQL_OPT_MAX_ALLOWED_PACKET,
+  MYSQL_OPT_NET_BUFFER_LENGTH,
+  MYSQL_OPT_TLS_VERSION,
+  MYSQL_OPT_SSL_MODE,
+  MYSQL_OPT_GET_SERVER_PUBLIC_KEY,
+  MYSQL_OPT_RETRY_COUNT,
+  MYSQL_OPT_OPTIONAL_RESULTSET_METADATA,
+  MYSQL_OPT_SSL_FIPS_MODE,
+  MYSQL_OPT_TLS_CIPHERSUITES,
+  MYSQL_OPT_COMPRESSION_ALGORITHMS,
+  MYSQL_OPT_ZSTD_COMPRESSION_LEVEL,
+  MYSQL_OPT_LOAD_DATA_LOCAL_DIR,
+  MYSQL_OPT_USER_PASSWORD,
 };
 
 /**
-  @todo remove the "extension", move st_des_options completely
+  @todo remove the "extension", move st_mysql_options completely
   out of mysql.h
 */
-struct st_des_options_extention;
+struct st_mysql_options_extention;
 
-struct st_des_options {
+struct st_mysql_options {
   unsigned int connect_timeout, read_timeout, write_timeout;
   unsigned int port, protocol;
   unsigned long client_flag;
   char *host, *user, *password, *unix_socket, *db;
   struct Init_commands_array *init_commands;
-  char *des_cnf_file, *des_cnf_group, *charset_dir, *charset_name;
+  char *my_cnf_file, *my_cnf_group, *charset_dir, *charset_name;
   char *ssl_key;    /* PEM key file */
   char *ssl_cert;   /* PEM cert file */
   char *ssl_ca;     /* PEM CA file */
@@ -250,25 +248,25 @@ struct st_des_options {
   void (*local_infile_end)(void *);
   int (*local_infile_error)(void *, char *, unsigned int);
   void *local_infile_userdata;
-  struct st_des_options_extention *extension;
+  struct st_mysql_options_extention *extension;
 };
 
-enum des_status {
-  DES_STATUS_READY,
-  DES_STATUS_GET_RESULT,
-  DES_STATUS_USE_RESULT,
-  DES_STATUS_STATEMENT_GET_RESULT
+enum mysql_status {
+  MYSQL_STATUS_READY,
+  MYSQL_STATUS_GET_RESULT,
+  MYSQL_STATUS_USE_RESULT,
+  MYSQL_STATUS_STATEMENT_GET_RESULT
 };
 
-enum des_protocol_type {
-  DES_PROTOCOL_DEFAULT,
-  DES_PROTOCOL_TCP,
-  DES_PROTOCOL_SOCKET,
-  DES_PROTOCOL_PIPE,
-  DES_PROTOCOL_MEMORY
+enum mysql_protocol_type {
+  MYSQL_PROTOCOL_DEFAULT,
+  MYSQL_PROTOCOL_TCP,
+  MYSQL_PROTOCOL_SOCKET,
+  MYSQL_PROTOCOL_PIPE,
+  MYSQL_PROTOCOL_MEMORY
 };
 
-enum des_ssl_mode {
+enum mysql_ssl_mode {
   SSL_MODE_DISABLED = 1,
   SSL_MODE_PREFERRED,
   SSL_MODE_REQUIRED,
@@ -276,12 +274,11 @@ enum des_ssl_mode {
   SSL_MODE_VERIFY_IDENTITY
 };
 
-enum des_ssl_fips_mode {
+enum mysql_ssl_fips_mode {
   SSL_FIPS_MODE_OFF = 0,
   SSL_FIPS_MODE_ON = 1,
   SSL_FIPS_MODE_STRICT
 };
-
 
 typedef struct character_set {
   unsigned int number;   /* character set number              */
@@ -292,18 +289,18 @@ typedef struct character_set {
   const char *dir;       /* character set directory           */
   unsigned int mbminlen; /* min. length for multibyte strings */
   unsigned int mbmaxlen; /* max. length for multibyte strings */
-} DES_CHARSET_INFO;
+} MY_CHARSET_INFO;
 
-struct DES_METHODS;
-struct DES_STMT;
+struct MYSQL_METHODS;
+struct MYSQL_STMT;
 
-typedef struct DES {
+typedef struct MYSQL {
   NET net;                     /* Communication parameters */
   unsigned char *connector_fd; /* ConnectorFd for SSL */
   char *host, *user, *passwd, *unix_socket, *server_version, *host_info;
   char *info, *db;
   struct CHARSET_INFO *charset;
-  DES_FIELD *fields;
+  MYSQL_FIELD *fields;
   struct MEM_ROOT *field_alloc;
   uint64_t affected_rows;
   uint64_t insert_id;      /* id if insert on table with NEXTNR */
@@ -317,8 +314,8 @@ typedef struct DES {
   unsigned int server_status;
   unsigned int server_language;
   unsigned int warning_count;
-  struct st_des_options options;
-  enum des_status status;
+  struct st_mysql_options options;
+  enum mysql_status status;
   enum enum_resultset_metadata resultset_metadata;
   bool free_me;   /* If free in mysql_close */
   bool reconnect; /* set to 1 if automatic reconnect */
@@ -326,27 +323,27 @@ typedef struct DES {
   /* session-wide random string */
   char scramble[SCRAMBLE_LENGTH + 1];
 
-  desodbc::LIST *stmts; /* list of all statements */
-  const struct DES_METHODS *methods;
+  LIST *stmts; /* list of all statements */
+  const struct MYSQL_METHODS *methods;
   void *thd;
   /*
-    Points to boolean flag in DES_RES  or DES_STMT. We set this flag
+    Points to boolean flag in MYSQL_RES  or MYSQL_STMT. We set this flag
     from mysql_stmt_close if close had to cancel result set of this object.
   */
   bool *unbuffered_fetch_owner;
   void *extension;
-} DES;
+} MYSQL;
 
-typedef struct DES_RES {
+typedef struct MYSQL_RES {
   uint64_t row_count;
-  DES_FIELD *fields;
-  struct DES_DATA *data;
-  DES_ROWS *data_cursor;
+  MYSQL_FIELD *fields;
+  struct MYSQL_DATA *data;
+  MYSQL_ROWS *data_cursor;
   unsigned long *lengths; /* column lengths of current row */
-  DES *handle;          /* for unbuffered reads */
-  const struct DES_METHODS *methods;
-  DES_ROW row;         /* If unbuffered read */
-  DES_ROW current_row; /* buffer to current row */
+  MYSQL *handle;          /* for unbuffered reads */
+  const struct MYSQL_METHODS *methods;
+  MYSQL_ROW row;         /* If unbuffered read */
+  MYSQL_ROW current_row; /* buffer to current row */
   struct MEM_ROOT *field_alloc;
   unsigned int field_count, current_field;
   bool eof; /* Used by mysql_fetch_row */
@@ -354,17 +351,17 @@ typedef struct DES_RES {
   bool unbuffered_fetch_cancelled;
   enum enum_resultset_metadata metadata;
   void *extension;
-} DES_RES;
+} MYSQL_RES;
 
 /**
   Flag to indicate that COM_BINLOG_DUMP_GTID should
   be used rather than COM_BINLOG_DUMP in the @sa mysql_binlog_open().
 */
-#define DES_RPL_GTID (1 << 16)
+#define MYSQL_RPL_GTID (1 << 16)
 /**
   Skip HEARBEAT events in the @sa mysql_binlog_fetch().
 */
-#define DES_RPL_SKIP_HEARTBEAT (1 << 17)
+#define MYSQL_RPL_SKIP_HEARTBEAT (1 << 17)
 
 /**
   Struct for information about a replication stream.
@@ -373,28 +370,28 @@ typedef struct DES_RES {
   @sa mysql_binlog_fetch()
   @sa mysql_binlog_close()
 */
-typedef struct DES_RPL {
+typedef struct MYSQL_RPL {
   size_t file_name_length; /** Length of the 'file_name' or 0     */
   const char *file_name;   /** Filename of the binary log to read */
   uint64_t start_position; /** Position in the binary log to      */
                            /*  start reading from                 */
   unsigned int server_id;  /** Server ID to use when identifying  */
                            /*  with the master                    */
-  unsigned int flags;      /** Flags, e.g. DES_RPL_GTID         */
+  unsigned int flags;      /** Flags, e.g. MYSQL_RPL_GTID         */
 
   /** Size of gtid set data              */
   size_t gtid_set_encoded_size;
   /** Callback function which is called  */
   /*  from @sa mysql_binlog_open() to    */
   /*  fill command packet gtid set       */
-  void (*fix_gtid_set)(struct DES_RPL *rpl, unsigned char *packet_gtid_set);
+  void (*fix_gtid_set)(struct MYSQL_RPL *rpl, unsigned char *packet_gtid_set);
   void *gtid_set_arg; /** GTID set data or an argument for   */
                       /*  fix_gtid_set() callback function   */
 
   unsigned long size;          /** Size of the packet returned by     */
                                /*  mysql_binlog_fetch()               */
   const unsigned char *buffer; /** Pointer to returned data           */
-} DES_RPL;
+} MYSQL_RPL;
 
 /*
   Set up and bring down the server; to ensure that applications will
@@ -426,72 +423,72 @@ bool STDCALL mysql_thread_init(void);
 void STDCALL mysql_thread_end(void);
 
 /*
-  Functions to get information from the DES and DES_RES structures
+  Functions to get information from the MYSQL and MYSQL_RES structures
   Should definitely be used if one uses shared libraries.
 */
 
-uint64_t STDCALL mysql_num_rows(DES_RES *res);
-unsigned int STDCALL mysql_num_fields(DES_RES *res);
-bool STDCALL mysql_eof(DES_RES *res);
-DES_FIELD *STDCALL mysql_fetch_field_direct(DES_RES *res,
+uint64_t STDCALL mysql_num_rows(MYSQL_RES *res);
+unsigned int STDCALL mysql_num_fields(MYSQL_RES *res);
+bool STDCALL mysql_eof(MYSQL_RES *res);
+MYSQL_FIELD *STDCALL mysql_fetch_field_direct(MYSQL_RES *res,
                                               unsigned int fieldnr);
-DES_FIELD *STDCALL mysql_fetch_fields(DES_RES *res);
-DES_ROW_OFFSET STDCALL mysql_row_tell(DES_RES *res);
-DES_FIELD_OFFSET STDCALL mysql_field_tell(DES_RES *res);
-enum enum_resultset_metadata STDCALL mysql_result_metadata(DES_RES *result);
+MYSQL_FIELD *STDCALL mysql_fetch_fields(MYSQL_RES *res);
+MYSQL_ROW_OFFSET STDCALL mysql_row_tell(MYSQL_RES *res);
+MYSQL_FIELD_OFFSET STDCALL mysql_field_tell(MYSQL_RES *res);
+enum enum_resultset_metadata STDCALL mysql_result_metadata(MYSQL_RES *result);
 
-unsigned int STDCALL mysql_field_count(DES *des);
-uint64_t STDCALL mysql_affected_rows(DES *des);
-uint64_t STDCALL mysql_insert_id(DES *des);
-unsigned int STDCALL mysql_errno(DES *des);
-const char *STDCALL mysql_error(DES *des);
-const char *STDCALL mysql_sqlstate(DES *des);
-unsigned int STDCALL mysql_warning_count(DES *des);
-const char *STDCALL mysql_info(DES *des);
-unsigned long STDCALL mysql_thread_id(DES *des);
-const char *STDCALL mysql_character_set_name(DES *des);
-int STDCALL mysql_set_character_set(DES *des, const char *csname);
+unsigned int STDCALL mysql_field_count(MYSQL *mysql);
+uint64_t STDCALL mysql_affected_rows(MYSQL *mysql);
+uint64_t STDCALL mysql_insert_id(MYSQL *mysql);
+unsigned int STDCALL mysql_errno(MYSQL *mysql);
+const char *STDCALL mysql_error(MYSQL *mysql);
+const char *STDCALL mysql_sqlstate(MYSQL *mysql);
+unsigned int STDCALL mysql_warning_count(MYSQL *mysql);
+const char *STDCALL mysql_info(MYSQL *mysql);
+unsigned long STDCALL mysql_thread_id(MYSQL *mysql);
+const char *STDCALL mysql_character_set_name(MYSQL *mysql);
+int STDCALL mysql_set_character_set(MYSQL *mysql, const char *csname);
 
-DES *STDCALL mysql_init(DES *des);
-bool STDCALL mysql_ssl_set(DES *des, const char *key, const char *cert,
+MYSQL *STDCALL mysql_init(MYSQL *mysql);
+bool STDCALL mysql_ssl_set(MYSQL *mysql, const char *key, const char *cert,
                            const char *ca, const char *capath,
                            const char *cipher);
-const char *STDCALL mysql_get_ssl_cipher(DES *des);
-bool STDCALL mysql_change_user(DES *des, const char *user,
+const char *STDCALL mysql_get_ssl_cipher(MYSQL *mysql);
+bool STDCALL mysql_change_user(MYSQL *mysql, const char *user,
                                const char *passwd, const char *db);
-DES *STDCALL mysql_real_connect(DES *des, const char *host,
+MYSQL *STDCALL mysql_real_connect(MYSQL *mysql, const char *host,
                                   const char *user, const char *passwd,
                                   const char *db, unsigned int port,
                                   const char *unix_socket,
                                   unsigned long clientflag);
-int STDCALL mysql_select_db(DES *des, const char *db);
-int STDCALL mysql_query(DES *des, const char *q);
-int STDCALL mysql_send_query(DES *des, const char *q, unsigned long length);
-int STDCALL mysql_real_query(DES *des, const char *q, unsigned long length);
-DES_RES *STDCALL mysql_store_result(DES *des);
-DES_RES *STDCALL mysql_use_result(DES *des);
+int STDCALL mysql_select_db(MYSQL *mysql, const char *db);
+int STDCALL mysql_query(MYSQL *mysql, const char *q);
+int STDCALL mysql_send_query(MYSQL *mysql, const char *q, unsigned long length);
+int STDCALL mysql_real_query(MYSQL *mysql, const char *q, unsigned long length);
+MYSQL_RES *STDCALL mysql_store_result(MYSQL *mysql);
+MYSQL_RES *STDCALL mysql_use_result(MYSQL *mysql);
 
 enum net_async_status STDCALL mysql_real_connect_nonblocking(
-    DES *des, const char *host, const char *user, const char *passwd,
+    MYSQL *mysql, const char *host, const char *user, const char *passwd,
     const char *db, unsigned int port, const char *unix_socket,
     unsigned long clientflag);
 enum net_async_status STDCALL mysql_send_query_nonblocking(
-    DES *des, const char *query, unsigned long length);
+    MYSQL *mysql, const char *query, unsigned long length);
 enum net_async_status STDCALL mysql_real_query_nonblocking(
-    DES *des, const char *query, unsigned long length);
+    MYSQL *mysql, const char *query, unsigned long length);
 enum net_async_status STDCALL
-mysql_store_result_nonblocking(DES *des, DES_RES **result);
-enum net_async_status STDCALL mysql_next_result_nonblocking(DES *des);
-enum net_async_status STDCALL mysql_select_db_nonblocking(DES *des,
+mysql_store_result_nonblocking(MYSQL *mysql, MYSQL_RES **result);
+enum net_async_status STDCALL mysql_next_result_nonblocking(MYSQL *mysql);
+enum net_async_status STDCALL mysql_select_db_nonblocking(MYSQL *mysql,
                                                           const char *db,
                                                           bool *error);
-void STDCALL mysql_get_character_set_info(DES *des,
-                                          DES_CHARSET_INFO *charset);
+void STDCALL mysql_get_character_set_info(MYSQL *mysql,
+                                          MY_CHARSET_INFO *charset);
 
-int STDCALL mysql_session_track_get_first(DES *des,
+int STDCALL mysql_session_track_get_first(MYSQL *mysql,
                                           enum enum_session_state_type type,
                                           const char **data, size_t *length);
-int STDCALL mysql_session_track_get_next(DES *des,
+int STDCALL mysql_session_track_get_next(MYSQL *mysql,
                                          enum enum_session_state_type type,
                                          const char **data, size_t *length);
 /* local infile support */
@@ -499,71 +496,71 @@ int STDCALL mysql_session_track_get_next(DES *des,
 #define LOCAL_INFILE_ERROR_LEN 512
 
 void mysql_set_local_infile_handler(
-    DES *des, int (*local_infile_init)(void **, const char *, void *),
+    MYSQL *mysql, int (*local_infile_init)(void **, const char *, void *),
     int (*local_infile_read)(void *, char *, unsigned int),
     void (*local_infile_end)(void *),
     int (*local_infile_error)(void *, char *, unsigned int), void *);
 
-void mysql_set_local_infile_default(DES *des);
-int STDCALL mysql_shutdown(DES *des,
+void mysql_set_local_infile_default(MYSQL *mysql);
+int STDCALL mysql_shutdown(MYSQL *mysql,
                            enum mysql_enum_shutdown_level shutdown_level);
-int STDCALL mysql_dump_debug_info(DES *des);
-int STDCALL mysql_refresh(DES *des, unsigned int refresh_options);
-int STDCALL mysql_kill(DES *des, unsigned long pid);
-int STDCALL mysql_set_server_option(DES *des,
+int STDCALL mysql_dump_debug_info(MYSQL *mysql);
+int STDCALL mysql_refresh(MYSQL *mysql, unsigned int refresh_options);
+int STDCALL mysql_kill(MYSQL *mysql, unsigned long pid);
+int STDCALL mysql_set_server_option(MYSQL *mysql,
                                     enum enum_mysql_set_option option);
-int STDCALL mysql_ping(DES *des);
-const char *STDCALL mysql_stat(DES *des);
-const char *STDCALL mysql_get_server_info(DES *des);
+int STDCALL mysql_ping(MYSQL *mysql);
+const char *STDCALL mysql_stat(MYSQL *mysql);
+const char *STDCALL mysql_get_server_info(MYSQL *mysql);
 const char *STDCALL mysql_get_client_info(void);
 unsigned long STDCALL mysql_get_client_version(void);
-const char *STDCALL mysql_get_host_info(DES *des);
-unsigned long STDCALL mysql_get_server_version(DES *des);
-unsigned int STDCALL mysql_get_proto_info(DES *des);
-DES_RES *STDCALL mysql_list_dbs(DES *des, const char *wild);
-DES_RES *STDCALL mysql_list_tables(DES *des, const char *wild);
-DES_RES *STDCALL mysql_list_processes(DES *des);
-int STDCALL mysql_options(DES *des, enum des_option option,
+const char *STDCALL mysql_get_host_info(MYSQL *mysql);
+unsigned long STDCALL mysql_get_server_version(MYSQL *mysql);
+unsigned int STDCALL mysql_get_proto_info(MYSQL *mysql);
+MYSQL_RES *STDCALL mysql_list_dbs(MYSQL *mysql, const char *wild);
+MYSQL_RES *STDCALL mysql_list_tables(MYSQL *mysql, const char *wild);
+MYSQL_RES *STDCALL mysql_list_processes(MYSQL *mysql);
+int STDCALL mysql_options(MYSQL *mysql, enum mysql_option option,
                           const void *arg);
-int STDCALL mysql_options4(DES *des, enum des_option option,
+int STDCALL mysql_options4(MYSQL *mysql, enum mysql_option option,
                            const void *arg1, const void *arg2);
-int STDCALL mysql_get_option(DES *des, enum des_option option,
+int STDCALL mysql_get_option(MYSQL *mysql, enum mysql_option option,
                              const void *arg);
-void STDCALL mysql_free_result(DES_RES *result);
-enum net_async_status STDCALL mysql_free_result_nonblocking(DES_RES *result);
-void STDCALL mysql_data_seek(DES_RES *result, uint64_t offset);
-DES_ROW_OFFSET STDCALL mysql_row_seek(DES_RES *result,
-                                        DES_ROW_OFFSET offset);
-DES_FIELD_OFFSET STDCALL mysql_field_seek(DES_RES *result,
-                                            DES_FIELD_OFFSET offset);
-DES_ROW STDCALL mysql_fetch_row(DES_RES *result);
-enum net_async_status STDCALL mysql_fetch_row_nonblocking(DES_RES *res,
-                                                          DES_ROW *row);
+void STDCALL mysql_free_result(MYSQL_RES *result);
+enum net_async_status STDCALL mysql_free_result_nonblocking(MYSQL_RES *result);
+void STDCALL mysql_data_seek(MYSQL_RES *result, uint64_t offset);
+MYSQL_ROW_OFFSET STDCALL mysql_row_seek(MYSQL_RES *result,
+                                        MYSQL_ROW_OFFSET offset);
+MYSQL_FIELD_OFFSET STDCALL mysql_field_seek(MYSQL_RES *result,
+                                            MYSQL_FIELD_OFFSET offset);
+MYSQL_ROW STDCALL mysql_fetch_row(MYSQL_RES *result);
+enum net_async_status STDCALL mysql_fetch_row_nonblocking(MYSQL_RES *res,
+                                                          MYSQL_ROW *row);
 
-unsigned long *STDCALL mysql_fetch_lengths(DES_RES *result);
-DES_FIELD *STDCALL mysql_fetch_field(DES_RES *result);
-DES_RES *STDCALL mysql_list_fields(DES *des, const char *table,
+unsigned long *STDCALL mysql_fetch_lengths(MYSQL_RES *result);
+MYSQL_FIELD *STDCALL mysql_fetch_field(MYSQL_RES *result);
+MYSQL_RES *STDCALL mysql_list_fields(MYSQL *mysql, const char *table,
                                      const char *wild);
 unsigned long STDCALL mysql_escape_string(char *to, const char *from,
                                           unsigned long from_length);
 unsigned long STDCALL mysql_hex_string(char *to, const char *from,
                                        unsigned long from_length);
-unsigned long STDCALL mysql_real_escape_string(DES *des, char *to,
+unsigned long STDCALL mysql_real_escape_string(MYSQL *mysql, char *to,
                                                const char *from,
                                                unsigned long length);
-unsigned long STDCALL mysql_real_escape_string_quote(DES *des, char *to,
+unsigned long STDCALL mysql_real_escape_string_quote(MYSQL *mysql, char *to,
                                                      const char *from,
                                                      unsigned long length,
                                                      char quote);
 void STDCALL mysql_debug(const char *debug);
-void STDCALL myodbc_remove_escape(DES *des, char *name);
+void STDCALL myodbc_remove_escape(MYSQL *mysql, char *name);
 unsigned int STDCALL mysql_thread_safe(void);
-bool STDCALL mysql_read_query_result(DES *des);
-int STDCALL mysql_reset_connection(DES *des);
+bool STDCALL mysql_read_query_result(MYSQL *mysql);
+int STDCALL mysql_reset_connection(MYSQL *mysql);
 
-int STDCALL mysql_binlog_open(DES *des, DES_RPL *rpl);
-int STDCALL mysql_binlog_fetch(DES *des, DES_RPL *rpl);
-void STDCALL mysql_binlog_close(DES *des, DES_RPL *rpl);
+int STDCALL mysql_binlog_open(MYSQL *mysql, MYSQL_RPL *rpl);
+int STDCALL mysql_binlog_fetch(MYSQL *mysql, MYSQL_RPL *rpl);
+void STDCALL mysql_binlog_close(MYSQL *mysql, MYSQL_RPL *rpl);
 
 /*
   The following definitions are added for the enhanced
@@ -571,11 +568,11 @@ void STDCALL mysql_binlog_close(DES *des, DES_RPL *rpl);
 */
 
 /* statement state */
-enum enum_des_stmt_state {
-  DES_STMT_INIT_DONE = 1,
-  DES_STMT_PREPARE_DONE,
-  DES_STMT_EXECUTE_DONE,
-  DES_STMT_FETCH_DONE
+enum enum_mysql_stmt_state {
+  MYSQL_STMT_INIT_DONE = 1,
+  MYSQL_STMT_PREPARE_DONE,
+  MYSQL_STMT_EXECUTE_DONE,
+  MYSQL_STMT_FETCH_DONE
 };
 
 /*
@@ -638,19 +635,19 @@ enum enum_des_stmt_state {
                    0  no truncation
                    1  value is out of range or buffer is too small
 
-  Please note that DES_BIND also has internals members.
+  Please note that MYSQL_BIND also has internals members.
 */
 
-typedef struct DES_BIND {
+typedef struct MYSQL_BIND {
   unsigned long *length; /* output length pointer */
   bool *is_null;         /* Pointer to null indicator */
   void *buffer;          /* buffer to get/put data */
   /* set this if you want to track data truncations happened during fetch */
   bool *error;
   unsigned char *row_ptr; /* for the current data position */
-  void (*store_param_func)(NET *net, struct DES_BIND *param);
-  void (*fetch_result)(struct DES_BIND *, DES_FIELD *, unsigned char **row);
-  void (*skip_result)(struct DES_BIND *, DES_FIELD *, unsigned char **row);
+  void (*store_param_func)(NET *net, struct MYSQL_BIND *param);
+  void (*fetch_result)(struct MYSQL_BIND *, MYSQL_FIELD *, unsigned char **row);
+  void (*skip_result)(struct MYSQL_BIND *, MYSQL_FIELD *, unsigned char **row);
   /* output buffer length, must be set when fetching str/binary */
   unsigned long buffer_length;
   unsigned long offset;              /* offset position for char/binary fetch */
@@ -663,25 +660,25 @@ typedef struct DES_BIND {
   bool long_data_used;               /* If used with mysql_send_long_data */
   bool is_null_value;                /* Used if is_null is 0 */
   void *extension;
-} DES_BIND;
+} MYSQL_BIND;
 
-struct DES_STMT_EXT;
+struct MYSQL_STMT_EXT;
 
 /* statement handler */
-typedef struct DES_STMT {
+typedef struct MYSQL_STMT {
   struct MEM_ROOT *mem_root; /* root allocations */
-  desodbc::LIST list;                 /* list to keep track of all stmts */
-  DES *des;              /* connection handle */
-  DES_BIND *params;        /* input parameters */
-  DES_BIND *bind;          /* output parameters */
-  DES_FIELD *fields;       /* result set metadata */
-  DES_DATA result;         /* cached result set */
-  DES_ROWS *data_cursor;   /* current row in cached result */
+  LIST list;                 /* list to keep track of all stmts */
+  MYSQL *mysql;              /* connection handle */
+  MYSQL_BIND *params;        /* input parameters */
+  MYSQL_BIND *bind;          /* output parameters */
+  MYSQL_FIELD *fields;       /* result set metadata */
+  MYSQL_DATA result;         /* cached result set */
+  MYSQL_ROWS *data_cursor;   /* current row in cached result */
   /*
     mysql_stmt_fetch() calls this function to fetch one row (it's different
     for buffered, unbuffered and cursor fetch).
   */
-  int (*read_row_func)(struct DES_STMT *stmt, unsigned char **row);
+  int (*read_row_func)(struct MYSQL_STMT *stmt, unsigned char **row);
   /* copy of mysql->affected_rows after statement execution */
   uint64_t affected_rows;
   uint64_t insert_id;          /* copy of mysql->insert_id */
@@ -696,8 +693,8 @@ typedef struct DES_STMT {
   unsigned int last_errno;            /* error code */
   unsigned int param_count;           /* input parameter count */
   unsigned int field_count;           /* number of columns in result set */
-  enum enum_des_stmt_state state;   /* statement state */
-  char last_error[DES_ERRMSG_SIZE]; /* error message */
+  enum enum_mysql_stmt_state state;   /* statement state */
+  char last_error[MYSQL_ERRMSG_SIZE]; /* error message */
   char sqlstate[SQLSTATE_LENGTH + 1];
   /* Types of input parameters should be sent to server */
   bool send_types_to_server;
@@ -710,8 +707,8 @@ typedef struct DES_STMT {
     metadata fields when doing mysql_stmt_store_result.
   */
   bool update_max_length;
-  struct DES_STMT_EXT *extension;
-} DES_STMT;
+  struct MYSQL_STMT_EXT *extension;
+} MYSQL_STMT;
 
 enum enum_stmt_attr_type {
   /*
@@ -734,53 +731,53 @@ enum enum_stmt_attr_type {
   STMT_ATTR_PREFETCH_ROWS
 };
 
-bool STDCALL mysql_bind_param(DES *des, unsigned n_params,
-                              DES_BIND *binds, const char **names);
+bool STDCALL mysql_bind_param(MYSQL *mysql, unsigned n_params,
+                              MYSQL_BIND *binds, const char **names);
 
-DES_STMT *STDCALL mysql_stmt_init(DES *des);
-int STDCALL mysql_stmt_prepare(DES_STMT *stmt, const char *query,
+MYSQL_STMT *STDCALL mysql_stmt_init(MYSQL *mysql);
+int STDCALL mysql_stmt_prepare(MYSQL_STMT *stmt, const char *query,
                                unsigned long length);
-int STDCALL mysql_stmt_execute(DES_STMT *stmt);
-int STDCALL mysql_stmt_fetch(DES_STMT *stmt);
-int STDCALL mysql_stmt_fetch_column(DES_STMT *stmt, DES_BIND *bind_arg,
+int STDCALL mysql_stmt_execute(MYSQL_STMT *stmt);
+int STDCALL mysql_stmt_fetch(MYSQL_STMT *stmt);
+int STDCALL mysql_stmt_fetch_column(MYSQL_STMT *stmt, MYSQL_BIND *bind_arg,
                                     unsigned int column, unsigned long offset);
-int STDCALL mysql_stmt_store_result(DES_STMT *stmt);
-unsigned long STDCALL mysql_stmt_param_count(DES_STMT *stmt);
-bool STDCALL mysql_stmt_attr_set(DES_STMT *stmt,
+int STDCALL mysql_stmt_store_result(MYSQL_STMT *stmt);
+unsigned long STDCALL mysql_stmt_param_count(MYSQL_STMT *stmt);
+bool STDCALL mysql_stmt_attr_set(MYSQL_STMT *stmt,
                                  enum enum_stmt_attr_type attr_type,
                                  const void *attr);
-bool STDCALL mysql_stmt_attr_get(DES_STMT *stmt,
+bool STDCALL mysql_stmt_attr_get(MYSQL_STMT *stmt,
                                  enum enum_stmt_attr_type attr_type,
                                  void *attr);
-bool STDCALL mysql_stmt_bind_param(DES_STMT *stmt, DES_BIND *bnd);
-bool STDCALL mysql_stmt_bind_result(DES_STMT *stmt, DES_BIND *bnd);
-bool STDCALL mysql_stmt_close(DES_STMT *stmt);
-bool STDCALL mysql_stmt_reset(DES_STMT *stmt);
-bool STDCALL mysql_stmt_free_result(DES_STMT *stmt);
-bool STDCALL mysql_stmt_send_long_data(DES_STMT *stmt,
+bool STDCALL mysql_stmt_bind_param(MYSQL_STMT *stmt, MYSQL_BIND *bnd);
+bool STDCALL mysql_stmt_bind_result(MYSQL_STMT *stmt, MYSQL_BIND *bnd);
+bool STDCALL mysql_stmt_close(MYSQL_STMT *stmt);
+bool STDCALL mysql_stmt_reset(MYSQL_STMT *stmt);
+bool STDCALL mysql_stmt_free_result(MYSQL_STMT *stmt);
+bool STDCALL mysql_stmt_send_long_data(MYSQL_STMT *stmt,
                                        unsigned int param_number,
                                        const char *data, unsigned long length);
-DES_RES *STDCALL mysql_stmt_result_metadata(DES_STMT *stmt);
-DES_RES *STDCALL mysql_stmt_param_metadata(DES_STMT *stmt);
-unsigned int STDCALL mysql_stmt_errno(DES_STMT *stmt);
-const char *STDCALL mysql_stmt_error(DES_STMT *stmt);
-const char *STDCALL mysql_stmt_sqlstate(DES_STMT *stmt);
-DES_ROW_OFFSET STDCALL mysql_stmt_row_seek(DES_STMT *stmt,
-                                             DES_ROW_OFFSET offset);
-DES_ROW_OFFSET STDCALL mysql_stmt_row_tell(DES_STMT *stmt);
-void STDCALL mysql_stmt_data_seek(DES_STMT *stmt, uint64_t offset);
-uint64_t STDCALL mysql_stmt_num_rows(DES_STMT *stmt);
-uint64_t STDCALL mysql_stmt_affected_rows(DES_STMT *stmt);
-uint64_t STDCALL mysql_stmt_insert_id(DES_STMT *stmt);
-unsigned int STDCALL mysql_stmt_field_count(DES_STMT *stmt);
+MYSQL_RES *STDCALL mysql_stmt_result_metadata(MYSQL_STMT *stmt);
+MYSQL_RES *STDCALL mysql_stmt_param_metadata(MYSQL_STMT *stmt);
+unsigned int STDCALL mysql_stmt_errno(MYSQL_STMT *stmt);
+const char *STDCALL mysql_stmt_error(MYSQL_STMT *stmt);
+const char *STDCALL mysql_stmt_sqlstate(MYSQL_STMT *stmt);
+MYSQL_ROW_OFFSET STDCALL mysql_stmt_row_seek(MYSQL_STMT *stmt,
+                                             MYSQL_ROW_OFFSET offset);
+MYSQL_ROW_OFFSET STDCALL mysql_stmt_row_tell(MYSQL_STMT *stmt);
+void STDCALL mysql_stmt_data_seek(MYSQL_STMT *stmt, uint64_t offset);
+uint64_t STDCALL mysql_stmt_num_rows(MYSQL_STMT *stmt);
+uint64_t STDCALL mysql_stmt_affected_rows(MYSQL_STMT *stmt);
+uint64_t STDCALL mysql_stmt_insert_id(MYSQL_STMT *stmt);
+unsigned int STDCALL mysql_stmt_field_count(MYSQL_STMT *stmt);
 
-bool STDCALL mysql_commit(DES *des);
-bool STDCALL mysql_rollback(DES *des);
-bool STDCALL mysql_autocommit(DES *des, bool auto_mode);
-bool STDCALL mysql_more_results(DES *des);
-int STDCALL mysql_next_result(DES *des);
-int STDCALL mysql_stmt_next_result(DES_STMT *stmt);
-void STDCALL mysql_close(DES *sock);
+bool STDCALL mysql_commit(MYSQL *mysql);
+bool STDCALL mysql_rollback(MYSQL *mysql);
+bool STDCALL mysql_autocommit(MYSQL *mysql, bool auto_mode);
+bool STDCALL mysql_more_results(MYSQL *mysql);
+int STDCALL mysql_next_result(MYSQL *mysql);
+int STDCALL mysql_stmt_next_result(MYSQL_STMT *stmt);
+void STDCALL mysql_close(MYSQL *sock);
 
 /* Public key reset */
 void STDCALL mysql_reset_server_public_key(void);
@@ -789,11 +786,11 @@ void STDCALL mysql_reset_server_public_key(void);
 #define MYSQL_NO_DATA 100
 #define MYSQL_DATA_TRUNCATED 101
 
-#define mysql_reload(des) mysql_refresh((des), REFRESH_GRANT)
+#define mysql_reload(mysql) mysql_refresh((mysql), REFRESH_GRANT)
 
 #define HAVE_MYSQL_REAL_CONNECT
 
-DES *STDCALL mysql_real_connect_dns_srv(DES *des,
+MYSQL *STDCALL mysql_real_connect_dns_srv(MYSQL *mysql,
                                           const char *dns_srv_name,
                                           const char *user, const char *passwd,
                                           const char *db,

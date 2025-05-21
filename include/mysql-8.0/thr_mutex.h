@@ -3,6 +3,9 @@
 
 /* Copyright (c) 2014, 2021, Oracle and/or its affiliates.
 
+	Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+	(see the next block comment below).
+	
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 2.0,
    as published by the Free Software Foundation.
@@ -22,6 +25,17 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 /**
   @file include/thr_mutex.h
@@ -52,22 +66,25 @@
 /*
   The following are part of the services ABI:
   - native_mutex_t
-  - des_mutex_t
+  - mysql_mutex_t
 */
 #include "mysql/components/services/thr_mutex_bits.h"
 
+/*
+DESODBC: renaming myodbc to desodbc
+*/
 namespace desodbc
 {
 
 /* Define mutex types, see my_thr_init.c */
-#define DES_MUTEX_INIT_SLOW NULL
+#define MY_MUTEX_INIT_SLOW NULL
 
 /* Can be set in /usr/include/pthread.h */
 #ifdef PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
 extern native_mutexattr_t my_fast_mutexattr;
-#define DES_MUTEX_INIT_FAST &my_fast_mutexattr
+#define MY_MUTEX_INIT_FAST &my_fast_mutexattr
 #else
-#define DES_MUTEX_INIT_FAST NULL
+#define MY_MUTEX_INIT_FAST NULL
 #endif
 
 /* Can be set in /usr/include/pthread.h */
@@ -164,7 +181,7 @@ static inline void safe_mutex_assert_not_owner(safe_mutex_t *mp) {
 }
 #endif /* SAFE_MUTEX */
 
-static inline int my_mutex_init(des_mutex_t *mp, const native_mutexattr_t *attr
+static inline int my_mutex_init(mysql_mutex_t *mp, const native_mutexattr_t *attr
 #ifdef SAFE_MUTEX
                                 ,
                                 const char *file, uint line
@@ -179,7 +196,7 @@ static inline int my_mutex_init(des_mutex_t *mp, const native_mutexattr_t *attr
 #endif
 }
 
-static inline int my_mutex_lock(des_mutex_t *mp
+static inline int my_mutex_lock(mysql_mutex_t *mp
 #ifdef SAFE_MUTEX
                                 ,
                                 const char *file, uint line
@@ -194,7 +211,7 @@ static inline int my_mutex_lock(des_mutex_t *mp
 #endif
 }
 
-static inline int my_mutex_trylock(des_mutex_t *mp
+static inline int my_mutex_trylock(mysql_mutex_t *mp
 #ifdef SAFE_MUTEX
                                    ,
                                    const char *file, uint line
@@ -209,7 +226,7 @@ static inline int my_mutex_trylock(des_mutex_t *mp
 #endif
 }
 
-static inline int my_mutex_unlock(des_mutex_t *mp
+static inline int my_mutex_unlock(mysql_mutex_t *mp
 #ifdef SAFE_MUTEX
                                   ,
                                   const char *file, uint line
@@ -224,7 +241,7 @@ static inline int my_mutex_unlock(des_mutex_t *mp
 #endif
 }
 
-static inline int my_mutex_destroy(des_mutex_t *mp
+static inline int my_mutex_destroy(mysql_mutex_t *mp
 #ifdef SAFE_MUTEX
                                    ,
                                    const char *file, uint line

@@ -67,9 +67,9 @@
   (libmysql error code) can be used too.
 
   The client plugin may set the error code and the error message directly
-  in the DES structure and return CR_ERROR. If a CR_xxx specific error
-  code was returned, an error message in the DES structure will be
-  overwritten. If CR_ERROR is returned without setting the error in DES,
+  in the MYSQL structure and return CR_ERROR. If a CR_xxx specific error
+  code was returned, an error message in the MYSQL structure will be
+  overwritten. If CR_ERROR is returned without setting the error in MYSQL,
   CR_UNKNOWN_ERROR will be user.
 */
 #define CR_ERROR 0

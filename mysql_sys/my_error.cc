@@ -41,7 +41,7 @@
 #include "m_ctype.h"
 #include "m_string.h"
 #include "my_base.h"
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_loglevel.h"
 #include "my_sys.h"
@@ -65,9 +65,9 @@ namespace desodbc
 /*
   WARNING!
   my_error family functions have to be used according following rules:
-  - if message has no parameters, use my_message(ER_CODE, ER(ER_CODE), DESF(N))
-  - if message has parameters and is registered: my_error(ER_CODE, DESF(N), ...)
-  - for free-form messages use my_printf_error(ER_CODE, format, DESF(N), ...)
+  - if message has no parameters, use my_message(ER_CODE, ER(ER_CODE), MYF(N))
+  - if message has parameters and is registered: my_error(ER_CODE, MYF(N), ...)
+  - for free-form messages use my_printf_error(ER_CODE, format, MYF(N), ...)
 
   These three send their messages using error_handler_hook, which normally
   means we'll send them to the client if we have one, or to error-log / stderr
@@ -338,7 +338,7 @@ int my_error_register(const char *(*get_errmsg)(int), int first, int last) {
 
   /* Allocate a new header structure. */
   if (!(meh_p = (struct my_err_head *)my_malloc(
-            key_memory_my_err_head, sizeof(struct my_err_head), DESF(MY_WME))))
+            key_memory_my_err_head, sizeof(struct my_err_head), MYF(MY_WME))))
     return 1;
   meh_p->get_errmsg = get_errmsg;
   meh_p->meh_first = first;
@@ -453,7 +453,7 @@ void my_message_local_stderr(enum loglevel ll, uint ecode, va_list args) {
       (ll == ERROR_LEVEL ? "ERROR" : ll == WARNING_LEVEL ? "Warning" : "Note"));
   vsnprintf(buff + len, sizeof(buff) - len, EE(ecode), args);
 
-  my_message_stderr(0, buff, DESF(0));
+  my_message_stderr(0, buff, MYF(0));
 }
 
 /**

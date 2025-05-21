@@ -1,4 +1,6 @@
 // Copyright (c) 2007, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -25,6 +27,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 /*
  * Installer wrapper implementations.
@@ -87,8 +100,17 @@ static SQLWCHAR W_DRIVER[] = {'D', 'R', 'I', 'V', 'E', 'R', 0};
 static SQLWCHAR W_Driver[] = {'D', 'r', 'i', 'v', 'e', 'r', 0};
 static SQLWCHAR W_DESCRIPTION[] =
   {'D', 'E', 'S', 'C', 'R', 'I', 'P', 'T', 'I', 'O', 'N', 0};
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 static SQLWCHAR W_DES_EXEC[] = {'D', 'E', 'S', '_', 'E', 'X', 'E', 'C', 0};
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 static SQLWCHAR W_DES_WORKING_DIR[] = {'D', 'E', 'S', '_', 'W', 'O', 'R', 'K', 'I', 'N', 'G', '_', 'D', 'I', 'R', 0};
+
 static SQLWCHAR W_UID[]= {'U', 'I', 'D', 0};
 static SQLWCHAR W_USER[]= {'U', 'S', 'E', 'R', 0};
 static SQLWCHAR W_PWD[]= {'P', 'W', 'D', 0};
@@ -909,7 +931,7 @@ void DataSource::reset() {
   BOOL_OPTIONS_LIST(SET_DEFAULT_BOOL_OPTION);
 
   //opt_PORT.set_default(3306);
-  opt_NO_SCHEMA = 1;
+  //opt_NO_SCHEMA = 1;
 }
 
 SQLWSTRING DataSource::to_kvpair(SQLWCHAR delim) {
@@ -1027,7 +1049,6 @@ int DataSource::add() {
 #endif
 
 #define OR_K_EQUAL(X) || k == W_##X
-
   for (const auto &el : m_opt_map) {
     auto &k = el.first;
     auto &v = el.second;

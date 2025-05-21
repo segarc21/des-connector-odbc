@@ -27,7 +27,7 @@
   @file include/lf.h
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #include <stddef.h>
 #include <sys/types.h>

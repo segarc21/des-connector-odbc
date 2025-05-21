@@ -7,9 +7,9 @@ driver/CMakeFiles/desodbc-w.dir/catalog.cc.o: driver/catalog.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -533,9 +533,9 @@ driver/CMakeFiles/desodbc-w.dir/catalog_no_i_s.cc.o: driver/catalog_no_i_s.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -1059,9 +1059,9 @@ driver/CMakeFiles/desodbc-w.dir/connect.cc.o: driver/connect.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -1626,9 +1626,9 @@ driver/CMakeFiles/desodbc-w.dir/cursor.cc.o: driver/cursor.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -2151,9 +2151,9 @@ driver/CMakeFiles/desodbc-w.dir/desc.cc.o: driver/desc.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -2676,9 +2676,9 @@ driver/CMakeFiles/desodbc-w.dir/dll.cc.o: driver/dll.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -3201,9 +3201,9 @@ driver/CMakeFiles/desodbc-w.dir/driver.cc.o: driver/driver.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -3726,9 +3726,9 @@ driver/CMakeFiles/desodbc-w.dir/error.cc.o: driver/error.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -4251,9 +4251,9 @@ driver/CMakeFiles/desodbc-w.dir/execute.cc.o: driver/execute.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -4776,9 +4776,9 @@ driver/CMakeFiles/desodbc-w.dir/handle.cc.o: driver/handle.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -4898,9 +4898,9 @@ driver/CMakeFiles/desodbc-w.dir/handle.cc.o: driver/handle.cc \
   extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/trace/tracer.h \
   extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/trace/tracer_provider.h \
   extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/version.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/my_inttypes.h \
   include/mysql-8.0/my_loglevel.h \
@@ -5332,9 +5332,9 @@ driver/CMakeFiles/desodbc-w.dir/info.cc.o: driver/info.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -5857,9 +5857,9 @@ driver/CMakeFiles/desodbc-w.dir/my_prepared_stmt.cc.o: driver/my_prepared_stmt.c
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -6383,9 +6383,9 @@ driver/CMakeFiles/desodbc-w.dir/my_stmt.cc.o: driver/my_stmt.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -6908,9 +6908,9 @@ driver/CMakeFiles/desodbc-w.dir/options.cc.o: driver/options.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -7434,9 +7434,9 @@ driver/CMakeFiles/desodbc-w.dir/parse.cc.o: driver/parse.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -7959,9 +7959,9 @@ driver/CMakeFiles/desodbc-w.dir/prepare.cc.o: driver/prepare.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -8484,9 +8484,9 @@ driver/CMakeFiles/desodbc-w.dir/results.cc.o: driver/results.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -9010,9 +9010,9 @@ driver/CMakeFiles/desodbc-w.dir/telemetry.cc.o: driver/telemetry.cc \
   MYODBC_MYSQL.h \
   MYODBC_ODBC.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -9536,9 +9536,9 @@ driver/CMakeFiles/desodbc-w.dir/transact.cc.o: driver/transact.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -10061,9 +10061,9 @@ driver/CMakeFiles/desodbc-w.dir/unicode.cc.o: driver/unicode.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -10586,9 +10586,9 @@ driver/CMakeFiles/desodbc-w.dir/utility.cc.o: driver/utility.cc \
   MYODBC_ODBC.h \
   VersionInfo.h \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
-  include/mysql-8.0/des_dbug.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
+  include/mysql-8.0/my_dbug.h \
   include/mysql-8.0/errmsg.h \
   include/mysql-8.0/field_types.h \
   include/mysql-8.0/lex_string.h \
@@ -11571,7 +11571,7 @@ extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/nostd/internal/abs
 
 /usr/include/c++/13/unordered_map:
 
-include/mysql-8.0/des_compiler.h:
+include/mysql-8.0/my_compiler.h:
 
 include/mysql-8.0/my_psi_config.h:
 
@@ -11611,7 +11611,7 @@ extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/trace/trace_id.h:
 
 include/mysql-8.0/my_loglevel.h:
 
-include/mysql-8.0/des_config.h:
+include/mysql-8.0/my_config.h:
 
 extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/common/attribute_value.h:
 
@@ -11833,7 +11833,7 @@ driver/myutil.h:
 
 /usr/include/c++/13/new:
 
-include/mysql-8.0/des_dbug.h:
+include/mysql-8.0/my_dbug.h:
 
 /usr/include/c++/13/ostream:
 

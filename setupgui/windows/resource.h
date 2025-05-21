@@ -22,7 +22,7 @@
 #define IDC_EDIT_DES_EXEC_PATH              10002
 #define IDC_EDIT_DES_WORKING_DIR        10003
 #define IDC_BUTTON_EXEC_BROWSE          11014
-#define IDC_BUTTON_HELP                 11015
+#define IDC_BUTTON_ABOUT                 11015
 #define IDC_BUTTON_WORKING_BROWSE       11016
 #define IDC_GROUP_BOX                      -1
 

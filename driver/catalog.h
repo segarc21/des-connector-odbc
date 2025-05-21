@@ -1,4 +1,6 @@
 // Copyright (c) 2010, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,118 +28,19 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  catalog.h
   @brief some definitions required for catalog functions
 */
-
-
-/**
-   enums for resultsets returned by catalog functions - we don't want
-   magic numbers
-*/
-
 #include "field_types.h"
-#include "mysql.h"
-
-/* SQLColumns */
-enum desodbcColumns {des_cTABLE_CAT= 0,      des_cTABLE_SCHEM,      des_cTABLE_NAME,
-              /*3*/ des_cCOLUMN_NAME,       des_cDATA_TYPE,        des_cTYPE_NAME,
-              /*6*/ des_cCOLUMN_SIZE,       des_cBUFFER_LENGTH,    des_cDECIMAL_DIGITS,
-              /*9*/ des_cNUM_PREC_RADIX,    des_cNULLABLE,         des_cREMARKS,
-              /*12*/des_cCOLUMN_DEF,        des_cSQL_DATA_TYPE,    des_cSQL_DATETIME_SUB,
-              /*15*/des_cCHAR_OCTET_LENGTH, des_cORDINAL_POSITION, des_cIS_NULLABLE };
-
-/* SQLProcedureColumns */
-enum desodbcProcColumns {des_pcPROCEDURE_CAT= 0, des_pcPROCEDURE_SCHEM,  des_pcPROCEDURE_NAME,
-                  /*3*/ des_pcCOLUMN_NAME,      des_pcCOLUMN_TYPE,      des_pcDATA_TYPE,
-                  /*6*/ des_pcTYPE_NAME,        des_pcCOLUMN_SIZE,      des_pcBUFFER_LENGTH,
-                  /*9*/ des_pcDECIMAL_DIGITS,   des_pcNUM_PREC_RADIX,   des_pcNULLABLE,
-                  /*12*/des_pcREMARKS,          des_pcCOLUMN_DEF,       des_pcSQL_DATA_TYPE,
-                  /*15*/des_pcSQL_DATETIME_SUB, des_pcCHAR_OCTET_LENGTH,des_pcORDINAL_POSITION,
-                  /*18*/des_pcIS_NULLABLE };
-
-typedef std::vector<DES_BIND> vec_bind;
-
-/* Some common(for i_s/no_i_s) helper functions */
-const char *des_next_token(const char *prev_token,
-                          const char **token,
-                                char *data,
-                          const char chr);
-
-SQLRETURN
-create_empty_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
-                            DES_FIELD *fields, uint fldcnt);
-
-SQLRETURN
-create_fake_resultset(STMT *stmt, DES_ROW rowval, size_t rowsize,
-                      des_ulonglong rowcnt, DES_FIELD *fields, uint fldcnt,
-                      bool copy_rowval);
-
-
-/* no_i_s functions */
-
-DES_RESULT *db_status(STMT *stmt, std::string &db);
-
-std::string get_database_name(STMT *stmt,
-                              SQLCHAR *catalog, SQLINTEGER catalog_len,
-                              SQLCHAR *schema, SQLINTEGER schema_len,
-                              bool try_reget = true);
-
-
-DES_RESULT *table_status(STMT        *stmt,
-                        SQLCHAR     *db,
-                        SQLSMALLINT  db_length,
-                        SQLCHAR     *table,
-                        SQLSMALLINT  table_length,
-                        des_bool      wildcard,
-                        des_bool      show_tables,
-                        des_bool      show_views);
-
-SQLRETURN
-primary_keys_no_i_s(SQLHSTMT hstmt,
-                    SQLCHAR *catalog, SQLSMALLINT catalog_len,
-                    SQLCHAR *schema,
-                    SQLSMALLINT schema_len,
-                    SQLCHAR *table, SQLSMALLINT table_len);
-
-
-SQLRETURN
-procedure_columns_no_i_s(SQLHSTMT hstmt,
-                         SQLCHAR *szCatalogName, SQLSMALLINT cbCatalogName,
-                         SQLCHAR *szSchemaName,
-                         SQLSMALLINT cbSchemaName,
-                         SQLCHAR *szProcName, SQLSMALLINT cbProcName,
-                         SQLCHAR *szColumnName, SQLSMALLINT cbColumnName);
-
-
-SQLRETURN
-special_columns_no_i_s(SQLHSTMT hstmt, SQLUSMALLINT fColType,
-                       SQLCHAR *szTableQualifier, SQLSMALLINT cbTableQualifier,
-                       SQLCHAR *szTableOwner,
-                       SQLSMALLINT cbTableOwner,
-                       SQLCHAR *szTableName, SQLSMALLINT cbTableName,
-                       SQLUSMALLINT fScope,
-                       SQLUSMALLINT fNullable);
-
-/*
-  @purpose : retrieves a list of statistics about a single table and the
-       indexes associated with the table. The driver returns the
-       information as a result set.
-*/
-
-SQLRETURN
-statistics_no_i_s(SQLHSTMT hstmt,
-                  SQLCHAR *catalog, SQLSMALLINT catalog_len,
-                  SQLCHAR *schema,
-                  SQLSMALLINT schema_len,
-                  SQLCHAR *table, SQLSMALLINT table_len,
-                  SQLUSMALLINT fUnique,
-                  SQLUSMALLINT fAccuracy);
-
-SQLRETURN
-tables_no_i_s(SQLHSTMT hstmt,
-              SQLCHAR *catalog, SQLSMALLINT catalog_len,
-              SQLCHAR *schema, SQLSMALLINT schema_len,
-              SQLCHAR *table, SQLSMALLINT table_len,
-              SQLCHAR *type, SQLSMALLINT type_len);

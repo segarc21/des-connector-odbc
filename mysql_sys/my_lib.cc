@@ -40,7 +40,7 @@
 
 #include "m_string.h"
 #include "my_alloc.h"
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_dir.h" /* Structs used by my_dir,includes sys/types */
 #include "my_inttypes.h"
 #include "my_io.h"
@@ -151,7 +151,7 @@ error:
   if (dirp) (void)closedir(dirp);
   my_dirend(result);
   if (MyFlags & (MY_FAE | MY_WME)) {
-    MyOsError(my_errno(), EE_DIR, DESF(0), path);
+    MyOsError(my_errno(), EE_DIR, MYF(0), path);
   }
   return nullptr;
 }
@@ -280,7 +280,7 @@ error:
   if (handle != -1) _findclose(handle);
   my_dirend(result);
   if (MyFlags & (MY_FAE | MY_WME)) {
-    MyOsError(my_errno(), EE_DIR, DESF(0), path);
+    MyOsError(my_errno(), EE_DIR, MYF(0), path);
   }
   return nullptr;
 }
@@ -318,7 +318,7 @@ MY_STAT *my_stat(const char *path, MY_STAT *stat_area, myf MyFlags) {
   set_my_errno(errno);
 
   if (MyFlags & (MY_FAE | MY_WME)) {
-    MyOsError(my_errno(), EE_STAT, DESF(0), path);
+    MyOsError(my_errno(), EE_STAT, MYF(0), path);
   }
   return nullptr;
 }

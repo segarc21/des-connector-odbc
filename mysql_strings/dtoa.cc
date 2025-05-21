@@ -48,7 +48,7 @@
 
  ***************************************************************/
 
-#include "des_config.h"
+#include "my_config.h"
 
 #include <assert.h>
 #include <algorithm>

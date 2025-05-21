@@ -1,6 +1,8 @@
-/*
-   Copyright (c) 2015, 2021, Oracle and/or its affiliates.
+/* Copyright (c) 2015, 2021, Oracle and/or its affiliates.
 
+	Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+	(see the next block comment below).
+	
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 2.0,
    as published by the Free Software Foundation.
@@ -21,6 +23,17 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /*
   Char classes for lexical scanners
 */
@@ -28,10 +41,13 @@
 #ifndef SQL_LEX_CHARS_INCLUDED
 #define SQL_LEX_CHARS_INCLUDED
 
-#include "des_compiler.h"
+#include "my_compiler.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 
+/*
+DESODBC: renaming myodbc to desodbc
+*/
 namespace desodbc
 {
 

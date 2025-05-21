@@ -1,7 +1,7 @@
 mysql_sys/CMakeFiles/mysql_sys.dir/my_read.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/my_read.cc \
  /usr/include/stdc-predef.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/errno.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -59,7 +59,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_read.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_double2ulonglong.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
@@ -67,7 +67,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_read.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_macros.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
  /usr/include/c++/13/stdlib.h /usr/include/c++/13/cstdlib \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
@@ -81,7 +81,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_read.cc.o: \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/alloca.h /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/13/bits/std_abs.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /usr/include/assert.h /usr/include/string.h /usr/include/strings.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_io.h \

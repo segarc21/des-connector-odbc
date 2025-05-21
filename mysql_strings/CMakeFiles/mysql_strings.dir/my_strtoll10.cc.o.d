@@ -101,7 +101,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/my_strtoll10.cc.o: \
  /usr/include/c++/13/pstl/execution_defs.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_macros.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/mysql_lex_string.h \
@@ -159,7 +159,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/my_strtoll10.cc.o: \
  /usr/include/c++/13/atomic /usr/include/c++/13/bits/atomic_base.h \
  /usr/include/c++/13/bits/atomic_lockfree_defines.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /usr/include/assert.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compress.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h \

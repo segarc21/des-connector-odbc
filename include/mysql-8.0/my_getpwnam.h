@@ -28,7 +28,7 @@
   @file include/my_getpwnam.h
 */
 #include <string>
-#include "des_config.h"
+#include "my_config.h"
 
 #ifdef HAVE_GETPWNAM
 #include <pwd.h>

@@ -1,7 +1,7 @@
 mysql_sys/CMakeFiles/mysql_sys.dir/charset.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/charset.cc \
  /usr/include/stdc-predef.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/fcntl.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -161,9 +161,9 @@ mysql_sys/CMakeFiles/mysql_sys.dir/charset.cc.o: \
  /usr/include/c++/13/bits/memory_resource.h /usr/include/c++/13/cstddef \
  /usr/include/c++/13/bits/uses_allocator_args.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /usr/include/assert.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_macros.h \
@@ -211,8 +211,8 @@ mysql_sys/CMakeFiles/mysql_sys.dir/charset.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/mysql_lex_string.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dir.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_io.h \

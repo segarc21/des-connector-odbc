@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  options.c
   @brief Functions for handling handle attributes and options.
@@ -34,11 +47,17 @@
 #include "driver.h"
 #include "errmsg.h"
 
+/* DESODBC:
+
+    Modified according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : sets the common connection/stmt attributes
 */
-
 static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
                                   SQLHANDLE    Handle,
                                   STMT_OPTIONS *options,
@@ -49,51 +68,30 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
     {
         case SQL_ATTR_ASYNC_ENABLE:
             if (ValuePtr == (SQLPOINTER) SQL_ASYNC_ENABLE_ON)
-                return set_handle_error(HandleType,Handle,DESERR_01S02,
-                                        "Doesn't support asynchronous, changed to default",0);
+            return set_handle_error(
+                HandleType, Handle, "01S02",
+                                        "Doesn't support asynchronous, changed to default");
             break;
 
         case SQL_ATTR_CURSOR_SENSITIVITY:
             if (ValuePtr != (SQLPOINTER) SQL_UNSPECIFIED)
             {
-                return set_handle_error(HandleType,Handle,DESERR_01S02,
-                                        "Option value changed to default cursor sensitivity(unspecified)",0);
+            return set_handle_error(HandleType, Handle, "01S02",
+                                        "Option value changed to default cursor sensitivity (unspecified)");
             }
             break;
 
         case SQL_ATTR_CURSOR_TYPE:
-            if (((STMT *)Handle)->dbc->ds.opt_FORWARD_CURSOR)
-            {
-                options->cursor_type= SQL_CURSOR_FORWARD_ONLY;
-                if (ValuePtr != (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY)
-                    return set_handle_error(HandleType,Handle,DESERR_01S02,
-                                            "Forcing the use of forward-only cursor)",0);
-            }
-            else if (((STMT *)Handle)->dbc->ds.opt_DYNAMIC_CURSOR)
-            {
-                if (ValuePtr != (SQLPOINTER)SQL_CURSOR_KEYSET_DRIVEN)
-                    options->cursor_type= (SQLUINTEGER)(SQLULEN)ValuePtr;
+          if (ValuePtr == (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY ||
+              ValuePtr == (SQLPOINTER)SQL_CURSOR_STATIC)
+            options->cursor_type = (SQLUINTEGER)(SQLULEN)ValuePtr;
 
-                else
-                {
-                    options->cursor_type= SQL_CURSOR_STATIC;
-                    return set_handle_error(HandleType,Handle,DESERR_01S02,
-                                            "Option value changed to default static cursor",0);
-                }
-            }
-            else
-            {
-                if (ValuePtr == (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY ||
-                    ValuePtr == (SQLPOINTER)SQL_CURSOR_STATIC)
-                    options->cursor_type= (SQLUINTEGER)(SQLULEN)ValuePtr;
-
-                else
-                {
-                    options->cursor_type= SQL_CURSOR_STATIC;
-                    return set_handle_error(HandleType,Handle,DESERR_01S02,
-                                            "Option value changed to default static cursor",0);
-                }
-            }
+          else {
+            options->cursor_type = SQL_CURSOR_STATIC;
+            return set_handle_error(
+                HandleType, Handle, "01S02",
+                "Option value changed to default static cursor");
+          }
             break;
 
         case SQL_ATTR_MAX_LENGTH:
@@ -105,9 +103,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
             break;
 
         case SQL_ATTR_METADATA_ID:
-            if (ValuePtr == (SQLPOINTER) SQL_TRUE)
-                return set_handle_error(HandleType,Handle,DESERR_01S02,
-                                        "Doesn't support SQL_ATTR_METADATA_ID to true, changed to default",0);
+            options->metadata_id = (ValuePtr == (SQLPOINTER)SQL_TRUE);
             break;
 
         case SQL_ATTR_RETRIEVE_DATA:
@@ -116,8 +112,9 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
 
         case SQL_ATTR_SIMULATE_CURSOR:
             if (ValuePtr != (SQLPOINTER) SQL_SC_TRY_UNIQUE)
-                return set_handle_error(HandleType,Handle,DESERR_01S02,
-                                        "Option value changed to default cursor simulation",0);
+            return set_handle_error(
+                  HandleType, Handle, "01S02",
+                                        "Option value changed to default cursor simulation");
             break;
 
         case 1226:/* MS SQL Server Extension */
@@ -138,20 +135,19 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
           break;
 
         case SQL_ATTR_QUERY_TIMEOUT:
-            /* Do something only if the handle is STMT */
-          return SQL_ERROR; //TODO: handle appropriately
-            break;
-
         case SQL_ATTR_KEYSET_SIZE:
         case SQL_ATTR_CONCURRENCY:
         case SQL_ATTR_NOSCAN:
         default:
+          /* Do something only if the handle is STMT */
+          return set_handle_error(HandleType, Handle, "01S02",
+                                  "Unsuported option");
+          break;
             /* ignored */
             break;
     }
     return SQL_SUCCESS;
 }
-
 
 /*
   @type    : myodbc3 internal
@@ -189,12 +185,14 @@ get_constmt_attr(SQLSMALLINT  HandleType,
             break;
 
         case SQL_ATTR_METADATA_ID:
-            *((SQLUINTEGER *) ValuePtr)= SQL_FALSE;
+            *((SQLUINTEGER *) ValuePtr)= options->metadata_id;
             break;
 
         case SQL_ATTR_QUERY_TIMEOUT:
-            /* Do something only if the handle is STMT */
-          return SQL_ERROR; //TODO: handle appropriately
+          /* Do something only if the handle is STMT */
+          return set_handle_error(HandleType, Handle, "01S02",
+                                  "Unsuported option");
+          break;
             break;
         case SQL_ATTR_RETRIEVE_DATA:
             *((SQLULEN *) ValuePtr)= (options->retrieve_data ? SQL_RD_ON : SQL_RD_OFF);
@@ -235,57 +233,87 @@ get_constmt_attr(SQLSMALLINT  HandleType,
 }
 
 
+/* DESODBC:
+
+    Renamed from the original MySQLSetConnectAttr
+    and modified according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : sets the connection attributes
 */
-
 SQLRETURN SQL_API
 DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
                     SQLPOINTER ValuePtr, SQLINTEGER StringLengthPtr)
 {
   DBC *dbc= (DBC *) hdbc;
 
+  std::string catalog;
+  SQLRETURN rc;
+  std::string output;
+  std::pair<SQLRETURN, std::string> pair;
+  std::string query;
 
   switch (Attribute)
   {
+    case SQL_ATTR_CURRENT_CATALOG:
+
+      rc = dbc->getQueryMutex();
+      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+
+      query = "/use_db ";
+      catalog = sqlcharptr_to_str((SQLCHAR *)ValuePtr, StringLengthPtr);
+      query += catalog;
+
+      pair = dbc->send_query_and_read(query);
+
+      rc = pair.first;
+      output = pair.second;
+
+      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+        dbc->releaseQueryMutex();
+        return rc;
+      }
+
+      dbc->releaseQueryMutex();
+
+      //We do not want to return an error when receiving this message.
+      if (!is_in_string(output, "Database already in use")) {
+        rc = check_and_set_errors(SQL_HANDLE_DBC, dbc, output);
+      }
+
+      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+        return rc;
+      }
+      break;
     case SQL_ATTR_ACCESS_MODE:
+      return dbc->set_error("HYC00",
+                            "Unsupported option due to DES' characteristics");
       break;
 
     case SQL_ATTR_AUTOCOMMIT:
-      return SQL_ERROR; //TODO: handle correctly
+      return dbc->set_error("HYC00", "Unsupported option due to DES' characteristics");
+      break;
 
     case SQL_ATTR_LOGIN_TIMEOUT:
-      return SQL_ERROR;  // TODO: handle correctly
+      return dbc->set_error("HYC00",
+                            "Unsupported option due to DES' characteristics");
       break;
 
     case SQL_ATTR_CONNECTION_TIMEOUT:
-      {
-        /*
-          We don't do anything with this, but we pretend that we did
-          to be consistent with Microsoft SQL Server.
-        */
-        return SQL_SUCCESS;
-      }
+      return dbc->set_error("HY092", "Read-only attribute");
       break;
-
-      /*
-        If this is done before connect (I would say a function
-        sequence but .NET IDE does this) then we store the value but
-        it is quite likely that it will get replaced by DATABASE in
-        a DSN or connect string.
-      */
-    case SQL_ATTR_CURRENT_CATALOG:
-        //TODO: handle correctly
-        return SQL_ERROR;
-        break;
-
 
     case SQL_ATTR_ODBC_CURSORS:
       if (dbc->ds.opt_FORWARD_CURSOR &&
         ValuePtr != (SQLPOINTER) SQL_CUR_USE_ODBC)
-        return ((DBC*)hdbc)->set_error(DESERR_01S02,
-          "Forcing the Driver Manager to use ODBC cursor library",0);
+        return ((DBC *)hdbc)
+            ->set_error(
+                "01S02",
+          "Forcing the Driver Manager to use ODBC cursor library");
       break;
 
     case SQL_OPT_TRACE:
@@ -295,31 +323,26 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
     case SQL_TRANSLATE_OPTION:
       {
         char buff[100];
-        desodbc_snprintf(buff, sizeof(buff),
+        myodbc_snprintf(buff, sizeof(buff),
                         "Suppose to set this attribute '%d' through driver "
                         "manager, not by the driver",
                         (int)Attribute);
-        return ((DBC*)hdbc)->set_error(DESERR_01S02, buff, 0);
+        return ((DBC *)hdbc)->set_error("01S02", buff);
       }
 
     case SQL_ATTR_PACKET_SIZE:
+        return dbc->set_error("HYC00",
+                              "Unsupported option due to DES' characteristics");
       break;
 
     case SQL_ATTR_TXN_ISOLATION:
-      return SQL_ERROR; //TODO: handle correctly
+      return dbc->set_error("HYC00",
+                            "Unsupported option due to DES' characteristics");
       break;
 
 #ifndef USE_IODBC
     case SQL_ATTR_RESET_CONNECTION:
-      if (ValuePtr != (SQLPOINTER)SQL_RESET_CONNECTION_YES)
-      {
-        return dbc->set_error( "HY024", "Invalid attribute value", 0);
-      }
-      /* TODO 3.8 feature */
-      reset_connection(dbc);
-      dbc->need_to_wakeup= 1;
-
-      return SQL_SUCCESS;
+      return dbc->set_error("HYC00", "Optional feature not implemented");
 #endif
 
     case CB_FIDO_CONNECTION:
@@ -332,8 +355,8 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
         break;
       }
     case SQL_ATTR_ENLIST_IN_DTC:
-      return dbc->set_error( "HYC00",
-                           "Optional feature not supported", 0);
+        return dbc->set_error("HYC00",
+                              "Unsupported option due to DES' characteristics");
 
       /*
         3.x driver doesn't support any statement attributes
@@ -349,6 +372,13 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
 }
 
 
+/* DESODBC:
+
+    Renamed from the original MySQLGetConnectAttr.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
  Retrieve connection attribute values.
 
@@ -363,10 +393,8 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
 {
   DBC *dbc= (DBC *)hdbc;
   SQLRETURN result= SQL_SUCCESS;
-
-  /* (Windows) DM checks SQL_ATTR_CONNECTION_DEAD before taking it from the pool and returning to the
-     application. We can use wake-up procedure for diagnostics of whether connection is alive instead
-     of mysql_ping(). But we are leaving this check for other attributes, too */
+  std::pair<SQLRETURN, std::string> pair;
+  std::string current_db_output, current_db;
 
   switch (attrib)
   {
@@ -379,11 +407,23 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_AUTOCOMMIT:
-    return SQL_ERROR; //TODO: handle correctly
+    return dbc->set_error("HYC00",
+                          "Unsupported option due to DES' characteristics");
     break;
 
   case SQL_ATTR_CONNECTION_DEAD:
-    return SQL_ERROR; //TODO: handle correctly
+    //We do a little test
+    result = dbc->getQueryMutex();
+    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) return result;
+
+    pair = dbc->send_query_and_read("/current_db");
+    result = pair.first;
+    current_db_output = pair.second;
+    dbc->releaseQueryMutex();
+    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
+      *((SQLUINTEGER *)num_attr) = SQL_CD_TRUE;
+    } else
+      *((SQLUINTEGER *)num_attr) = SQL_CD_FALSE;
     break;
 
   case SQL_ATTR_CONNECTION_TIMEOUT:
@@ -392,11 +432,34 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_CURRENT_CATALOG:
-    return SQL_ERROR; //TODO: check
+
+    // We do a little test
+    result = dbc->getQueryMutex();
+    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) return result;
+
+    pair = dbc->send_query_and_read("/current_db");
+    result = pair.first;
+    current_db_output = pair.second;
+    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
+      dbc->releaseQueryMutex();
+      return result;
+    }
+
+    result = dbc->releaseQueryMutex();
+
+    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
+      return result;
+    }
+
+    current_db = getLines(current_db_output)[0];
+
+    *char_attr = str_to_sqlcharptr(current_db);
+    *((SQLUINTEGER *)num_attr) = 1;
     break;
 
   case SQL_ATTR_LOGIN_TIMEOUT:
-    *((SQLUINTEGER *)num_attr)= dbc->login_timeout;
+    return dbc->set_error("HYC00",
+                          "Unsupported option due to DES' characteristics");
     break;
 
   case SQL_ATTR_ODBC_CURSORS:
@@ -407,26 +470,34 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_PACKET_SIZE:
-    return SQL_ERROR; //TODO: handle correctly
+    return dbc->set_error("HYC00",
+                          "Unsupported option due to DES' characteristics");
     break;
 
   case SQL_ATTR_TXN_ISOLATION:
-    return SQL_ERROR; //TODO: handle correctly
+    return dbc->set_error("HYC00",
+                          "Unsupported option due to DES' characteristics");
     break;
 
   default:
-    return set_handle_error(SQL_HANDLE_DBC, hdbc, DESERR_S1092, NULL, 0);
+    return set_handle_error(SQL_HANDLE_DBC, hdbc, "HY092", "Invalid attribute");
   }
 
   return result;
 }
 
 
+/* DESODBC:
+
+    Renamed from the original MySQLSetStmtAttr.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : sets the statement attributes
 */
-
 SQLRETURN SQL_API
 DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
                  SQLINTEGER StringLengthPtr __attribute__((unused)))
@@ -481,19 +552,22 @@ DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
 
               if (desc->alloc_type == SQL_DESC_ALLOC_AUTO &&
                   desc->stmt != stmt)
-                return ((STMT*)hstmt)->set_error(DESERR_S1017,
+                return ((STMT *)hstmt)
+                    ->set_error("HY017",
                                  "Invalid use of an automatically allocated "
                                  "descriptor handle");
 
               if (desc->alloc_type == SQL_DESC_ALLOC_USER &&
                   stmt->dbc != desc->dbc)
-                return ((STMT*)hstmt)->set_error(DESERR_S1024,
+                return ((STMT *)hstmt)
+                    ->set_error("HY024",
                                  "Invalid attribute value");
 
               if (desc->desc_type != DESC_UNKNOWN &&
                   desc->desc_type != desc_type)
               {
-                return ((STMT*)hstmt)->set_error(DESERR_S1024,
+                return ((STMT *)hstmt)
+                    ->set_error("HY024",
                                  "Descriptor type mismatch");
               }
 
@@ -510,13 +584,15 @@ DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
         case SQL_ATTR_AUTO_IPD:
         case SQL_ATTR_ENABLE_AUTO_IPD:
             if (ValuePtr != (SQLPOINTER)SQL_FALSE)
-                return ((STMT*)hstmt)->set_error(DESERR_S1C00,
+            return ((STMT *)hstmt)
+                ->set_error("HYC00",
                                  "Optional feature not implemented");
             break;
 
         case SQL_ATTR_IMP_PARAM_DESC:
         case SQL_ATTR_IMP_ROW_DESC:
-            return ((STMT*)hstmt)->set_error(DESERR_S1024,
+          return ((STMT *)hstmt)
+              ->set_error("HY024",
                              "Invalid attribute/option identifier");
 
         case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
@@ -567,7 +643,8 @@ DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
                                         ValuePtr, SQL_IS_INTEGER);
 
         case SQL_ATTR_ROW_NUMBER:
-            return ((STMT*)hstmt)->set_error(DESERR_S1000,
+          return ((STMT *)hstmt)
+              ->set_error("HY092",
                              "Trying to set read-only attribute");
 
         case SQL_ATTR_ROW_OPERATION_PTR:
@@ -602,11 +679,15 @@ DESSetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
 }
 
 
+/* DESODBC:
+    Renamed from the original MySQLGetStmtAttr
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : returns the statement attribute values
 */
-
 SQLRETURN SQL_API
 DESGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
                  SQLINTEGER BufferLength __attribute__((unused)),
@@ -729,11 +810,14 @@ DESGetStmtAttr(SQLHSTMT hstmt, SQLINTEGER Attribute, SQLPOINTER ValuePtr,
 }
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 3.0 API
   @purpose : sets the environment attributes
 */
-
 SQLRETURN SQL_API
 SQLSetEnvAttr(SQLHENV    henv,
               SQLINTEGER Attribute,
@@ -743,7 +827,8 @@ SQLSetEnvAttr(SQLHENV    henv,
   CHECK_HANDLE(henv);
 
   if (((ENV *)henv)->has_connections())
-      return set_env_error((ENV*)henv, DESERR_S1010, NULL, 0);
+    return ((ENV *)henv)
+        ->set_error("HY010", "There exists open connections");
 
   switch (Attribute)
   {
@@ -759,7 +844,8 @@ SQLSetEnvAttr(SQLHENV    henv,
             ((ENV *)henv)->odbc_ver= (SQLINTEGER)(SQLLEN)ValuePtr;
             break;
           default:
-            return set_env_error((ENV*)henv,DESERR_S1024,NULL,0);
+            return ((ENV *)henv)
+                ->set_error("HY024", "Invalid attribute");
           }
           break;
         }
@@ -768,17 +854,20 @@ SQLSetEnvAttr(SQLHENV    henv,
               break;
 
       default:
-          return set_env_error((ENV*)henv,DESERR_S1C00,NULL,0);
+        return ((ENV *)henv)->set_error("HYC00", "Option not appliable for DESODBC");
   }
   return SQL_SUCCESS;
 }
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 3.0 API
   @purpose : returns the environment attributes
 */
-
 SQLRETURN SQL_API
 SQLGetEnvAttr(SQLHENV    henv,
               SQLINTEGER Attribute,
@@ -791,10 +880,6 @@ SQLGetEnvAttr(SQLHENV    henv,
 
     switch ( Attribute )
     {
-        case SQL_ATTR_CONNECTION_POOLING:
-            IF_NOT_NULL(ValuePtr, *(SQLINTEGER*)ValuePtr = SQL_CP_ONE_PER_DRIVER);
-            break;
-
         case SQL_ATTR_ODBC_VERSION:
             IF_NOT_NULL(ValuePtr, *(SQLINTEGER*)ValuePtr= ((ENV *)henv)->odbc_ver);
             break;
@@ -804,7 +889,8 @@ SQLGetEnvAttr(SQLHENV    henv,
             break;
 
         default:
-            return set_env_error((ENV*)henv,DESERR_S1C00,NULL,0);
+          return ((ENV *)henv)
+              ->set_error("HYC00", "Option not appliable for DESODBC");
     }
     return SQL_SUCCESS;
 }

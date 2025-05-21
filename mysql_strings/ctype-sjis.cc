@@ -32,7 +32,7 @@
 #include <sys/types.h>
 
 #include "m_ctype.h"
-#include "des_compiler.h"
+#include "my_compiler.h"
 #include "my_inttypes.h"
 #include "template_utils.h"
 
@@ -18023,7 +18023,7 @@ CHARSET_INFO my_charset_sjis_japanese_ci = {
     13,
     0,
     0, /* number */
-    MY_CS_COMPILED | DES_CS_PRIMARY | MY_CS_STRNXFRM |
+    MY_CS_COMPILED | MY_CS_PRIMARY | MY_CS_STRNXFRM |
         MY_CS_NONASCII,   /* state */
     "sjis",               /* cs name    */
     "sjis_japanese_ci",   /* name */

@@ -1,4 +1,6 @@
 // Copyright (c) 2012, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  my_stmt.c
   @brief Some "methods" for STMT "class" - functions that dispatch a call to either
@@ -36,14 +49,22 @@
 
 #include "driver.h"
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /* Errors processing? */
 BOOL returned_result(STMT *stmt)
 { return des_num_fields(stmt->result) > 0; }
 
 
-des_bool free_current_result(STMT *stmt)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+my_bool free_current_result(STMT *stmt)
 {
-  des_bool res= 0;
+  my_bool res= 0;
   if (stmt->result)
   {
     stmt_result_free(stmt);
@@ -52,7 +73,10 @@ des_bool free_current_result(STMT *stmt)
   return res;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /* Name may be misleading, the idea is stmt - for directly executed statements,
    i.e using mysql_* part of api, ssps - prepared on server, using mysql_stmt
  */
@@ -62,7 +86,10 @@ DES_RESULT * stmt_get_result(STMT *stmt)
   return des_store_result(stmt);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /* For text protocol this get result itself as well. Besides for text protocol
    we need to use/store each resultset of multiple resultsets */
 DES_RESULT * get_result_metadata(STMT *stmt)
@@ -75,31 +102,27 @@ DES_RESULT * get_result_metadata(STMT *stmt)
   return stmt->result;
 }
 
-int bind_result(STMT *stmt)
-{
-  return 0;
-}
-
-int get_result(STMT *stmt)
-{
-  return 0;
-}
-
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 size_t STMT::field_count()
 {
   return result && result->field_count > 0 ? result->field_count : 0;
 }
 
-
-des_ulonglong affected_rows(STMT *stmt)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+my_ulonglong affected_rows(STMT *stmt)
 {
   return stmt->affected_rows;
 }
 
-des_ulonglong update_affected_rows(STMT *stmt)
+my_ulonglong update_affected_rows(STMT *stmt)
 {
-  des_ulonglong last_affected;
+  my_ulonglong last_affected;
 
   last_affected= affected_rows(stmt);
 
@@ -108,95 +131,138 @@ des_ulonglong update_affected_rows(STMT *stmt)
   return last_affected;
 }
 
-
-des_ulonglong num_rows(STMT *stmt)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+my_ulonglong num_rows(STMT *stmt)
 {
-  des_ulonglong offset= scroller_exists(stmt) && stmt->scroller.next_offset > 0 ?
-    stmt->scroller.next_offset - stmt->scroller.row_count : 0;
-
-  return offset + des_num_rows(stmt->result);
+  return des_num_rows(stmt->result);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DES_ROW STMT::fetch_row(bool read_unbuffered)
 {
     return des_fetch_row(result);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 unsigned long* fetch_lengths(STMT *stmt)
 {
   return des_fetch_lengths(stmt);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DES_ROW_OFFSET row_seek(STMT *stmt, DES_ROW_OFFSET offset)
 {
   return des_row_seek(stmt->result, offset);
 }
 
-
-void data_seek(STMT *stmt, des_ulonglong offset)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+void data_seek(STMT *stmt, my_ulonglong offset)
 {
   des_data_seek(stmt->result, offset);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DES_ROW_OFFSET row_tell(STMT *stmt)
 {
     return des_row_tell(stmt->result);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 int next_result(STMT *stmt)
 { return -1; //TODO: research
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /* --- Data conversion methods --- */
 int get_int(STMT *stmt, ulong column_number, char *value, ulong length)
 {
   return (int)strtol(value, NULL, 10);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 unsigned int get_uint(STMT* stmt, ulong column_number, char* value, ulong length)
 {
   return (unsigned int)strtoul(value, NULL, 10);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 long long get_int64(STMT *stmt, ulong column_number, char *value, ulong length)
 {
   return strtoll(value, NULL, 10);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 unsigned long long get_uint64(STMT* stmt, ulong column_number, char* value, ulong length)
 {
   return strtoull(value, NULL, 10);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 char * get_string(STMT *stmt, ulong column_number, char *value, ulong *length,
                   char * buffer)
 {
   return value;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 double get_double(STMT *stmt, ulong column_number, char *value,
                   ulong length)
 {
   return myodbc_strtod(value, length);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 BOOL is_null(STMT *stmt, ulong column_number, char *value)
 {
   return value == NULL;
 }
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /* Prepares statement depending on connection option either on a client or
    on a server. Returns SQLRETURN result code since preparing on client or
    server can produce errors, memory allocation to name one.  */
@@ -217,7 +283,7 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
      If that changes we will need to make "parse" to set error and return rc */
   if (parse(&stmt->query))
   {
-    return stmt->set_error( DESERR_S1001, NULL);
+    return stmt->set_error("HY000", "Internal error parsing the query");
   }
 
   stmt->param_count = (uint)PARAM_COUNT(stmt->query);
@@ -235,180 +301,6 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
   /* Reset current_param so that SQLParamData starts fresh. */
   stmt->current_param= 0;
   stmt->state= ST_PREPARED;
-
-  return SQL_SUCCESS;
-}
-
-SQLRETURN send_long_data (STMT *stmt, unsigned int param_num, DESCREC * aprec, const char *chunk,
-                          unsigned long length)
-{
-  aprec->par.add_param_data(chunk, length);
-  return SQL_SUCCESS;
-}
-
-
-/*------------------- Scrolled cursor related stuff -------------------*/
-
-/* @param[in]     selected  - prefetch value in datatsource selected by user
-   @param[in]     app_fetchs- how many rows app fetchs at a time,
-                              i.e. stmt->ard->array_size
-   @param[in]     max_rows  - limit for maximal number of rows to fetch
- */
-unsigned int calc_prefetch_number(unsigned int selected, SQLULEN app_fetchs,
-                                  SQLULEN max_rows)
-{
-  unsigned int result= selected;
-
-  if (selected == 0)
-  {
-    return 0;
-  }
-
-  if (app_fetchs > 1)
-  {
-    if (app_fetchs > selected)
-    {
-      result = (unsigned int)app_fetchs;
-    }
-
-    if (selected % app_fetchs > 0)
-    {
-      result = (unsigned int)(app_fetchs * (selected/app_fetchs + 1));
-    }
-  }
-
-  if (max_rows > 0 && max_rows < result)
-  {
-    return (unsigned int)max_rows;
-  }
-
-  return result;
-}
-
-BOOL scroller_exists(STMT * stmt)
-{
-  return stmt->scroller.offset_pos > stmt->scroller.query;
-}
-
-/* Initialization of a scroller */
-void scroller_create(STMT * stmt, const char *query, SQLULEN query_len)
-{
-  /* MAX32_BUFF_SIZE includes place for terminating null, which we do not need
-     and will use for comma */
-  const size_t len2add = 7/*" LIMIT "*/ + MAX64_BUFF_SIZE/*offset*/ /*- 1*/ + MAX32_BUFF_SIZE;
-  DES_LIMIT_CLAUSE limit = find_position4limit(stmt->dbc->cxn_charset_info,
-                                            query, query + query_len);
-
-  stmt->scroller.start_offset= limit.offset;
-  stmt->scroller.total_rows= myodbc_max(stmt->stmt_options.max_rows, 0);
-
-  if (limit.begin != limit.end)
-  {
-    // This has to be recalculated only if limit is specified
-    stmt->scroller.total_rows= stmt->scroller.total_rows > 0 ?
-      desodbc_min(limit.row_count, stmt->scroller.total_rows) :
-      limit.row_count;
-  }
-
-  if ((stmt->scroller.row_count > stmt->scroller.total_rows) &&
-      (limit.begin != limit.end))
-    // Only set row cound if LIMIT exists in the original query
-    stmt->scroller.row_count = (unsigned int)stmt->scroller.total_rows;
-
-  stmt->scroller.next_offset= myodbc_max(limit.offset, 0);
-
-  stmt->scroller.query_len= query_len + len2add;
-  stmt->scroller.extend_buf((size_t)stmt->scroller.query_len + 1);
-  memset(stmt->scroller.query, ' ', (size_t)stmt->scroller.query_len);
-  memcpy(stmt->scroller.query, query, limit.begin - query);
-
-  /* Forgive me - now limit.begin points to beginning of limit in scroller's
-     copy of the query */
-  char *limptr = stmt->scroller.query + (limit.begin - query);
-  limit.begin = limptr;
-  strncpy(limptr, " LIMIT ", 7);
-
-  /* That is where we will update offset */
-  stmt->scroller.offset_pos = limptr + 7;
-
-  /* putting row count in place. normally should not change or only once */
-  desodbc_snprintf(stmt->scroller.offset_pos + MAX64_BUFF_SIZE - 1, MAX32_BUFF_SIZE + 1,
-    ",%*u", MAX32_BUFF_SIZE-1, stmt->scroller.row_count);
-  /* cpy'ing end of query from original query - not sure if we will allow to
-     have one */
-  memcpy(stmt->scroller.offset_pos + MAX64_BUFF_SIZE + MAX32_BUFF_SIZE - 1, limit.end,
-          query + query_len - limit.end);
-  *(stmt->scroller.query + stmt->scroller.query_len)= '\0';
-}
-
-SQLRETURN scroller_prefetch(STMT *stmt) {
-  return SQL_SUCCESS; //TODO: research how we should implement this
-}
-
-
-/* Returns next offset/maxrow for current fetch*/
-unsigned long long scroller_move(STMT * stmt)
-{
-  desodbc_snprintf(stmt->scroller.offset_pos, MAX64_BUFF_SIZE, "%*llu", MAX64_BUFF_SIZE - 1,
-    stmt->scroller.next_offset);
-  stmt->scroller.offset_pos[MAX64_BUFF_SIZE - 1]=',';
-
-  stmt->scroller.next_offset+= stmt->scroller.row_count;
-
-  return stmt->scroller.next_offset;
-}
-
-bool scrollable(STMT * stmt, const char * query, const char * query_end)
-{
-  if (!stmt->query.is_select_statement())
-  {
-    return FALSE;
-  }
-
-  /* FOR UPDATE*/
-  {
-    const char *before_token= query_end;
-    const char *last= desstr_get_prev_token(stmt->dbc->cxn_charset_info,
-                                                &before_token,
-                                                query);
-    const char *prev= desstr_get_prev_token(stmt->dbc->cxn_charset_info,
-                                                &before_token,
-                                                query);
-
-    /* we have to tokens - nothing to do*/
-    if (prev == query)
-    {
-      return FALSE;
-    }
-
-    before_token= prev - 1;
-    /* FROM can be only token before a last one at most
-       no need to scroll if there is no FROM clause
-     */
-    if ( desodbc_casecmp(prev,"FROM", 4)
-      && !find_token(stmt->dbc->cxn_charset_info, query, before_token, "FROM"))
-    {
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-SQLRETURN STMT::do_local_query() {
-  if (!get_result_metadata(this)) {
-    stmt_result_free(this);
-    return this->set_error("S1001", "Not enough memory");
-  }
-  this->fake_result = 1;
-  this->state = ST_EXECUTED;
-
-  if (bind_result(this) || get_result(this)) {
-    return this->set_error(DESERR_S1000);
-  }
-  /* Caching row counts for queries returning resultset as well */
-  // update_affected_rows(stmt);
-  fix_result_types(this);
 
   return SQL_SUCCESS;
 }

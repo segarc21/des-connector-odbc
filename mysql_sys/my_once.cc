@@ -37,7 +37,7 @@
 #include <sys/types.h>
 
 #include "my_alloc.h"
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_pointer_arithmetic.h"
 #include "my_sys.h"
@@ -83,7 +83,7 @@ void *my_once_alloc(size_t Size, myf MyFlags) {
     if ((next = (USED_MEM *)malloc(get_size)) == nullptr) {
       set_my_errno(errno);
       if (MyFlags & (MY_FAE + MY_WME))
-        my_error(EE_OUTOFMEMORY, DESF(ME_FATALERROR), get_size);
+        my_error(EE_OUTOFMEMORY, MYF(ME_FATALERROR), get_size);
       return ((uchar *)nullptr);
     }
     DBUG_PRINT("test", ("my_once_malloc %lu byte malloced", (ulong)get_size));
@@ -95,7 +95,7 @@ void *my_once_alloc(size_t Size, myf MyFlags) {
   point = (uchar *)((char *)next + (next->size - next->left));
   next->left -= (uint)Size;
 
-  if (MyFlags & DES_ZEROFILL) memset(point, 0, Size);
+  if (MyFlags & MY_ZEROFILL) memset(point, 0, Size);
   return ((void *)point);
 } /* my_once_alloc */
 

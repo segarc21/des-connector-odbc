@@ -35,8 +35,8 @@
 #include <sys/types.h>
 
 #include "memory_debugging.h"
-#include "des_compiler.h"
-#include "des_dbug.h"
+#include "my_compiler.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_psi_config.h"
 #include "my_sys.h"
@@ -88,7 +88,7 @@ void *my_malloc(PSI_memory_key key, size_t size, myf flags) {
     mh->m_size = size;
     mh->m_key = PSI_MEMORY_CALL(memory_alloc)(key, size, &mh->m_owner);
     user_ptr = HEADER_TO_USER(mh);
-    MEM_MALLOCLIKE_BLOCK(user_ptr, size, 0, (flags & DES_ZEROFILL));
+    MEM_MALLOCLIKE_BLOCK(user_ptr, size, 0, (flags & MY_ZEROFILL));
     return user_ptr;
   }
   return nullptr;
@@ -190,12 +190,12 @@ static void *my_raw_malloc(size_t size, myf my_flags) {
   if (!size) size = 1;
 
 #if defined(DES_MSCRT_DEBUG)
-  if (my_flags & DES_ZEROFILL)
+  if (my_flags & MY_ZEROFILL)
     point = _calloc_dbg(size, 1, _CLIENT_BLOCK, __FILE__, __LINE__);
   else
     point = _malloc_dbg(size, _CLIENT_BLOCK, __FILE__, __LINE__);
 #else
-  if (my_flags & DES_ZEROFILL)
+  if (my_flags & MY_ZEROFILL)
     point = calloc(size, 1);
   else
     point = malloc(size);
@@ -214,7 +214,7 @@ static void *my_raw_malloc(size_t size, myf my_flags) {
     set_my_errno(errno);
     if (my_flags & MY_FAE) error_handler_hook = my_message_stderr;
     if (my_flags & (MY_FAE + MY_WME))
-      my_error(EE_OUTOFMEMORY, DESF(ME_ERRORLOG + ME_FATALERROR), size);
+      my_error(EE_OUTOFMEMORY, MYF(ME_ERRORLOG + ME_FATALERROR), size);
     DBUG_EXECUTE_IF("simulate_out_of_memory",
                     DBUG_SET("-d,simulate_out_of_memory"););
     if (my_flags & MY_FAE) exit(1);
@@ -259,7 +259,7 @@ end:
     if (my_flags & MY_FREE_ON_ERROR) my_free(oldpoint);
     set_my_errno(errno);
     if (my_flags & (MY_FAE + MY_WME))
-      my_error(EE_OUTOFMEMORY, DESF(ME_FATALERROR), size);
+      my_error(EE_OUTOFMEMORY, MYF(ME_FATALERROR), size);
     DBUG_EXECUTE_IF("simulate_out_of_memory",
                     DBUG_SET("-d,simulate_out_of_memory"););
   }

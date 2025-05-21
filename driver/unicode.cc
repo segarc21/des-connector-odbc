@@ -1,4 +1,6 @@
 // Copyright (c) 2007, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -25,6 +27,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 /**
   @file  unicode.c
@@ -96,7 +109,7 @@ SQLColAttributeWImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
 
   if (value)
   {
-    des_bool free_value= FALSE;
+    my_bool free_value= FALSE;
     wvalue= sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value,
                                 &len, &errors);
 
@@ -104,8 +117,11 @@ SQLColAttributeWImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
     char_attr_max/= sizeof(SQLWCHAR);
 
     /* We set the error only when the result is intented to be returned */
-    if ((char_attr || num_attr) && len > char_attr_max - 1)
-      rc= stmt->set_error( DESERR_01004, NULL);
+    if ((char_attr || num_attr) && len > char_attr_max - 1) {
+      stmt->set_error("01004", "String data, right-truncated");
+      rc = SQL_SUCCESS_WITH_INFO;
+    }
+      
 
     if (char_attr_len)
       *char_attr_len= (SQLSMALLINT)len * sizeof(SQLWCHAR);
@@ -127,6 +143,10 @@ SQLColAttributeWImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
 }
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLColumnPrivilegesW(SQLHSTMT hstmt,
                      SQLWCHAR *catalog, SQLSMALLINT catalog_len,
@@ -134,44 +154,13 @@ SQLColumnPrivilegesW(SQLHSTMT hstmt,
                      SQLWCHAR *table, SQLSMALLINT table_len,
                      SQLWCHAR *column, SQLSMALLINT column_len)
 {
-  SQLRETURN rc;
-  SQLCHAR *catalog8, *schema8, *table8, *column8;
-  SQLINTEGER len;
-  uint errors= 0;
-  DBC *dbc;
-
-  LOCK_STMT(hstmt);
-
-  dbc= ((STMT *)hstmt)->dbc;
-
-  len= catalog_len;
-  catalog8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, catalog, &len, &errors);
-  catalog_len= (SQLSMALLINT)len;
-
-  len= schema_len;
-  schema8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, schema, &len, &errors);
-  schema_len= (SQLSMALLINT)len;
-
-  len= table_len;
-  table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
-  table_len= (SQLSMALLINT)len;
-
-  len= column_len;
-  column8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, column, &len, &errors);
-  column_len= (SQLSMALLINT)len;
-
-  rc= DESColumnPrivileges(hstmt, catalog8, catalog_len, schema8, schema_len,
-                            table8, table_len, column8, column_len);
-
-  x_free(catalog8);
-  x_free(schema8);
-  x_free(table8);
-  x_free(column8);
-
-  return rc;
+  return ((STMT *)hstmt)->set_error("IM001", "DESODBC does not support this function");
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLColumnsW(SQLHSTMT hstmt,
             SQLWCHAR *catalog, SQLSMALLINT catalog_len,
@@ -205,8 +194,16 @@ SQLColumnsW(SQLHSTMT hstmt,
   column8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, column, &len, &errors);
   column_len= (SQLSMALLINT)len;
 
-  rc= DESColumns(hstmt, catalog8, catalog_len, schema8, schema_len,
+  try {
+  rc= DES_SQLColumns(hstmt, catalog8, catalog_len, schema8, schema_len,
                    table8, table_len, column8, column_len);
+  } catch (const std::bad_alloc &e) {
+    x_free(catalog8);
+    x_free(schema8);
+    x_free(table8);
+    x_free(column8);
+    return ((STMT *)hstmt)->set_error("HY001", "Memory allocation error");
+   }
 
   x_free(catalog8);
   x_free(schema8);
@@ -225,7 +222,7 @@ SQLConnectW(SQLHDBC hdbc, SQLWCHAR *dsn, SQLSMALLINT dsn_len,
   CHECK_HANDLE(hdbc);
   ((DBC *)hdbc)->unicode= TRUE; /* Hooray, a Unicode connection! */
 
-  return DESConnect(hdbc, dsn, dsn_len, user, user_len, auth, auth_len);
+  return DES_SQLConnect(hdbc, dsn, dsn_len, user, user_len, auth, auth_len);
 }
 
 
@@ -245,7 +242,7 @@ SQLDriverConnectW(SQLHDBC hdbc, SQLHWND hwnd,
 
   ((DBC *)hdbc)->unicode= TRUE; /* Hooray, a Unicode connection! */
 
-  return DESDriverConnect(hdbc, hwnd, in, in_len, out, out_max,
+  return DES_SQLDriverConnect(hdbc, hwnd, in, in_len, out, out_max,
                             out_len, completion);
 }
 
@@ -269,20 +266,20 @@ SQLDescribeColW(SQLHSTMT hstmt, SQLUSMALLINT column,
   rc = DESDescribeCol(hstmt, column, &value, &free_value, type, size, scale,
                         nullable);
 
-  if (free_value == -1) {
-    return handle_connection_error(stmt);
-  }
 
   if (value) {
     wvalue =
         sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info, value, &len, &errors);
     if (len == -1) {
       if (free_value) x_free(value);
-      return handle_connection_error(stmt);
+      return stmt->set_error("HY000", "Internal conversion error");
     }
 
     /* We set the error only when the result is intented to be returned */
-    if (name && len > name_max - 1) rc = stmt->set_error(DESERR_01004, NULL);
+    if (name && len > name_max - 1) {
+      stmt->set_error("01004", "String data, right-truncated");
+      rc = SQL_SUCCESS_WITH_INFO;
+    }
 
     if (name_len) *name_len = (SQLSMALLINT)len;
 
@@ -314,7 +311,10 @@ SQLExecDirectW(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len)
   return error;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLForeignKeysW(SQLHSTMT hstmt,
                 SQLWCHAR *pk_catalog, SQLSMALLINT pk_catalog_len,
@@ -365,10 +365,20 @@ SQLForeignKeysW(SQLHSTMT hstmt,
       sqlwchar_as_sqlchar(dbc->cxn_charset_info, fk_table, &len, &errors);
   fk_table_len = (SQLSMALLINT)len;
 
-  rc = DESForeignKeys(hstmt, pk_catalog8, pk_catalog_len, pk_schema8,
+  try {
+    rc = DES_SQLForeignKeys(hstmt, pk_catalog8, pk_catalog_len, pk_schema8,
                         pk_schema_len, pk_table8, pk_table_len, fk_catalog8,
                         fk_catalog_len, fk_schema8, fk_schema_len, fk_table8,
                         fk_table_len);
+  } catch (const std::bad_alloc &e) {
+    x_free(pk_catalog8);
+    x_free(pk_schema8);
+    x_free(pk_table8);
+    x_free(fk_catalog8);
+    x_free(fk_schema8);
+    x_free(fk_table8);
+    return ((STMT *)hstmt)->set_error("HY001", "Memory allocation error");
+  }
 
   x_free(pk_catalog8);
   x_free(pk_schema8);
@@ -421,8 +431,8 @@ SQLGetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
     */
     if(!dbc->cxn_charset_info)
     {
-      result_charset_info= desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY),
-                                                 DESF(0));
+      result_charset_info= desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
+                                                 MYF(0));
     }
 
     wvalue= sqlchar_as_sqlwchar(result_charset_info, char_value,
@@ -436,8 +446,10 @@ SQLGetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
       execute if output buffer is NULL
       see: "if (char_value)"
     */
-    if (len > value_max - 1)
-      rc = dbc->set_error(DESERR_01004, NULL, 0);
+    if (len > value_max - 1) {
+      dbc->set_error("01004", "String data, right-truncated");
+      rc = SQL_SUCCESS_WITH_INFO;
+    }
 
     if (value_len)
       *value_len= len * sizeof(SQLWCHAR);
@@ -471,18 +483,19 @@ SQLGetCursorNameW(SQLHSTMT hstmt, SQLWCHAR *cursor, SQLSMALLINT cursor_max,
 
   CLEAR_STMT_ERROR(stmt);
 
-  if (cursor_max < 0)
-    return stmt->set_error( DESERR_S1090, NULL);
+  if (cursor_max < 0) return stmt->set_error("HY090", "Invalid string or buffer length");
 
   name= sqlchar_as_sqlwchar(stmt->dbc->cxn_charset_info,
-                            DESGetCursorName(hstmt), &len, &errors);
+                            MySQLGetCursorName(hstmt), &len, &errors);
 
   if (cursor_len)
     *cursor_len= (SQLSMALLINT)len;
 
   /* Warn if name truncated, but buffer is not null */
-  if (cursor && len > cursor_max - 1)
-    rc= stmt->set_error( DESERR_01004, NULL);
+  if (cursor && len > cursor_max - 1) {
+    stmt->set_error("01004", "String data, right-truncated");
+    rc = SQL_SUCCESS_WITH_INFO;
+  }
 
   if (cursor_max > 0)
   {
@@ -511,7 +524,7 @@ SQLGetDiagFieldW(SQLSMALLINT handle_type, SQLHANDLE handle,
 
   CHECK_HANDLE(handle);
 
-  rc= DESGetDiagField(handle_type, handle, record, field,
+  rc= DES_SQLGetDiagField(handle_type, handle, record, field,
                         &value, info);
 
   switch (handle_type) {
@@ -541,8 +554,10 @@ SQLGetDiagFieldW(SQLSMALLINT handle_type, SQLHANDLE handle,
     info_max/= sizeof(SQLWCHAR);
 
     /* We set the error only when the result is intented to be returned */
-    if (info && len > info_max - 1)
-      rc= dbc->set_error(DESERR_01004, NULL, 0);
+    if (info && len > info_max - 1) {
+      dbc->set_error("01004", "String data, right-truncated");
+      rc = SQL_SUCCESS_WITH_INFO;
+    }
 
     if (info_len)
       *info_len= (SQLSMALLINT)len * sizeof(SQLWCHAR);
@@ -610,7 +625,7 @@ SQLGetDiagRecWImpl(SQLSMALLINT handle_type, SQLHANDLE handle,
   if (message_max < 0)
     return SQL_ERROR;
 
-  rc= DESGetDiagRec(handle_type, handle, record, &sqlstate_value,
+  rc= MySQLGetDiagRec(handle_type, handle, record, &sqlstate_value,
                       native_error, &msg_value);
 
   if (rc == SQL_NO_DATA_FOUND)
@@ -629,8 +644,10 @@ SQLGetDiagRecWImpl(SQLSMALLINT handle_type, SQLHANDLE handle,
       We set the error only when the result is intented to be returned
       and message_max is greaater than 0
     */
-    if (message && message_max && len > message_max - 1)
-      rc = dbc->set_error(DESERR_01004, NULL, 0);
+    if (message && message_max && len > message_max - 1) {
+      dbc->set_error("01004", "String data, right-truncated");
+      rc = SQL_SUCCESS_WITH_INFO;
+    }
 
     if (message_len)
       *message_len= (SQLSMALLINT)len;
@@ -705,8 +722,10 @@ SQLGetInfoW(SQLHDBC hdbc, SQLUSMALLINT type, SQLPOINTER value,
       MSSQL implementation does not return the truncation warning if the
       value is not NULL and value_max is 0
      */
-    if (value && value_max && len > value_max - 1)
-      rc = dbc->set_error(DESERR_01004, NULL, 0);
+    if (value && value_max && len > value_max - 1) {
+      dbc->set_error("01004", "String data, right-truncated");
+      rc = SQL_SUCCESS_WITH_INFO;
+    }
 
     if (value_len)
       *value_len= (SQLSMALLINT)len * sizeof(SQLWCHAR);
@@ -735,14 +754,23 @@ SQLGetStmtAttrW(SQLHSTMT hstmt, SQLINTEGER attribute, SQLPOINTER value,
   return DESGetStmtAttr(hstmt, attribute, value, value_max, value_len);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /* This shouldn't be necessary, but iODBC expects it. */
 SQLRETURN SQL_API
 SQLGetTypeInfoW(SQLHSTMT hstmt, SQLSMALLINT type)
 {
   LOCK_STMT(hstmt);
 
-  return DESGetTypeInfo(hstmt, type);
+  SQLRETURN rc;
+  try {
+    rc = DESGetTypeInfo(hstmt, type);
+  } catch (const std::bad_alloc &e) {
+    return ((STMT *)hstmt)->set_error("HY001", "Memory allocation error");
+  }
+  return rc;
 }
 
 
@@ -760,8 +788,7 @@ SQLNativeSqlW(SQLHDBC hdbc, SQLWCHAR *in, SQLINTEGER in_len,
   if (out_len)
     *out_len= in_len;
 
-  if (out && in_len >= out_max)
-    rc = ((DBC*)hdbc)->set_error(DESERR_01004, NULL, 0);
+  if (out && in_len >= out_max) rc = ((DBC *)hdbc)->set_error("01004", "String data, right-truncated");
 
   if (out_max > 0)
   {
@@ -799,7 +826,7 @@ SQLPrepareWImpl(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len,
   if (errors)
   {
     x_free(conv);
-    return stmt->set_error("22018", NULL);
+    return stmt->set_error("22018", "Character conversion error");
   }
 
   SQLRETURN rc = DESPrepare(hstmt, conv, str_len, false, force_prepare);
@@ -807,7 +834,10 @@ SQLPrepareWImpl(SQLHSTMT hstmt, SQLWCHAR *str, SQLINTEGER str_len,
   return rc;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLPrimaryKeysW(SQLHSTMT hstmt,
                 SQLWCHAR *catalog, SQLSMALLINT catalog_len,
@@ -834,8 +864,15 @@ SQLPrimaryKeysW(SQLHSTMT hstmt,
   table8 = sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
   table_len = (SQLSMALLINT)len;
 
-  rc = DESPrimaryKeys(hstmt, catalog8, catalog_len, schema8, schema_len,
+  try {
+    rc = DES_SQLPrimaryKeys(hstmt, catalog8, catalog_len, schema8, schema_len,
                         table8, table_len);
+  } catch (const std::bad_alloc &e) {
+    x_free(catalog8);
+    x_free(schema8);
+    x_free(table8);
+    return ((STMT *)hstmt)->set_error("HY001", "Memory allocation error");
+  }
 
   x_free(catalog8);
   x_free(schema8);
@@ -844,7 +881,10 @@ SQLPrimaryKeysW(SQLHSTMT hstmt,
   return rc;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLProcedureColumnsW(SQLHSTMT hstmt,
                      SQLWCHAR *catalog, SQLSMALLINT catalog_len,
@@ -852,80 +892,22 @@ SQLProcedureColumnsW(SQLHSTMT hstmt,
                      SQLWCHAR *proc, SQLSMALLINT proc_len,
                      SQLWCHAR *column, SQLSMALLINT column_len)
 {
-  SQLRETURN rc;
-  SQLCHAR *catalog8, *schema8, *proc8, *column8;
-  SQLINTEGER len;
-  uint errors= 0;
-  DBC *dbc;
-
-  LOCK_STMT(hstmt);
-
-  dbc= ((STMT *)hstmt)->dbc;
-  len= catalog_len;
-  catalog8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, catalog, &len, &errors);
-  catalog_len= (SQLSMALLINT)len;
-
-  len= schema_len;
-  schema8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, schema, &len, &errors);
-  schema_len= (SQLSMALLINT)len;
-
-  len= proc_len;
-  proc8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, proc, &len, &errors);
-  proc_len= (SQLSMALLINT)len;
-
-  len= column_len;
-  column8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, column, &len, &errors);
-  column_len= (SQLSMALLINT)len;
-
-  rc= DESProcedureColumns(hstmt, catalog8, catalog_len, schema8, schema_len,
-                               proc8, proc_len, column8, column_len);
-
-  x_free(catalog8);
-  x_free(schema8);
-  x_free(proc8);
-  x_free(column8);
-
-  return rc;
+  return ((STMT *)hstmt)
+      ->set_error("IM001", "DESODBC does not support this function");
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLProceduresW(SQLHSTMT hstmt,
                SQLWCHAR *catalog, SQLSMALLINT catalog_len,
                SQLWCHAR *schema, SQLSMALLINT schema_len,
                SQLWCHAR *proc, SQLSMALLINT proc_len)
 {
-  SQLRETURN rc;
-  SQLCHAR *catalog8, *schema8, *proc8;
-  SQLINTEGER len;
-  uint errors= 0;
-  DBC *dbc;
-
-  LOCK_STMT(hstmt);
-
-  dbc= ((STMT *)hstmt)->dbc;
-  len= catalog_len;
-  catalog8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, catalog, &len, &errors);
-  catalog_len= (SQLSMALLINT)len;
-
-  len= schema_len;
-  schema8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, schema, &len, &errors);
-  schema_len= (SQLSMALLINT)len;
-
-  len= proc_len;
-  proc8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, proc, &len, &errors);
-  proc_len= (SQLSMALLINT)len;
-
-  rc= DESProcedures(hstmt, catalog8, catalog_len, schema8, schema_len,
-                      proc8, proc_len);
-  // Remove parameters
-  ((STMT *)hstmt)->free_reset_params();
-
-  x_free(catalog8);
-  x_free(schema8);
-  x_free(proc8);
-
-  return rc;
+  return ((STMT *)hstmt)
+      ->set_error("IM001", "DESODBC does not support this function");
 }
 
 
@@ -945,7 +927,7 @@ SQLSetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute,
 {
   SQLRETURN rc;
   DBC *dbc= (DBC *)hdbc;
-  des_bool free_value= FALSE;
+  my_bool free_value= FALSE;
   /* Let's make it for windows only so far */
 #ifdef _WIN32
   SQLINTEGER len= value_len == SQL_NTS ? SQL_NTS : value_len / sizeof(SQLWCHAR);
@@ -961,8 +943,8 @@ SQLSetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute,
     if (value_len < 0 && value_len != SQL_NTS)
     {
       return dbc->set_error("HY090",
-                  " StringLength argument was less "
-                  "than 0 but was not SQL_NTS " , 0);
+                  "StringLength argument was less "
+                  "than 0 but was not SQL_NTS");
     }
 
     if (is_connected(dbc))
@@ -998,7 +980,7 @@ SQLSetCursorNameW(SQLHSTMT hstmt, SQLWCHAR *name, SQLSMALLINT name_len)
   name_char= sqlwchar_as_sqlchar(dbc->cxn_charset_info,
                                           name, &len, &errors);
 
-  rc= DESSetCursorName(hstmt, name_char, (SQLSMALLINT)len);
+  rc= MySQLSetCursorName(hstmt, name_char, (SQLSMALLINT)len);
 
   x_free(name_char);
 
@@ -1024,7 +1006,10 @@ SQLSetStmtAttrW(SQLHSTMT hstmt, SQLINTEGER attribute,
   return DESSetStmtAttr(hstmt, attribute, value, value_len);
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLSpecialColumnsW(SQLHSTMT hstmt, SQLUSMALLINT type,
                    SQLWCHAR *catalog, SQLSMALLINT catalog_len,
@@ -1053,9 +1038,16 @@ SQLSpecialColumnsW(SQLHSTMT hstmt, SQLUSMALLINT type,
   table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
   table_len= (SQLSMALLINT)len;
 
-  rc= DESSpecialColumns(hstmt, type, catalog8, catalog_len,
+  try {
+    rc= DES_SQLSpecialColumns(hstmt, type, catalog8, catalog_len,
                           schema8, schema_len, table8, table_len,
                           scope, nullable);
+  } catch (const std::bad_alloc &e) {
+    x_free(catalog8);
+    x_free(schema8);
+    x_free(table8);
+    return ((STMT *)hstmt)->set_error("HY001", "Memory allocation error");
+  }
 
   x_free(catalog8);
   x_free(schema8);
@@ -1064,7 +1056,10 @@ SQLSpecialColumnsW(SQLHSTMT hstmt, SQLUSMALLINT type,
   return rc;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLStatisticsW(SQLHSTMT hstmt,
                SQLWCHAR *catalog, SQLSMALLINT catalog_len,
@@ -1093,8 +1088,15 @@ SQLStatisticsW(SQLHSTMT hstmt,
   table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
   table_len= (SQLSMALLINT)len;
 
-  rc= DESStatistics(hstmt, catalog8, catalog_len, schema8, schema_len,
-                      table8, table_len, unique, accuracy);
+  try {
+    rc = DES_SQLStatistics(hstmt, catalog8, catalog_len, schema8, schema_len,
+                       table8, table_len, unique, accuracy);
+  } catch (const std::bad_alloc &e) {
+    x_free(catalog8);
+    x_free(schema8);
+    x_free(table8);
+    return ((STMT *)hstmt)->set_error("HY001", "Memory allocation error");
+  }
 
   x_free(catalog8);
   x_free(schema8);
@@ -1103,45 +1105,24 @@ SQLStatisticsW(SQLHSTMT hstmt,
   return rc;
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLTablePrivilegesW(SQLHSTMT hstmt,
                     SQLWCHAR *catalog, SQLSMALLINT catalog_len,
                     SQLWCHAR *schema, SQLSMALLINT schema_len,
                     SQLWCHAR *table, SQLSMALLINT table_len)
 {
-  SQLRETURN rc;
-  SQLCHAR *catalog8, *schema8, *table8;
-  SQLINTEGER len;
-  uint errors= 0;
-  DBC *dbc;
-
-  LOCK_STMT(hstmt);
-
-  dbc= ((STMT *)hstmt)->dbc;
-  len= catalog_len;
-  catalog8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, catalog, &len, &errors);
-  catalog_len= (SQLSMALLINT)len;
-
-  len= schema_len;
-  schema8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, schema, &len, &errors);
-  schema_len= (SQLSMALLINT)len;
-
-  len= table_len;
-  table8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, table, &len, &errors);
-  table_len= (SQLSMALLINT)len;
-
-  rc= DESTablePrivileges(hstmt, catalog8, catalog_len, schema8, schema_len,
-                           table8, table_len);
-
-  x_free(catalog8);
-  x_free(schema8);
-  x_free(table8);
-
-  return rc;
+  return ((STMT *)hstmt)
+      ->set_error("IM001", "DESODBC does not support this function");
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 SQLRETURN SQL_API
 SQLTablesW(SQLHSTMT hstmt,
            SQLWCHAR *catalog, SQLSMALLINT catalog_len,
@@ -1183,8 +1164,16 @@ SQLTablesW(SQLHSTMT hstmt,
   type8= sqlwchar_as_sqlchar(dbc->cxn_charset_info, type, &len, &errors);
   type_len= (SQLSMALLINT)len;
 
-  rc= DESTables(hstmt, catalog8, catalog_len, schema8, schema_len,
+  try {
+    rc= DES_SQLTables(hstmt, catalog8, catalog_len, schema8, schema_len,
                   table8, table_len, type8, type_len);
+  } catch (const std::bad_alloc &e) {
+    if (catalog_len) x_free(catalog8);
+    if (schema_len) x_free(schema8);
+    if (table_len) x_free(table8);
+    x_free(type8);
+    return ((STMT *)hstmt)->set_error("HY001", "Memory allocation error");
+  }
 
   rc = SQL_SUCCESS;
 
@@ -1207,7 +1196,7 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT record, SQLSMALLINT field,
 {
   CHECK_HANDLE(hdesc);
 
-  return DESGetDescField(hdesc, record, field, value, value_max, value_len);
+  return MySQLGetDescField(hdesc, record, field, value, value_max, value_len);
 }
 
 
@@ -1268,8 +1257,8 @@ SQLBrowseConnectW(SQLHDBC hdbc, SQLWCHAR *in, SQLSMALLINT in_len,
 {
   CHECK_HANDLE(hdbc);
 
-  return ((DBC*)hdbc)->set_error(DESERR_S1000,
-    "Driver does not support this API", 0);
+  return ((DBC *)hdbc)->set_error("IM001",
+    "Driver does not support this API");
 }
 
 

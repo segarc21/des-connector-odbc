@@ -49,7 +49,7 @@
 #include "m_ctype.h"
 #include "m_string.h"
 #include "my_byteorder.h"
-#include "des_compiler.h"
+#include "my_compiler.h"
 
 #include "my_inttypes.h"
 #include "my_loglevel.h"
@@ -9566,7 +9566,7 @@ CHARSET_INFO my_charset_utf8mb4_0900_ai_ci = {
     255,
     0,
     0,                                       /* number       */
-    MY_CS_UTF8MB4_UCA_FLAGS | DES_CS_PRIMARY, /* state    */
+    MY_CS_UTF8MB4_UCA_FLAGS | MY_CS_PRIMARY, /* state    */
     MY_UTF8MB4,                              /* csname       */
     MY_UTF8MB4 "_0900_ai_ci",                /* name */
     "UTF-8 Unicode",                         /* comment      */

@@ -1,4 +1,6 @@
 // Copyright (c) 2007, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -25,6 +27,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 /**
   @file  desc.c
@@ -194,7 +207,7 @@ void DESCREC::par_struct::add_param_data(const char *chunk,
  * @return The requested record of NULL if it doesn't exist
  *         (and isn't created).
  */
-DESCREC *desc_get_rec(DESC *desc, int recnum, des_bool expand)
+DESCREC *desc_get_rec(DESC *desc, int recnum, my_bool expand)
 {
   DESCREC *rec= NULL;
 
@@ -210,8 +223,8 @@ DESCREC *desc_get_rec(DESC *desc, int recnum, des_bool expand)
         ++desc->bookmark_count;
       }
     }
-
-    rec= &desc->bookmark2.back();
+    if (desc->bookmark2.size() > 0) //solving MyODBC bug
+        rec= &desc->bookmark2.back();
   }
   else if (recnum < 0)
   {
@@ -515,13 +528,18 @@ getfield(SQLSMALLINT fldid)
   return NULL;
 }
 
+/* DESODBC:
+    Renamed from the original 
 
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 3.0 API
   @purpose : Get a field of a descriptor.
  */
 SQLRETURN
-DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
+MySQLGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
                   SQLPOINTER valptr, SQLINTEGER buflen, SQLINTEGER *outlen)
 {
   DESC *desc= (DESC *)hdesc;
@@ -704,14 +722,13 @@ DESGetDescField(SQLHDESC hdesc, SQLSMALLINT recnum, SQLSMALLINT fldid,
   return SQL_SUCCESS;
 }
 
-
-SQLRETURN DESC::set_error(char *state, const char *message, uint errcode)
-{
-  error.sqlstate = state ? state : "";
-  error.message = std::string(stmt->dbc->st_error_prefix) + message;
-  error.native_error = errcode;
-
-  return SQL_ERROR;
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+SQLRETURN DESC::set_error(const char *state, const char *msg) {
+  error = DESERROR(state, msg);
+  return error.retcode;
 }
 
 DESC::DESC(STMT *p_stmt, SQLSMALLINT p_alloc_type,
@@ -750,8 +767,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
         break;
       default:
       return set_error("HY016",
-                      "Cannot modify an implementation row descriptor",
-                      DESERR_S1016);
+                      "Cannot modify an implementation row descriptor");
     }
   }
 
@@ -762,8 +778,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
           (ref_type == DESC_IMP && (~fld->perms & P_WI)))))
   {
     return set_error("HY091",
-                     "Invalid descriptor field identifier",
-                     DESERR_S1091);
+                     "Invalid descriptor field identifier");
   }
   else if (fld->loc == DESC_REC)
   {
@@ -781,8 +796,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
 
     if ((~fld->perms & perms) == perms)
       return set_error("HY091",
-                       "Invalid descriptor field identifier",
-                       DESERR_S1091);
+                       "Invalid descriptor field identifier");
   }
 
   /* get the dest struct */
@@ -792,8 +806,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
   {
     if (recnum < 1 && stmt->stmt_options.bookmarks == SQL_UB_OFF)
       return set_error("07009",
-                       "Invalid descriptor index",
-                       DESERR_07009);
+                       "Invalid descriptor index");
     else
       dest_struct= desc_get_rec(this, recnum - 1, TRUE);
   }
@@ -808,8 +821,7 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
   if ((fld->data_type == SQL_IS_POINTER && buflen != SQL_IS_POINTER) ||
       (fld->data_type != SQL_IS_POINTER && buflen == SQL_IS_POINTER))
     return set_error("HY015",
-                     "Invalid parameter type",
-                     DESERR_S1015);
+                     "Invalid parameter type");
 
   /* per-field checks/functionality */
   switch (fldid)
@@ -829,14 +841,11 @@ SQLRETURN DESC::set_field(SQLSMALLINT recnum, SQLSMALLINT fldid,
     }
     break;
     /* We don't support named parameters, values stay as initialized */
-    //return set_desc_error(desc, "01S01",
-    //                      "Option value changed",
-    //                      DESERR_01S02);
+
   case SQL_DESC_UNNAMED:
     if ((size_t)val == SQL_NAMED)
       return set_error("HY092",
-                       "Invalid attribute/option identifier",
-                       DESERR_S1092);
+                       "Invalid attribute/option identifier");
   }
 
   /* We have to unbind the value if not setting a buffer */
@@ -959,7 +968,7 @@ stmt_SQLGetDescField(STMT *stmt, DESC *desc, SQLSMALLINT recnum,
                      SQLINTEGER buflen, SQLINTEGER *outlen)
 {
   SQLRETURN rc;
-  if ((rc= DESGetDescField((SQLHANDLE)desc, recnum, fldid,
+  if ((rc= MySQLGetDescField((SQLHANDLE)desc, recnum, fldid,
                              valptr, buflen, outlen)) != SQL_SUCCESS)
     stmt->error = desc->error;
   return rc;

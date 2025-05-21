@@ -30,7 +30,7 @@
   @file mysys/mf_pack.cc
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #include <string>
 
@@ -40,7 +40,7 @@
 #include "m_ctype.h"
 #endif
 #include "m_string.h"
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_getpwnam.h"
 #include "my_inttypes.h"
 #include "my_io.h"
@@ -132,7 +132,7 @@ size_t cleanup_dirname(char *to, const char *from) {
             if (*pos == FN_LIBCHAR) pos--;       /* home ended with '/' */
           }
           if (*pos == FN_CURLIB && (pos == start || pos[-1] == FN_LIBCHAR)) {
-            if (my_getwd(curr_dir, FN_REFLEN, DESF(0))) {
+            if (my_getwd(curr_dir, FN_REFLEN, MYF(0))) {
               pos += length + 1; /* Don't unpack ./.. */
               continue;
             }

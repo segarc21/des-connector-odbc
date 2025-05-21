@@ -29,7 +29,7 @@
   @file mysys/my_open.cc
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -41,7 +41,7 @@
 #include <unistd.h>
 #endif
 
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_sys.h"
@@ -80,7 +80,7 @@ File my_open(const char *filename, int Flags, myf MyFlags) {
     set_my_errno(errno);
     DBUG_PRINT("error", ("Got error %d on open", my_errno()));
     if (MyFlags & (MY_FAE | MY_WME)) {
-      MyOsError(my_errno(), EE_FILENOTFOUND, DESF(0), filename);
+      MyOsError(my_errno(), EE_FILENOTFOUND, MYF(0), filename);
     }
     return fd;
   }
@@ -119,7 +119,7 @@ int my_close(File fd, myf MyFlags) {
     DBUG_PRINT("error", ("Got error %d on close", err));
     set_my_errno(errno);
     if (MyFlags & (MY_FAE | MY_WME)) {
-      MyOsError(my_errno(), EE_BADCLOSE, DESF(0), fname.c_str());
+      MyOsError(my_errno(), EE_BADCLOSE, MYF(0), fname.c_str());
     }
   }
   return err;

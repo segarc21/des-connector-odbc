@@ -1,7 +1,7 @@
 mysql_sys/CMakeFiles/mysql_sys.dir/my_getwd.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/my_getwd.cc \
  /usr/include/stdc-predef.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/errno.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -112,7 +112,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_getwd.cc.o: \
  /usr/include/c++/13/pstl/execution_defs.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_macros.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/mysql_lex_string.h \
@@ -149,8 +149,8 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_getwd.cc.o: \
  /usr/include/c++/13/bits/memory_resource.h /usr/include/c++/13/cstddef \
  /usr/include/c++/13/bits/uses_allocator.h \
  /usr/include/c++/13/bits/uses_allocator_args.h /usr/include/c++/13/tuple \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /usr/include/assert.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_io.h \
@@ -232,7 +232,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_getwd.cc.o: \
  /usr/include/c++/13/pstl/glue_memory_defs.h /usr/include/c++/13/utility \
  /usr/include/c++/13/bits/stl_relops.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/memory_debugging.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_pointer_arithmetic.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/psi/psi_memory.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_psi_config.h \

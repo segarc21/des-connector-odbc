@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 #include "my_psi_config.h"  // IWYU pragma: keep
 
 /* For MY_STAT */
-#include "des_compiler.h"
+#include "my_compiler.h"
 #include "my_dir.h"
 #include "my_io.h"
 #include "mysql/psi/psi_socket.h"

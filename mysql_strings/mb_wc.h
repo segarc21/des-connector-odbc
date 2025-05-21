@@ -50,8 +50,8 @@
 */
 
 #include "m_ctype.h"
-#include "des_compiler.h"
-#include "des_config.h"
+#include "my_compiler.h"
+#include "my_config.h"
 
 namespace desodbc
 {

@@ -32,7 +32,7 @@
 */
 
 #include "my_systime.h"
-#include "des_config.h"
+#include "my_config.h"
 
 #include <assert.h>
 #include <algorithm>  // std::min

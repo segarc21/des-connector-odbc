@@ -1,24 +1,38 @@
 /* Copyright (c) 2008, 2021, Oracle and/or its affiliates.
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License, version 2.0,
-  as published by the Free Software Foundation.
+	Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+	(see the next block comment below).
+	
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License, version 2.0,
+   as published by the Free Software Foundation.
 
-  This program is also distributed with certain software (including
-  but not limited to OpenSSL) that is licensed under separate terms,
-  as designated in a particular file or component or in included license
-  documentation.  The authors of MySQL hereby grant you an additional
-  permission to link the program and your derivative works with the
-  separately licensed software that they have included with MySQL.
+   This program is also distributed with certain software (including
+   but not limited to OpenSSL) that is licensed under separate terms,
+   as designated in a particular file or component or in included license
+   documentation.  The authors of MySQL hereby grant you an additional
+   permission to link the program and your derivative works with the
+   separately licensed software that they have included with MySQL.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License, version 2.0, for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License, version 2.0, for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 #ifndef MYSQL_MUTEX_H
 #define MYSQL_MUTEX_H
@@ -68,6 +82,9 @@
 #include "pfs_mutex_provider.h"  // IWYU pragma: keep
 #endif
 
+/*
+DESODBC: renaming myodbc to desodbc
+*/
 namespace desodbc
 {
 
@@ -144,11 +161,11 @@ namespace desodbc
   @param A Mutex attributes
 */
 
-#define des_mutex_init(K, M, A) \
-  des_mutex_init_with_src(K, M, A, __FILE__, __LINE__)
+#define mysql_mutex_init(K, M, A) \
+  mysql_mutex_init_with_src(K, M, A, __FILE__, __LINE__)
 
-#define des_mutex_init_with_src(K, M, A, F, L) \
-  inline_des_mutex_init(K, M, A, F, L)
+#define mysql_mutex_init_with_src(K, M, A, F, L) \
+  inline_mysql_mutex_init(K, M, A, F, L)
 
 /**
   @def mysql_mutex_destroy(M)
@@ -156,22 +173,22 @@ namespace desodbc
   @c mysql_mutex_destroy is a drop-in replacement
   for @c pthread_mutex_destroy.
 */
-#define des_mutex_destroy(M) \
-  des_mutex_destroy_with_src(M, __FILE__, __LINE__)
+#define mysql_mutex_destroy(M) \
+  mysql_mutex_destroy_with_src(M, __FILE__, __LINE__)
 
-#define des_mutex_destroy_with_src(M, F, L) \
+#define mysql_mutex_destroy_with_src(M, F, L) \
   inline_mysql_mutex_destroy(M, F, L)
 
 /**
-  @def def_des_mutex_lock(M)
+  @def def_mysql_mutex_lock(M)
   Instrumented mutex_lock.
-  @c def_des_mutex_lock is a drop-in replacement for @c pthread_mutex_lock.
+  @c def_mysql_mutex_lock is a drop-in replacement for @c pthread_mutex_lock.
   @param M The mutex to lock
 */
 
-#define def_des_mutex_lock(M) des_mutex_lock_with_src(M, __FILE__, __LINE__)
+#define def_mysql_mutex_lock(M) mysql_mutex_lock_with_src(M, __FILE__, __LINE__)
 
-#define des_mutex_lock_with_src(M, F, L) inline_des_mutex_lock(M, F, L)
+#define mysql_mutex_lock_with_src(M, F, L) inline_mysql_mutex_lock(M, F, L)
 
 /**
   @def mysql_mutex_trylock(M)
@@ -187,13 +204,13 @@ namespace desodbc
   inline_mysql_mutex_trylock(M, F, L)
 
 /**
-  @def def_des_mutex_unlock(M)
+  @def def_mysql_mutex_unlock(M)
   Instrumented mutex_unlock.
-  @c def_des_mutex_unlock is a drop-in replacement for @c pthread_mutex_unlock.
+  @c def_mysql_mutex_unlock is a drop-in replacement for @c pthread_mutex_unlock.
 */
-#define def_des_mutex_unlock(M) des_mutex_unlock_with_src(M, __FILE__, __LINE__)
+#define def_mysql_mutex_unlock(M) mysql_mutex_unlock_with_src(M, __FILE__, __LINE__)
 
-#define des_mutex_unlock_with_src(M, F, L) inline_des_mutex_unlock(M, F, L)
+#define mysql_mutex_unlock_with_src(M, F, L) inline_mysql_mutex_unlock(M, F, L)
 
 static inline void inline_mysql_mutex_register(const char *category
                                                [[maybe_unused]],
@@ -205,8 +222,8 @@ static inline void inline_mysql_mutex_register(const char *category
 #endif
 }
 
-static inline int inline_des_mutex_init(PSI_mutex_key key [[maybe_unused]],
-                                          repl_des_mutex_t *that,
+static inline int inline_mysql_mutex_init(PSI_mutex_key key [[maybe_unused]],
+                                          repl_mysql_mutex_t *that,
                                           const native_mutexattr_t *attr,
                                           const char *src_file [[maybe_unused]],
                                           uint src_line [[maybe_unused]]) {
@@ -223,7 +240,7 @@ static inline int inline_des_mutex_init(PSI_mutex_key key [[maybe_unused]],
   );
 }
 
-static inline int inline_mysql_mutex_destroy(repl_des_mutex_t *that,
+static inline int inline_mysql_mutex_destroy(repl_mysql_mutex_t *that,
                                              const char *src_file
                                              [[maybe_unused]],
                                              uint src_line [[maybe_unused]]) {
@@ -241,7 +258,7 @@ static inline int inline_mysql_mutex_destroy(repl_des_mutex_t *that,
   );
 }
 
-static inline int inline_des_mutex_lock(repl_des_mutex_t *that,
+static inline int inline_mysql_mutex_lock(repl_mysql_mutex_t *that,
                                           const char *src_file [[maybe_unused]],
                                           uint src_line [[maybe_unused]]) {
   int result;
@@ -256,7 +273,7 @@ static inline int inline_des_mutex_lock(repl_des_mutex_t *that,
           &state, that->m_psi, PSI_MUTEX_LOCK, src_file, src_line);
 
       /* Instrumented code */
-      result = des_mutex_lock(&that->m_mutex
+      result = mysql_mutex_lock(&that->m_mutex
 #ifdef SAFE_MUTEX
                              ,
                              src_file, src_line
@@ -284,7 +301,7 @@ static inline int inline_des_mutex_lock(repl_des_mutex_t *that,
   return result;
 }
 
-static inline int inline_mysql_mutex_trylock(repl_des_mutex_t *that,
+static inline int inline_mysql_mutex_trylock(repl_mysql_mutex_t *that,
                                              const char *src_file
                                              [[maybe_unused]],
                                              uint src_line [[maybe_unused]]) {
@@ -328,7 +345,7 @@ static inline int inline_mysql_mutex_trylock(repl_des_mutex_t *that,
   return result;
 }
 
-static inline int inline_des_mutex_unlock(repl_des_mutex_t *that,
+static inline int inline_mysql_mutex_unlock(repl_mysql_mutex_t *that,
                                             const char *src_file
                                             [[maybe_unused]],
                                             uint src_line [[maybe_unused]]) {

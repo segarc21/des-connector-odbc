@@ -37,7 +37,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "des_config.h"
+#include "my_config.h"
 #include "my_inttypes.h"
 
 /* Allow multuple chunks 'AAA= AA== AA==', binlog uses this */

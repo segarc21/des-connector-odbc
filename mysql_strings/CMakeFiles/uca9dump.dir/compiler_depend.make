@@ -3,8 +3,8 @@
 
 mysql_strings/CMakeFiles/uca9dump.dir/uca9-dump.cc.o: mysql_strings/uca9-dump.cc \
   include/mysql-8.0/decimal.h \
-  include/mysql-8.0/des_compiler.h \
-  include/mysql-8.0/des_config.h \
+  include/mysql-8.0/my_compiler.h \
+  include/mysql-8.0/my_config.h \
   include/mysql-8.0/lex_string.h \
   include/mysql-8.0/m_ctype.h \
   include/mysql-8.0/m_string.h \
@@ -464,7 +464,7 @@ mysql_strings/uca900_data.h:
 
 /usr/include/sched.h:
 
-include/mysql-8.0/des_compiler.h:
+include/mysql-8.0/my_compiler.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
 
@@ -534,7 +534,7 @@ include/mysql-8.0/m_string.h:
 
 /usr/include/x86_64-linux-gnu/bits/endianness.h:
 
-include/mysql-8.0/des_config.h:
+include/mysql-8.0/my_config.h:
 
 /usr/include/c++/13/bits/basic_string.h:
 

@@ -31,7 +31,7 @@
 
 /* my_setwd() and my_getwd() works with intern_filenames !! */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #include <errno.h>
 #include <string.h>
@@ -41,7 +41,7 @@
 #endif
 
 #include "m_string.h"
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_macros.h"
@@ -88,7 +88,7 @@ int my_getwd(char *buf, size_t size, myf MyFlags) {
     if (size < 2) return -1;
     if (!getcwd(buf, (uint)(size - 2)) && MyFlags & MY_WME) {
       set_my_errno(errno);
-      MyOsError(my_errno(), EE_GETWD, DESF(0));
+      MyOsError(my_errno(), EE_GETWD, MYF(0));
       return -1;
     }
     if (*((pos = strend(buf)) - 1) != FN_LIBCHAR) /* End with FN_LIBCHAR */
@@ -115,7 +115,7 @@ int my_setwd(const char *dir, myf MyFlags) {
   if ((res = chdir(dir)) != 0) {
     set_my_errno(errno);
     if (MyFlags & MY_WME) {
-      MyOsError(my_errno(), EE_SETWD, DESF(0), start);
+      MyOsError(my_errno(), EE_SETWD, MYF(0), start);
     }
   } else {
     if (test_if_hard_path(start)) { /* Hard pathname */

@@ -27,7 +27,7 @@
   @file include/my_timer.h
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 /* POSIX timers API. */
 #ifdef HAVE_POSIX_TIMERS

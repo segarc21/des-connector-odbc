@@ -77,6 +77,7 @@
 /* for clock() */
 #include <time.h>
 
+
 /* Get routines for helping with Unicode conversion. */
 #define ODBCTAP
 
@@ -140,26 +141,18 @@ const char * wstr4output(const wchar_t *wstr)
 #define _MY_NEWLINE "\n"
 #endif
 
-SQLCHAR *mydriver= (SQLCHAR *)"{MySQL ODBC " DESODBC_STRSERIES " Driver}";
+SQLCHAR *mydriver= (SQLCHAR *)"{DES ODBC Unicode Driver}";
 SQLCHAR mydrv_nobrackets[255] = {'\0'}; /* mydriver value will be copied here */
-SQLCHAR *mydsn= (SQLCHAR *)"test";
-SQLCHAR *myuid= (SQLCHAR *)"root";
-SQLCHAR *mypwd= (SQLCHAR *)"";
-SQLCHAR *mysock= NULL;
-SQLCHAR *mydns_srv= NULL;
-int      myoption= 0, myport= 0, myenable_pooling= 0;
-SQLCHAR *my_str_options= (SQLCHAR *)""; /* String for additional connection options */
-SQLCHAR *myserver= (SQLCHAR *)"localhost";
-SQLCHAR *mydb= (SQLCHAR *)"test";
-SQLCHAR *myauth= NULL;
-SQLCHAR *myplugindir= NULL;
+SQLCHAR *mydsn= (SQLCHAR *)"pruebanocatalog2dsn";
+SQLCHAR *myexec = (SQLCHAR *)"D:\\Portables\\des\\des.exe";
+SQLCHAR *mydir = (SQLCHAR *)"D:\\Portables\\des";
 SQLCHAR *odbcini = (SQLCHAR *)"ODBC.INI";
 
 SQLCHAR *test_db= (SQLCHAR *)"client_odbc_test";
 /* Suffix is useful if a testsuite is run more than once */
 const SQLCHAR *testname_suffix= (SQLCHAR*)"";
 /* -1 means that the fact has to be established, 0 - ansi driver, 1 - unicode */
-int     unicode_driver= -1;
+int     unicode_driver= 1;
 #define REQUIRES_UNICODE_DRIVER if (unicode_driver == 0) skip("This testcase is designed for Unicode drivers only")
 #define REQUIRES_ANSI_DRIVER if (unicode_driver != 0) skip("This testcase is designed for ANSI drivers only")
 
@@ -294,6 +287,7 @@ int main(int argc, char **argv) \
   SQLHSTMT hstmt = NULL; \
   int      i, num_tests, failcnt= 0; \
   ENABLE_ALARMS; \
+  Sleep(5000);\
 \
   mem_debug_init(); \
   mem_gc_init(); \
@@ -310,36 +304,17 @@ int main(int argc, char **argv) \
   } else { \
     memcpy(mydrv_nobrackets, mydriver, sizeof(SQLCHAR)*drvlen); \
   } \
-  if (getenv("TEST_UID")) \
-    myuid=  (SQLCHAR *)getenv("TEST_UID"); \
-  if (getenv("TEST_PASSWORD")) \
-    mypwd=  (SQLCHAR *)getenv("TEST_PASSWORD"); \
-  if (getenv("TEST_SOCKET")) \
-    mysock= (SQLCHAR *)getenv("TEST_SOCKET"); \
-  if (getenv("TEST_SERVER")) \
-    myserver= (SQLCHAR *)getenv("TEST_SERVER"); \
-  if (getenv("TEST_PORT")) \
-    myport= atoi(getenv("TEST_PORT")); \
-  if (getenv("TEST_ENABLE_POOLING")) \
-    myenable_pooling= atoi(getenv("TEST_ENABLE_POOLING")); \
-  if (getenv("TEST_DEFAULTAUTH")) \
-    myauth=  (SQLCHAR *)getenv("TEST_DEFAULTAUTH"); \
-  if (getenv("TEST_PLUGINDIR")) \
-    myplugindir=  (SQLCHAR *)getenv("TEST_PLUGINDIR"); \
-  if (getenv("TEST_DNS_SRV")) \
-    mydns_srv= (SQLCHAR *)getenv("TEST_DNS_SRV"); \
+  if (getenv("TEST_DES_EXEC")) \
+    myexec=  (SQLCHAR *)getenv("TEST_DES_EXEC"); \
+  if (getenv("TEST_DES_WORKING_DIR")) \
+    mydir=  (SQLCHAR *)getenv("TEST_DES_WORKING_DIR"); \
 \
   if (argc > 1) \
     mydsn= (SQLCHAR *)argv[1]; \
   if (argc > 2) \
-    myuid= (SQLCHAR *)argv[2]; \
+    myexec= (SQLCHAR *)argv[2]; \
   if (argc > 3) \
-    mypwd= (SQLCHAR *)argv[3]; \
-  if (argc > 4) \
-    mysock= (SQLCHAR *)argv[4];
-
-#define SET_DSN_OPTION(x) \
-  myoption= (x);
+    mydir= (SQLCHAR *)argv[3]; \
 
 #define RUN_TESTS_ONCE \
   setbuf(stdout, NULL); \
@@ -1227,9 +1202,8 @@ int mydrvconnect(SQLHENV *henv, SQLHDBC *hdbc, SQLHSTMT *hstmt, SQLCHAR *connIn)
 /*
   Helper function to make the connection string.
 */
-SQLCHAR *make_conn_str(const SQLCHAR *dsn, const SQLCHAR *uid,
-                       const SQLCHAR *pwd, const SQLCHAR *db,
-                       const SQLCHAR *options, int hide_password)
+SQLCHAR *make_conn_str(const SQLCHAR *dsn, const SQLCHAR *exec,
+                       const SQLCHAR *dir)
 {
   static SQLCHAR connIn[4096]= {0};
   SQLCHAR dsn_buf[MAX_NAME_LEN]= {0};
@@ -1250,73 +1224,9 @@ SQLCHAR *make_conn_str(const SQLCHAR *dsn, const SQLCHAR *uid,
   else
     snprintf((char *)dsn_buf, sizeof(dsn_buf), "DSN=%s", (char *)dsn);
 
-  if (uid     == NULL) uid=     myuid;
-  if (pwd     == NULL) pwd=     mypwd;
-  if (db      == NULL) db=      mydb;
-  if (options == NULL) options= my_str_options;
+  snprintf((char *)connIn, sizeof(connIn), "%s;DES_EXEC=%s;DES_WORKING_DIR=%s;",
+           (char *)dsn_buf, (char *)exec, (char *)dir);
 
-  if (hide_password)
-    pwd = (SQLCHAR*)"*************";
-
-  snprintf((char *)connIn, sizeof(connIn), "%s;UID=%s;PWD=%s;OPTION=%d;",
-          (char *)dsn_buf, (char *)uid, (char *)pwd, myoption);
-
-  if (strstr((const char*)options, "SOCKET=;") &&
-      strcmp((const char*)myserver, "localhost") == 0)
-  {
-    skip_socket = 1;
-    char *port = NULL;
-    if ((port = getenv("TEST_PORT")) ||
-        (port = getenv("MYSQL_PORT")))
-    {
-      myport = atoi(port);
-    }
-    strncat((char *)connIn, (char*)";SERVER=127.0.0.1;", sizeof(connIn) - 1);
-  }
-  else
-  {
-    snprintf((char *)server_buf, sizeof(server_buf), ";SERVER=%s", myserver);
-    strncat((char *)connIn, (char *)server_buf, sizeof(connIn) - 1);
-  }
-
-  if (mysock && mysock[0] && skip_socket == 0)
-  {
-    snprintf((char *)socket_buf, sizeof(socket_buf), ";SOCKET=%s", (char *)mysock);
-    strncat((char *)connIn, (char*)socket_buf, sizeof(connIn) - 1);
-  }
-  if (db && db[0])
-  {
-    snprintf((char *)db_buf, sizeof(db_buf), ";DATABASE=%s", (char *)db);
-    strncat((char *)connIn, (char *)db_buf, sizeof(connIn) - 1);
-  }
-  if (myport)
-  {
-    snprintf((char*)port_buf, sizeof(port_buf), ";PORT=%d", myport);
-    strncat((char *)connIn, (char*)port_buf, sizeof(connIn) - 1);
-  }
-
-  if (options != NULL && options[0] > 0)
-  {
-    strncat((char*)connIn, ";", sizeof(connIn));
-    strncat((char*)connIn, (char*)options, sizeof(connIn) - 1);
-  }
-
-#if DES_VERSION_ID >= 50507
-  if (init_auth_plugin)
-  {
-    init_auth_plugin= 0; /* reset the plugin init flag */
-    if (myauth && myauth[0])
-    {
-      strncat((char *)connIn, ";DEFAULTAUTH=", sizeof(connIn));
-      strncat((char *)connIn, (char *)myauth, sizeof(connIn) - 1);
-    }
-    if (myplugindir && myplugindir[0])
-    {
-      strncat((char *)connIn, ";PLUGINDIR=", sizeof(connIn));
-      strncat((char *)connIn, (char *)myplugindir, sizeof(connIn) - 1);
-    }
-  }
-#endif
   return connIn;
 }
 
@@ -1325,9 +1235,8 @@ SQLCHAR *make_conn_str(const SQLCHAR *dsn, const SQLCHAR *uid,
    If dsn, uid, pwd or options is null - they defualt to mydsn, myuid, mypwd
    and my_str_options, respectively.
    myoption, mysock and myport values are used. */
-int get_connection(SQLHDBC *hdbc, const SQLCHAR *dsn, const SQLCHAR *uid,
-                   const SQLCHAR *pwd, const SQLCHAR *db,
-                   const SQLCHAR *options)
+int get_connection(SQLHDBC *hdbc, const SQLCHAR *dsn, const SQLCHAR *exec,
+                   const SQLCHAR *dir)
 {
   /* Buffers have to be large enough to contain SSL options and long names */
   SQLCHAR     connOut[4096];
@@ -1336,7 +1245,7 @@ int get_connection(SQLHDBC *hdbc, const SQLCHAR *dsn, const SQLCHAR *uid,
   SQLCHAR     driver_name[16]; /* Should be enough for myodbc library file name */
   SQLCHAR     *connIn;
 
-  connIn = make_conn_str(dsn, uid, pwd, db, options, 0);
+  connIn = make_conn_str(dsn, exec, dir);
   rc= SQLDriverConnect(*hdbc, NULL, connIn, SQL_NTS, connOut,
                        MAX_NAME_LEN, &len, SQL_DRIVER_NOPROMPT);
 
@@ -1344,16 +1253,7 @@ int get_connection(SQLHDBC *hdbc, const SQLCHAR *dsn, const SQLCHAR *uid,
   {
     /* re-build and print the connection string with hidden password */
     printf("# Connection failed with the following Connection string: " \
-           "\n%s\n", (char*)make_conn_str(dsn, uid, pwd, db, options, 1));
-    return rc;
-  }
-
-  /* Let's neglect possibility that error returned by get_connection() can be
-     in fact error of turning autocommit on */
-  rc= SQLSetConnectAttr(*hdbc, SQL_ATTR_AUTOCOMMIT,
-                                  (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
-  if (!SQL_IS_SUCCESS(rc))
-  {
+           "\n%s\n", (char*)make_conn_str(dsn, exec, dir));
     return rc;
   }
 
@@ -1374,34 +1274,18 @@ int get_connection(SQLHDBC *hdbc, const SQLCHAR *dsn, const SQLCHAR *uid,
 
 int alloc_basic_handles_with_opt(SQLHENV *henv, SQLHDBC *hdbc,
                                  SQLHSTMT *hstmt,  const SQLCHAR *dsn,
-                                 const SQLCHAR *uid, const SQLCHAR *pwd,
-                                 const SQLCHAR *db, const SQLCHAR *options)
+                                 const SQLCHAR *exec, const SQLCHAR *dir)
 {
-  if (myenable_pooling)
-  {
-    SQLSetEnvAttr(NULL, SQL_ATTR_CONNECTION_POOLING,
-                 (SQLPOINTER)SQL_CP_ONE_PER_DRIVER, 0);
-  }
 
   ok_env(*henv, SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, henv));
 
   ok_env(*henv, SQLSetEnvAttr(*henv, SQL_ATTR_ODBC_VERSION,
                               (SQLPOINTER)SQL_OV_ODBC3, 0));
-  if (myenable_pooling)
-  {
-    SQLRETURN rc= SQLSetEnvAttr(*henv, SQL_ATTR_CP_MATCH, (SQLPOINTER)SQL_CP_STRICT_MATCH, 0);
-
-    if( !SQL_IS_SUCCESS(rc))
-    {
-      /* No DM case? */
-      is_num(check_sqlstate_ex(*henv, SQL_HANDLE_ENV, "HYC00"), OK);
-    }
-  }
-
+ 
   ok_env(*henv, SQLAllocHandle(SQL_HANDLE_DBC, *henv, hdbc));
 
   /* ok_con(*hdbc, SQLConnect(*hdbc, mydsn, strlen(mydsn), myuid, strlen(myuid), mypwd, strlen(mypwd))); */
-  ok_con(*hdbc, get_connection(hdbc, dsn, uid, pwd, db, options));
+  ok_con(*hdbc, get_connection(hdbc, dsn, exec, dir));
 
   ok_con(*hdbc, SQLAllocHandle(SQL_HANDLE_STMT, *hdbc, hstmt));
 
@@ -1412,9 +1296,7 @@ int alloc_basic_handles_with_opt(SQLHENV *henv, SQLHDBC *hdbc,
 int alloc_basic_handles(SQLHENV *henv, SQLHDBC *hdbc, SQLHSTMT *hstmt)
 {
   return alloc_basic_handles_with_opt(henv, hdbc, hstmt, (SQLCHAR *)mydsn,
-                                      (SQLCHAR *)myuid, (SQLCHAR *)mypwd,
-                                      (SQLCHAR *)mydb,
-                                      (SQLCHAR *)my_str_options);
+                                      (SQLCHAR *)myexec, (SQLCHAR *)mydir);
 }
 
 

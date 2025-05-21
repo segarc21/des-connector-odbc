@@ -1,4 +1,6 @@
 // Copyright (c) 2007, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -25,6 +27,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 /**
  @file  odbcdialogparams.cpp
@@ -234,7 +247,7 @@ HWND getTabCtrlTabPages(unsigned int framenum)
 }
 
 
-des_bool getBoolFieldDataTab(unsigned int framenum, int idc)
+my_bool getBoolFieldDataTab(unsigned int framenum, int idc)
 {
   assert(TabCtrl_1.hTabPages);
   HWND checkbox = GetDlgItem(TabCtrl_1.hTabPages[framenum-1], idc);
@@ -248,7 +261,7 @@ des_bool getBoolFieldDataTab(unsigned int framenum, int idc)
 
 
 /* this reads non-DSN bool data */
-des_bool getBoolFieldData(HWND hwnd, int idc)
+my_bool getBoolFieldData(HWND hwnd, int idc)
 {
   HWND checkbox = GetDlgItem(hwnd, idc);
 
@@ -260,7 +273,7 @@ des_bool getBoolFieldData(HWND hwnd, int idc)
 }
 
 
-void setBoolFieldData(HWND hwnd, int idc, des_bool state)
+void setBoolFieldData(HWND hwnd, int idc, my_bool state)
 {
   HWND checkbox = GetDlgItem(hwnd, idc);
   assert(checkbox);
@@ -269,7 +282,7 @@ void setBoolFieldData(HWND hwnd, int idc, des_bool state)
 }
 
 
-void setBoolFieldDataTab(unsigned int framenum, int idc, des_bool state)
+void setBoolFieldDataTab(unsigned int framenum, int idc, my_bool state)
 {
   assert(TabCtrl_1.hTabPages);
   Button_SetCheck(GetDlgItem(TabCtrl_1.hTabPages[framenum-1],idc), state);
@@ -277,7 +290,7 @@ void setBoolFieldDataTab(unsigned int framenum, int idc, des_bool state)
 }
 
 
-void setControlEnabled(unsigned int framenum, int idc, des_bool state)
+void setControlEnabled(unsigned int framenum, int idc, my_bool state)
 {
   HWND cursorTab= TabCtrl_1.hTabPages[framenum-1];
   assert(cursorTab);
@@ -303,6 +316,10 @@ void FormMain_OnClose(HWND hwnd)
 }
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /****************************************************************************
  *                                                                          *
  * Functions: FormMain_OnCommand related event code                         *
@@ -393,7 +410,9 @@ void btnCancel_Click (HWND hwnd)
   PostMessage(hwnd, WM_CLOSE, NULL, NULL);
 }
 
-
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void btnExecBrowse_Click (HWND hwnd)
 {
   /*I work with unicode since definitions expand
@@ -427,6 +446,9 @@ void btnExecBrowse_Click (HWND hwnd)
   }
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void btnWorkingBrowse_Click(HWND hwnd) {
 
   BROWSEINFOW dialog;
@@ -451,14 +473,16 @@ void btnWorkingBrowse_Click(HWND hwnd) {
   }
 }
 
-
-void btnHelp_Click (HWND hwnd)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+void btnAbout_Click (HWND hwnd)
 {
   ShellExecute(NULL, L"open",
          L"https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-configuration-dsn-windows.html",
          NULL, NULL, SW_SHOWNORMAL);
 }
-
 
 void chooseFile( HWND parent, int hostCtlId )
 {
@@ -616,7 +640,10 @@ void processCharsetCombobox(HWND hwnd, HWND hwndCtl, UINT codeNotify)
   }
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 void FormMain_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
   if (controlWithDefValue != 0 && id == controlWithDefValue
@@ -631,8 +658,8 @@ void FormMain_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       btnCancel_Click(hwnd); break;
     case IDC_BUTTON_DETAILS:
       btnDetails_Click(hwnd); break;
-    case IDC_BUTTON_HELP:
-      btnHelp_Click(hwnd); break;
+    case IDC_BUTTON_ABOUT:
+      btnAbout_Click(hwnd); break;
     case IDC_BUTTON_EXEC_BROWSE:
       btnExecBrowse_Click(hwnd); break;
     case IDC_BUTTON_WORKING_BROWSE:
@@ -738,7 +765,7 @@ void AdjustLayout(HWND hwnd)
   AlignWindowToBottom( GetDlgItem(hwnd,IDC_BUTTON_DETAILS), dY);
   AlignWindowToBottom( GetDlgItem(hwnd,IDOK), dY);
   AlignWindowToBottom( GetDlgItem(hwnd,IDCANCEL), dY);
-  AlignWindowToBottom( GetDlgItem(hwnd,IDC_BUTTON_HELP), dY);
+  AlignWindowToBottom( GetDlgItem(hwnd,IDC_BUTTON_ABOUT), dY);
 
   Refresh(hwnd);
 }
@@ -822,7 +849,10 @@ BOOL FormMain_DlgProc (HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
   }
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
    Display the DSN dialog
 

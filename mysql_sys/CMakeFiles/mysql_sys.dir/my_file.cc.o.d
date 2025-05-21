@@ -1,7 +1,7 @@
 mysql_sys/CMakeFiles/mysql_sys.dir/my_file.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/my_file.cc \
  /usr/include/stdc-predef.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -174,7 +174,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_file.cc.o: \
  /usr/include/assert.h /usr/include/c++/13/utility \
  /usr/include/c++/13/bits/stl_relops.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_sys.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
@@ -201,7 +201,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_file.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_macros.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/mysql_lex_string.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compress.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_psi_config.h \
@@ -256,7 +256,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_file.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_thread.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/components/services/my_thread_bits.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/components/services/thr_mutex_bits.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_io.h \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/my_static.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_alloc.h \
@@ -271,7 +271,7 @@ mysql_sys/CMakeFiles/mysql_sys.dir/my_file.cc.o: \
  /usr/include/c++/13/backward/auto_ptr.h \
  /usr/include/c++/13/pstl/glue_memory_defs.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/memory_debugging.h \
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_pointer_arithmetic.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/mysql/psi/psi_memory.h \
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_sys/mysys_priv.h \

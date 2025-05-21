@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
 @file  info.c
 @brief Driver information functions.
@@ -33,29 +46,37 @@
 
 #include "driver.h"
 
-#define DESINFO_SET_ULONG(val) \
+#define MYINFO_SET_ULONG(val) \
 do { \
   *((SQLUINTEGER *)num_info)= (val); \
   *value_len= sizeof(SQLUINTEGER); \
   return SQL_SUCCESS; \
 } while(0)
 
-#define DESINFO_SET_USHORT(val) \
+#define MYINFO_SET_USHORT(val) \
 do { \
   *((SQLUSMALLINT *)num_info)= (SQLUSMALLINT)(val); \
   *value_len= sizeof(SQLUSMALLINT); \
   return SQL_SUCCESS; \
 } while(0)
 
-#define DESINFO_SET_STR(val) \
+#define MYINFO_SET_STR(val) \
 do { \
   *char_info= (SQLCHAR *)(val); \
   return SQL_SUCCESS; \
 } while(0)
 
-static des_bool desodbc_ov2_inited = 0;
+static my_bool desodbc_ov2_inited = 0;
 
 
+/* DESODBC:
+
+    Renamed from the original MySQLGetInfo and modified
+    according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
 Return general information about the driver and data source
 associated with a connection.
@@ -82,65 +103,74 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 
   switch (fInfoType) {
   case SQL_ACTIVE_ENVIRONMENTS:
-    DESINFO_SET_USHORT(0);
+    MYINFO_SET_USHORT(0);
 
   case SQL_AGGREGATE_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_AF_ALL | SQL_AF_AVG | SQL_AF_COUNT | SQL_AF_DISTINCT |
-                     SQL_AF_MAX | SQL_AF_MIN | SQL_AF_SUM);
+    MYINFO_SET_ULONG(SQL_AF_ALL | SQL_AF_AVG | SQL_AF_COUNT | SQL_AF_DISTINCT |
+                     SQL_AF_MAX | SQL_AF_MIN | SQL_AF_SUM); //DES allow all of these
 
   case SQL_ALTER_DOMAIN:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0); //DES does not allow ALTER DOMAIN
 
+
+  //See 4.2.4.7 "Modifying Tables" for the following.
+  //Also, see the rules of DDLstmt.
   case SQL_ALTER_TABLE:
-    /** @todo check if we should report more */
-    DESINFO_SET_ULONG(SQL_AT_ADD_COLUMN | SQL_AT_DROP_COLUMN);
+    MYINFO_SET_ULONG(SQL_AT_ADD_TABLE_CONSTRAINT |
+                      SQL_AT_DROP_TABLE_CONSTRAINT_CASCADE | SQL_AT_ADD_COLUMN |
+                      SQL_AT_DROP_COLUMN | SQL_AT_DROP_COLUMN_CASCADE);
 
-#ifndef USE_IODBC
+  //This ODBC Driver does not allow asyncronic execution.
+#ifndef USE_IODBC //I imagine iODBC does not allow 3.8, and that is why MyODBC put this #ifndef.
   case SQL_ASYNC_DBC_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_ASYNC_DBC_NOT_CAPABLE);
+    MYINFO_SET_ULONG(SQL_ASYNC_DBC_NOT_CAPABLE);
 #endif
 
   case SQL_ASYNC_MODE:
-    DESINFO_SET_ULONG(SQL_AM_NONE);
+    MYINFO_SET_ULONG(SQL_AM_NONE);
+
+#ifdef SQL_ASYNC_NOTIFICATION
+  case SQL_ASYNC_NOTIFICATION:
+    MYINFO_SET_ULONG(SQL_ASYNC_NOTIFICATION_NOT_CAPABLE);
+#endif
 
   case SQL_BATCH_ROW_COUNT:
-    DESINFO_SET_ULONG(SQL_BRC_EXPLICIT);
+    MYINFO_SET_ULONG(SQL_BRC_EXPLICIT);
 
   case SQL_BATCH_SUPPORT:
-    DESINFO_SET_ULONG(SQL_BS_SELECT_EXPLICIT | SQL_BS_ROW_COUNT_EXPLICIT |
-                     SQL_BS_SELECT_PROC | SQL_BS_ROW_COUNT_PROC);
+    MYINFO_SET_ULONG(SQL_BS_SELECT_EXPLICIT | SQL_BS_ROW_COUNT_EXPLICIT);
 
   case SQL_BOOKMARK_PERSISTENCE:
-    DESINFO_SET_ULONG(SQL_BP_UPDATE | SQL_BP_DELETE);
+    MYINFO_SET_ULONG(SQL_BP_UPDATE | SQL_BP_DELETE);
 
   case SQL_CATALOG_LOCATION:
-    DESINFO_SET_USHORT(SQL_CL_START);
+    MYINFO_SET_USHORT(SQL_CL_START); //When calling /dbschema, it is at the start.
 
   case SQL_CATALOG_NAME:
-    DESINFO_SET_STR(dbc->ds.opt_NO_CATALOG ? "" : "Y");
+    MYINFO_SET_STR("Y");
 
   case SQL_CATALOG_NAME_SEPARATOR:
-    DESINFO_SET_STR(dbc->ds.opt_NO_CATALOG ? "" : ".");
+    MYINFO_SET_STR(":"); //the most common character is '.'. However,
+                                                        //in DES, it seems to be ':': for example,
+                                                        //catalog:table when calling /dbschema.
 
   case SQL_CATALOG_TERM:
-    DESINFO_SET_STR(dbc->ds.opt_NO_CATALOG ? "" : "database");
+    MYINFO_SET_STR("database");
 
   case SQL_CATALOG_USAGE:
-    DESINFO_SET_ULONG(!dbc->ds.opt_NO_CATALOG ?
-      (SQL_CU_DML_STATEMENTS | SQL_CU_PROCEDURE_INVOCATION |
-       SQL_CU_TABLE_DEFINITION | SQL_CU_INDEX_DEFINITION |
-       SQL_CU_PRIVILEGE_DEFINITION) :
-                     0);
+    MYINFO_SET_ULONG(SQL_CU_DML_STATEMENTS |
+       SQL_CU_TABLE_DEFINITION);
 
   case SQL_COLLATION_SEQ:
-    DESINFO_SET_STR(dbc->cxn_charset_info->name);
+    MYINFO_SET_STR(dbc->cxn_charset_info->name);
 
   case SQL_COLUMN_ALIAS:
-    DESINFO_SET_STR("Y");
+    MYINFO_SET_STR("Y"); //DES allows alias for columns.
 
-  case SQL_CONCAT_NULL_BEHAVIOR:
-    DESINFO_SET_USHORT(SQL_CB_NULL);
+  case SQL_CONCAT_NULL_BEHAVIOR: 
+    MYINFO_SET_USHORT(SQL_CB_NULL);
 
+  //We did not modify the conversions from MyODBC.
   case SQL_CONVERT_BIGINT:
   case SQL_CONVERT_BIT:
   case SQL_CONVERT_CHAR:
@@ -160,7 +190,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
   case SQL_CONVERT_WCHAR:
   case SQL_CONVERT_WVARCHAR:
   case SQL_CONVERT_WLONGVARCHAR:
-    DESINFO_SET_ULONG(SQL_CVT_CHAR | SQL_CVT_NUMERIC | SQL_CVT_DECIMAL |
+    MYINFO_SET_ULONG(SQL_CVT_CHAR | SQL_CVT_NUMERIC | SQL_CVT_DECIMAL |
                      SQL_CVT_INTEGER | SQL_CVT_SMALLINT | SQL_CVT_FLOAT |
                      SQL_CVT_REAL | SQL_CVT_DOUBLE | SQL_CVT_VARCHAR |
                      SQL_CVT_LONGVARCHAR | SQL_CVT_BIT | SQL_CVT_TINYINT |
@@ -173,101 +203,119 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
   case SQL_CONVERT_LONGVARBINARY:
   case SQL_CONVERT_INTERVAL_DAY_TIME:
   case SQL_CONVERT_INTERVAL_YEAR_MONTH:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);
 
   case SQL_CONVERT_FUNCTIONS:
-    /* MySQL's CONVERT() and CAST() functions aren't SQL compliant yet. */
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(SQL_FN_CVT_CONVERT); //see "4.2.8 Conversion Functions"
 
   case SQL_CORRELATION_NAME:
-    DESINFO_SET_USHORT(SQL_CN_DIFFERENT);
+    MYINFO_SET_USHORT(SQL_CN_ANY); //se the example given in "4.2.2 Main Features"
 
   case SQL_CREATE_ASSERTION:
   case SQL_CREATE_CHARACTER_SET:
   case SQL_CREATE_COLLATION:
   case SQL_CREATE_DOMAIN:
   case SQL_CREATE_SCHEMA:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);
 
+  //TODO: should I put SQL_CT_COMMIT_DELETE?
   case SQL_CREATE_TABLE:
-    DESINFO_SET_ULONG(SQL_CT_CREATE_TABLE | SQL_CT_COMMIT_DELETE |
-                     SQL_CT_LOCAL_TEMPORARY | SQL_CT_COLUMN_DEFAULT |
-                     SQL_CT_COLUMN_COLLATION);
+    MYINFO_SET_ULONG(SQL_CT_CREATE_TABLE | SQL_CT_TABLE_CONSTRAINT | SQL_CT_COMMIT_DELETE |
+                     SQL_CT_LOCAL_TEMPORARY | SQL_CT_COLUMN_CONSTRAINT | SQL_CT_COLUMN_DEFAULT);
 
   case SQL_CREATE_TRANSLATION:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);
 
   case SQL_CREATE_VIEW:
-    DESINFO_SET_ULONG(SQL_CV_CREATE_VIEW | SQL_CV_CHECK_OPTION |
-                      SQL_CV_CASCADED);
+    MYINFO_SET_ULONG(SQL_CV_CREATE_VIEW | SQL_CV_CHECK_OPTION); //TODO: I have omitted SQL_CV_CASCADED but I am not sure
 
   case SQL_CURSOR_COMMIT_BEHAVIOR:
   case SQL_CURSOR_ROLLBACK_BEHAVIOR:
-    DESINFO_SET_USHORT(SQL_CB_PRESERVE);
+    MYINFO_SET_USHORT(0);
 
 #ifdef SQL_CURSOR_SENSITIVITY
   case SQL_CURSOR_SENSITIVITY:
-    DESINFO_SET_ULONG(SQL_UNSPECIFIED);
+    MYINFO_SET_ULONG(0);
 #endif
 
 #ifdef SQL_CURSOR_ROLLBACK_SQL_CURSOR_SENSITIVITY
   case SQL_CURSOR_ROLLBACK_SQL_CURSOR_SENSITIVITY:
-    DESINFO_SET_ULONG(SQL_UNSPECIFIED);
+    MYINFO_SET_ULONG(0);
 #endif
 
   case SQL_DATA_SOURCE_NAME:
-    DESINFO_SET_STR(dbc->ds.opt_DSN);
+    MYINFO_SET_STR(dbc->ds.opt_DSN);
 
   case SQL_DATA_SOURCE_READ_ONLY:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("N");
 
   case SQL_DATABASE_NAME:
-      //TODO: implement appropriately
-    if (is_connected(dbc))
-      return dbc->set_error("HY000",
-                           "SQLGetInfo() failed to return current catalog.",
-                           0);
-    DESINFO_SET_STR(!dbc->database.empty() ? dbc->database.c_str() : "null");
+    if (is_connected(dbc)) {
+      SQLRETURN rc = dbc->getQueryMutex();
+      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
+      auto pair = dbc->send_query_and_read("/current_db");
+      rc = pair.first;
+      std::string current_db_output = pair.second;
+      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+        dbc->releaseQueryMutex();
+        return rc;
+      }
+      rc = dbc->releaseQueryMutex();
+      if (rc != SQL_SUCCESS &&
+          rc != SQL_SUCCESS_WITH_INFO) {
+        return rc;
+      }
+      std::string db = getLines(current_db_output)[0];
+
+      MYINFO_SET_STR(string_to_char_pointer(db)); //TODO: check memory leaks
+
+    } else {
+      return dbc->set_error(
+          "HY000",
+          "SQLGetInfo() needs an active connection to return current catalog");
+    }
+      
   case SQL_DATETIME_LITERALS:
-    DESINFO_SET_ULONG(SQL_DL_SQL92_DATE | SQL_DL_SQL92_TIME |
+    MYINFO_SET_ULONG(SQL_DL_SQL92_DATE | SQL_DL_SQL92_TIME |
                      SQL_DL_SQL92_TIMESTAMP);
 
   case SQL_DBMS_NAME:
-    DESINFO_SET_STR("DES");
+    MYINFO_SET_STR("DES");
 
   case SQL_DBMS_VER:
-    /** @todo technically this is not right: should be ##.##.#### */
-    DESINFO_SET_STR("v6.7"); //TODO: check
+    MYINFO_SET_STR("6.7");
 
+    //DES does not support indexes
+  /*
   case SQL_DDL_INDEX:
-    DESINFO_SET_ULONG(SQL_DI_CREATE_INDEX | SQL_DI_DROP_INDEX);
-
+    MYINFO_SET_ULONG(SQL_DI_CREATE_INDEX | SQL_DI_DROP_INDEX);
+  */
   case SQL_DEFAULT_TXN_ISOLATION:
-    DESINFO_SET_ULONG(DEFAULT_TXN_ISOLATION);
+    MYINFO_SET_ULONG(0); //DES does not support transactions
 
   case SQL_DESCRIBE_PARAMETER:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("Y"); //see ISLstmt syntax
 
   case SQL_DRIVER_NAME:
 #ifdef MYODBC_UNICODEDRIVER
 # ifdef WIN32
-    DESINFO_SET_STR("myodbc" DESODBC_STRMAJOR_VERSION "w.dll");
+    MYINFO_SET_STR("desodbc" DESODBC_STRMAJOR_VERSION "w.dll");
 # else
-    DESINFO_SET_STR("libmyodbc" DESODBC_STRMAJOR_VERSION "w.so");
+    MYINFO_SET_STR("libdesodbc" DESODBC_STRMAJOR_VERSION "w.so");
 # endif
 #else
 # ifdef WIN32
-    DESINFO_SET_STR("myodbc" DESODBC_STRMAJOR_VERSION "a.dll");
+    MYINFO_SET_STR("desodbc" DESODBC_STRMAJOR_VERSION "a.dll");
 # else
-    DESINFO_SET_STR("libmyodbc" DESODBC_STRMAJOR_VERSION "a.so");
+    MYINFO_SET_STR("libdesodbc" DESODBC_STRMAJOR_VERSION "a.so");
 # endif
 #endif
   case SQL_DRIVER_ODBC_VER:
-    DESINFO_SET_STR("03.80");               /* What standard we implement */
+    MYINFO_SET_STR("03.80");
 
   case SQL_DRIVER_VER:
-    DESINFO_SET_STR(DRIVER_VERSION);
+    MYINFO_SET_STR(DRIVER_VERSION);
 
   case SQL_DROP_ASSERTION:
   case SQL_DROP_CHARACTER_SET:
@@ -275,333 +323,341 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
   case SQL_DROP_DOMAIN:
   case SQL_DROP_SCHEMA:
   case SQL_DROP_TRANSLATION:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);
 
+  //TODO: I have not put SQL_DT_RESTRICT. Check.
   case SQL_DROP_TABLE:
-    DESINFO_SET_ULONG(SQL_DT_DROP_TABLE | SQL_DT_CASCADE | SQL_DT_RESTRICT);
+    MYINFO_SET_ULONG(SQL_DT_DROP_TABLE | SQL_DT_CASCADE);
 
+  // TODO: I have not put SQL_DT_RESTRICT. Check.
   case SQL_DROP_VIEW:
-    DESINFO_SET_ULONG(SQL_DV_DROP_VIEW | SQL_DV_CASCADE | SQL_DV_RESTRICT);
+    MYINFO_SET_ULONG(SQL_DV_DROP_VIEW | SQL_DV_CASCADE);
 
+    //DESODBC does not support dynamic cursors.
+    /*
   case SQL_DYNAMIC_CURSOR_ATTRIBUTES1:
     if (!dbc->ds.opt_FORWARD_CURSOR &&
         dbc->ds.opt_DYNAMIC_CURSOR)
-      DESINFO_SET_ULONG(SQL_CA1_NEXT | SQL_CA1_ABSOLUTE | SQL_CA1_RELATIVE |
+      MYINFO_SET_ULONG(SQL_CA1_NEXT | SQL_CA1_ABSOLUTE | SQL_CA1_RELATIVE |
                        SQL_CA1_LOCK_NO_CHANGE | SQL_CA1_POS_POSITION |
                        SQL_CA1_POS_UPDATE | SQL_CA1_POS_DELETE |
                        SQL_CA1_POS_REFRESH | SQL_CA1_POSITIONED_UPDATE |
                        SQL_CA1_POSITIONED_DELETE | SQL_CA1_BULK_ADD);
     else
-      DESINFO_SET_ULONG(0);
+      MYINFO_SET_ULONG(0);
 
   case SQL_DYNAMIC_CURSOR_ATTRIBUTES2:
     if (!dbc->ds.opt_FORWARD_CURSOR &&
         dbc->ds.opt_DYNAMIC_CURSOR)
-      DESINFO_SET_ULONG(SQL_CA2_SENSITIVITY_ADDITIONS |
+      MYINFO_SET_ULONG(SQL_CA2_SENSITIVITY_ADDITIONS |
                        SQL_CA2_SENSITIVITY_DELETIONS |
                        SQL_CA2_SENSITIVITY_UPDATES |
                        SQL_CA2_MAX_ROWS_SELECT | SQL_CA2_MAX_ROWS_INSERT |
                        SQL_CA2_MAX_ROWS_DELETE | SQL_CA2_MAX_ROWS_UPDATE |
                        SQL_CA2_CRC_EXACT | SQL_CA2_SIMULATE_TRY_UNIQUE);
     else
-      DESINFO_SET_ULONG(0);
-
+      MYINFO_SET_ULONG(0);
+    */
   case SQL_EXPRESSIONS_IN_ORDERBY:
-    DESINFO_SET_STR("Y");
+    MYINFO_SET_STR("Y"); //see tthe basic SQL query statement syntax in 4.2.6.1 Basic SQL Queries
 
   case SQL_FILE_USAGE:
-    DESINFO_SET_USHORT(SQL_FILE_NOT_SUPPORTED);
+    MYINFO_SET_USHORT(SQL_FILE_NOT_SUPPORTED);
 
   case SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES1:
-    DESINFO_SET_ULONG(dbc->ds.opt_FORWARD_CURSOR ?
-                     SQL_CA1_NEXT :
-                     SQL_CA1_NEXT | SQL_CA1_ABSOLUTE | SQL_CA1_RELATIVE |
+    MYINFO_SET_ULONG(SQL_CA1_NEXT | SQL_CA1_ABSOLUTE | SQL_CA1_RELATIVE |
                      SQL_CA1_LOCK_NO_CHANGE | SQL_CA1_POS_POSITION |
                      SQL_CA1_POS_UPDATE | SQL_CA1_POS_DELETE |
                      SQL_CA1_POS_REFRESH | SQL_CA1_POSITIONED_UPDATE |
                      SQL_CA1_POSITIONED_DELETE | SQL_CA1_BULK_ADD);
 
   case SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2:
-    DESINFO_SET_ULONG(SQL_CA2_MAX_ROWS_SELECT | SQL_CA2_MAX_ROWS_INSERT |
-                     SQL_CA2_MAX_ROWS_DELETE | SQL_CA2_MAX_ROWS_UPDATE |
-                     (dbc->ds.opt_FORWARD_CURSOR ?
-                      0 : SQL_CA2_CRC_EXACT));
+    MYINFO_SET_ULONG(SQL_CA2_MAX_ROWS_SELECT | SQL_CA2_MAX_ROWS_INSERT |
+                     SQL_CA2_MAX_ROWS_DELETE | SQL_CA2_MAX_ROWS_UPDATE | SQL_CA2_CRC_EXACT);
 
   case SQL_GETDATA_EXTENSIONS:
 #ifndef USE_IODBC
-    DESINFO_SET_ULONG(SQL_GD_ANY_COLUMN | SQL_GD_ANY_ORDER | SQL_GD_BLOCK |
+    MYINFO_SET_ULONG(SQL_GD_ANY_COLUMN | SQL_GD_ANY_ORDER | SQL_GD_BLOCK |
                      SQL_GD_BOUND | SQL_GD_OUTPUT_PARAMS);
 #else
-    DESINFO_SET_ULONG(SQL_GD_ANY_COLUMN | SQL_GD_ANY_ORDER | SQL_GD_BLOCK |
+    MYINFO_SET_ULONG(SQL_GD_ANY_COLUMN | SQL_GD_ANY_ORDER | SQL_GD_BLOCK |
                      SQL_GD_BOUND);
 #endif
 
   case SQL_GROUP_BY:
-    DESINFO_SET_USHORT(SQL_GB_NO_RELATION);
+    MYINFO_SET_USHORT(SQL_GB_NO_RELATION);
 
   case SQL_IDENTIFIER_CASE:
-    DESINFO_SET_USHORT(SQL_IC_MIXED);
+    MYINFO_SET_USHORT(SQL_IC_MIXED);
 
   case SQL_IDENTIFIER_QUOTE_CHAR:
-    DESINFO_SET_STR("`");
+    MYINFO_SET_STR("'");
 
+    //DES not support indexes.
+    /*
   case SQL_INDEX_KEYWORDS:
-    DESINFO_SET_ULONG(SQL_IK_ALL);
+    MYINFO_SET_ULONG(SQL_IK_ALL);
+    */
 
-  case SQL_INFO_SCHEMA_VIEWS:
-    DESINFO_SET_ULONG(
-        SQL_ISV_CHARACTER_SETS | SQL_ISV_COLLATIONS |
-        SQL_ISV_COLUMN_PRIVILEGES | SQL_ISV_COLUMNS | SQL_ISV_KEY_COLUMN_USAGE |
-        SQL_ISV_REFERENTIAL_CONSTRAINTS |
-        /* SQL_ISV_SCHEMATA | */ SQL_ISV_TABLE_CONSTRAINTS |
-        SQL_ISV_TABLE_PRIVILEGES | SQL_ISV_TABLES | SQL_ISV_VIEWS);
+  case SQL_INFO_SCHEMA_VIEWS: //(context of /dbschema)
+    MYINFO_SET_ULONG(
+        SQL_ISV_ASSERTIONS | SQL_ISV_CHECK_CONSTRAINTS | SQL_ISV_COLUMNS |
+        SQL_ISV_COLUMNS | SQL_ISV_CONSTRAINT_COLUMN_USAGE |
+        SQL_ISV_CONSTRAINT_TABLE_USAGE | SQL_ISV_KEY_COLUMN_USAGE |
+        SQL_ISV_REFERENTIAL_CONSTRAINTS | SQL_ISV_TABLES | SQL_ISV_VIEWS); //TODO: I have not put SQL_ISV_VIEW_COLUMN_USAGE nor SQL_ISV_VIEW_TABLE_USAGE, check.
 
   case SQL_INSERT_STATEMENT:
-    DESINFO_SET_ULONG(SQL_IS_INSERT_LITERALS | SQL_IS_INSERT_SEARCHED |
+    MYINFO_SET_ULONG(SQL_IS_INSERT_LITERALS | SQL_IS_INSERT_SEARCHED |
                      SQL_IS_SELECT_INTO);
 
   case SQL_INTEGRITY:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("N"); //DES does not support Integrity Enhanced Facility (IEF)
 
+    //Keyset driven cursors are not supported.
+    /*
   case SQL_KEYSET_CURSOR_ATTRIBUTES1:
   case SQL_KEYSET_CURSOR_ATTRIBUTES2:
-    DESINFO_SET_ULONG(0);
-
+    MYINFO_SET_ULONG(0);
+    */
   case SQL_KEYWORDS:
     /*
-    These lists were generated by taking the list of reserved words from
-    the MySQL Reference Manual (which is, in turn, generated from the source)
-    with the pre-reserved ODBC keywords removed.
+    Fetched from the DES manual running a script and checking the words one by one.
     */
-    DESINFO_SET_STR(
-        "ACCESSIBLE,ANALYZE,ASENSITIVE,BEFORE,BIGINT,BINARY,BLOB,"
-        "CALL,CHANGE,CONDITION,DATABASE,DATABASES,DAY_HOUR,"
-        "DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DELAYED,"
-        "DETERMINISTIC,DISTINCTROW,DIV,DUAL,EACH,ELSEIF,ENCLOSED,"
-        "ESCAPED,EXIT,EXPLAIN,FLOAT4,FLOAT8,FORCE,FULLTEXT,GENERAL,"
-        "GET,HIGH_PRIORITY,HOUR_MICROSECOND,HOUR_MINUTE,"
-        "HOUR_SECOND,IF,IGNORE,IGNORE_SERVER_IDS,INFILE,INOUT,INT1,"
-        "INT2,INT3,INT4,INT8,IO_AFTER_GTIDS,IO_BEFORE_GTIDS,"
-        "ITERATE,KEYS,KILL,LEAVE,LIMIT,LINEAR,LINES,LOAD,LOCALTIME,"
-        "LOCALTIMESTAMP,LOCK,LONG,LONGBLOB,LONGTEXT,LOOP,"
-        "LOW_PRIORITY,SOURCE_BIND,SOURCE_HEARTBEAT_PERIOD,"
-        "SOURCE_SSL_VERIFY_SERVER_CERT,MAXVALUE,MEDIUMBLOB,"
-        "MEDIUMINT,MEDIUMTEXT,MIDDLEINT,MINUTE_MICROSECOND,"
-        "MINUTE_SECOND,MOD,MODIFIES,NO_WRITE_TO_BINLOG,NONBLOCKING,ONE_SHOT,"
-        "OPTIMIZE,OPTIONALLY,OUT,OUTFILE,PARTITION,PURGE,RANGE,"
-        "READ_ONLY,READS,READ_WRITE,REGEXP,RELEASE,RENAME,REPEAT,"
-        "REPLACE,REQUIRE,RESIGNAL,RETURN,RLIKE,SCHEMAS,"
-        "SECOND_MICROSECOND,SENSITIVE,SEPARATOR,SHOW,SIGNAL,SLOW,"
-        "SPATIAL,SPECIFIC,SQL_AFTER_GTIDS,SQL_BEFORE_GTIDS,"
-        "SQL_BIG_RESULT,SQL_CALC_FOUND_ROWS,SQLEXCEPTION,"
-        "SQL_SMALL_RESULT,SSL,STARTING,STRAIGHT_JOIN,TERMINATED,"
-        "TINYBLOB,TINYINT,TINYTEXT,TRIGGER,UNDO,UNLOCK,UNSIGNED,"
-        "USE,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VARBINARY,"
-        "VARCHARACTER,WHILE,X509,XOR,YEAR_MONTH,ZEROFILL");
+    MYINFO_SET_STR(
+        "ADD,ALL,ALTER,AND,ANY,AS,ASC,ASCENDING,ASSUME,AVG,BETWEEN,BY,"
+        "CANDIDATE,CASCADE,CAST,CHAR,CHARACTER,CHECK,COLUMN,COMMIT,CONCAT,"
+        "CONSTRAINT,COUNT,CREATE,DATA,DATABASE,DATABASES,DATE,DATETIME,DECIMAL,"
+        "DEFAULT,DELETE,DESC,DESCENDING,DESCRIBE,DETERMINED,DIFFERENCE,"
+        "DISTINCT,DIVISION,DOUBLE,DROP,DUAL,EXCEPT,EXISTS,EXTRACT,FALSE,FETCH,"
+        "FIRST,FJOIN,FLOAT,FORALL,FOREIGN,FROM,FULL,GROUP,HAVING,IMPLIES,IN,"
+        "INNER,INSERT,INSTR,INT,INTEGER,INTERSECT,INTO,IS,JOIN,KEY,LEFT,LENGTH,"
+        "LIKE,LIMIT,LJOIN,LONGCHAR,LOWER,LPAD,LTRIM,MAX,MIN,MINUS,MONTH,NAME,"
+        "NATURAL,NJOIN,NLJOIN,NOT,NRJOIN,NULL,NUMBER,NUMERIC,OFFSET,ON,ONLY,OR,"
+        "ORDER,OUTER,PRECISION,PRIMARY,PRODUCT,PROJECT,REAL,RECURSIVE,"
+        "REFERENCES,RENAME,REPLACE,REVERSE,RIGHT,RJOIN,ROLLBACK,ROWS,RPAD,"
+        "RTRIM,SAVEPOINT,SELECT,SET,SHOW,SMALLINT,SORT,STRING,SUBSTR,SUM,TABLE,"
+        "TABLES,TEXT,TIME,TIMESTAMP,TO,TOP,TRIM,TRUE,TYPE,UNION,UNIQUE,UPDATE,"
+        "UPPER,USING,VALUES,VARCHAR,VARYING,VIEW,VIEWS,WHERE,WITH,WORK,XOR,"
+        "YEAR,ZJOIN");
 
   case SQL_LIKE_ESCAPE_CLAUSE:
-    DESINFO_SET_STR("Y");
+    MYINFO_SET_STR("N");
 
   case SQL_MAX_ASYNC_CONCURRENT_STATEMENTS:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);  // No specific limit
 
   case SQL_MAX_BINARY_LITERAL_LEN:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);  // No specific limit
 
-  // SQL_MAX_QUALIFIER_NAME_LEN is also defined as SQL_MAX_CATALOG_NAME_LEN
   case SQL_MAX_CATALOG_NAME_LEN:
-    if (!dbc->ds.opt_NO_CATALOG)
-      DESINFO_SET_USHORT(64);
-    else
-      DESINFO_SET_USHORT(0);
+    MYINFO_SET_USHORT(0);  // No specific limit
 
   case SQL_MAX_CHAR_LITERAL_LEN:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);  // No specific limit
 
   case SQL_MAX_COLUMN_NAME_LEN:
-    DESINFO_SET_USHORT(NAME_LEN);
+    MYINFO_SET_USHORT(0);  // No specific limit
 
   case SQL_MAX_COLUMNS_IN_GROUP_BY:
-    DESINFO_SET_USHORT(0); /* No specific limit */
+    MYINFO_SET_USHORT(0);  // No specific limit
 
+    //DES does not support indexes
+    /*
   case SQL_MAX_COLUMNS_IN_INDEX:
-    DESINFO_SET_USHORT(32);
+    MYINFO_SET_USHORT(32);
+    */
 
   case SQL_MAX_COLUMNS_IN_ORDER_BY:
-    DESINFO_SET_USHORT(0); /* No specific limit */
+    MYINFO_SET_USHORT(0);  // No specific limit
 
   case SQL_MAX_COLUMNS_IN_SELECT:
-    DESINFO_SET_USHORT(0); /* No specific limit */
+    MYINFO_SET_USHORT(0);  // No specific limit
 
   case SQL_MAX_COLUMNS_IN_TABLE:
-    DESINFO_SET_USHORT(0); /* No specific limit */
+    MYINFO_SET_USHORT(0); //No specific limit
 
   // SQL_ACTIVE_STATEMENTS in ODBC v1 has the same definition as
   // SQL_MAX_CONCURRENT_ACTIVITIES in ODBC v3.
   case SQL_MAX_CONCURRENT_ACTIVITIES:
-    // TODO: Fix Bug#34916959
-    DESINFO_SET_USHORT(0); /* No specific limit */
+    MYINFO_SET_USHORT(0);
 
   case SQL_MAX_CURSOR_NAME_LEN:
-    DESINFO_SET_USHORT(DES_MAX_CURSOR_LEN);
+    MYINFO_SET_USHORT(DES_MAX_CURSOR_LEN);
 
   case SQL_MAX_DRIVER_CONNECTIONS:
-    DESINFO_SET_USHORT(0); /* No specific limit */
+#ifdef _WIN32
+    MYINFO_SET_USHORT(MAX_CLIENTS);  // in Windows we can only have up to 256
+                                      // clients connected and therefore, 256
+                                      // possible concurrent activities.
+#else
+    MYINFO_SET_USHORT(0);  // No specific limit
+#endif
 
   case SQL_MAX_IDENTIFIER_LEN:
-    DESINFO_SET_USHORT(NAME_LEN);
+    MYINFO_SET_USHORT(0); //in DES it is unlimited.
 
+    //Not supported by DES:
+    /*
   case SQL_MAX_INDEX_SIZE:
-    DESINFO_SET_USHORT(3072);
+    MYINFO_SET_USHORT(3072);
 
   case SQL_MAX_PROCEDURE_NAME_LEN:
-    DESINFO_SET_USHORT(NAME_LEN);
-
+    MYINFO_SET_USHORT(N);
+    */
   case SQL_MAX_ROW_SIZE:
-    DESINFO_SET_ULONG(0); /* No specific limit */
+    MYINFO_SET_ULONG(0); //No specific limit
 
   case SQL_MAX_ROW_SIZE_INCLUDES_LONG:
-    DESINFO_SET_STR("Y");
+    MYINFO_SET_STR("Y");
 
-  // SQL_MAX_OWNER_NAME_LEN is also defined as SQL_MAX_SCHEMA_NAME_LEN
+    //DESODBC does not work with schemas
+    /*
   case SQL_MAX_SCHEMA_NAME_LEN:
     if (!dbc->ds.opt_NO_SCHEMA)
-      DESINFO_SET_USHORT(64);
+      MYINFO_SET_USHORT(64);
     else
-      DESINFO_SET_USHORT(0);
-
+      MYINFO_SET_USHORT(0);
+    */
   case SQL_MAX_STATEMENT_LEN:
-    DESINFO_SET_ULONG(dbc->net_buffer_len);
+    MYINFO_SET_ULONG(0);
 
   case SQL_MAX_TABLE_NAME_LEN:
-    DESINFO_SET_USHORT(NAME_LEN);
+    MYINFO_SET_USHORT(0);
 
   case SQL_MAX_TABLES_IN_SELECT:
-    DESINFO_SET_USHORT(63);
+    MYINFO_SET_USHORT(0); //TODO: check
 
+    //We will leave this as the username may take place in an external connection
   case SQL_MAX_USER_NAME_LEN:
-    DESINFO_SET_USHORT(USERNAME_LENGTH);
+    MYINFO_SET_USHORT(0);
 
   case SQL_MULT_RESULT_SETS:
-    DESINFO_SET_STR("Y");
+    MYINFO_SET_STR("Y");
 
   case SQL_MULTIPLE_ACTIVE_TXN:
-    DESINFO_SET_STR("Y");
+    MYINFO_SET_STR("N");
 
   case SQL_NEED_LONG_DATA_LEN:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("N");
 
   case SQL_NON_NULLABLE_COLUMNS:
-    DESINFO_SET_USHORT(SQL_NNC_NON_NULL);
+    MYINFO_SET_USHORT(SQL_NNC_NON_NULL);
 
   case SQL_NULL_COLLATION:
-    DESINFO_SET_USHORT(SQL_NC_LOW);
+    MYINFO_SET_USHORT(SQL_NC_HIGH);
 
+    //all of them except SQL_FN_NUM_LOG10, SQL_FN_NUM_ATAN2, SQL_FN_NUM_DEGREES and SQL_FN_NUM_RADIANS.
+    //technically SQL_FN_NUM_LOG10 is defined implicitly by using log/2 which allow us to
+    //choose base 10. However, this is possible in MySQL and MyODBC did not include this value either.
   case SQL_NUMERIC_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_FN_NUM_ABS | SQL_FN_NUM_ACOS | SQL_FN_NUM_ASIN |
-                     SQL_FN_NUM_ATAN | SQL_FN_NUM_ATAN2 | SQL_FN_NUM_CEILING |
+    MYINFO_SET_ULONG(SQL_FN_NUM_ABS | SQL_FN_NUM_ACOS | SQL_FN_NUM_ASIN |
+                     SQL_FN_NUM_ATAN | SQL_FN_NUM_CEILING |
                      SQL_FN_NUM_COS | SQL_FN_NUM_COT | SQL_FN_NUM_EXP |
                      SQL_FN_NUM_FLOOR | SQL_FN_NUM_LOG | SQL_FN_NUM_MOD |
                      SQL_FN_NUM_SIGN | SQL_FN_NUM_SIN | SQL_FN_NUM_SQRT |
-                     SQL_FN_NUM_TAN | SQL_FN_NUM_PI | SQL_FN_NUM_RAND |
-                     SQL_FN_NUM_DEGREES | SQL_FN_NUM_LOG10 | SQL_FN_NUM_POWER |
-                     SQL_FN_NUM_RADIANS | SQL_FN_NUM_ROUND |
+                     SQL_FN_NUM_TAN | SQL_FN_NUM_PI | SQL_FN_NUM_RAND | SQL_FN_NUM_POWER | SQL_FN_NUM_ROUND |
                      SQL_FN_NUM_TRUNCATE);
 
+  /*DESODBC complies with the Core Interface Conformance, and could comply with Level 1 Interface conformance:
+  in their requirements, it includes capabilities regarding procedures and transactions. DESODBC does not include these but not because of
+  a lack of further development, but because of DES capabilities.*/
   case SQL_ODBC_API_CONFORMANCE:
-    DESINFO_SET_USHORT(SQL_OAC_LEVEL1);
+    MYINFO_SET_USHORT(SQL_OIC_CORE);
 
   case SQL_ODBC_INTERFACE_CONFORMANCE:
-    DESINFO_SET_ULONG(SQL_OIC_LEVEL1);
+    MYINFO_SET_ULONG(SQL_OIC_CORE);
 
   case SQL_ODBC_SQL_CONFORMANCE:
-    DESINFO_SET_USHORT(SQL_OSC_CORE);
+    MYINFO_SET_USHORT(
+        SQL_SC_SQL92_ENTRY); //the same as MyODBC
 
   case SQL_OJ_CAPABILITIES:
-    DESINFO_SET_ULONG(SQL_OJ_LEFT | SQL_OJ_RIGHT | SQL_OJ_NESTED |
+    MYINFO_SET_ULONG(SQL_OJ_LEFT | SQL_OJ_RIGHT | SQL_OJ_NESTED |
                      SQL_OJ_NOT_ORDERED | SQL_OJ_INNER |
                      SQL_OJ_ALL_COMPARISON_OPS);
 
   case SQL_ORDER_BY_COLUMNS_IN_SELECT:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("N");
 
+  //Same as MyODBC
   case SQL_PARAM_ARRAY_ROW_COUNTS:
-    DESINFO_SET_ULONG(SQL_PARC_NO_BATCH);
+    MYINFO_SET_ULONG(SQL_PARC_NO_BATCH);
 
+  // Same as MyODBC
   case SQL_PARAM_ARRAY_SELECTS:
-    DESINFO_SET_ULONG(SQL_PAS_NO_BATCH);
+    MYINFO_SET_ULONG(SQL_PAS_NO_BATCH);
 
+    //Procedures are not supported by DES
+    /*
   case SQL_PROCEDURE_TERM:
-    DESINFO_SET_STR("");
+    MYINFO_SET_STR("");
+    */
 
   case SQL_PROCEDURES:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("N");
 
   case SQL_POS_OPERATIONS:
-    if (dbc->ds.opt_FORWARD_CURSOR)
-      DESINFO_SET_ULONG(0);
-    else
-      DESINFO_SET_ULONG(SQL_POS_POSITION | SQL_POS_UPDATE | SQL_POS_DELETE |
+    MYINFO_SET_ULONG(SQL_POS_POSITION | SQL_POS_UPDATE | SQL_POS_DELETE |
                        SQL_POS_ADD | SQL_POS_REFRESH);
 
   case SQL_QUOTED_IDENTIFIER_CASE:
-    DESINFO_SET_USHORT(SQL_IC_SENSITIVE);
+    MYINFO_SET_USHORT(SQL_IC_SENSITIVE);
 
   case SQL_ROW_UPDATES:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("N");
 
   case SQL_SCHEMA_TERM:
-    DESINFO_SET_STR((dbc->ds.opt_NO_SCHEMA) ? "" : "database");
+    MYINFO_SET_STR("dbschema");
 
   case SQL_SCHEMA_USAGE:
-    if (!dbc->ds.opt_NO_SCHEMA)
-      DESINFO_SET_ULONG(SQL_SU_DML_STATEMENTS | SQL_SU_PROCEDURE_INVOCATION |
-                       SQL_SU_TABLE_DEFINITION | SQL_SU_INDEX_DEFINITION |
-                       SQL_SU_PRIVILEGE_DEFINITION);
-    else
-      DESINFO_SET_ULONG(0);
+      MYINFO_SET_ULONG(0);
 
   case SQL_SCROLL_OPTIONS:
-    DESINFO_SET_ULONG(SQL_SO_FORWARD_ONLY |
-      (dbc->ds.opt_FORWARD_CURSOR ?
-       0 : SQL_SO_STATIC |
-       (dbc->ds.opt_DYNAMIC_CURSOR ? SQL_SO_DYNAMIC : 0)));
+    MYINFO_SET_ULONG(SQL_SO_FORWARD_ONLY | SQL_SO_STATIC);
 
   case SQL_SEARCH_PATTERN_ESCAPE:
-    DESINFO_SET_STR("\\");
+    MYINFO_SET_STR("\\");
 
+    //Not appliable:
+    /*
   case SQL_SERVER_NAME:
-    DESINFO_SET_STR("Servers not supported in DES."); //TODO: think a proper message
+    MYINFO_SET_STR("");
+    */
 
-  case SQL_SPECIAL_CHARACTERS:
-    /* We can handle anything but / and \xff. */
-    DESINFO_SET_STR(" !\"#%&'()*+,-.:;<=>?@[\\]^`{|}~");
+  case SQL_SPECIAL_CHARACTERS: //we will leave them the same as in MyODBC
+    MYINFO_SET_STR(" !\"#%&'()*+,-.:;<=>?@[\\]^`{|}~");
 
   case SQL_SQL_CONFORMANCE:
-    DESINFO_SET_ULONG(SQL_SC_SQL92_INTERMEDIATE);
+    MYINFO_SET_ULONG(SQL_SC_SQL92_ENTRY); /* DES contains the majority of the SQL-92 intermediate level features.
+    However, it does not contain characteristics such as privileges and transaction isolation levels.
+    This is why we have put entry level SQL-92 compliant.*/
 
   case SQL_SQL92_DATETIME_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_SDF_CURRENT_DATE | SQL_SDF_CURRENT_TIME |
+    MYINFO_SET_ULONG(SQL_SDF_CURRENT_DATE | SQL_SDF_CURRENT_TIME |
                      SQL_SDF_CURRENT_TIMESTAMP);
 
   case SQL_SQL92_FOREIGN_KEY_DELETE_RULE:
   case SQL_SQL92_FOREIGN_KEY_UPDATE_RULE:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(SQL_SFKD_CASCADE | SQL_SFKD_NO_ACTION);
 
+    //Not appliable
+    /*
   case SQL_SQL92_GRANT:
-    DESINFO_SET_ULONG(SQL_SG_DELETE_TABLE | SQL_SG_INSERT_COLUMN |
+    MYINFO_SET_ULONG(SQL_SG_DELETE_TABLE | SQL_SG_INSERT_COLUMN |
                      SQL_SG_INSERT_TABLE | SQL_SG_REFERENCES_TABLE |
                      SQL_SG_REFERENCES_COLUMN | SQL_SG_SELECT_TABLE |
                      SQL_SG_UPDATE_COLUMN | SQL_SG_UPDATE_TABLE |
                      SQL_SG_WITH_GRANT_OPTION);
+                     */
 
+    //DESODBC reused them from MyODBC:
   case SQL_SQL92_NUMERIC_VALUE_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_SNVF_BIT_LENGTH | SQL_SNVF_CHAR_LENGTH |
+    MYINFO_SET_ULONG(SQL_SNVF_BIT_LENGTH | SQL_SNVF_CHAR_LENGTH |
                      SQL_SNVF_CHARACTER_LENGTH | SQL_SNVF_EXTRACT |
                      SQL_SNVF_OCTET_LENGTH | SQL_SNVF_POSITION);
 
   case SQL_SQL92_PREDICATES:
-    DESINFO_SET_ULONG(SQL_SP_BETWEEN | SQL_SP_COMPARISON | SQL_SP_EXISTS |
+    MYINFO_SET_ULONG(SQL_SP_BETWEEN | SQL_SP_COMPARISON | SQL_SP_EXISTS |
                      SQL_SP_IN | SQL_SP_ISNOTNULL | SQL_SP_ISNULL |
                      SQL_SP_LIKE /*| SQL_SP_MATCH_FULL  |SQL_SP_MATCH_PARTIAL |
                                  SQL_SP_MATCH_UNIQUE_FULL | SQL_SP_MATCH_UNIQUE_PARTIAL |
@@ -609,142 +665,130 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
                                  SQL_SP_UNIQUE */);
 
   case SQL_SQL92_RELATIONAL_JOIN_OPERATORS:
-    DESINFO_SET_ULONG(SQL_SRJO_CROSS_JOIN | SQL_SRJO_INNER_JOIN |
+    MYINFO_SET_ULONG(SQL_SRJO_INNER_JOIN |
                      SQL_SRJO_LEFT_OUTER_JOIN | SQL_SRJO_NATURAL_JOIN |
-                     SQL_SRJO_RIGHT_OUTER_JOIN);
+                     SQL_SRJO_RIGHT_OUTER_JOIN | SQL_SRJO_FULL_OUTER_JOIN);
 
+    //Not appliable:
+    /*
   case SQL_SQL92_REVOKE:
-    DESINFO_SET_ULONG(SQL_SR_DELETE_TABLE | SQL_SR_INSERT_COLUMN |
+    MYINFO_SET_ULONG(SQL_SR_DELETE_TABLE | SQL_SR_INSERT_COLUMN |
                      SQL_SR_INSERT_TABLE | SQL_SR_REFERENCES_TABLE |
                      SQL_SR_REFERENCES_COLUMN | SQL_SR_SELECT_TABLE |
                      SQL_SR_UPDATE_COLUMN | SQL_SR_UPDATE_TABLE);
+    */
 
   case SQL_SQL92_ROW_VALUE_CONSTRUCTOR:
-    DESINFO_SET_ULONG(SQL_SRVC_VALUE_EXPRESSION | SQL_SRVC_NULL |
+    MYINFO_SET_ULONG(SQL_SRVC_VALUE_EXPRESSION | SQL_SRVC_NULL |
                      SQL_SRVC_DEFAULT | SQL_SRVC_ROW_SUBQUERY);
 
+    //See 4.7.5 "String Functions and Operators"
   case SQL_SQL92_STRING_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_SSF_CONVERT | SQL_SSF_LOWER | SQL_SSF_UPPER |
-                     SQL_SSF_SUBSTRING | SQL_SSF_TRANSLATE | SQL_SSF_TRIM_BOTH |
+    MYINFO_SET_ULONG(SQL_SSF_LOWER | SQL_SSF_UPPER |
+                     SQL_SSF_SUBSTRING | SQL_SSF_TRIM_BOTH |
                      SQL_SSF_TRIM_LEADING | SQL_SSF_TRIM_TRAILING);
-
+    //See 4.7.7 "Selection Functions"
   case SQL_SQL92_VALUE_EXPRESSIONS:
-    DESINFO_SET_ULONG(SQL_SVE_CASE | SQL_SVE_CAST | SQL_SVE_COALESCE |
+    MYINFO_SET_ULONG(SQL_SVE_CASE | SQL_SVE_CAST | SQL_SVE_COALESCE |
                      SQL_SVE_NULLIF);
 
   case SQL_STANDARD_CLI_CONFORMANCE:
-    DESINFO_SET_ULONG(SQL_SCC_ISO92_CLI);
+    MYINFO_SET_ULONG(SQL_SCC_ISO92_CLI);
 
   case SQL_STATIC_CURSOR_ATTRIBUTES1:
-    DESINFO_SET_ULONG(SQL_CA1_NEXT | SQL_CA1_ABSOLUTE | SQL_CA1_RELATIVE |
+    MYINFO_SET_ULONG(SQL_CA1_NEXT | SQL_CA1_ABSOLUTE | SQL_CA1_RELATIVE |
                      SQL_CA1_LOCK_NO_CHANGE | SQL_CA1_POS_POSITION |
                      SQL_CA1_POS_UPDATE | SQL_CA1_POS_DELETE |
                      SQL_CA1_POS_REFRESH | SQL_CA1_POSITIONED_UPDATE |
                      SQL_CA1_POSITIONED_DELETE | SQL_CA1_BULK_ADD);
 
   case SQL_STATIC_CURSOR_ATTRIBUTES2:
-    DESINFO_SET_ULONG(SQL_CA2_MAX_ROWS_SELECT | SQL_CA2_MAX_ROWS_INSERT |
+    MYINFO_SET_ULONG(SQL_CA2_MAX_ROWS_SELECT | SQL_CA2_MAX_ROWS_INSERT |
                      SQL_CA2_MAX_ROWS_DELETE | SQL_CA2_MAX_ROWS_UPDATE |
                      SQL_CA2_CRC_EXACT);
 
+    /*
+    I have put all the coincident ISO functions in 4.2.7 "String Operations". There are some more
+    that may coincide with SQL_FN_STR_... attributes, but those are not ISO compliant and their
+    names may be distinct (check SUBSTRING (SQL_FN_STR_SUBSTRING) vs. SUBSTR DES string function)
+    */
   case SQL_STRING_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_FN_STR_ASCII | SQL_FN_STR_BIT_LENGTH |
-                     SQL_FN_STR_CHAR | SQL_FN_STR_CHAR_LENGTH |
-                     SQL_FN_STR_CONCAT | SQL_FN_STR_INSERT | SQL_FN_STR_LCASE |
-                     SQL_FN_STR_LEFT | SQL_FN_STR_LENGTH | SQL_FN_STR_LOCATE |
-                     SQL_FN_STR_LOCATE_2 | SQL_FN_STR_LTRIM |
-                     SQL_FN_STR_OCTET_LENGTH | SQL_FN_STR_POSITION |
-                     SQL_FN_STR_REPEAT | SQL_FN_STR_REPLACE | SQL_FN_STR_RIGHT |
-                     SQL_FN_STR_RTRIM | SQL_FN_STR_SOUNDEX | SQL_FN_STR_SPACE |
-                     SQL_FN_STR_SUBSTRING | SQL_FN_STR_UCASE);
+    MYINFO_SET_ULONG(SQL_FN_STR_CONCAT | SQL_FN_STR_LENGTH);
 
   case SQL_SUBQUERIES:
-    DESINFO_SET_ULONG(SQL_SQ_CORRELATED_SUBQUERIES | SQL_SQ_COMPARISON |
+    MYINFO_SET_ULONG(SQL_SQ_CORRELATED_SUBQUERIES | SQL_SQ_COMPARISON |
                      SQL_SQ_EXISTS | SQL_SQ_IN | SQL_SQ_QUANTIFIED);
 
   case SQL_SYSTEM_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_FN_SYS_DBNAME | SQL_FN_SYS_IFNULL |
-                     SQL_FN_SYS_USERNAME);
+    MYINFO_SET_ULONG(0);
 
   case SQL_TABLE_TERM:
-    DESINFO_SET_STR("table");
+    MYINFO_SET_STR("table");
 
   case SQL_TIMEDATE_ADD_INTERVALS:
   case SQL_TIMEDATE_DIFF_INTERVALS:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);
 
   case SQL_TIMEDATE_FUNCTIONS:
-    DESINFO_SET_ULONG(SQL_FN_TD_CURRENT_DATE | SQL_FN_TD_CURRENT_TIME |
-                     SQL_FN_TD_CURRENT_TIMESTAMP | SQL_FN_TD_CURDATE |
-                     SQL_FN_TD_CURTIME | SQL_FN_TD_DAYNAME |
-                     SQL_FN_TD_DAYOFMONTH | SQL_FN_TD_DAYOFWEEK |
-                     SQL_FN_TD_DAYOFYEAR | SQL_FN_TD_EXTRACT | SQL_FN_TD_HOUR |
-                     /* SQL_FN_TD_JULIAN_DAY | */ SQL_FN_TD_MINUTE |
-                     SQL_FN_TD_MONTH | SQL_FN_TD_MONTHNAME | SQL_FN_TD_NOW |
-                     SQL_FN_TD_QUARTER | SQL_FN_TD_SECOND |
-                     /*SQL_FN_TD_SECONDS_SINCE_MIDNIGHT | */
-                     SQL_FN_TD_TIMESTAMPADD | SQL_FN_TD_TIMESTAMPDIFF |
-                     SQL_FN_TD_WEEK | SQL_FN_TD_YEAR);
+    MYINFO_SET_ULONG(SQL_FN_TD_CURRENT_DATE | SQL_FN_TD_CURRENT_TIME |
+                     SQL_FN_TD_CURRENT_TIMESTAMP | SQL_FN_TD_EXTRACT | SQL_FN_TD_HOUR | SQL_FN_TD_MINUTE | SQL_FN_TD_MONTH |
+                     SQL_FN_TD_QUARTER | SQL_FN_TD_SECOND | SQL_FN_TD_YEAR);
 
+    
   case SQL_TXN_CAPABLE:
-    DESINFO_SET_USHORT(SQL_TC_NONE);
+    MYINFO_SET_USHORT(SQL_TC_NONE);
 
+    //Not appliable
+    /*
   case SQL_TXN_ISOLATION_OPTION:
-    DESINFO_SET_ULONG(SQL_TXN_READ_COMMITTED);
-
+    MYINFO_SET_ULONG(SQL_TXN_READ_COMMITTED);
+    */
   case SQL_UNION:
-    DESINFO_SET_ULONG(SQL_U_UNION | SQL_U_UNION_ALL);
+    MYINFO_SET_ULONG(SQL_U_UNION | SQL_U_UNION_ALL);
 
+    //Not appliable
+    /*
   case SQL_USER_NAME:
-    DESINFO_SET_STR(dbc->ds.opt_UID);
-
+    MYINFO_SET_STR(dbc->ds.opt_UID);
+    */
   case SQL_XOPEN_CLI_YEAR:
-    DESINFO_SET_STR("1992");
+    MYINFO_SET_STR("1992");
 
-    /* The following aren't listed in the MSDN documentation. */
 
+    //These are not supported in DES.
+    /*
   case SQL_ACCESSIBLE_PROCEDURES:
   case SQL_ACCESSIBLE_TABLES:
-    DESINFO_SET_STR("N");
+    MYINFO_SET_STR("N");
+    */
 
   case SQL_LOCK_TYPES:
-    DESINFO_SET_ULONG(0);
+    MYINFO_SET_ULONG(0);
 
   case SQL_OUTER_JOINS:
-    DESINFO_SET_STR("Y");
+    MYINFO_SET_STR("Y");
 
   case SQL_POSITIONED_STATEMENTS:
-    if (dbc->ds.opt_FORWARD_CURSOR)
-      DESINFO_SET_ULONG(0);
-    else
-      DESINFO_SET_ULONG(SQL_PS_POSITIONED_DELETE | SQL_PS_POSITIONED_UPDATE);
+    MYINFO_SET_ULONG(SQL_PS_POSITIONED_DELETE | SQL_PS_POSITIONED_UPDATE);
 
   case SQL_SCROLL_CONCURRENCY:
-    /** @todo this is wrong. */
-    DESINFO_SET_ULONG(SQL_SS_ADDITIONS | SQL_SS_DELETIONS | SQL_SS_UPDATES);
+    MYINFO_SET_ULONG(SQL_SCCO_LOCK);
 
   case SQL_STATIC_SENSITIVITY:
-    DESINFO_SET_ULONG(SQL_SS_ADDITIONS | SQL_SS_DELETIONS | SQL_SS_UPDATES);
+    MYINFO_SET_ULONG(SQL_SS_ADDITIONS | SQL_SS_DELETIONS | SQL_SS_UPDATES);
 
   case SQL_FETCH_DIRECTION:
-    if (dbc->ds.opt_FORWARD_CURSOR)
-      DESINFO_SET_ULONG(SQL_FD_FETCH_NEXT);
-    else
-      DESINFO_SET_ULONG(SQL_FD_FETCH_NEXT | SQL_FD_FETCH_FIRST |
-                       SQL_FD_FETCH_LAST |
-                       (dbc->ds.opt_NO_DEFAULT_CURSOR ? 0 : SQL_FD_FETCH_PRIOR) |
+    MYINFO_SET_ULONG(SQL_FD_FETCH_NEXT | SQL_FD_FETCH_FIRST |
+                      SQL_FD_FETCH_LAST | SQL_FD_FETCH_PRIOR |
                        SQL_FD_FETCH_ABSOLUTE | SQL_FD_FETCH_RELATIVE);
-
-  case SQL_ODBC_SAG_CLI_CONFORMANCE:
-    DESINFO_SET_USHORT(SQL_OSCC_COMPLIANT);
 
   default:
   {
     char buff[80];
-    desodbc_snprintf(buff, sizeof(buff),
+    myodbc_snprintf(buff, sizeof(buff),
                     "Unsupported option: %d to SQLGetInfo",
                     fInfoType);
-    return ((DBC*)hdbc)->set_error(DESERR_S1C00, buff, 4000);
+    return ((DBC *)hdbc)->set_error("HYC00", buff);
   }
   }
 
@@ -789,131 +833,24 @@ sql_varbinary[6], sql_time[6], sql_date[6], sql_binary[6],
 sql_longvarbinary[6], sql_datetime[6], sql_wchar[6], sql_wvarchar[6],
 sql_wlongvarchar[6];
 
-char *SQL_GET_TYPE_INFO_values[][19] =
-{
-  /* SQL_BIT= -7 */
-  { "bit",sql_bit,"1","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"bit",NULL,NULL,sql_bit,NULL,NULL,NULL },
 
-  /* SQL_TINY= -6 */
-  { "tinyint",sql_tinyint,"3","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","tinyint",NULL,NULL,sql_tinyint,NULL,"10",NULL },
-  { "tinyint unsigned",sql_tinyint,"3","'","'",NULL,sql_nullable,"0",sql_searchable,"1","0","0","tinyint unsigned",NULL,NULL,sql_tinyint,NULL,"10",NULL },
-  { "tinyint auto_increment",sql_tinyint,"3","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","tinyint auto_increment",NULL,NULL,sql_tinyint, NULL,"10",NULL },
-  { "tinyint unsigned auto_increment",sql_tinyint,"3","'","'",NULL,sql_no_nulls, "0",sql_searchable,"1","0","1","tinyint unsigned auto_increment",NULL,NULL, sql_tinyint,NULL,"10",NULL },
-
-  /* SQL_BIGINT= -5 */
-  { "bigint",sql_bigint,"19","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","bigint",NULL,NULL,sql_bigint,NULL,"10",NULL },
-  { "bigint unsigned",sql_bigint,"20","'","'",NULL,sql_nullable,"0",sql_searchable,"1","0","0","bigint unsigned",NULL,NULL,sql_bigint,NULL,"10",NULL },
-  { "bigint auto_increment",sql_bigint,"19","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","bigint auto_increment",NULL,NULL,sql_bigint,NULL,"10",NULL },
-  { "bigint unsigned auto_increment",sql_bigint,"20","'","'",NULL,sql_no_nulls, "0",sql_searchable,"1","0","1","bigint unsigned auto_increment",NULL,NULL,sql_bigint, NULL,"10",NULL },
-
-  /* SQL_LONGVARBINARY= -4 */
-  { "long varbinary",sql_longvarbinary,"16777215","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"long varbinary",NULL,NULL,sql_longvarbinary,NULL,NULL,NULL },
-  { "blob",sql_longvarbinary,"65535","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"blob",NULL,NULL,sql_longvarbinary,NULL,NULL,NULL },
-  { "longblob",sql_longvarbinary,"2147483647","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"longblob",NULL,NULL,sql_longvarbinary,NULL,NULL,NULL },
-  { "tinyblob",sql_longvarbinary,"255","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"tinyblob",NULL,NULL,sql_longvarbinary,NULL,NULL,NULL },
-  { "mediumblob",sql_longvarbinary,"16777215","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"mediumblob",NULL,NULL,sql_longvarbinary,NULL,NULL,NULL },
-
-  /* SQL_VARBINARY= -3 */
-  { "varbinary",sql_varbinary,"255","'","'","length",sql_nullable,"0",sql_searchable,NULL,"0",NULL,"varbinary",NULL,NULL,sql_varbinary,NULL,NULL,NULL },
-  { "vector()",sql_varbinary,"16382",NULL,NULL,"length",sql_nullable,"0",sql_searchable,NULL,"0",NULL,"vector",NULL,NULL,sql_varbinary,NULL,NULL,NULL },
-
-  /* SQL_BINARY= -2 */
-  { "binary",sql_binary,"255","'","'","length",sql_nullable,"0",sql_searchable,NULL,"0",NULL,"binary",NULL,NULL,sql_binary,NULL,NULL,NULL },
-
-  /* SQL_LONGVARCHAR= -1 */
-  { "long varchar",sql_longvarchar,"16777215","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"mediumtext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "text",sql_longvarchar,"65535","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"text",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "mediumtext",sql_longvarchar,"16777215","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"mediumtext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "longtext",sql_longvarchar,"2147483647","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"longtext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "tinytext",sql_longvarchar,"255","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"tinytext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-
-  // For JSON maximum column length (in characters) is taken to be maximum
-  // octet length of LONGTEXT (4G) divided by 4 bytes/character for
-  // utf8mb4 encoding.
-  { "json",sql_longvarchar,"1073741823","'","'",NULL,sql_nullable,"1","1",NULL,"0",NULL,"json",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-
-  { "long varchar",sql_wlongvarchar,"16777215","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"mediumtext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "text",sql_wlongvarchar,"65535","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"text",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "mediumtext",sql_wlongvarchar,"16777215","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"mediumtext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "longtext",sql_wlongvarchar,"2147483647","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"longtext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-  { "tinytext",sql_wlongvarchar,"255","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"tinytext",NULL,NULL,sql_longvarchar,NULL,NULL,NULL },
-
-  // For JSON maximum column length (in characters) is taken to be maximum
-  // octet length of LONGTEXT (4G) divided by 4 bytes/character for
-  // utf8mb4 encoding.
-  { "json",sql_wlongvarchar,"1073741823","'","'",NULL,sql_nullable,"1","1",NULL,"0",NULL,"json",NULL,NULL,sql_wlongvarchar,NULL,NULL,NULL},
-
-  /* SQL_CHAR= 1 */
-  { "char",sql_char, "255","'","'","length",sql_nullable,"0",sql_searchable,NULL,"0",NULL,"char",NULL,NULL,sql_char,"0",NULL,NULL },
-  { "char",sql_wchar,"255","'","'","length",sql_nullable,"0",sql_searchable,NULL,"0",NULL,"char",NULL,NULL,sql_wchar,"0",NULL,NULL },
-
-  /* SQL_NUMERIC= 2 */
-  { "numeric",sql_numeric,"19","'","'","precision,scale",sql_nullable,"0",sql_searchable,"0","0","0","numeric","0","19",sql_numeric,NULL,"10",NULL },
-
-  /* SQL_DECIMAL= 3 */
-  { "decimal",sql_decimal,"19","'","'","precision,scale",sql_nullable,"0",sql_searchable,"0","0","0","decimal","0","19",sql_decimal,NULL,"10",NULL },
-
-  /* SQL_INTEGER= 4 */
-  { "integer",sql_integer,"10","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","integer",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "integer unsigned",sql_integer,"10","'","'",NULL,sql_nullable,"0",sql_searchable,"1","0","0","integer unsigned",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "int",sql_integer,"10","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","integer",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "int unsigned",sql_integer,"10","'","'",NULL,sql_nullable,"0",sql_searchable,"1","0","0","integer unsigned",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "mediumint",sql_integer,"7","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","Medium integer",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "mediumint unsigned",sql_integer,"8","'","'",NULL,sql_nullable,"0",sql_searchable,"1","0","0","Medium integer unsigned",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "integer auto_increment",sql_integer,"10","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","integer auto_increment",NULL,NULL,sql_integer, NULL,"10",NULL },
-  { "integer unsigned auto_increment",sql_integer,"10","'","'",NULL,sql_no_nulls, "0",sql_searchable,"1","0","1","integer unsigned auto_increment",NULL,NULL, sql_integer,NULL,"10",NULL },
-  { "int auto_increment",sql_integer,"10","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","integer auto_increment",NULL,NULL,sql_integer, NULL,"10",NULL },
-  { "int unsigned auto_increment",sql_integer,"10","'","'",NULL,sql_no_nulls,"0",sql_searchable,"1","0","1","integer unsigned auto_increment",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "mediumint auto_increment",sql_integer,"7","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","Medium integer auto_increment",NULL,NULL,sql_integer,NULL,"10",NULL },
-  { "mediumint unsigned auto_increment",sql_integer,"8","'","'",NULL,sql_no_nulls, "0",sql_searchable,"1","0","1","Medium integer unsigned auto_increment",NULL,NULL, sql_integer,NULL,"10",NULL },
-
-  /* SQL_SMALLINT= 5 */
-  { "smallint",sql_smallint,"5","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","smallint",NULL,NULL,sql_smallint,NULL,"10",NULL },
-  { "smallint unsigned",sql_smallint,"5","'","'",NULL,sql_nullable,"0",sql_searchable,"1","0","0","smallint unsigned",NULL,NULL,sql_smallint,NULL,"10",NULL },
-  { "smallint auto_increment",sql_smallint,"5","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","smallint auto_increment",NULL,NULL,sql_smallint,NULL,"10",NULL },
-  { "smallint unsigned auto_increment",sql_smallint,"5","'","'",NULL,sql_no_nulls, "0",sql_searchable,"1","0","1","smallint unsigned auto_increment",NULL,NULL, sql_smallint,NULL,"10",NULL },
-
-  /* SQL_FLOAT= 6 */
-  { "double",sql_float,"15","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","double","0","4",sql_float, NULL,"2",NULL },
-  { "double auto_increment",sql_float,"15","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","double auto_increment","0","4",sql_float,NULL,"2",NULL },
-
-  /* SQL_REAL= 7 */
-  { "float",sql_real,"7","'","'",NULL,sql_nullable, "0",sql_unsearchable,"0","0","0","float","0","2",sql_real, NULL,"2",NULL },
-  { "float auto_increment",sql_real,"7","'","'",NULL,sql_no_nulls,"0",sql_unsearchable,"0","0","1","float auto_increment","0","2",sql_real,NULL,"2",NULL },
-
-  /* SQL_DOUBLE= 8 */
-  { "double",sql_double,"15","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","double","0","4",sql_double,NULL,"2",NULL },
-  { "double auto_increment",sql_double,"15","'","'",NULL,sql_no_nulls,"0",sql_searchable,"0","0","1","double auto_increment","0","4",sql_double,NULL,"2",NULL },
-
-  /* SQL_TYPE_DATE= 91 */
-  { "date",sql_date,"10","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"date",NULL,NULL,sql_datetime,sql_date,NULL,NULL },
-
-  /* SQL_TYPE_TIME= 92 */
-  { "time",sql_time,"8","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"time",NULL,NULL,sql_datetime,sql_time,NULL,NULL },
-
-  /* YEAR - SQL_SMALLINT */
-  { "year",sql_smallint,"4","'","'",NULL,sql_nullable,"0",sql_searchable,"0","0","0","year",NULL,NULL,sql_smallint,NULL,"10",NULL },
-
-  /* SQL_TYPE_TIMESTAMP= 93 */
-  { "datetime",sql_timestamp,"21","'","'",NULL,sql_nullable,"0",sql_searchable,NULL,"0",NULL,"datetime","0","0",sql_datetime,sql_timestamp,NULL,NULL },
-  { "timestamp",sql_timestamp,"14","'","'",NULL,sql_no_nulls,"0",sql_searchable,NULL,"0",NULL,"timestamp","0","0",sql_datetime,sql_timestamp,NULL,NULL },
-
-  /* SQL_VARCHAR= 12 */
-  { "varchar",sql_varchar,"255","'","'","length",sql_nullable,"0",sql_searchable,NULL,"0",NULL,"varchar","0","0",sql_varchar,NULL,"10",NULL },
-  { "varchar",sql_wvarchar,"255","'","'","length",sql_nullable,"0",sql_searchable,NULL,"0",NULL,"varchar","0","0",sql_wvarchar,NULL,"10",NULL },
-
-  /* ENUM and SET are not included -- it confuses some applications. */
-};
-
-const uint DES_DATA_TYPES = (uint)array_elements(SQL_GET_TYPE_INFO_values);
-
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void ResultTable::insert_SQLGetTypeInfo_cols() {
   insert_cols(SQL_GET_TYPE_INFO_fields,
               array_elements(SQL_GET_TYPE_INFO_fields));
 }
 
 
+/* DESODBC:
 
+    Renamed from the original MySQLGetTypeInfo
+    and modified according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
 Return information about data types supported by the server.
 
@@ -1005,7 +942,6 @@ void desodbc_ov_init(SQLINTEGER odbc_version)
     des_int2str(SQL_TIMESTAMP, sql_timestamp, -10, 0);
     des_int2str(SQL_DATE, sql_date, -10, 0);
     des_int2str(SQL_TIME, sql_time, -10, 0);
-    desodbc_sqlstate2_init();
     desodbc_ov2_inited = 1;
   }
   else
@@ -1017,11 +953,17 @@ void desodbc_ov_init(SQLINTEGER odbc_version)
     des_int2str(SQL_TYPE_TIMESTAMP, sql_timestamp, -10, 0);
     des_int2str(SQL_TYPE_DATE, sql_date, -10, 0);
     des_int2str(SQL_TYPE_TIME, sql_time, -10, 0);
-    desodbc_sqlstate3_init();
   }
 }
 
 
+/* DESODBC:
+
+    Modified according to DES' needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
 List of functions supported in the driver.
 */
@@ -1031,9 +973,9 @@ SQLUSMALLINT desodbc3_functions[] =
   SQL_API_SQLALLOCHANDLE,
   SQL_API_SQLBINDCOL,
   SQL_API_SQLBINDPARAM,
-  SQL_API_SQLCANCEL,
+  //SQL_API_SQLCANCEL,
 #ifndef USE_IODBC
-  SQL_API_SQLCANCELHANDLE,
+  //SQL_API_SQLCANCELHANDLE,
 #else
   SQL_API_SQLGETSTMTOPTION,
   SQL_API_SQLSETSTMTOPTION,
@@ -1047,7 +989,7 @@ SQLUSMALLINT desodbc3_functions[] =
   SQL_API_SQLDATASOURCES,
   SQL_API_SQLDESCRIBECOL,
   SQL_API_SQLDISCONNECT,
-  SQL_API_SQLENDTRAN,
+  //SQL_API_SQLENDTRAN,
   SQL_API_SQLEXECDIRECT,
   SQL_API_SQLEXECUTE,
   SQL_API_SQLFETCH,
@@ -1067,9 +1009,9 @@ SQLUSMALLINT desodbc3_functions[] =
   SQL_API_SQLGETSTMTATTR,
   SQL_API_SQLGETTYPEINFO,
   SQL_API_SQLNUMRESULTCOLS,
-  SQL_API_SQLPARAMDATA,
+  //SQL_API_SQLPARAMDATA,
   SQL_API_SQLPREPARE,
-  SQL_API_SQLPUTDATA,
+  //SQL_API_SQLPUTDATA,
   SQL_API_SQLROWCOUNT,
   SQL_API_SQLSETCONNECTATTR,
   SQL_API_SQLSETCURSORNAME,

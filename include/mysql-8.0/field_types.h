@@ -42,43 +42,10 @@
  * Constants exported from this package.
  */
 
-/**
-  Column types for DES
-*/
-enum enum_field_types
-#if defined(__cplusplus) && __cplusplus > 201103L
-    // N2764: Forward enum declarations, added in C++11
-    : int
-#endif /* __cplusplus */
-{ DES_TYPE_VARCHAR,
-  DES_TYPE_STRING,
-  DES_TYPE_CHAR_N,
-  DES_TYPE_VARCHAR_N,
-  DES_TYPE_CHAR,
-  DES_TYPE_INTEGER,
-  DES_TYPE_INT,
-  DES_TYPE_FLOAT,
-  DES_TYPE_REAL,
-  DES_TYPE_DATE,
-  DES_TYPE_TIME,
-  DES_TYPE_DATETIME,
-  DES_TYPE_TIMESTAMP,
-  DES_TYPE_BLOB,   // needed somewhere, but I need to know why. TODO
-  DES_TYPE_TINY,  // needed somewhere, but I need to know why. TODO
-  DES_UNKNOWN_TYPE
-};
+
 
 #include "sql.h"
-#include "sqltypes.h"
-inline const SQLULEN DES_DEFAULT_DATA_CHARACTER_SIZE =
-    255;  // This seems to be a standard, along with
-          // 8000. TODO: research
 
-//Handy structure
-struct TypeAndLength {
-  enum_field_types simple_type;
-  SQLULEN len = -1;  // length as in number of characters; do not confuse with
-                     // length as the DES_FIELD field (width of column)
-};
+
 
 #endif /* FIELD_TYPES_INCLUDED */

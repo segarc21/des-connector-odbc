@@ -28,7 +28,7 @@
   Instrumentation helpers for statements.
 */
 
-#include "des_compiler.h"
+#include "my_compiler.h"
 
 /* HAVE_PSI_*_INTERFACE */
 #include "my_psi_config.h"  // IWYU pragma: keep

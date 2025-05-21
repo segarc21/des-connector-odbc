@@ -31,7 +31,7 @@
 #include <limits.h>
 #include <sys/types.h>
 
-#include "des_config.h"
+#include "my_config.h"
 #include "my_double2ulonglong.h"
 #include "my_inttypes.h"
 #include "my_macros.h"

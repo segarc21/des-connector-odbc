@@ -318,9 +318,9 @@ driver/CMakeFiles/desodbc-w.dir/telemetry.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/driver.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../MYODBC_MYSQL.h \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_sys.h \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_config.h \
  /usr/include/unistd.h /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h \
@@ -337,7 +337,7 @@ driver/CMakeFiles/desodbc-w.dir/telemetry.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_macros.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/lex_string.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/mysql/mysql_lex_string.h \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_compiler.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_compress.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_loglevel.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_psi_config.h \
@@ -389,7 +389,7 @@ driver/CMakeFiles/desodbc-w.dir/telemetry.cc.o: \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/mysqld_error.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_alloc.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/memory_debugging.h \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_dbug.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_pointer_arithmetic.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/mysql/psi/psi_memory.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_psi_config.h \

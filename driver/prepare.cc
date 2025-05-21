@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  prepare.c
   @brief Prepared statement functions.
@@ -46,6 +59,11 @@
 # include <dos.h>
 #endif /* !_UNIX_ */
 
+/* DESODBC:
+    Renamed from the original MySQLPrepare
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /**
   Prepare a statement for later execution.
 
@@ -73,6 +91,11 @@ SQLRETURN SQL_API DESPrepare(SQLHSTMT hstmt, SQLCHAR *query, SQLINTEGER len,
   return DES_SQLPrepare(hstmt, query, len, reset_select_limit, force_prepare);
 }
 
+/* DESODBC:
+    Renamed from the original my_SQLPrepare()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : prepares an SQL string for execution
@@ -95,11 +118,15 @@ SQLRETURN DES_SQLPrepare(SQLHSTMT hstmt, SQLCHAR *szSqlStr,
 }
 
 
+/* DESODBC:
+    Renamed from the original my_SQLBindParameter
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : binds a buffer to a parameter marker in an SQL statement.
 */
-
 SQLRETURN SQL_API DES_SQLBindParameter( SQLHSTMT     StatementHandle,
                                        SQLUSMALLINT ParameterNumber,
                                        SQLSMALLINT  InputOutputType,
@@ -121,7 +148,7 @@ SQLRETURN SQL_API DES_SQLBindParameter( SQLHSTMT     StatementHandle,
     CLEAR_STMT_ERROR(stmt);
 
     if (ParameterNumber < 1) {
-      stmt->set_error(DESERR_S1093, NULL);
+      stmt->set_error("07009", "Invalid descriptor index");
       return SQL_ERROR;
     }
 
@@ -247,13 +274,15 @@ SQLRETURN SQL_API SQLBindParameter( SQLHSTMT        hstmt,
   
 }
 
-
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 1.0 API
   @purpose : returns the description of a parameter marker associated
   with a prepared SQL statement
 */
-
 SQLRETURN SQL_API SQLDescribeParam( SQLHSTMT        hstmt,
                                     SQLUSMALLINT    ipar __attribute__((unused)),
                                     SQLSMALLINT     *pfSqlType,
@@ -268,7 +297,7 @@ SQLRETURN SQL_API SQLDescribeParam( SQLHSTMT        hstmt,
 
     if (pfSqlType)
         *pfSqlType= SQL_VARCHAR;
-    if (pcbColDef) *pcbColDef = DES_DEFAULT_DATA_CHARACTER_SIZE; //TODO: research what to do
+    if (pcbColDef) *pcbColDef = DES_MAX_STRLEN;
     if (pfNullable)
         *pfNullable= SQL_NULLABLE_UNKNOWN;
 

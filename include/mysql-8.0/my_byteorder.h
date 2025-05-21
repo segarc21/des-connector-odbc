@@ -30,9 +30,9 @@
   for integer types, but 'get' (assume 'getter') for floating point types.
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
-#include "des_compiler.h"
+#include "my_compiler.h"
 
 #include <string.h>
 #include <sys/types.h>

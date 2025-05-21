@@ -8,9 +8,9 @@ driver/CMakeFiles/desodbc-w.dir/catalog.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -535,9 +535,9 @@ driver/CMakeFiles/desodbc-w.dir/catalog_no_i_s.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -1062,9 +1062,9 @@ driver/CMakeFiles/desodbc-w.dir/connect.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -1630,9 +1630,9 @@ driver/CMakeFiles/desodbc-w.dir/cursor.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -2156,9 +2156,9 @@ driver/CMakeFiles/desodbc-w.dir/desc.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -2682,9 +2682,9 @@ driver/CMakeFiles/desodbc-w.dir/dll.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -3208,9 +3208,9 @@ driver/CMakeFiles/desodbc-w.dir/driver.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -3734,9 +3734,9 @@ driver/CMakeFiles/desodbc-w.dir/error.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -4260,9 +4260,9 @@ driver/CMakeFiles/desodbc-w.dir/execute.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -4786,9 +4786,9 @@ driver/CMakeFiles/desodbc-w.dir/handle.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -4908,9 +4908,9 @@ driver/CMakeFiles/desodbc-w.dir/handle.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/trace/tracer.h
  /home/sergi/mysql-connector-odbc-9.0.0/extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/trace/tracer_provider.h
  /home/sergi/mysql-connector-odbc-9.0.0/extra/otel/opentelemetry-cpp-1.10.0/api/include/opentelemetry/version.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -5343,9 +5343,9 @@ driver/CMakeFiles/desodbc-w.dir/info.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -5869,9 +5869,9 @@ driver/CMakeFiles/desodbc-w.dir/my_prepared_stmt.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -6396,9 +6396,9 @@ driver/CMakeFiles/desodbc-w.dir/my_stmt.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -6922,9 +6922,9 @@ driver/CMakeFiles/desodbc-w.dir/options.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -7449,9 +7449,9 @@ driver/CMakeFiles/desodbc-w.dir/parse.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -7975,9 +7975,9 @@ driver/CMakeFiles/desodbc-w.dir/prepare.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -8501,9 +8501,9 @@ driver/CMakeFiles/desodbc-w.dir/results.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -9028,9 +9028,9 @@ driver/CMakeFiles/desodbc-w.dir/telemetry.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_MYSQL.h
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -9555,9 +9555,9 @@ driver/CMakeFiles/desodbc-w.dir/transact.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -10081,9 +10081,9 @@ driver/CMakeFiles/desodbc-w.dir/unicode.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
@@ -10607,9 +10607,9 @@ driver/CMakeFiles/desodbc-w.dir/utility.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/MYODBC_ODBC.h
  /home/sergi/mysql-connector-odbc-9.0.0/VersionInfo.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/errmsg.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/field_types.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h

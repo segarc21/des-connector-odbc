@@ -1,4 +1,6 @@
 // Copyright (c) 2012, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  parse.c
   @brief utilities to parse queries
@@ -33,47 +46,61 @@
 
 #include "driver.h"
 
-//TODO: add process and other types
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 static const DES_QUERY_TYPE query_types_array[]=
 {
-  /*desqtSelect*/      {'\1', '\1', NULL},
-  /*desqtInsert*/      {'\0', '\1', NULL},
-  /*desqtUpdate*/      {'\0', '\1', NULL},
-  /*desqtCall*/        {'\1', '\1', "5.5.3"},
-  /*desqtShow*/        {'\1', '\1', NULL},
-  /*desqtUse*/         {'\0', '\0', NULL},
-  /*desqtCreateTable*/ {'\0', '\0', NULL},
-  /*desqtCreateProc*/  {'\0', '\0', NULL},
-  /*desqtCreateFunc*/  {'\0', '\0', NULL},
-  /*desqtDropProc*/    {'\0', '\0', NULL},
-  /*desqtDropFunc*/    {'\0', '\0', NULL},
-  /*desqtOptimize*/    {'\0', '\1', "5.0.23"},/*to check*/
-  /*desqtOther*/       {'\0', '\1', NULL},
+    /*desqtProcess*/ {'\0'},
+  /*desqtSelect*/      {'\1'},
+  /*desqtInsert*/      {'\0'},
+  /*desqtUpdate*/      {'\0'},
+    /*desqtDelete*/ {'\0'},
+  /*desqtCall*/        {'\1'},
+  /*desqtShow*/        {'\1'},
+  /*desqtUse*/         {'\0'},
+  /*desqtCreateTable*/ {'\0'},
+  /*desqtCreateProc*/  {'\0'},
+  /*desqtCreateFunc*/  {'\0'},
+  /*desqtDropProc*/    {'\0'},
+  /*desqtDropFunc*/    {'\0'},
+  /*desqtOptimize*/    {'\0'},
+  /*desqtOther*/       {'\0'},
 };
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*static? */
-static const DES_STRING escape=       {"\\" , 1, 1};
-static const DES_STRING odbc_open=    {"{"  , 1, 1};
-static const DES_STRING odbc_close=   {"}"  , 1, 1};
-static const DES_STRING param_marker= {"?"  , 1, 1};
-static const DES_STRING process = {"/PROCESS", 8, 8};
-static const DES_STRING select_=    {"SELECT"   , 6, 6};
-static const DES_STRING insert=     {"INSERT"   , 6, 6};
-static const DES_STRING update=     {"UPDATE"   , 6, 6};
-static const DES_STRING call=       {"CALL"     , 4, 4};
-static const DES_STRING show=       {"SHOW"     , 4, 4};
-static const DES_STRING use=        {"USE"      , 3, 3};
-static const DES_STRING create=     {"CREATE"   , 6, 6};
-static const DES_STRING drop=       {"DROP"     , 4, 4};
-static const DES_STRING table=      {"TABLE"    , 5, 5};
-static const DES_STRING procedure=  {"PROCEDURE", 9, 9};
-static const DES_STRING function=   {"FUNCTION" , 8, 8};
-static const DES_STRING where_=     {"WHERE"    , 5, 5};
-static const DES_STRING current=    {"CURRENT"  , 7, 7};
-static const DES_STRING of=         {"OF"       , 2, 2};
-static const DES_STRING limit=      {"LIMIT"    , 5, 5};
-static const DES_STRING optimize=   {"OPTIMIZE" , 8, 8};
+static const MY_STRING escape=       {"\\" , 1, 1};
+static const MY_STRING odbc_open=    {"{"  , 1, 1};
+static const MY_STRING odbc_close=   {"}"  , 1, 1};
+static const MY_STRING param_marker= {"?"  , 1, 1};
+static const MY_STRING process = {"/PROCESS", 8, 8};
+static const MY_STRING select_=    {"SELECT"   , 6, 6};
+static const MY_STRING insert=     {"INSERT"   , 6, 6};
+static const MY_STRING update=     {"UPDATE"   , 6, 6};
+static const MY_STRING del = {"DELETE", 6, 6};
+static const MY_STRING call=       {"CALL"     , 4, 4};
+static const MY_STRING show=       {"SHOW"     , 4, 4};
+static const MY_STRING use=        {"USE"      , 3, 3};
+static const MY_STRING create=     {"CREATE"   , 6, 6};
+static const MY_STRING drop=       {"DROP"     , 4, 4};
+static const MY_STRING table=      {"TABLE"    , 5, 5};
+static const MY_STRING procedure=  {"PROCEDURE", 9, 9};
+static const MY_STRING function=   {"FUNCTION" , 8, 8};
+static const MY_STRING where_=     {"WHERE"    , 5, 5};
+static const MY_STRING current=    {"CURRENT"  , 7, 7};
+static const MY_STRING of=         {"OF"       , 2, 2};
+static const MY_STRING limit=      {"LIMIT"    , 5, 5};
+static const MY_STRING optimize=   {"OPTIMIZE" , 8, 8};
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 static const DES_SYNTAX_MARKERS ansi_syntax_markers= {/*quote*/
                                               {
                                                 {"'", 1, 1}, {"\"", 1, 1},
@@ -97,7 +124,7 @@ static const DES_SYNTAX_MARKERS ansi_syntax_markers= {/*quote*/
                                               {"\n", 1, 1},
 #endif
                                               {
-                                                &process, &select_, &insert, &update,
+                                                &process, &select_, &insert, &update, &del,
                                                 &call, &show, &use, &create,
                                                 &drop, &table, &procedure,
                                                 &function, &where_, &current,
@@ -117,12 +144,17 @@ static const QUERY_TYPE_RESOLVING crt_table_rule=
 { &table,     1,          2,          desqtCreateTable,  NULL, &proc_rule };
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 static const QUERY_TYPE_RESOLVING rule[]=
 { /*keyword*/ /*pos_from*/ /*pos_thru*/ /*query_type*/ /*and_rule*/ /*or_rule*/
     {&process, 0, 0, desqtProcess, NULL, NULL},
   { &select_,   0,          0,          desqtSelect,     NULL,       NULL},
   { &call,      0,          0,          desqtCall,       NULL,       NULL},
   { &insert,    0,          0,          desqtInsert,     NULL,       NULL},
+    {&del, 0, 0, desqtDelete, NULL, NULL},
   { &update,    0,          0,          desqtUpdate,     NULL,       NULL},
   { &show,      0,          0,          desqtShow,       NULL,       NULL},
   { &create,    0,          0,          desqtOther,      &crt_table_rule, NULL},
@@ -244,17 +276,6 @@ bool DES_PARSED_QUERY::returns_result() {
 }
 
 
-bool DES_PARSED_QUERY::preparable_on_server(const char *server_version) {
-  if (query_types_array[query_type].preparable_on_server)
-  {
-    return query_types_array[query_type].server_version == NULL
-        || is_minimum_version(server_version,
-                              query_types_array[query_type].server_version);
-  }
-
-  return FALSE;
-}
-
 
 const char *DES_PARSED_QUERY::get_cursor_name() {
   size_t tcount = token_count();
@@ -296,7 +317,7 @@ int  get_ctype(DES_PARSER *parser)
 }
 
 
-const char *desstr_get_prev_token(desodbc::CHARSET_INFO *charset,
+const char *mystr_get_prev_token(desodbc::CHARSET_INFO *charset,
                                         const char **query, const char *start)
 {
   const char *pos= *query, *end= *query;
@@ -306,7 +327,7 @@ const char *desstr_get_prev_token(desodbc::CHARSET_INFO *charset,
     if (pos == start)
       return (*query = start);     /* Return start of string */
     --pos;
-  } while (*pos < 0 || !desodbc_isspace(charset, pos, end)) ;
+  } while (*pos < 0 || !myodbc_isspace(charset, pos, end)) ;
 
   *query= pos;      /* Remember pos to space */
 
@@ -325,12 +346,12 @@ const char *mystr_get_next_token(desodbc::CHARSET_INFO *charset,
     if (pos == end)
       return (*query = end);     /* Return start of string */
     ++pos;
-  } while (*pos > 0 && desodbc_isspace(charset, pos, pos + 1)) ;
+  } while (*pos > 0 && myodbc_isspace(charset, pos, pos + 1)) ;
 
   /* Looking for space after token */
   *query= pos + 1;
 
-  while (*query != end && (**query < 0 || !desodbc_isspace(charset, *query, end)))
+  while (*query != end && (**query < 0 || !myodbc_isspace(charset, *query, end)))
     ++*query;
 
   return pos;   /* Return found token */
@@ -343,9 +364,9 @@ const char * find_token(desodbc::CHARSET_INFO *charset, const char * begin,
   const char * token, *before= end;
 
   /* we will not check 1st token in the string - no need at the moment */
-  while ((token= desstr_get_prev_token(charset,&before, begin)) != begin)
+  while ((token= mystr_get_prev_token(charset,&before, begin)) != begin)
   {
-    if (!desodbc_casecmp(token, target, (uint)strlen(target)))
+    if (!myodbc_casecmp(token, target, (uint)strlen(target)))
     {
       return token;
     }
@@ -362,7 +383,7 @@ const char * find_first_token(desodbc::CHARSET_INFO *charset, const char * begin
 
   while ((token= mystr_get_next_token(charset, &begin, end)) != end)
   {
-    if (!desodbc_casecmp(token, target, (uint)strlen(target)))
+    if (!myodbc_casecmp(token, target, (uint)strlen(target)))
     {
       return token;
     }
@@ -388,32 +409,54 @@ const char * skip_leading_spaces(const char *str)
 int is_set_names_statement(const char *query)
 {
   query= skip_leading_spaces(query);
-  return desodbc_casecmp(query, "SET NAMES", 9) == 0;
+  return myodbc_casecmp(query, "SET NAMES", 9) == 0;
 }
 
 
 /**
 Detect if a statement is a SELECT statement.
 */
-
-bool DES_PARSED_QUERY::is_process_statement() {
-  return query_type == desqtProcess;
-}
-
-bool DES_PARSED_QUERY::is_select_statement()
-{
+bool DES_PARSED_QUERY::is_select_statement() {
   return query_type == desqtSelect;
 }
 
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+bool DES_PARSED_QUERY::is_process_statement() {
+  return query_type == desqtProcess;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+bool DES_PARSED_QUERY::is_update_statement() {
+  return query_type == desqtUpdate;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+bool DES_PARSED_QUERY::is_insert_statement() {
+  return query_type == desqtInsert;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+bool DES_PARSED_QUERY::is_delete_statement() {
+  return query_type == desqtDelete;
+}
+
 /* These functions expect that leasding spaces have been skipped */
 BOOL is_drop_procedure(const char* query)
 {
-  if (desodbc_casecmp(query, "DROP", 4) == 0 && *(query+4) != '\0'
+  if (myodbc_casecmp(query, "DROP", 4) == 0 && *(query+4) != '\0'
     && isspace(*(query+4)))
   {
     query= skip_leading_spaces(query+5);
-    return desodbc_casecmp(query, "PROCEDURE", 9) == 0;
+    return myodbc_casecmp(query, "PROCEDURE", 9) == 0;
   }
 
   return FALSE;
@@ -422,11 +465,11 @@ BOOL is_drop_procedure(const char* query)
 
 BOOL is_drop_function(const char* query)
 {
-  if (desodbc_casecmp(query, "DROP", 4) == 0 && *(query+4) != '\0'
+  if (myodbc_casecmp(query, "DROP", 4) == 0 && *(query+4) != '\0'
     && isspace(*(query+4)))
   {
     query= skip_leading_spaces(query+5);
-    return desodbc_casecmp(query, "FUNCTION", 8) == 0;
+    return myodbc_casecmp(query, "FUNCTION", 8) == 0;
   }
 
   return FALSE;
@@ -437,17 +480,17 @@ BOOL is_drop_function(const char* query)
    But so far we are fine with that and even are using that.*/
 BOOL is_create_procedure(const char* query)
 {
-  if (desodbc_casecmp(query, "CREATE", 6) == 0 && *(query+6) != '\0'
+  if (myodbc_casecmp(query, "CREATE", 6) == 0 && *(query+6) != '\0'
     && isspace(*(query+6)))
   {
     query= skip_leading_spaces(query+7);
 
-    if (desodbc_casecmp(query, "DEFINER", 7) == 0)
+    if (myodbc_casecmp(query, "DEFINER", 7) == 0)
     {
       return TRUE;
     }
 
-    return desodbc_casecmp(query, "PROCEDURE", 9) == 0;
+    return myodbc_casecmp(query, "PROCEDURE", 9) == 0;
   }
 
   return FALSE;
@@ -456,11 +499,11 @@ BOOL is_create_procedure(const char* query)
 
 BOOL is_create_function(const char* query)
 {
-  if (desodbc_casecmp(query, "CREATE", 6) == 0 && *(query+6) != '\0'
+  if (myodbc_casecmp(query, "CREATE", 6) == 0 && *(query+6) != '\0'
     && isspace(*(query+6)))
   {
     query= skip_leading_spaces(query+7);
-    return desodbc_casecmp(query, "FUNCTION", 8) == 0;
+    return myodbc_casecmp(query, "FUNCTION", 8) == 0;
   }
 
   return FALSE;
@@ -469,7 +512,7 @@ BOOL is_create_function(const char* query)
 
 BOOL is_use_db(const char* query)
 {
-  if (desodbc_casecmp(query, "USE", 3) == 0 && *(query+3) != '\0'
+  if (myodbc_casecmp(query, "USE", 3) == 0 && *(query+3) != '\0'
     && isspace(*(query+3)))
   {
     return TRUE;
@@ -565,11 +608,11 @@ BOOL is_escape(DES_PARSER *parser)
                 parser->bytes_at_pos) == 0;
 }
 
-const DES_STRING * is_quote(DES_PARSER *parser)
+const MY_STRING * is_quote(DES_PARSER *parser)
 {
   int i;
 
-  for (i=0; i < sizeof(parser->syntax->quote)/sizeof(DES_STRING); ++i)
+  for (i=0; i < sizeof(parser->syntax->quote)/sizeof(MY_STRING); ++i)
   {
     if (parser->bytes_at_pos == parser->syntax->quote[i].bytes
       && memcmp(parser->pos, parser->syntax->quote[i].str,
@@ -689,7 +732,7 @@ void step_char(DES_PARSER *parser)
 }
 
 
-BOOL open_quote(DES_PARSER *parser, const DES_STRING * quote)
+BOOL open_quote(DES_PARSER *parser, const MY_STRING * quote)
 {
   if (quote != NULL)
   {
@@ -705,7 +748,7 @@ BOOL is_query_separator(DES_PARSER *parser)
 {
   int i;
 
-  for (i=0; i < sizeof(parser->syntax->query_sep)/sizeof(DES_STRING); ++i)
+  for (i=0; i < sizeof(parser->syntax->query_sep)/sizeof(MY_STRING); ++i)
   {
     if (parser_compare(parser, &parser->syntax->query_sep[i]))
     {
@@ -844,7 +887,7 @@ QUERY_TYPE_ENUM detect_query_type(DES_PARSER *parser,
   return desqtOther;
 }
 
-BOOL parser_compare(DES_PARSER *parser, const DES_STRING *str)
+BOOL parser_compare(DES_PARSER *parser, const MY_STRING *str)
 {
   if (str && BYTES_LEFT(parser->query, parser->pos) >= (int)str->bytes)
   {
@@ -855,12 +898,12 @@ BOOL parser_compare(DES_PARSER *parser, const DES_STRING *str)
 }
 
 
-BOOL case_compare(DES_PARSED_QUERY *pq, const char *pos, const DES_STRING *str)
+BOOL case_compare(DES_PARSED_QUERY *pq, const char *pos, const MY_STRING *str)
 {
   if (str && BYTES_LEFT(pq, pos) >= (int)str->bytes)
   {
-    /* to check: if desodbc_casecmp suits */
-    return desodbc_casecmp(pos, str->str, str->bytes) == 0;
+    /* to check: if myodbc_casecmp suits */
+    return myodbc_casecmp(pos, str->str, str->bytes) == 0;
   }
 
   return FALSE;

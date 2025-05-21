@@ -1,5 +1,8 @@
 /* Copyright (c) 2000, 2021, Oracle and/or its affiliates.
 
+	Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+	(see the next block comment below).
+	
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License, version 2.0,
    as published by the Free Software Foundation.
@@ -20,6 +23,17 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 #ifndef _my_sys_h
 #define _my_sys_h
 
@@ -31,7 +45,7 @@
   @note Many mysys implementation files now have their own header file.
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #ifdef HAVE_ALLOCA_H
 #include <alloca.h>
@@ -54,7 +68,7 @@
 #include <atomic>  // error_handler_hook
 
 #include "m_string.h" /* IWYU pragma: keep */
-#include "des_compiler.h"
+#include "my_compiler.h"
 #include "my_compress.h"
 #include "my_inttypes.h"
 #include "my_loglevel.h"
@@ -72,6 +86,9 @@
 #include "mysql/components/services/psi_stage_bits.h"
 //#include "sql/stream_cipher.h"
 
+/*
+DESODBC: renaming myodbc to desodbc
+*/
 namespace desodbc
 {
 
@@ -102,7 +119,7 @@ struct MEM_ROOT;
 #define MY_INIT(name)   \
   {                     \
     my_progname = name; \
-    des_init();          \
+    my_init();          \
   }
 
 /**
@@ -137,14 +154,14 @@ struct MEM_ROOT;
 #define MY_HOLD_ORIGINAL_MODES 128  /* my_copy() holds to file modes */
 #define MY_SEEK_NOT_DONE 32         /* my_lock may have to do a seek */
 #define MY_DONT_WAIT 64             /* my_lock() don't wait if can't lock */
-#define DES_ZEROFILL 32              /* my_malloc(), fill array with zero */
+#define MY_ZEROFILL 32              /* my_malloc(), fill array with zero */
 #define MY_ALLOW_ZERO_PTR 64        /* my_realloc() ; zero ptr -> malloc */
 #define MY_FREE_ON_ERROR 128        /* my_realloc() ; Free old ptr on error */
 #define MY_HOLD_ON_ERROR 256        /* my_realloc() ; Return old ptr on error */
 #define MY_DONT_OVERWRITE_FILE 1024 /* my_copy: Don't overwrite file */
 #define MY_SYNC 4096                /* my_copy(): sync dst file */
 
-#define MYF_RW DESF(MY_WME + MY_NABP) /* For my_read & my_write */
+#define MYF_RW MYF(MY_WME + MY_NABP) /* For my_read & my_write */
 
 #define MY_CHECK_ERROR 1    /* Params to my_end; Check open-close */
 #define MY_GIVE_INFO 2      /* Give time info about process*/
@@ -191,7 +208,7 @@ extern void *my_multi_malloc(PSI_memory_key key, myf flags, ...);
 extern PSI_memory_key key_memory_max_alloca;
 #define my_safe_alloca(size, max_alloca_sz)  \
   ((size <= max_alloca_sz) ? my_alloca(size) \
-                           : my_malloc(key_memory_max_alloca, size, DESF(0)))
+                           : my_malloc(key_memory_max_alloca, size, MYF(0)))
 #define my_safe_afree(ptr, size, max_alloca_sz) \
   if (size > max_alloca_sz) my_free(ptr)
 
@@ -237,7 +254,7 @@ extern MYSQL_PLUGIN_IMPORT ulong my_thread_stack_size;
   By having hooks, we avoid direct dependencies on server code.
 */
 extern void (*enter_cond_hook)(void *opaque_thd, mysql_cond_t *cond,
-                               repl_des_mutex_t *mutex,
+                               repl_mysql_mutex_t *mutex,
                                const PSI_stage_info *stage,
                                PSI_stage_info *old_stage,
                                const char *src_function, const char *src_file,
@@ -315,7 +332,7 @@ struct DYNAMIC_ARRAY {
 struct MY_TMPDIR {
   char **list{nullptr};
   uint cur{0}, max{0};
-  repl_des_mutex_t mutex;
+  repl_mysql_mutex_t mutex;
 };
 
 struct DYNAMIC_STRING {
@@ -327,7 +344,7 @@ struct IO_CACHE;
 typedef int (*IO_CACHE_CALLBACK)(IO_CACHE *);
 
 struct IO_CACHE_SHARE {
-  repl_des_mutex_t mutex;      /* To sync on reads into buffer. */
+  repl_mysql_mutex_t mutex;      /* To sync on reads into buffer. */
   mysql_cond_t cond;        /* To wait for signals. */
   mysql_cond_t cond_writer; /* For a synchronized writer. */
   /* Offset in file corresponding to the first byte of buffer. */
@@ -385,7 +402,7 @@ struct IO_CACHE /* Used when cacheing files */
     The lock is for append buffer used in SEQ_READ_APPEND cache
     need mutex copying from append buffer to read buffer.
   */
-  repl_des_mutex_t append_buffer_lock;
+  repl_mysql_mutex_t append_buffer_lock;
   /*
     The following is used when several threads are reading the
     same file in parallel. They are synchronized on disk
@@ -695,7 +712,7 @@ inline void MyOsError(int errno_val, Ts... ppck) {
   my_error(ppck..., errno_val, my_strerror(errbuf, sizeof(errbuf), errno_val));
 }
 
-extern bool des_init(void);
+extern bool my_init(void);
 extern void my_end(int infoflag);
 extern const char *my_filename(File fd);
 extern MY_MODE get_file_perm(ulong perm_flags);

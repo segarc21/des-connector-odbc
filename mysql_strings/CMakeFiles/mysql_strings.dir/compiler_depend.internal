@@ -3,8 +3,8 @@
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-big5.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-big5.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -205,8 +205,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-big5.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-bin.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-bin.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
@@ -423,8 +423,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-bin.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-cp932.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-cp932.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -624,8 +624,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-cp932.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-czech.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-czech.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -827,8 +827,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-czech.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-euc_kr.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-euc_kr.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -1028,8 +1028,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-euc_kr.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-eucjpms.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-eucjpms.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -1229,8 +1229,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-eucjpms.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-extra.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-extra.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -1430,8 +1430,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-extra.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-gb18030.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-gb18030.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -1633,8 +1633,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-gb18030.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-gb2312.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-gb2312.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -1834,8 +1834,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-gb2312.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-gbk.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-gbk.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -2036,8 +2036,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-gbk.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-latin1.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-latin1.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
@@ -2255,8 +2255,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-latin1.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-mb.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-mb.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
@@ -2480,8 +2480,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-mb.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-simple.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-simple.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
@@ -2745,8 +2745,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-simple.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-sjis.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-sjis.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -2947,8 +2947,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-sjis.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-tis620.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-tis620.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
@@ -3167,8 +3167,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-tis620.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-uca.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-uca.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/little_endian.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
@@ -3430,8 +3430,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-uca.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-ucs2.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-ucs2.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/little_endian.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
@@ -3699,8 +3699,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-ucs2.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-ujis.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-ujis.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -3900,8 +3900,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-ujis.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-utf8.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-utf8.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/little_endian.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_byteorder.h
@@ -4127,8 +4127,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-utf8.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype-win1250ch.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype-win1250ch.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -4330,8 +4330,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype-win1250ch.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/ctype.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/ctype.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/little_endian.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_byteorder.h
@@ -4559,9 +4559,9 @@ mysql_strings/CMakeFiles/mysql_strings.dir/ctype.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/decimal.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/decimal.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_dbug.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_dbug.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/integer_digits.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
@@ -4855,7 +4855,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/decimal.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/dtoa.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/dtoa.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
@@ -5033,7 +5033,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/dtoa.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/int2str.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/int2str.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/integer_digits.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
@@ -5243,8 +5243,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/int2str.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/my_strchr.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/my_strchr.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_loglevel.h
@@ -5445,8 +5445,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/my_strchr.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/my_strtoll10.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/my_strtoll10.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compress.h
@@ -5685,8 +5685,8 @@ mysql_strings/CMakeFiles/mysql_strings.dir/my_strtoll10.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/str2int.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/str2int.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_compiler.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_compiler.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_ctype.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
@@ -5960,7 +5960,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/str_alloc.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/strcont.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/strcont.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
@@ -6135,7 +6135,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/strcont.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/strmake.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/strmake.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
@@ -6310,7 +6310,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/strmake.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/strxmov.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/strxmov.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
@@ -6485,7 +6485,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/strxmov.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/strxnmov.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/strxnmov.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
@@ -6659,7 +6659,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/strxnmov.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/uca900_ja_tbls.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/uca900_ja_tbls.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /usr/include/endian.h
  /usr/include/features-time64.h
@@ -6706,7 +6706,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/uca900_ja_tbls.cc.o
 
 mysql_strings/CMakeFiles/mysql_strings.dir/uca900_zh_tbls.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/uca900_zh_tbls.cc
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h
  /usr/include/endian.h
  /usr/include/features-time64.h
@@ -6754,7 +6754,7 @@ mysql_strings/CMakeFiles/mysql_strings.dir/uca900_zh_tbls.cc.o
 mysql_strings/CMakeFiles/mysql_strings.dir/xml.cc.o
  /home/sergi/mysql-connector-odbc-9.0.0/mysql_strings/xml.cc
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/decimal.h
- /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/des_config.h
+ /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_config.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/lex_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/m_string.h
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_inttypes.h

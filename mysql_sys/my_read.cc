@@ -29,7 +29,7 @@
   @file mysys/my_read.cc
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #include <errno.h>
 #include <stddef.h>
@@ -39,7 +39,7 @@
 #endif
 
 #include "my_base.h"
-#include "des_dbug.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_io.h"
 #include "my_sys.h"
@@ -107,9 +107,9 @@ size_t my_read(File fd, uchar *Buffer, size_t Count, myf MyFlags) {
 
       if (MyFlags & (MY_WME | MY_FAE | MY_FNABP)) {
         if (readbytes == -1)
-          MyOsError(my_errno(), EE_READ, DESF(0), my_filename(fd));
+          MyOsError(my_errno(), EE_READ, MYF(0), my_filename(fd));
         else if (MyFlags & (MY_NABP | MY_FNABP))
-          MyOsError(my_errno(), EE_EOFERR, DESF(0), my_filename(fd));
+          MyOsError(my_errno(), EE_EOFERR, MYF(0), my_filename(fd));
       }
       if (readbytes == -1 ||
           ((MyFlags & (MY_FNABP | MY_NABP)) && !(MyFlags & MY_FULL_IO)))

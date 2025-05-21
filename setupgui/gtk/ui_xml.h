@@ -297,8 +297,8 @@ static char *ui_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" \
                   "</packing>\n" \
                 "</child>\n" \
                 "<child>\n" \
-                  "<object class=\"GtkButton\" id=\"help\">\n" \
-                    "<property name=\"label\">_Help</property>\n" \
+                  "<object class=\"GtkButton\" id=\"about\">\n" \
+                    "<property name=\"label\">_About...</property>\n" \
                     "<property name=\"can_focus\">True</property>\n" \
                     "<property name=\"receives_default\">False</property>\n" \
                     "<property name=\"use_underline\">True</property>\n" \

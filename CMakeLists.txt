@@ -234,7 +234,7 @@ SET(MYSQL_CLIENT_LIBS ${MYSQL_LIBRARIES})
 #-----------------------------------------------------
 
 
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config8.h.cmake ${CMAKE_SOURCE_DIR}/include/mysql-8.0/des_config.h)
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config8.h.cmake ${CMAKE_SOURCE_DIR}/include/mysql-8.0/my_config.h)
   INCLUDE_DIRECTORIES(include/mysql-8.0)
 
 

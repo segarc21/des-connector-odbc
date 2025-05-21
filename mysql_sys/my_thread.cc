@@ -29,7 +29,7 @@
   @file mysys/my_thread.cc
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #ifdef HAVE_PTHREAD_SETNAME_NP_LINUX
 #include <cstring>

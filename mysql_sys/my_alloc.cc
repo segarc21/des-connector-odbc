@@ -36,8 +36,8 @@
 #include <sys/types.h>
 
 #include "my_alloc.h"
-#include "des_compiler.h"
-#include "des_dbug.h"
+#include "my_compiler.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_pointer_arithmetic.h"
 #include "my_sys.h"
@@ -70,7 +70,7 @@ std::pair<MEM_ROOT::Block *, size_t> MEM_ROOT::AllocBlock(
     }
     if (wanted_length > bytes_left) {
       if (m_error_for_capacity_exceeded) {
-        my_error(EE_CAPACITY_EXCEEDED, DESF(0),
+        my_error(EE_CAPACITY_EXCEEDED, MYF(0),
                  static_cast<ulonglong>(m_max_capacity));
         // NOTE: No early return; we will abort the query at the next safe
         // point. We also don't go down to minimum_length, as this will give a
@@ -88,7 +88,7 @@ std::pair<MEM_ROOT::Block *, size_t> MEM_ROOT::AllocBlock(
 
   Block *new_block = static_cast<Block *>(
       my_malloc(m_psi_key, length + ALIGN_SIZE(sizeof(Block)),
-                DESF(MY_WME | ME_FATALERROR)));
+                MYF(MY_WME | ME_FATALERROR)));
   if (new_block == nullptr) {
     if (m_error_handler) (m_error_handler)();
     return {nullptr, 0};

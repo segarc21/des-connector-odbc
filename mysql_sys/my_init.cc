@@ -29,7 +29,7 @@
   @file mysys/my_init.cc
 */
 
-#include "des_config.h"
+#include "my_config.h"
 
 #ifdef DES_MSCRT_DEBUG
 #include <crtdbg.h>
@@ -45,8 +45,8 @@
 
 #include "m_ctype.h"
 #include "m_string.h"
-#include "des_compiler.h"
-#include "des_dbug.h"
+#include "my_compiler.h"
+#include "my_dbug.h"
 #include "my_inttypes.h"
 #include "my_macros.h"
 #include "my_psi_config.h"
@@ -136,7 +136,7 @@ int set_crt_report_leaks() {
     @retval false Success
     @retval true  Error. Couldn't initialize environment
 */
-bool des_init() {
+bool my_init() {
   char *str;
 
   if (des_init_done) return false;
@@ -171,7 +171,7 @@ bool des_init() {
 #ifdef _WIN32
     des_win_init();
 #endif
-    DESFileInit();
+    MyFileInit();
 
     DBUG_PRINT("exit", ("home: '%s'", home_dir));
     return false;
@@ -201,7 +201,7 @@ void my_end(int infoflag) {
       char ebuff[512];
       snprintf(ebuff, sizeof(ebuff), EE(EE_OPEN_WARNING), my_file_opened,
                my_stream_opened);
-      my_message_stderr(EE_OPEN_WARNING, ebuff, DESF(0));
+      my_message_stderr(EE_OPEN_WARNING, ebuff, MYF(0));
       DBUG_PRINT("error", ("%s", ebuff));
     }
   }
@@ -549,7 +549,7 @@ static PSI_memory_info all_mysys_memory[] = {
     {&key_memory_my_compress_alloc, "my_compress_alloc", 0, 0, PSI_DOCUMENT_ME},
     {&key_memory_my_err_head, "my_err_head", PSI_FLAG_ONLY_GLOBAL_STAT, 0,
      PSI_DOCUMENT_ME},
-    {&key_memory_des_file_info, "my_file_info", PSI_FLAG_ONLY_GLOBAL_STAT, 0,
+    {&key_memory_my_file_info, "my_file_info", PSI_FLAG_ONLY_GLOBAL_STAT, 0,
      PSI_DOCUMENT_ME},
     {&key_memory_MY_DIR, "MY_DIR", 0, 0, PSI_DOCUMENT_ME},
     {&key_memory_DYNAMIC_STRING, "DYNAMIC_STRING", 0, 0, PSI_DOCUMENT_ME},

@@ -29,7 +29,7 @@
 #ifndef _myisam_h
 #define _myisam_h
 
-#include "des_config.h"
+#include "my_config.h"
 
 #include <sys/types.h>
 #include <time.h>

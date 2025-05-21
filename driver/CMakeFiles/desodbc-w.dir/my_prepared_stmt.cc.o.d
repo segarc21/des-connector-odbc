@@ -74,9 +74,9 @@ driver/CMakeFiles/desodbc-w.dir/my_prepared_stmt.cc.o: \
  /usr/include/c++/13/pstl/execution_defs.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/driver.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../MYODBC_MYSQL.h \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_config.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_sys.h \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_config.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_config.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
@@ -160,7 +160,7 @@ driver/CMakeFiles/desodbc-w.dir/my_prepared_stmt.cc.o: \
  /usr/include/c++/13/bits/memory_resource.h /usr/include/c++/13/cstddef \
  /usr/include/c++/13/bits/uses_allocator.h \
  /usr/include/c++/13/bits/uses_allocator_args.h /usr/include/c++/13/tuple \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_compiler.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_compiler.h \
  /usr/include/assert.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_compress.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_loglevel.h \
@@ -241,7 +241,7 @@ driver/CMakeFiles/desodbc-w.dir/my_prepared_stmt.cc.o: \
  /usr/include/c++/13/pstl/glue_memory_defs.h /usr/include/c++/13/utility \
  /usr/include/c++/13/bits/stl_relops.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/memory_debugging.h \
- /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/des_dbug.h \
+ /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_dbug.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/my_pointer_arithmetic.h \
  /home/sergi/mysql-connector-odbc-9.0.0/driver/../include/mysql-8.0/mysql/psi/psi_memory.h \
  /home/sergi/mysql-connector-odbc-9.0.0/include/mysql-8.0/my_psi_config.h \

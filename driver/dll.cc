@@ -1,4 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  dll.c
   @brief Library initialization functions.
@@ -35,8 +48,8 @@
 #include <locale.h>
 
 std::string thousands_sep, decimal_point, default_locale;
-static int desodbc_inited=0;
-static int dessys_inited=0;
+static int desodbc_inited=0; //DESODBC: renamed from the original myodbc_inited
+static int mysys_inited=0;
 
 std::string current_dll_location;
 std::string default_plugin_location;
@@ -51,18 +64,22 @@ std::string default_plugin_location;
 #include <signal.h>
 
 static void
-desodbc_pipe_sig_handler(int sig __attribute__((unused)))
+myodbc_pipe_sig_handler(int sig __attribute__((unused)))
 {
   /* Do nothing */
 }
 
 #endif
 
+/* DESODBC:
+    Renamed from the original myodbc_end()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : initializations
 */
-
 void desodbc_init(void)
 {
 #if !defined(__WIN__) && !defined(SKIP_SIGPIPE_HANDLER)
@@ -70,7 +87,7 @@ void desodbc_init(void)
      sigaction will block other signals from coming when handler is working
    */
    struct sigaction action;
-   action.sa_handler = desodbc_pipe_sig_handler;
+   action.sa_handler = myodbc_pipe_sig_handler;
    sigemptyset(&action.sa_mask);
    action.sa_flags = 0;
    sigaction(SIGPIPE, &action, NULL);
@@ -81,11 +98,7 @@ void desodbc_init(void)
   if (desodbc_inited > 1)
     return;
 
-  if(!dessys_inited)
-  {
-    des_sys_init();
-    dessys_inited = 1;
-  }
+  my_sys_init();
 
   {
     struct lconv *tmp;
@@ -98,21 +111,25 @@ void desodbc_init(void)
     thousands_sep = tmp->thousands_sep;
 
     __LOCALE_RESTORE()
-    utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, DESF(DES_CS_PRIMARY),
-                                             DESF(0));
+    utf8_charset_info= desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY),
+                                             MYF(0));
 
 #ifdef IS_BIG_ENDIAN
     utf16_charset_info =
-        desodbc::get_charset_by_csname("utf16", DESF(DES_CS_PRIMARY),
-                                             DESF(0));
+        desodbc::get_charset_by_csname("utf16", MYF(MY_CS_PRIMARY),
+                                             MYF(0));
 #else
-    utf16_charset_info = desodbc::get_charset_by_csname("utf16le", DESF(DES_CS_PRIMARY),
-                                             DESF(0));
+    utf16_charset_info = desodbc::get_charset_by_csname("utf16le", MYF(MY_CS_PRIMARY),
+                                             MYF(0));
 #endif
   }
 }
 
-
+/* DESODBC:
+    Renamed and modified from the original desodbc_end()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : clean all resources while unloading..
@@ -124,21 +141,7 @@ void desodbc_end()
 
   --desodbc_inited;
 
-  if (!desodbc_inited)
-  {
-
-    /* my_thread_end_wait_time was added in 5.1.14 and 5.0.32 */
-#if !defined(NONTHREADSAFE) && \
-    (DES_VERSION_ID >= 50114 || \
-    (DES_VERSION_ID >= 50032 && DES_VERSION_ID < 50100)) && \
-    DES_VERSION_ID < 50701
-    /*
-       This eliminates the delay when mysys_end() is called and other threads
-       have been initialized but not ended.
-    */
-    my_thread_end_wait_time= 0;
-#endif
-  }
+  desodbc::my_end(0);
 }
 
 
@@ -186,14 +189,14 @@ int APIENTRY LibMain(HANDLE inst, DWORD ul_reason_being_called,
     if (!--inited)
     {
       // Process is about to detach. All has to be deinited to avoid
-      // memory leaks even if initialized multiple times (myodbc_inited > 1).
+      // memory leaks even if initialized multiple times (desodbc_inited > 1).
       desodbc_inited = 1;
       desodbc_end();
     }
     break;
 
   /*
-     We don't explicitly call des_thread_init() to avoid initialization in
+     We don't explicitly call my_thread_init() to avoid initialization in
      threads that may not even make ODBC calls. des_thread_init() will be
      called implicitly when mysys calls are made from the thread.
   */

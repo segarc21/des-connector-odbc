@@ -28,7 +28,7 @@
 #ifndef MY_THREAD_OS_ID_INCLUDED
 #define MY_THREAD_OS_ID_INCLUDED
 
-#include "des_config.h"
+#include "my_config.h"
 #include "my_macros.h"
 #include "my_thread.h"
 #ifndef _WIN32

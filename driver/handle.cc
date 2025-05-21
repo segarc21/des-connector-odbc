@@ -1,4 +1,6 @@
-// Copyright (c) 2001, 2024, Oracle and/or its affiliates.
+﻿// Copyright (c) 2001, 2024, Oracle and/or its affiliates.
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -26,6 +28,17 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
+
 /**
   @file  handle.c
   @brief Allocation and freeing of handles.
@@ -48,6 +61,10 @@ thread_local long thread_count = 0;
 
 std::mutex g_lock;
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 void ENV::add_dbc(DBC* dbc)
 {
   LOCK_ENV(this);
@@ -55,6 +72,10 @@ void ENV::add_dbc(DBC* dbc)
   active_dbcs_global_var.emplace_back(dbc);
 }
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 void ENV::remove_dbc(DBC* dbc)
 {
   LOCK_ENV(this);
@@ -67,6 +88,10 @@ bool ENV::has_connections()
   return conn_list.size() > 0;
 }
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DBC::DBC(ENV *p_env)  : env(p_env),
                         txn_isolation(DEFAULT_TXN_ISOLATION),
                         last_query_time((time_t) time((time_t*) 0))
@@ -109,8 +134,11 @@ void DBC::free_explicit_descriptors()
   }
 }
 
-SQLRETURN DBC::close()
-{
+/* DESODBC:
+  Original author: MyODBC
+  Modified by: DESODBC Developer
+*/
+SQLRETURN DBC::close() {
   SQLRETURN ret;
   if (!this->closed) {
 #ifdef _WIN32
@@ -127,59 +155,56 @@ SQLRETURN DBC::close()
       return ret;
     }
     if (share_pipes_thread != nullptr && share_pipes_thread.get()->joinable())
-     share_pipes_thread->join();
+      share_pipes_thread->join();
     share_pipes_thread.reset();
 
-    this->shmem->handle_sharing_info.handle_petitioner.id = 0; //we reset this field
+    this->shmem->handle_sharing_info.handle_petitioner.id =
+        0;  // we reset this field
     ret = releaseSharedMemoryMutex();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-
-    try_close(this->driver_to_des_in_rpipe);
-    try_close(this->driver_to_des_in_wpipe);
-    try_close(this->driver_to_des_out_rpipe);
-    try_close(this->driver_to_des_out_wpipe);
 
     ret = getSharedMemoryMutex();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
       return ret;
     }
-  
-    ConnectedClients clients = this->shmem->connected_clients_struct;
-    remove_client_from_shmem(clients, this->connection_id);
-    if (clients.size == 0) {
-
+    remove_client_from_shmem(this->shmem->connected_clients_struct,
+                             this->connection_id);
+    if (this->shmem->connected_clients_struct.size == 0) {
       DWORD pid = this->shmem->DES_pid;
 
-      HANDLE des_process_handle =
-            OpenProcess(PROCESS_TERMINATE, false, pid);
+      HANDLE des_process_handle = OpenProcess(PROCESS_TERMINATE, false, pid);
       if (des_process_handle == NULL) {
-        releaseSharedMemoryMutex();
-        return this->set_win_error(
-            "Failing to access DES process with PID " + std::to_string(pid),
+        ret = this->set_win_error(
+            "Failed to access DES process with PID " + std::to_string(pid),
             true);
       }
 
-      if (!TerminateProcess(des_process_handle, 1)) {
-        releaseSharedMemoryMutex();
-        return this->set_win_error(
-            "Failing to terminate DES process with PID " + std::to_string(pid),
+      auto pair = this->send_query_and_read("/q");
+      if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
+        ret = this->set_win_error(
+            "Failed to terminate DES process with PID " + std::to_string(pid),
             true);
+      }
+
+      // Just in case the shared memory is cached when creating it again
+      shmem->DES_pid = 0;
+      shmem->handle_sharing_info = HandleSharingInfo();
+      shmem->connected_clients_struct = ConnectedClients();
+      shmem->des_process_created = false;
+      shmem->exec_hash_int = 0;
+
+      // All these functions closes the correspondent objects for only this
+      // instance. Windows by itself destroys these objects when no instance has
+      // access to them.
+      if (!UnmapViewOfFile(shmem)) {
+        ret = this->set_win_error("Failed to unmap shared memory file " +
+                                      std::string(SHARED_MEMORY_NAME),
+                                  true);
       }
     }
 
     ret = releaseSharedMemoryMutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-      return ret;
-    }
 
-    // All these functions closes the correspondent objects for only this
-    // instance. Windows by itself destroys these objects when no instance has
-    // access to them.
-    if (!UnmapViewOfFile(shmem)) {
-      return this->set_win_error(
-          "Failing to unmap shared memory file " + std::string(SHARED_MEMORY_NAME),
-          true);
-    }
     try_close(query_mutex);
     try_close(shared_memory_mutex);
     try_close(request_handle_mutex);
@@ -188,75 +213,85 @@ SQLRETURN DBC::close()
     try_close(finishing_event);
 #else
 
-  ret = getSharedMemoryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO)
-    return ret;
-
-  try_close(this->driver_to_des_out_rpipe);
-  try_close(this->driver_to_des_out_wpipe);
-  try_close(this->driver_to_des_in_rpipe);
-  try_close(this->driver_to_des_in_wpipe);
-  
-  this->shmem->n_clients -= 1;
-  if (this->shmem->n_clients == 0) {
-
-    ret = releaseSharedMemoryMutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO)
-    return ret;
-    
-    //We will not handle errors for unlink.
-    //If a file does not exist, it is fine for us.
-    unlink(IN_WPIPE_NAME);
-    unlink(OUT_RPIPE_NAME);
-
-    #ifdef __APPLE__
-    if (sem_close(query_mutex) == -1) {
-      return this->set_unix_error("Failing to close query mutex", true);
-    }
-    if (sem_close(shared_memory_mutex) == -1) {
-      return this->set_unix_error("Failing to close shared memory mutex", true);
-    }
-
-    sem_unlink(QUERY_MUTEX_NAME);
-    sem_unlink(SHARED_MEMORY_MUTEX_NAME);
-    #endif
-    
-    if (kill(this->shmem->DES_pid, SIGTERM) == -1) {
-      return this->set_unix_error("Failing to kill DES process", true);
-    }
-
-    if (shmdt(this->shmem) == -1) {
-      return this->set_unix_error("Failing to detach shared memory from connector", true);
-    }
-    if (shmctl(this->shm_id, IPC_RMID, 0) == -1) {
-      return this->set_unix_error("Failing to remove shared memory segment", true);
-    }
-
-  } else {
-    ret = releaseSharedMemoryMutex();
+    ret = getSharedMemoryMutex();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 
-    #ifdef __APPLE__
-    if (sem_close(query_mutex) == -1) {
-      return this->set_unix_error("Failing to close query mutex", true);
-    }
-    if (sem_close(shared_memory_mutex) == -1) {
-      return this->set_unix_error("Failing to close shared memory mutex", true);
-    }
-    #endif
+    this->shmem->n_clients -= 1;
+    if (this->shmem->n_clients == 0) {
+      ret = releaseSharedMemoryMutex();
+      if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 
-    if (shmdt(this->shmem) == -1) {
-      return this->set_unix_error("Failing to detach shared memory from connector", true);
+      auto pair = this->send_query_and_read("/q");
+      if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
+        std::string msg = "Failed to terminate DES process with PID ";
+        msg += std::to_string(this->shmem->DES_pid);
+        ret = this->set_unix_error(msg, true);
+      }
+
+#ifdef __APPLE__
+      if (sem_close(query_mutex) == -1) {
+        ret = this->set_unix_error("Failed to close query mutex", true);
+      }
+      if (sem_close(shared_memory_mutex) == -1) {
+        ret = this->set_unix_error("Failed to close shared memory mutex", true);
+      }
+      sem_unlink(QUERY_MUTEX_NAME);
+      sem_unlink(SHARED_MEMORY_MUTEX_NAME);
+#endif
+
+      if (shmdt(this->shmem) == -1) {
+        return this->set_unix_error(
+            "Failed to detach shared memory from connector", true);
+      }
+      if (shmctl(this->shm_id, IPC_RMID, 0) == -1) {
+        return this->set_unix_error("Failed to remove shared memory segment",
+                                    true);
+      }
+
+      try_close(this->driver_to_des_out_rpipe);
+      // try_close(this->driver_to_des_out_wpipe); Not needed
+      // try_close(this->driver_to_des_in_rpipe); Not needed
+      try_close(this->driver_to_des_in_wpipe);
+
+      unlink(IN_WPIPE_NAME);
+      unlink(OUT_RPIPE_NAME);
+
+    } else {
+      ret = releaseSharedMemoryMutex();
+
+#ifdef __APPLE__
+      if (sem_close(query_mutex) == -1) {
+        ret = this->set_unix_error("Failed to close query mutex", true);
+      }
+      if (sem_close(shared_memory_mutex) == -1) {
+        ret = this->set_unix_error("Failed to close shared memory mutex", true);
+      }
+#endif
+
+      if (shmdt(this->shmem) == -1) {
+        ret = this->set_unix_error(
+            "Failed to detach shared memory from connector", true);
+      }
+
+      try_close(this->driver_to_des_out_rpipe);
+      // try_close(this->driver_to_des_out_wpipe); Not needed
+      // try_close(this->driver_to_des_in_rpipe); Not needed
+      try_close(this->driver_to_des_in_wpipe);
     }
-  }
 
 #endif
   }
   this->closed = true;
+  this->connected = false;
 
   return SQL_SUCCESS;
 }
 
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 DBC::~DBC()
 {
   if (!closed)
@@ -268,14 +303,27 @@ DBC::~DBC()
 }
 
 #ifdef _WIN32
+/* DESODBC:
+    This function sets a Windows error.
+
+    Original author: DESODBC Developer
+*/
 SQLRETURN DBC::set_win_error(std::string err, bool show_win_err) {
-  if (show_win_err)
-    err +=
-        ". Last Windows error message: " + '\"' + GetLastWinErrMessage() + '\"';
-  return this->set_error("HY000", string_to_char_pointer(err), 0);
+  if (show_win_err) {
+    err += ". Last Windows error message: ";
+    err += '\"';
+    err += GetLastWinErrMessage();
+    err += '\"';
+  }
+  return this->set_error("HY000", string_to_char_pointer(err));
 
 }
 #else
+/* DESODBC:
+    This function sets a Unix error.
+
+    Original author: DESODBC Developer
+*/
 SQLRETURN DBC::set_unix_error(std::string err, bool show_unix_err) {
   if (show_unix_err) {
     err += ". Last Unix-like error message: ";
@@ -283,40 +331,50 @@ SQLRETURN DBC::set_unix_error(std::string err, bool show_unix_err) {
     err += strerror(errno);
     err += '\"';
   }
-  return this->set_error("HY000", string_to_char_pointer(err), 0);
+  return this->set_error("HY000", string_to_char_pointer(err));
 
 }
 #endif
 
-SQLRETURN DBC::set_error(char * state, const char * message, uint errcode)
-{
-  error.sqlstate = state ? state : "";
-  error.message = std::string(DESODBC_ERROR_PREFIX) + message;
-  error.native_error= errcode;
-  return SQL_ERROR;
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+SQLRETURN ENV::set_error(const char *state, const char *msg) {
+  error = DESERROR(state, msg);
+  return error.retcode;
 }
 
-
-SQLRETURN DBC::set_error(char * state)
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+SQLRETURN DBC::set_error(const char * state, const char * msg)
 {
-  return set_error(state, "", 0);
+  error = DESERROR(state, msg);
+  return error.retcode;
 }
 
-
-SQLRETURN DBC::set_error(desodbc_errid errid, const char* errtext,
-  SQLINTEGER errcode)
-{
-  error = DESERROR(errid, errtext);
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+SQLRETURN STMT::set_error(const char *state, const char *msg) {
+  error = DESERROR(state, msg);
   return error.retcode;
 }
 
 
+/* DESODBC:
+    Renamed from the original my_SQLAllocEnv()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : to allocate the environment handle and to maintain
        its list
 */
-
 SQLRETURN SQL_API DES_SQLAllocEnv(SQLHENV *phenv)
 {
   ENV *env;
@@ -334,7 +392,11 @@ SQLRETURN SQL_API DES_SQLAllocEnv(SQLHENV *phenv)
   return SQL_SUCCESS;
 }
 
-
+/* DESODBC:
+    Renamed from the original my_SQLFreeEnv()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : to free the environment handle
@@ -351,34 +413,19 @@ SQLRETURN SQL_API DES_SQLFreeEnv(SQLHENV henv)
     return(SQL_SUCCESS);
 }
 
+/* DESODBC:
 
-#ifndef _UNIX_
-SQLRETURN my_GetLastError(ENV *henv)
-{
-    SQLRETURN ret;
-    LPVOID    msg;
+    Renamed from the original my_SQLAllocConnect and
+    modified according to DES' needs.
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                  NULL,
-                  GetLastError(),
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPTSTR) &msg,
-                  0,
-                  NULL );
-
-    ret = set_env_error(henv,DESERR_S1001,(const char*)msg,0);
-    LocalFree(msg);
-
-    return ret;
-}
-#endif
-
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : to allocate the connection handle and to
        maintain the connection list
 */
-
 SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
 {
     DBC *dbc;
@@ -389,22 +436,11 @@ SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
 
     ++thread_count;
 
-    if (DES_VERSION_ID < MIN_MYSQL_VERSION)
-    {
-        char buff[255];
-        desodbc_snprintf(buff, sizeof(buff),
-          "Wrong libmysqlclient library version: %ld. "
-          "MyODBC needs at least version: %ld",
-            DES_VERSION_ID, MIN_MYSQL_VERSION);
-
-        return(set_env_error((ENV*)henv, DESERR_S1000, buff, 0));
-    }
-
     if (!penv->odbc_ver)
     {
-        return set_env_error((ENV*)henv, DESERR_S1010,
+      return penv->set_error("HY010",
                              "Can't allocate connection "
-                             "until ODBC version specified.", 0);
+                             "until ODBC version specified.");
     }
 
     try
@@ -421,26 +457,38 @@ SQLRETURN SQL_API DES_SQLAllocConnect(SQLHENV henv, SQLHDBC *phdbc)
     return(SQL_SUCCESS);
 }
 
+/* DESODBC:
 
-/* ODBC specs suggest(and that actually makes sense) to do jobs that require communication with server
-   when connection is taken from pool, i.e. at "wakeup" time */
-int reset_connection(DBC *dbc)
-{
-  dbc->free_connection_stmts();
-  dbc->free_explicit_descriptors();
+    Renamed from the original my_SQLFreeConnect and
+    modified according to DES' needs.
 
-  return 0;
-}
-
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : to allocate the connection handle and to
        maintain the connection list
 */
-
 SQLRETURN SQL_API DES_SQLFreeConnect(SQLHDBC hdbc)
 {
     DBC *dbc= (DBC *) hdbc;
+
+    #ifdef _WIN32
+    delete dbc->SHARED_MEMORY_NAME;
+    delete dbc->SHARED_MEMORY_MUTEX_NAME;
+    delete dbc->QUERY_MUTEX_NAME;
+    delete dbc->REQUEST_HANDLE_EVENT_NAME;
+    delete dbc->REQUEST_HANDLE_MUTEX_NAME;
+    delete dbc->HANDLE_SENT_EVENT_NAME;
+    delete dbc->FINISHING_EVENT_NAME;
+    #else
+    delete dbc->SHARED_MEMORY_NAME;
+    delete dbc->SHARED_MEMORY_MUTEX_NAME;
+    delete dbc->QUERY_MUTEX_NAME;
+    delete dbc->IN_WPIPE_NAME;
+    delete dbc->OUT_RPIPE_NAME;
+    #endif
     delete dbc;
 
     if (thread_count)
@@ -479,7 +527,11 @@ int adjust_param_bind_array(STMT *stmt)
   return 0;
 }
 
-
+/* DESODBC:
+    Renamed from the original my_SQLAllocStmt
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : allocates the statement handle
@@ -495,7 +547,7 @@ SQLRETURN SQL_API DES_SQLAllocStmt(SQLHDBC hdbc, SQLHSTMT *phstmt)
   }
   catch (...)
   {
-    return dbc->set_error( "HY001", "Memory allocation error", DESERR_S1001);
+    return dbc->set_error("HY001", "Memory allocation error");
   }
 
   *phstmt = (SQLHSTMT*)stmt.release();
@@ -518,6 +570,11 @@ SQLRETURN SQL_API SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT fOption)
 }
 
 
+/* DESODBC:
+    Renamed from the original my_SQLFreeStmt()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : stops processing associated with a specific statement,
@@ -525,13 +582,20 @@ SQLRETURN SQL_API SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT fOption)
        discards pending results, or, optionally, frees all
        resources associated with the statement handle
 */
-
 SQLRETURN SQL_API DES_SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT f_option)
 {
   return DES_SQLFreeStmtExtended(hstmt, f_option,
     FREE_STMT_CLEAR_RESULT | FREE_STMT_DO_LOCK);
 }
 
+/* DESODBC:
+
+    Renamed from the original my_SQLFreeStmtExtended
+    and modified according to DESODBC's needs.
+
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : myodbc3 internal
   @purpose : stops processing associated with a specific statement,
@@ -539,7 +603,6 @@ SQLRETURN SQL_API DES_SQLFreeStmt(SQLHSTMT hstmt, SQLUSMALLINT f_option)
        discards pending results, or, optionally, frees all
        resources associated with the statement handle
 */
-
 SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
   SQLUSMALLINT f_extra)
 {
@@ -570,6 +633,7 @@ SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
     stmt->free_fake_result((bool)(f_extra & FREE_STMT_CLEAR_RESULT));
 
     x_free(stmt->fields);   // TODO: Looks like STMT::fields is not used anywhere
+    free_result(stmt->result);
     stmt->result= 0;
     stmt->fake_result= 0;
     stmt->fields= 0;
@@ -592,11 +656,15 @@ SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
 
     stmt->state= ST_UNKNOWN;
 
-    stmt->params_for_table.table_name.clear();
-    stmt->params_for_table.fk_table_name.clear();
     stmt->params_for_table.pk_table_name.clear();
-    stmt->params_for_table.column_name.clear();
+    stmt->params_for_table.fk_table_name.clear();
     stmt->params_for_table.type_requested = SQL_TYPE_NULL;
+    stmt->params_for_table.table_name.clear();
+    stmt->params_for_table.column_name.clear();
+    stmt->params_for_table.catalog_name.clear();
+    stmt->params_for_table.table_type.clear();
+    stmt->params_for_table.metadata_id = false;
+    
 
     stmt->dummy_state= ST_DUMMY_UNKNOWN;
     stmt->cursor.pk_validated= FALSE;
@@ -651,6 +719,11 @@ SQLRETURN SQL_API DES_SQLFreeStmtExtended(SQLHSTMT hstmt, SQLUSMALLINT f_option,
 }
 
 
+/* DESODBC:
+    Renamed from the original my_SQLAllocDesc()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   Explicitly allocate a descriptor.
 */
@@ -663,7 +736,7 @@ SQLRETURN DES_SQLAllocDesc(SQLHDBC hdbc, SQLHANDLE *pdesc)
   LOCK_DBC(dbc);
 
   if (!desc)
-    return dbc->set_error( "HY001", "Memory allocation error", DESERR_S1001);
+    return dbc->set_error("HY001", "Memory allocation error");
 
   desc->dbc= dbc;
 
@@ -674,7 +747,11 @@ SQLRETURN DES_SQLAllocDesc(SQLHDBC hdbc, SQLHANDLE *pdesc)
   return SQL_SUCCESS;
 }
 
-
+/* DESODBC:
+    Renamed from the original my_SQLFreeDesc()
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   Free an explicitly allocated descriptor. This resets all statements
   that it was associated with to their implicitly allocated descriptors.
@@ -708,12 +785,15 @@ SQLRETURN DES_SQLFreeDesc(SQLHANDLE hdesc)
 }
 
 
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 /*
   @type    : ODBC 3.0 API
   @purpose : allocates an environment, connection, statement, or
        descriptor handle
 */
-
 SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT HandleType,
                                  SQLHANDLE   InputHandle,
                                  SQLHANDLE   *OutputHandlePtr)
@@ -746,7 +826,7 @@ SQLRETURN SQL_API SQLAllocHandle(SQLSMALLINT HandleType,
             break;
 
         default:
-            return ((DBC*)InputHandle)->set_error(DESERR_S1C00, NULL, 0);
+          return ((DBC *)InputHandle)->set_error("HYC00", "Optional feature not implemented");
     }
 
     return error;
@@ -767,7 +847,7 @@ SQLRETURN SQL_API SQLCancelHandle(SQLSMALLINT  HandleType,
   case SQL_HANDLE_DBC:
     {
       DBC *dbc= (DBC*)Handle;
-      return dbc->set_error( "IM001", "Driver does not support this function", 0);
+      return dbc->set_error("IM001", "Driver does not support this function");
     }
   /* Normally DM should map such call to SQLCancel */
   case SQL_HANDLE_STMT:
