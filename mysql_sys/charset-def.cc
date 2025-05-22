@@ -1,5 +1,5 @@
 /* Copyright (c) 2000, 2021, Oracle and/or its affiliates.
-   Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+   Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>
    (see the next block comment below).
 
    This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,17 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA */
+
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://des.sourceforge.io/)
+//
+// The authorship of each section of this source file (comments,
+// functions and other symbols) belongs to MyODBC unless we
+// explicitly state otherwise.
+// ---------------------------------------------------------
 
 #include "m_ctype.h"
 #include "my_compiler.h"

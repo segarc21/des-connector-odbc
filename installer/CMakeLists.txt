@@ -42,8 +42,6 @@ add_version_info(desodbc-installer
   "Provides installer tool functionality."
 )
 
-TARGET_LINK_LIBRARIES(desodbc-installer otel_api)
-
 IF(WIN32)
   IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     LINK_DIRECTORIES(${MYSQL_DIR}/lib/debug)

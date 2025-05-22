@@ -400,3 +400,8 @@ FodyWeavers.xsd
 *.yaml
 *.yaml
 CMakeFiles/CMakeConfigureLog.yaml
+
+# Visual studio
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

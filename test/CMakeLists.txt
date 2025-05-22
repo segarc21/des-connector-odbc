@@ -44,7 +44,7 @@ IF(NOT WIN32)
   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ODBC_LINK_FLAGS}")
 ENDIF(NOT WIN32)
 
-FOREACH(FN my_basics.c)
+FOREACH(FN tests.c)
 
   GET_FILENAME_COMPONENT(T ${FN} NAME_WE)
 
@@ -55,7 +55,7 @@ FOREACH(FN my_basics.c)
   ENDIF(WIN32)
 
   add_version_info(${T}
-    "MySQL Connector/ODBC unit test."
+    "DES Connector/ODBC unit tests."
     "Tests the driver functionality."
   )
 
@@ -85,9 +85,9 @@ FOREACH(FN my_basics.c)
   ENDIF(WIN32)
 
   IF(WIN32)
-    TARGET_LINK_LIBRARIES(${T} ${ODBCLIB} ${ODBCINSTLIB} legacy_stdio_definitions.lib myodbc-util)
+    TARGET_LINK_LIBRARIES(${T} ${ODBCLIB} ${ODBCINSTLIB} legacy_stdio_definitions.lib desodbc-util)
   ELSE(WIN32)
-    TARGET_LINK_LIBRARIES(${T} ${ODBC_LINK_FLAGS} ${ODBCINSTLIB} myodbc-util)
+    TARGET_LINK_LIBRARIES(${T} ${ODBC_LINK_FLAGS} ${ODBCINSTLIB} desodbc-util)
   ENDIF(WIN32)
   ADD_TEST(${T} ${T})
 
@@ -124,7 +124,7 @@ IF(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       ENDIF(WIN32)
 
       add_version_info(${T}
-        "MySQL Connector/ODBC unit test."
+        "DES Connector/ODBC unit tests."
         "Tests the driver functionality."
       )
 
@@ -160,7 +160,7 @@ ENDIF(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 ENDIF(NOT skip_no_dm)
 
-TARGET_LINK_LIBRARIES(my_basics ${CMAKE_THREAD_LIBS_INIT})
+TARGET_LINK_LIBRARIES(tests ${CMAKE_THREAD_LIBS_INIT})
 
 
 #
@@ -178,7 +178,7 @@ foreach(idx RANGE 0 1)
 
   list(GET CONNECTOR_DRIVER_TYPE_LIST ${idx} driver_type)
   list(GET CONNECTOR_DRIVER_TYPES_SHORT ${idx} driver_type_short)
-  set(driver_tgt "myodbc-${driver_type_short}")
+  set(driver_tgt "desodbc-${driver_type_short}")
   if(TARGET ${driver_tgt})
 
     math(EXPR DRIVERS_COUNT "${idx}+1")

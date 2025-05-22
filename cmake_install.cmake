@@ -2,7 +2,7 @@
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/MySQL_Connector_ODBC")
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/DES_Connector_ODBC")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -45,19 +45,11 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE FILE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/README.txt")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE FILE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/README.md")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE FILE RENAME "ChangeLog.txt" FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/ChangeLog")
-endif()
-
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE FILE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/Install.bat")
-endif()
-
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE FILE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/Uninstall.bat")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/." TYPE FILE FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CONTRIBUTING.md")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -86,7 +78,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/extra/otel/cmake_install.cmake")
   include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/util/cmake_install.cmake")
   include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/cmake_install.cmake")
   include("C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/setupgui/cmake_install.cmake")

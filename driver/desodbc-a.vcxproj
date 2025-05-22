@@ -61,25 +61,25 @@
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">desodbc-a.dir\Debug\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">myodbc1a</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">desodbca</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">desodbc-a.dir\Release\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">myodbc1a</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">desodbca</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">desodbc-a.dir\MinSizeRel\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">myodbc1a</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">desodbca</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\lib\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">desodbc-a.dir\RelWithDebInfo\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">myodbc1a</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">desodbca</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
@@ -123,10 +123,10 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc1a.lib</ImportLibrary>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/desodbca.lib</ImportLibrary>
       <ModuleDefinitionFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/drivera.def</ModuleDefinitionFile>
-      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc1a.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/desodbca.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -173,10 +173,10 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc1a.lib</ImportLibrary>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/desodbca.lib</ImportLibrary>
       <ModuleDefinitionFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/drivera.def</ModuleDefinitionFile>
-      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc1a.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/desodbca.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -224,9 +224,9 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/myodbc1a.lib</ImportLibrary>
+      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/desodbca.lib</ImportLibrary>
       <ModuleDefinitionFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/drivera.def</ModuleDefinitionFile>
-      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/myodbc1a.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/desodbca.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -272,10 +272,10 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc1a.lib</ImportLibrary>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/desodbca.lib</ImportLibrary>
       <ModuleDefinitionFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/drivera.def</ModuleDefinitionFile>
-      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc1a.pdb</ProgramDataBaseFile>
+      <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/desodbca.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -286,7 +286,7 @@
     <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\CMakeFiles\bd3e59b7cf59796801c0b221245a3eb3\desodbc-a_version_info.rc.rule">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating desodbc-a_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/myodbc1a.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Debug -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Debug/desodbca.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Debug -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -299,7 +299,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating desodbc-a_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/myodbc1a.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Release -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/Release/desodbca.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=Release -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -312,7 +312,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating desodbc-a_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/myodbc1a.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=MinSizeRel -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/MinSizeRel/desodbca.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=MinSizeRel -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -325,7 +325,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating desodbc-a_version_info.rc</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/myodbc1a.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=RelWithDebInfo -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
+"C:\Program Files\CMake\bin\cmake.exe" -D RC=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/driver/desodbc-a_version_info.rc -D OUTPUT=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/lib/RelWithDebInfo/desodbca.dll -D TYPE=MODULE_LIBRARY -D "DESCRIPTION=DES Connector/ODBC ANSI driver." -D "COMMENTS=Provides core driver functionality." -D VERSION=C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/version.cmake -D CONFIG=RelWithDebInfo -P C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/cmake/version_info/gen_version_info.cmake
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone

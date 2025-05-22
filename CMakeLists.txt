@@ -239,10 +239,6 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/config8.h.cmake ${CMAKE_SOURCE_DIR}/include/m
 
 
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/VersionInfo.h.cmake ${CMAKE_SOURCE_DIR}/VersionInfo.h @ONLY)
-IF(WIN32)
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/Install.bat.cmake ${CMAKE_SOURCE_DIR}/Install.bat @ONLY)
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/Uninstall.bat.cmake ${CMAKE_SOURCE_DIR}/Uninstall.bat @ONLY)
-ENDIF(WIN32)
 
 #SET(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -302,7 +298,6 @@ ENDIF(WIN32)
 #--------- check support for vector type in mysql --------
 TRY_COMPILE(COMPILE_RESULT ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/cmake/type_vector.c
 CMAKE_FLAGS "-DINCLUDE_DIRECTORIES='${MYSQL_INCLUDE_DIR}'")
-MESSAGE(STATUS "Checking if MySQL client lib supports vector type - ${COMPILE_RESULT}")
 
 IF(COMPILE_RESULT)
     ADD_DEFINITIONS(-DHAVE_TYPE_VECTOR)
@@ -469,7 +464,6 @@ MESSAGE(STATUS "Installation library subdir: ${LIB_SUBDIR}")
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
-add_subdirectory(extra/otel)
 ADD_SUBDIRECTORY(util)
 ADD_SUBDIRECTORY(driver)
 
@@ -484,73 +478,6 @@ ADD_SUBDIRECTORY(installer)
 ADD_SUBDIRECTORY(mysql_sys)
 ADD_SUBDIRECTORY(mysql_strings)
 
-IF(APPLE)
-  ADD_SUBDIRECTORY(scripts/macosx)
-ENDIF()
-
-##############################################################################
-#
-#  Packaging
-#
-##############################################################################
-
-# Some stuff for building RPMs, that is not using CPack
-# RPMs doesn't allow "-" in version, so we use like "x.x.0_alpha"
-STRING(REPLACE "-" "_" CONNECTOR_NODASH_VERSION "${CONNECTOR_VERSION}")
-IF(UNIX)
-  EXECUTE_PROCESS(COMMAND "date" "+%Y" OUTPUT_VARIABLE CURRENT_YEAR OUTPUT_STRIP_TRAILING_WHITESPACE)
-ENDIF()
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/scripts/myodbc3.spec.sh ${CMAKE_SOURCE_DIR}/myodbc3.spec @ONLY)
-
-# The rest is mainly about CPack
-SET(CPACK_PACKAGE_VERSION_MAJOR ${CONNECTOR_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${CONNECTOR_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${CONNECTOR_PATCH})
-
-IF(NOT EXTRA_NAME_SUFFIX)
-  SET(EXTRA_NAME_SUFFIX "")
-ENDIF(NOT EXTRA_NAME_SUFFIX)
-IF(NOT EXTRA_NAME_SUFFIX2)
-  SET(EXTRA_NAME_SUFFIX2 "")
-ENDIF(NOT EXTRA_NAME_SUFFIX2)
-
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Connector/ODBC ${CONNECTOR_BASE_VERSION}, a library for connecting to MySQL servers.")
-SET(CPACK_PACKAGE_NAME                "mysql-connector-odbc${EXTRA_NAME_SUFFIX}")
-
-SET(CPACK_RESOURCE_FILE_LICENSE     "${CMAKE_SOURCE_DIR}/LICENSE.txt")
-if(EXISTS "${CMAKE_SOURCE_DIR}/README.txt")
-  SET(CPACK_PACKAGE_DESCRIPTION_FILE    "${CMAKE_SOURCE_DIR}/README.txt")
-else()
-  SET(CPACK_PACKAGE_DESCRIPTION_FILE    "${CMAKE_SOURCE_DIR}/README.md")
-endif()
-
-SET(CPACK_SOURCE_PACKAGE_FILE_NAME    "${CPACK_PACKAGE_NAME}-${CONNECTOR_VERSION}-src")
-SET(CPACK_PACKAGE_INSTALL_DIRECTORY   "${CPACK_PACKAGE_NAME}-${CONNECTOR_VERSION}${EXTRA_NAME_SUFFIX2}${PACKAGE_DRIVER_TYPE_SUFFIX}-${CONNECTOR_PLATFORM}")
-IF(WIN32)
-  SET(CPACK_GENERATOR                 "ZIP")
-  SET(CPACK_PACKAGE_FILE_NAME         "${CPACK_PACKAGE_NAME}-${CONNECTOR_VERSION}${EXTRA_NAME_SUFFIX2}${PACKAGE_DRIVER_TYPE_SUFFIX}-${CONNECTOR_PLATFORM}")
-ELSE(WIN32)
-  SET(CPACK_GENERATOR                 "TGZ")
-  SET(CPACK_PACKAGE_FILE_NAME         "${CPACK_PACKAGE_INSTALL_DIRECTORY}")
-ENDIF(WIN32)
-
-SET(CPACK_SOURCE_IGNORE_FILES
-\\\\.bzr/
-\\\\.bzr-mysql
-\\\\.bzrignore
-CMakeCache\\\\.txt
-CPackSourceConfig\\\\.cmake
-CPackConfig\\\\.cmake
-VersionInfo\\\\.h$
-postflight$
-/cmake_install\\\\.cmake
-/CTestTestfile\\\\.cmake
-/CMakeFiles/
-/_CPack_Packages/
-Makefile$
-cmake/sql.*\\\\.c$
-)
-
 #------------ Installation ---------------------------
 INCLUDE(cmake/info_bin.cmake)
 
@@ -564,18 +491,6 @@ else()
 endif()
 
 IF(WIN32)
-
-# For conveninence copy (un)install.bat scripts to the build
-# directory to ease testing.
-
-  CONFIGURE_FILE(Install.bat ${CMAKE_BINARY_DIR}/Install.bat COPYONLY)
-  CONFIGURE_FILE(Uninstall.bat ${CMAKE_BINARY_DIR}/Uninstall.bat COPYONLY)
-
-# TODO: line-ending conversions unix->dos
-
-  INSTALL(FILES ChangeLog     DESTINATION . RENAME ChangeLog.txt)
-  INSTALL(FILES Install.bat   DESTINATION .)
-  INSTALL(FILES Uninstall.bat DESTINATION .)
 
   # Install all .pdb files to enable debugging. Note that what build
   # type and what sub directory the binaries ends up in, like

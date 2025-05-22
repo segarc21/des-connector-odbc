@@ -123,7 +123,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/Debug/desodbc-installer.lib</ImportLibrary>
       <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/Debug/desodbc-installer.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
@@ -172,7 +172,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/Release/desodbc-installer.lib</ImportLibrary>
       <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/Release/desodbc-installer.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
@@ -269,7 +269,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <IgnoreSpecificDefaultLibraries>mysqlclient;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/RelWithDebInfo/desodbc-installer.lib</ImportLibrary>
       <ProgramDataBaseFile>C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/RelWithDebInfo/desodbc-installer.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>

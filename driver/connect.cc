@@ -1,6 +1,6 @@
 // Copyright (c) 2000, 2024, Oracle and/or its affiliates.
-// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>
-// (see the anext block comment below).
+// Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>
+// (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 2.0, as
@@ -29,10 +29,10 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 // ---------------------------------------------------------
-// Modified in 2025 by Sergio Miguel Garc�a Jim�nez <segarc21@ucm.es>,
+// Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>,
 // hereinafter the DESODBC developer, in the context of the GPLv2 derivate
 // work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
-// System (DES) (see https://www.fdi.ucm.es/profesor/fernan/des/)
+// System (DES) (see https://des.sourceforge.io/)
 //
 // The authorship of each section of this source file (comments,
 // functions and other symbols) belongs to MyODBC unless we
@@ -47,7 +47,6 @@
 #include "driver.h"
 #include "installer.h"
 #include "stringutil.h"
-#include "telemetry.h"
 
 #include <map>
 #include <random>
@@ -76,32 +75,19 @@ std::mutex global_fido_mutex;
   This function creates the pipes for the
   DES process we are about to launch.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::createPipes() {
   /*
-
-
-
-
       We will create anonymous pipes so
       the driver can communicate with a new DES process.
       The idea is that the driver can read and write onto
       an exclusive instance of DES, as its executable provides
       a CLI.
 
-
-
-
       For creating the pipes, we will follow this Microsoft article that shows
       how to create a child process with redirected input and output:
       https://learn.microsoft.com/en-us/windows/win32/procthread/creating-a-child-process-with-redirected-input-and-output
-
-
-
 
   */
 
@@ -194,9 +180,6 @@ SQLRETURN DBC::createPipes() {
   the shared memory file, which is a necessary
   step in the Windows version.
 
-
-
-
   Original author: DESODBC Developer
 */
 void DBC::remove_client_from_shmem(ConnectedClients &pids, size_t id) {
@@ -228,9 +211,6 @@ void DBC::remove_client_from_shmem(ConnectedClients &pids, size_t id) {
   This function gets a generic mutex
   in Windows.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::getMutex(HANDLE h, const std::string &name) {
@@ -251,9 +231,6 @@ SQLRETURN DBC::getMutex(HANDLE h, const std::string &name) {
 /* DESODBC:
   This function gets a generic mutex
   in Unix-like systems.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -298,9 +275,6 @@ SQLRETURN DBC::getMutex(sem_t *s, const std::string &name) {
   This function releases a generic
   mutex in Windows.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::releaseMutex(HANDLE h, const std::string &name) {
@@ -315,9 +289,6 @@ SQLRETURN DBC::releaseMutex(HANDLE h, const std::string &name) {
 /* DESODBC:
   This function releases a generic
   mutex in Windows.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -335,9 +306,6 @@ SQLRETURN DBC::releaseMutex(sem_t *s, const std::string &name) {
   This function sets a generic event in
   the context of Windows' event objects.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::setEvent(HANDLE h, const std::string &name) {
@@ -352,9 +320,6 @@ SQLRETURN DBC::setEvent(HANDLE h, const std::string &name) {
 /* DESODBC:
   This function gets the shared memory
   mutex.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -373,9 +338,6 @@ SQLRETURN DBC::getSharedMemoryMutex() {
 /* DESODBC:
   This function releases the shared
   memory mutex.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -396,9 +358,6 @@ SQLRETURN DBC::releaseSharedMemoryMutex() {
   This function gets the request handle mutex,
   which is only available in the Windows version.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::getRequestHandleMutex() {
@@ -409,9 +368,6 @@ SQLRETURN DBC::getRequestHandleMutex() {
   This function releases the request handle mutex,
   which is only available in the Windows version.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::releaseRequestHandleMutex() {
@@ -421,9 +377,6 @@ SQLRETURN DBC::releaseRequestHandleMutex() {
 
 /* DESODBC:
   This function gets the query mutex.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -441,9 +394,6 @@ SQLRETURN DBC::getQueryMutex() {
 
 /* DESODBC:
   This function releases the query mutex.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -464,9 +414,6 @@ SQLRETURN DBC::releaseQueryMutex() {
   This function sets a request handle event in
   the context of Windows' event objects.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::setRequestHandleEvent() {
@@ -476,9 +423,6 @@ SQLRETURN DBC::setRequestHandleEvent() {
 /* DESODBC:
   This function sets a finishing event in
   the context of Windows' event objects.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -490,9 +434,6 @@ SQLRETURN DBC::setFinishingEvent() {
 /* DESODBC:
   This function gets the input/output
   pipes from the already launched global DES process.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -659,9 +600,6 @@ SQLRETURN DBC::getDESProcessPipes() {
   This function creates the DES global process in
   Unix-like systems.
 
-
-
-
   Original author: DESODBC Developer
 */
 SQLRETURN DBC::createDESProcess(const char *des_exec_path,
@@ -760,9 +698,6 @@ SQLRETURN DBC::createDESProcess(const char *des_exec_path,
   the last '\' or '/' delimiter character if so.
   (char version)
 
-
-
-
   Original author: DESODBC Developer
 */
 const char *prepare_working_dir(const char *working_dir) {
@@ -789,9 +724,6 @@ const char *prepare_working_dir(const char *working_dir) {
   This function modifies the working directory removing
   the last '\' or '/' delimiter character if so.
   (wchar version)
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -820,9 +752,6 @@ const wchar_t *prepare_working_dir(const wchar_t *working_dir) {
 /* DESODBC:
   This function creates the DES global process in
   Windows.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -858,9 +787,6 @@ SQLRETURN DBC::createDESProcess(SQLWCHAR *des_exec_path,
   [out]               LPPROCESS_INFORMATION lpProcessInformation
   );
 
-
-
-
   - lpApplicationName: if NULL, it justs go for lpApplicationName (simpler).
   - lpCommandLine: route of the DES executable.
   - lpProcessAttributes: if NULL, the identifier of the new process cannot
@@ -873,10 +799,6 @@ SQLRETURN DBC::createDESProcess(SQLWCHAR *des_exec_path,
   - lpCurrentDirectory: if NULL, we use parent's starting directory
   - lpStartupInfo: the pointer to a STARTUPINFO structure
   - lpProcessInformation: the pointer to a PROCESS_INFORMATION structure
-
-
-
-
   */
 
   if (!CreateProcessW(NULL, des_exec_path, NULL, NULL, TRUE,
@@ -938,9 +860,6 @@ SQLRETURN DBC::createDESProcess(SQLWCHAR *des_exec_path,
 /* DESODBC:
   This function shares the DES global process pipes
   in the context of the Windows version.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -1004,9 +923,6 @@ void DBC::sharePipes() {
 
 /* DESODBC:
   This function initializes the IPC objects.
-
-
-
 
   Original author: DESODBC Developer
 */
@@ -1140,9 +1056,6 @@ SQLRETURN DBC::initialize() {
   We have almost completely rewritten this
   function from MyODBC so as to adapt it to the DESODBC's needs.
 
-
-
-
   Original author: MyODBC
   Modified by: DESODBC Developer
 */
@@ -1150,13 +1063,7 @@ SQLRETURN DBC::initialize() {
 Try to establish a connection to a MySQL server based on the data source
 configuration.
 
-
-
-
 @param[in]  ds   Data source information
-
-
-
 
 @return Standard SQLRETURN code. If it is @c SQL_SUCCESS or @c
 SQL_SUCCESS_WITH_INFO, a connection has been established.
@@ -1269,17 +1176,11 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
   MySQLConnect in MyODBC. We have reused
   almost everything.
 
-
-
-
   Original author: MyODBC
   Modified by: DESODBC Developer
 */
 /**
 Establish a connection to a data source.
-
-
-
 
 @param[in]  hdbc    Connection handle
 @param[in]  szDSN   Data source name (in connection charset)
@@ -1289,13 +1190,7 @@ Establish a connection to a data source.
 @param[in]  szAuth  Authentication string (password) (in connection charset)
 @param[in]  cbAuth  Length of authentication string in bytes or @c SQL_NTS
 
-
-
-
 @return  Standard ODBC success codes
-
-
-
 
 @since ODBC 1.0
 @since ISO SQL 92
@@ -1347,9 +1242,6 @@ SQLRETURN SQL_API DES_SQLConnect(SQLHDBC hdbc, SQLWCHAR *szDSN,
   have a safe close of the DESODBC's IPC
   objects.
 
-
-
-
   Original author: DESODBC Developer
 */
 void safeCloseConnections() {
@@ -1363,9 +1255,6 @@ void safeCloseConnections() {
   safeCloseConnections when destroying this
   driver instance.
 
-
-
-
   Original author: DESODBC Developer
 */
 __attribute__((constructor)) void init() { atexit(safeCloseConnections); }
@@ -1376,9 +1265,6 @@ __attribute__((constructor)) void init() { atexit(safeCloseConnections); }
   MySQLDriverConnect in MyODBC. We have reused
   almost everything.
 
-
-
-
   Original author: MyODBC
   Modified by: DESODBC Developer
 */
@@ -1387,16 +1273,10 @@ An alternative to SQLConnect that allows specifying more of the connection
 parameters, and whether or not to prompt the user for more information
 using the setup library.
 
-
-
-
 NOTE: The prompting done in this function using MYODBCUTIL_DATASOURCE has
       been observed to cause an access violation outside of our code
       (specifically in Access after prompting, before table link list).
       This has only been seen when setting a breakpoint on this function.
-
-
-
 
 @param[in]  hdbc  Handle of database connection
 @param[in]  hwnd  Window handle. May be @c NULL if no prompting will be done.
@@ -1411,13 +1291,7 @@ NOTE: The prompting done in this function using MYODBCUTIL_DATASOURCE has
             @c SQL_DRIVER_COMPLETE, @c SQL_DRIVER_COMPLETE_REQUIRED, or
             @cSQL_DRIVER_NOPROMPT
 
-
-
-
 @return Standard ODBC return codes
-
-
-
 
 @since ODBC 1.0
 @since ISO SQL 92
@@ -1478,9 +1352,6 @@ SQLRETURN SQL_API DES_SQLDriverConnect(
 
   /*
     We only prompt if we need to.
-
-
-
 
     A not-so-obvious gray area is when SQL_DRIVER_COMPLETE or
     SQL_DRIVER_COMPLETE_REQUIRED was specified along without a server or
@@ -1733,27 +1604,14 @@ void DBC::free_connection_stmts() {
   This function has been almost completely reused
   from MyODBC.
 
-
-
-
   Original author: MyODBC
   Modified by: DESODBC Developer
 */
 /**
 Disconnect a connection.
 
-
-
-
 @param[in]  hdbc   Connection handle
-
-
-
-
 @return  Standard ODBC return codes
-
-
-
 
 @since ODBC 1.0
 @since ISO SQL 92

@@ -43,5 +43,5 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-MYSQL_LOGO              BITMAP  DISCARDABLE     "..\mysql.bmp"
+MYSQL_LOGO              BITMAP  DISCARDABLE     "..\des_logo.bmp"
 #endif    // English (U.S.) resources

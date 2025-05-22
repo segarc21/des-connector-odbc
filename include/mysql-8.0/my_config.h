@@ -248,8 +248,8 @@
 /* #undef DEFAULT_MYSQL_HOME */
 #define SHAREDIR "share"
 /* #undef DEFAULT_BASEDIR */
-#define MYSQL_DATADIR "C:/Program Files/MySQL/MySQL Server "
-#define MYSQL_KEYRINGDIR "C:/Program Files/MySQL/MySQL Server "
+/* #undef MYSQL_DATADIR */
+/* #undef MYSQL_KEYRINGDIR */
 #define DEFAULT_CHARSET_HOME "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0"
 /* #undef PLUGINDIR */
 /* #undef DEFAULT_SYSCONFDIR */

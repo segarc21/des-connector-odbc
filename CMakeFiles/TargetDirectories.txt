@@ -2,8 +2,6 @@ C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/PACKAGE.dir
 C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/INSTALL.dir
 C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/ALL_BUILD.dir
 C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/CMakeFiles/ZERO_CHECK.dir
-C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/extra/otel/CMakeFiles/PACKAGE.dir
-C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/extra/otel/CMakeFiles/INSTALL.dir
 C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/util/CMakeFiles/desodbc-util.dir
 C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/util/CMakeFiles/PACKAGE.dir
 C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/util/CMakeFiles/INSTALL.dir

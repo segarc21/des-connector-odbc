@@ -1,5 +1,5 @@
 // Copyright (c) 2003, 2024, Oracle and/or its affiliates.
-// Modified in 2025 by Sergio Miguel García Jiménez <segarc21@ucm.es>
+// Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>
 // (see the next block comment below).
 //
 // This program is free software; you can redistribute it and/or modify

@@ -44,7 +44,7 @@
     <CustomBuild Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\myodbcS.def">
+    <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\desodbcS.def">
       <Filter>Source Files</Filter>
     </None>
     <None Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\setupgui\windows\connector_odbc_header.bmp" />

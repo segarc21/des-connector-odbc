@@ -5,6 +5,6 @@ os-info              :  Windows-10.0.19045
 build-type           :  Debug
 compiler             :  MSVC 19.33.31630.0
 mysql-version        :  
-libmysql-linkage     :  Static
+libmysql-linkage     :  Dynamic
 msvc-runtime-linkage :  Dynamic (/MD)
 

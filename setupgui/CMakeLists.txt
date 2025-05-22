@@ -40,8 +40,8 @@ endif(UNICODE OR NOT ANSI)
 
 if(WIN32)
 
-  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/setupgui/myodbcS.def.in
-                 ${CMAKE_SOURCE_DIR}/setupgui/myodbcS.def @ONLY)
+  CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/setupgui/desodbcS.def.in
+                 ${CMAKE_SOURCE_DIR}/setupgui/desodbcS.def @ONLY)
 
   CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/setupgui/windows/odbcdialogparams.rc.in
                  ${CMAKE_BINARY_DIR}/setupgui/windows/odbcdialogparams.rc @ONLY)
@@ -51,7 +51,7 @@ if(WIN32)
     callbacks.cc
     setupgui.h
     utils.cc
-    myodbcS.def
+    desodbcS.def
     windows/main.cpp
     windows/odbcdialogparams.cpp
     windows/odbcdialogparams.h
@@ -112,7 +112,7 @@ add_version_info(desodbc-setup
   "Provides driver configuration GUI."
 )
 
-target_link_libraries(desodbc-setup ${ODBCLIB} ${ODBCINSTLIB} otel_api)
+target_link_libraries(desodbc-setup ${ODBCLIB} ${ODBCINSTLIB})
 
 # Note: When using GTK+, these libraries will be linked to -gtk modules.
 
@@ -186,7 +186,6 @@ if(use_gtk)
 
     target_link_libraries(${${gtk}_target} PRIVATE
        ${${gtk}_LIBS} desodbc-util ${ODBCLIB} ${MYSQL_CLIENT_LIBS} ${PLATFORM_LIBS}
-       otel_api
     )
 
     target_include_directories(${${gtk}_target} PRIVATE ${${gtk}_INCLUDE_DIRS})
