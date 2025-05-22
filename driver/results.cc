@@ -3210,104 +3210,144 @@ void ResultTable::build_table_SQLForeignKeys_PKFK() {
 void ResultTable::build_table_SQLColumns() {
   insert_SQLColumns_cols();
 
+  std::string catalog_name_param = this->params.catalog_name;
+
   std::string table_name_search = this->params.table_name;
 
   std::string column_name_search = this->params.column_name;
 
-  auto pair = this->dbc->send_query_and_read("/dbschema");
+  std::vector<std::string> dbs;
+  auto pair = dbc->send_query_and_read("/show_dbs");
   SQLRETURN rc = pair.first;
-  std::string dbschema_str = pair.second;
+  std::string dbs_str = pair.second;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     return;
   }
 
-  std::unordered_map<std::string, DBSchemaRelationInfo> map = getAllRelationsInfo(dbschema_str);
+  std::vector<std::string> candidate_dbs = getLines(dbs_str);
+  candidate_dbs.erase(
+      std::remove(candidate_dbs.begin(), candidate_dbs.end(), "$eot"),
+      candidate_dbs.end());
 
-  std::vector<std::string> dbschema_tables;
-  for (auto pair : map) {
-    if (pair.second.is_table) //we only deal with tables in SQLColumns.
-      dbschema_tables.push_back(pair.first);
-  }
+  dbs = filter_candidates(candidate_dbs, catalog_name_param,
+                          this->params.metadata_id);
 
-  std::vector<std::string> dbschema_table_names = filter_candidates(
-      dbschema_tables, table_name_search, this->params.metadata_id);
-
-  for (auto dbschema_table_name : dbschema_table_names) {
-    
-    std::string select_query = "select * from " + dbschema_table_name;
-    pair = dbc->send_query_and_read(select_query);
-    rc = pair.first;
-    std::string select_query_output = pair.second;
+  for (int i = 0; i < dbs.size(); ++i) {
+    std::string query_dbschema = "/dbschema ";
+    query_dbschema += dbs[i];
+    auto pair = this->dbc->send_query_and_read(query_dbschema);
+    SQLRETURN rc = pair.first;
+    std::string dbschema_str = pair.second;
     if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
       return;
     }
 
-    ResultTable table(SELECT, select_query_output);
+    std::unordered_map<std::string, DBSchemaRelationInfo> map =
+        getAllRelationsInfo(dbschema_str);
 
-    std::vector<std::string> col_names = table.names_ordered;
-    col_names = filter_candidates(col_names, column_name_search,
-                                  this->params.metadata_id);
+    std::vector<std::string> dbschema_tables;
+    for (auto pair : map) {
+      if (pair.second.is_table)  // we only deal with tables in SQLColumns.
+        dbschema_tables.push_back(pair.first);
+    }
 
-    for (int i = 0; i < col_names.size(); ++i) {
-      Column col = table.columns[col_names[i]];
-      DES_FIELD *field = col.get_DES_FIELD();
-      if (this->params.catalog_name.size() == 0)
-        insert_value("TABLE_CAT", std::string("$des"));
-      else
-        insert_value("TABLE_CAT", std::string(this->params.catalog_name));
-      insert_value("TABLE_SCHEM", NULL_STR);
-      insert_value(
-          "TABLE_NAME", dbschema_table_name);
-      insert_value("COLUMN_NAME", col_names[i]);
+    std::vector<std::string> dbschema_table_names = filter_candidates(
+        dbschema_tables, table_name_search, this->params.metadata_id);
 
-      enum_field_types des_type = field->type;
-      int sql_type = des_type_2_sql_type(des_type);
-      insert_value("DATA_TYPE", std::to_string(sql_type));
-      insert_value("TYPE_NAME", des_type_2_str(des_type));
+    for (auto dbschema_table_name : dbschema_table_names) {
 
-      insert_value("COLUMN_SIZE", std::to_string(col.getColumnSize()));
+      pair = this->dbc->send_query_and_read("/current_db");
+      rc = pair.first;
+      if (!SQL_SUCCEEDED(rc)) return;
 
-      TypeAndLength tal = {col.get_simple_type(), col.getMaxLength()};
-      insert_value("BUFFER_LENGTH",
-                   std::to_string(get_transfer_octet_length(tal)));
+      std::string current_db_output = pair.second;
+      std::string previous_db = getLines(current_db_output)[0];
 
-      insert_value("DECIMAL_DIGITS", std::to_string(field->decimals));
+      std::string query_usedb = "/use_db ";
+      query_usedb += dbs[i];
 
-      if (is_numeric_des_data_type(des_type)) {
-        insert_value("NUM_PREC_RADIX", std::string("10"));
-      } else
-        insert_value("NUM_PREC_RADIX", NULL_STR);
+      pair = this->dbc->send_query_and_read(query_usedb);
+      rc = pair.first;
+      if (!SQL_SUCCEEDED(rc)) return;
 
-      insert_value(
-          "NULLABLE",
-          std::to_string(SQL_NULLABLE_UNKNOWN));  // we cannot know this in DES.
-      insert_value(
-          "REMARKS", std::string(""));
-      insert_value("COLUMN_DEF", NULL_STR);
-      if (sql_type == SQL_TYPE_DATE)
-        insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATETIME));
-      else
-        insert_value("SQL_DATA_TYPE", std::to_string(sql_type));
+      std::string select_query = "select * from " + dbschema_table_name;
+      pair = dbc->send_query_and_read(select_query);
+      rc = pair.first;
+      std::string select_query_output = pair.second;
+      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+        return;
+      }
 
-      if (sql_type == SQL_TYPE_DATE)
-        insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_DATE));
-      else if (sql_type == SQL_TYPE_TIME)
-        insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIME));
-      else if (sql_type == SQL_TYPE_TIMESTAMP)
-        insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIMESTAMP));
-      else
-        insert_value("SQL_DATETIME_SUB", NULL_STR);
+      std::string query_usepreviousdb = "/use_db ";
+      query_usepreviousdb += previous_db;
 
-      if (is_character_des_type(field))) {
+      pair = this->dbc->send_query_and_read(query_usepreviousdb);
+      rc = pair.first;
+      if (!SQL_SUCCEEDED(rc)) return;
+
+      ResultTable table(SELECT, select_query_output);
+
+      std::vector<std::string> col_names = table.names_ordered;
+      col_names = filter_candidates(col_names, column_name_search,
+                                    this->params.metadata_id);
+
+      for (int j = 0; j < col_names.size(); ++j) {
+        Column col = table.columns[col_names[j]];
+        DES_FIELD *field = col.get_DES_FIELD();
+        insert_value("TABLE_CAT", dbs[i]);
+        insert_value("TABLE_SCHEM", NULL_STR);
+        insert_value("TABLE_NAME", dbschema_table_name);
+        insert_value("COLUMN_NAME", col_names[j]);
+
+        enum_field_types des_type = field->type;
+        int sql_type = des_type_2_sql_type(des_type);
+        insert_value("DATA_TYPE", std::to_string(sql_type));
+        insert_value("TYPE_NAME", des_type_2_str(des_type));
+
+        insert_value("COLUMN_SIZE", std::to_string(col.getColumnSize()));
+
+        TypeAndLength tal = {col.get_simple_type(), col.getMaxLength()};
+        insert_value("BUFFER_LENGTH",
+                     std::to_string(get_transfer_octet_length(tal)));
+
+        insert_value("DECIMAL_DIGITS", std::to_string(field->decimals));
+
+        if (is_numeric_des_data_type(des_type)) {
+          insert_value("NUM_PREC_RADIX", std::string("10"));
+        } else
+          insert_value("NUM_PREC_RADIX", NULL_STR);
+
+        insert_value("NULLABLE",
+                     std::to_string(
+                         SQL_NULLABLE_UNKNOWN));
+        insert_value("REMARKS", std::string(""));
+        insert_value(
+            "COLUMN_DEF", std::string("NULL"));
+        if (sql_type == SQL_TYPE_DATE)
+          insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATETIME));
+        else
+          insert_value("SQL_DATA_TYPE", std::to_string(sql_type));
+
+        if (sql_type == SQL_TYPE_DATE)
+          insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_DATE));
+        else if (sql_type == SQL_TYPE_TIME)
+          insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIME));
+        else if (sql_type == SQL_TYPE_TIMESTAMP)
+          insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIMESTAMP));
+        else
+          insert_value("SQL_DATETIME_SUB", std::to_string(0));
+
+        if (is_character_des_type(field))) {
       insert_value("CHAR_OCTET_LENGTH", std::to_string(tal.len));
     }
-      else
-        insert_value("CHAR_OCTET_LENGTH", NULL_STR);
+        else
+          insert_value("CHAR_OCTET_LENGTH", NULL_STR);
 
-      insert_value("ORDINAL_POSITION", std::to_string(i + 1));
-      insert_value("IS_NULLABLE", std::string(""));
+        insert_value("ORDINAL_POSITION", std::to_string(j + 1));
+        insert_value("IS_NULLABLE", std::string("YES"));
+      }
     }
-  
+
   }
 
 }
@@ -3505,6 +3545,10 @@ void ResultTable::build_table_select() {
 
   // We ignore the first line, that contains the keywords success/answer.
   int i = 1;
+
+  //No columns: we are dealing with an empty table.
+  if (lines[i] == "$")
+      return;
 
   // If the first message is not answer, we can be sure that the output
   // originates from a non-select query. We then create the default

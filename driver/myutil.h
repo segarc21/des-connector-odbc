@@ -308,7 +308,7 @@ inline const std::unordered_map<std::string, SQLSMALLINT> typestr_sqltype_map = 
     {"varchar", SQL_LONGVARCHAR},
     {"char", SQL_CHAR},  // we will use it with size_str=1
     {"char()", SQL_CHAR},
-    {"integer", SQL_BIGINT},
+    {"integer_des", SQL_BIGINT},
     {"int", SQL_BIGINT},
     {"float", SQL_DOUBLE},
     {"real", SQL_DOUBLE},
@@ -643,7 +643,6 @@ DESC*     desc_alloc              (STMT *stmt, SQLSMALLINT alloc_type,
                                   desc_ref_type ref_type, desc_desc_type desc_type);
 void      desc_free               (DESC *desc);
 int       desc_find_dae_rec       (DESC *desc);
-DESCREC * desc_find_outstream_rec (STMT *stmt, uint *recnum, uint *res_col_num);
 SQLRETURN
 stmt_SQLSetDescField      (STMT *stmt, DESC *desc, SQLSMALLINT recnum,
                           SQLSMALLINT fldid, SQLPOINTER val, SQLINTEGER buflen);
@@ -661,12 +660,6 @@ void sqlnum_to_str        (SQL_NUMERIC_STRUCT *sqlnum, SQLCHAR *numstr,
 void *ptr_offset_adjust   (void *ptr, SQLULEN *bind_offset,
                           SQLINTEGER bind_type, SQLINTEGER default_size,
                           SQLULEN row);
-
-/* DESODBC:
-    Original author: MyODBC
-    Modified by: DESODBC Developer
-*/
-enum enum_field_types map_sql2mysql_type(SQLSMALLINT sql_type);
 
 
 const char *get_fractional_part   (const char * str, int len,

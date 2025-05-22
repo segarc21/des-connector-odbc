@@ -181,6 +181,9 @@ void fix_result_types(STMT *stmt)
       irrec->literal_suffix= (SQLCHAR *) "";
     }
     switch (field->type) {
+      case DES_TYPE_SHORT:
+      case DES_TYPE_LONG:
+        irrec->num_prec_radix = 10;
 
     /* overwrite irrec->precision set above */
     case DES_TYPE_FLOAT:
@@ -697,7 +700,7 @@ std::map<std::string, int> sql_data_types_map = {
     {"char(N)", SQL_CHAR},
     {"varchar(N)", SQL_CHAR},
     {"char", SQL_CHAR},
-    {"integer", SQL_BIGINT},
+    {"integer_des", SQL_BIGINT},
     {"int", SQL_BIGINT},
     {"float", SQL_DOUBLE},
     {"real", SQL_DOUBLE},
@@ -743,11 +746,17 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
       if (buff) (void)desodbc_stpmov(buff, "char");
       return SQL_CHAR;
     case DES_TYPE_INTEGER:
-      if (buff) (void)desodbc_stpmov(buff, "integer");
+      if (buff) (void)desodbc_stpmov(buff, "integer_des");
       return SQL_BIGINT;
     case DES_TYPE_INT:
       if (buff) (void)desodbc_stpmov(buff, "int");
       return SQL_BIGINT;
+    case DES_TYPE_SHORT:
+      if (buff) (void)desodbc_stpmov(buff, "smallint");
+      return SQL_SMALLINT;
+    case DES_TYPE_LONG:
+      if (buff) (void)desodbc_stpmov(buff, "integer");
+      return SQL_INTEGER;
     case DES_TYPE_FLOAT:
       if (buff) (void)desodbc_stpmov(buff, "float");
       return SQL_DOUBLE;
@@ -862,6 +871,10 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
   case DES_TYPE_INTEGER:
   case DES_TYPE_INT:
     return 19;
+  case DES_TYPE_SHORT:
+    return 5;
+  case DES_TYPE_LONG:
+    return 10;
   case DES_TYPE_FLOAT:
   case DES_TYPE_REAL:
     return 53;
@@ -905,6 +918,8 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
   /* All exact numeric types. */
     case DES_TYPE_INTEGER:
     case DES_TYPE_INT:
+    case DES_TYPE_SHORT:
+    case DES_TYPE_LONG:
     case DES_TYPE_DATE:
     case DES_TYPE_TIME:
     case DES_TYPE_DATETIME:
@@ -947,6 +962,10 @@ SQLLEN get_transfer_octet_length(TypeAndLength tal) {
     case DES_TYPE_INTEGER:
     case DES_TYPE_INT:
       return 8;
+    case DES_TYPE_SHORT:
+      return 2;
+    case DES_TYPE_LONG:
+      return 4;
     case DES_TYPE_FLOAT:
     case DES_TYPE_REAL:
       return 8;
@@ -1021,6 +1040,10 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),DES_FIELD *field)
     case DES_TYPE_INTEGER:
     case DES_TYPE_INT:
       return 20;
+    case DES_TYPE_SHORT:
+      return 5;
+    case DES_TYPE_LONG:
+      return 10;
     case DES_TYPE_FLOAT:
     case DES_TYPE_REAL:
       return 24;
@@ -1219,6 +1242,10 @@ int unireg_to_c_datatype(DES_FIELD *field)
       case DES_TYPE_DATETIME:
       case DES_TYPE_TIMESTAMP:
         return SQL_C_TIMESTAMP;
+      case DES_TYPE_SHORT:
+        return SQL_C_SSHORT;
+      case DES_TYPE_LONG:
+        return SQL_C_LONG;
       default:
         return SQL_C_CHAR;
     }
@@ -2114,7 +2141,9 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR_N, 0, 0},
     {(SQLCHAR *)"varchar", 7, SQL_CHAR, DES_TYPE_VARCHAR_N, 0, 0},
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR, 1, 0},
-    {(SQLCHAR *)"integer", 7, SQL_BIGINT, DES_TYPE_INTEGER, 19, 1},
+    {(SQLCHAR *)"integer_des", 7, SQL_BIGINT, DES_TYPE_INTEGER, 19, 1},
+    {(SQLCHAR *)"smallint", 7, SQL_SMALLINT, DES_TYPE_SHORT, 5, 1},
+    {(SQLCHAR *)"integer", 7, SQL_INTEGER, DES_TYPE_LONG, 8, 1},
     {(SQLCHAR *)"int", 3, SQL_BIGINT, DES_TYPE_INT, 19, 1},
     {(SQLCHAR *)"float", 5, SQL_DOUBLE, DES_TYPE_FLOAT, 53, 1},
     {(SQLCHAR *)"real", 4, SQL_DOUBLE, DES_TYPE_REAL, 53, 1},
@@ -2123,23 +2152,6 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
     {(SQLCHAR *)"datetime", 8, SQL_DATETIME, DES_TYPE_DATETIME, 19, 1},
     {(SQLCHAR *)"timestamp", 9, SQL_TYPE_TIMESTAMP, DES_TYPE_TIMESTAMP, 19, 1}
 };
-
-/* DESODBC:
-    Original author: MyODBC
-    Modified by: DESODBC Developer
-*/
-enum enum_field_types map_sql2mysql_type(SQLSMALLINT sql_type)
-{
-  for (auto &elem : SQL_TYPE_MAP_values)
-  {
-    if (elem.sql_type == sql_type)
-    {
-      return (enum_field_types)elem.des_type;
-    }
-  }
-
-  return DES_UNKNOWN_TYPE;
-}
 
 
 
@@ -2708,7 +2720,6 @@ int des_type_2_sql_type(enum_field_types des_type) {
     case DES_TYPE_CHAR:
       return SQL_CHAR;
     case DES_TYPE_INTEGER:
-      return SQL_BIGINT;
     case DES_TYPE_INT:
       return SQL_BIGINT;
     case DES_TYPE_FLOAT:
@@ -2723,6 +2734,10 @@ int des_type_2_sql_type(enum_field_types des_type) {
       return SQL_DATETIME;
     case DES_TYPE_TIMESTAMP:
       return SQL_TYPE_TIMESTAMP;
+    case DES_TYPE_SHORT:
+      return SQL_SMALLINT;
+    case DES_TYPE_LONG:
+      return SQL_INTEGER;
     default:
       return SQL_UNKNOWN_TYPE;
   }
@@ -2750,6 +2765,8 @@ bool is_numeric_des_data_type(enum_field_types type) {
     case DES_TYPE_INTEGER:
     case DES_TYPE_FLOAT:
     case DES_TYPE_REAL:
+    case DES_TYPE_SHORT:
+    case DES_TYPE_LONG:
       return true;
     default:
       return false;

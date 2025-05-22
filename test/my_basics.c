@@ -34,14 +34,14 @@
 
 DECLARE_TEST(simple_select_standard)
 {
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
   ok_sql(hstmt,
-         "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+         "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
-  ok_sql(hstmt, "INSERT INTO test_table VALUES (1,'foo'),(2,'bar'),(3,'baz')");
+  ok_sql(hstmt, "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
 
-  ok_sql(hstmt, "SELECT * FROM test_table");
+  ok_sql(hstmt, "SELECT * FROM tabletest");
 
 
   SQLCHAR buffer[BUFFER_SIZE];
@@ -74,11 +74,11 @@ DECLARE_TEST(simple_select_standard)
 DECLARE_TEST(simple_select_block) {
 #define BLOCK_SIZE 2
 
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
-  ok_sql(hstmt, "INSERT INTO test_table VALUES (1,'foo'),(2,'bar'),(3,'baz')");
+  ok_sql(hstmt, "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
 
   ok_stmt(hstmt,
           SQLSetStmtAttr(hstmt, SQL_ATTR_ROW_BIND_TYPE, SQL_BIND_BY_COLUMN, 0));
@@ -101,7 +101,7 @@ DECLARE_TEST(simple_select_block) {
 
   ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
-  ok_sql(hstmt, "SELECT * FROM test_table");
+  ok_sql(hstmt, "SELECT * FROM tabletest");
 
   ok_stmt(hstmt,
           SQLBindCol(hstmt, 1, SQL_C_CHAR, col1, sizeof(col1[0]), col1_lens));
@@ -127,14 +127,14 @@ DECLARE_TEST(simple_select_block) {
 }
 
 DECLARE_TEST(parameter_binding) {
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
-  ok_sql(hstmt, "INSERT INTO test_table VALUES (1,'foo'),(2,'bar'),(3,'baz')");
+  ok_sql(hstmt, "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
 
   ok_stmt(hstmt,
-          SQLPrepare(hstmt, "SELECT * FROM test_table WHERE id = ? AND name = ?", SQL_NTS));
+          SQLPrepare(hstmt, "SELECT * FROM tabletest WHERE id = ? AND name = ?", SQL_NTS));
 
   int id = 2;
   ok_stmt(hstmt,
@@ -159,13 +159,13 @@ DECLARE_TEST(parameter_binding) {
 }
 
 DECLARE_TEST(application_variables) {
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
-  ok_sql(hstmt, "INSERT INTO test_table VALUES (1,'foo'),(2,'bar'),(3,'baz')");
+  ok_sql(hstmt, "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
 
-  ok_sql(hstmt, "SELECT * FROM test_table");
+  ok_sql(hstmt, "SELECT * FROM tabletest");
 
   char snd_column[BUFFER_SIZE];
   ok_stmt(hstmt, SQLBindCol(hstmt, 2, SQL_C_CHAR, snd_column, BUFFER_SIZE, NULL));
@@ -188,15 +188,15 @@ from MyODBC. We will see a transformation between a string and a uint64
 (DES' int)
 */ 
 DECLARE_TEST(type_conversion) {
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (number VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (number VARCHAR(20))");
 
-  ok_sql(hstmt, "INSERT INTO test_table VALUES ('123')");
+  ok_sql(hstmt, "INSERT INTO tabletest VALUES ('123')");
 
   SQLUBIGINT num;  // we will convert a string to an unsigned bigint (DES integer).
 
-  ok_sql(hstmt, "SELECT * FROM test_table");
+  ok_sql(hstmt, "SELECT * FROM tabletest");
 
   ok_stmt(hstmt, SQLBindCol(hstmt, 1, SQL_C_UBIGINT, &num, 0, NULL));
 
@@ -208,17 +208,17 @@ DECLARE_TEST(type_conversion) {
 }
 
 DECLARE_TEST(sqlcolumns) {
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
   expect_odbc(hstmt, SQL_HANDLE_STMT,
               SQLColumnsW(hstmt, L"nonexistentcatalog", SQL_NTS, L"", 0,
-                          L"t\\_b%",
+                          L"t_b%",
                                 SQL_NTS, L"name", SQL_NTS), SQL_ERROR);
   ok_stmt(hstmt,
           SQLColumnsW(
-              hstmt, L"$des", SQL_NTS, L"", 0, L"t\\_b%", SQL_NTS, L"name",
+              hstmt, L"$des", SQL_NTS, L"", 0, L"t_b%", SQL_NTS, L"name",
               SQL_NTS));  // we need to escape the first character _ so
                           // that it isn't recognised as pattern at that point.
 
@@ -231,7 +231,7 @@ DECLARE_TEST(sqlcolumns) {
 
   ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
-  ok_stmt(hstmt, SQLColumnsW(hstmt, L"$des", SQL_NTS, L"", 0, L"test_table",
+  ok_stmt(hstmt, SQLColumnsW(hstmt, L"$des", SQL_NTS, L"", 0, L"tabletest",
                              SQL_NTS, L"%", SQL_NTS));
 
   ok_stmt(hstmt, SQLFetch(hstmt));
@@ -364,24 +364,24 @@ DECLARE_TEST(sqlspecialcolumns) {
 }
 
 DECLARE_TEST(sqlstatistics) {
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
-  ok_sql(hstmt, "INSERT INTO test_table VALUES (1,'foo'),(2,'bar'),(3,'baz')");
+  ok_sql(hstmt, "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
 
   expect_odbc(hstmt, SQL_HANDLE_STMT,
-              SQLStatisticsW(hstmt, L"nonexistentcatalog", SQL_NTS, L"", 0, L"test_table",
+              SQLStatisticsW(hstmt, L"nonexistentcatalog", SQL_NTS, L"", 0, L"tabletest",
                              SQL_NTS, SQL_INDEX_ALL, SQL_ENSURE), SQL_ERROR);
 
-  ok_stmt(hstmt, SQLStatisticsW(hstmt, L"$des", SQL_NTS, L"", 0, L"test_table", SQL_NTS, SQL_INDEX_ALL, SQL_ENSURE));
+  ok_stmt(hstmt, SQLStatisticsW(hstmt, L"$des", SQL_NTS, L"", 0, L"tabletest", SQL_NTS, SQL_INDEX_ALL, SQL_ENSURE));
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
   SQLCHAR buffer[BUFFER_SIZE];
   ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, BUFFER_SIZE,
                             NULL));  // TABLE_NAME col
-  is_str(buffer, "test_table", 7);
+  is_str(buffer, "tabletest", 7);
 
   ok_stmt(hstmt, SQLGetData(hstmt, 11, SQL_C_CHAR, buffer, BUFFER_SIZE,
                             NULL));  // CARDINALITY col
@@ -391,9 +391,9 @@ DECLARE_TEST(sqlstatistics) {
 }
 
 DECLARE_TEST(sqltables) {
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
   ok_stmt(hstmt, SQLTablesW(hstmt, L"$des", SQL_NTS, L"", 0, L"%", SQL_NTS, L"%",
                            SQL_NTS));
@@ -403,7 +403,7 @@ DECLARE_TEST(sqltables) {
   SQLCHAR buffer[BUFFER_SIZE];
   ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, BUFFER_SIZE,
                             NULL));  // TABLE_NAME col
-  is_str(buffer, "test_table", 7);
+  is_str(buffer, "tabletest", 7);
 
   return OK;
 }
@@ -412,14 +412,14 @@ DECLARE_TEST(sqlsetpos_standard) {
 
   ok_stmt(hstmt, SQLSetStmtAttr(hstmt, SQL_ATTR_CURSOR_TYPE,
                                 (SQLPOINTER)SQL_CURSOR_STATIC, 0));
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
   ok_sql(hstmt,
-         "INSERT INTO test_table VALUES (1,'foo'),(2,'bar'),(3,'baz'),(4, 'bax')");
+         "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz'),(4, 'bax')");
 
-  ok_sql(hstmt, "SELECT * FROM test_table");
+  ok_sql(hstmt, "SELECT * FROM tabletest");
 
   SQLRETURN rc = SQLFetchScroll(hstmt, SQL_FETCH_ABSOLUTE, 4);
 
@@ -449,12 +449,12 @@ DECLARE_TEST(sqlsetpos_block) {
   ok_stmt(hstmt, SQLSetStmtAttr(hstmt, SQL_ATTR_CURSOR_TYPE,
                                 (SQLPOINTER)SQL_CURSOR_STATIC, 0));
 
-  ok_sql(hstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
-  ok_sql(hstmt, "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+  ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
   ok_sql(hstmt,
-         "INSERT INTO test_table VALUES "
+         "INSERT INTO tabletest VALUES "
          "(1,'a'),(2,'b'),(3,'c'),(4,'d'),(5,'e'),(6,'f'),(7,'g'),(8,'h')");
 
   ok_stmt(hstmt,
@@ -476,7 +476,7 @@ DECLARE_TEST(sqlsetpos_block) {
   char col2[BLOCK_SIZE][256];
   SQLLEN col2_lens[BLOCK_SIZE];
 
-  ok_sql(hstmt, "SELECT * FROM test_table");
+  ok_sql(hstmt, "SELECT * FROM tabletest");
 
   ok_stmt(hstmt,
           SQLBindCol(hstmt, 1, SQL_C_CHAR, col1, sizeof(col1[0]), col1_lens));
@@ -740,18 +740,18 @@ DECLARE_TEST(sqlfreehandle) {
   expect_odbc(newhdbc, SQL_HANDLE_STMT,
               SQLAllocHandle(SQL_HANDLE_STMT, newhdbc, &newhstmt), SQL_SUCCESS);
 
-  ok_sql(newhstmt, "DROP TABLE IF EXISTS test_table");
+  ok_sql(newhstmt, "DROP TABLE IF EXISTS tabletest");
   ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
 
   ok_sql(newhstmt,
-         "CREATE TABLE test_table (id INT PRIMARY KEY, name VARCHAR(20))");
+         "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
   ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
 
   ok_sql(newhstmt,
-         "INSERT INTO test_table VALUES (1,'foo'),(2,'bar'),(3,'baz')");
+         "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
   ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
 
-  ok_sql(hstmt, "SELECT * FROM test_table");
+  ok_sql(hstmt, "SELECT * FROM tabletest");
   ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
 
   ok_stmt(newhstmt, SQLFreeHandle(SQL_HANDLE_STMT, newhstmt));
@@ -803,18 +803,17 @@ ADD_TEST(sqlprimarykeys)
 ADD_TEST(sqlforeignkeys)
 ADD_TEST(sqlspecialcolumns)
 ADD_TEST(sqlstatistics)
+
 ADD_TEST(sqltables)
 ADD_TEST(sqlsetpos_standard)
 ADD_TEST(sqlsetpos_block)
+*/
 ADD_TEST(bookmarks)
 ADD_TEST(bulk_operations)
 ADD_TEST(sqldisconnect)
 ADD_TEST(sqlfreehandle)
-*/
 ADD_TEST(error_handling)
-/*
-ADD_TEST(sqlgetinfo)
-*/
+//ADD_TEST(sqlgetinfo)
 END_TESTS
 
 

@@ -141,7 +141,7 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
         default:
           /* Do something only if the handle is STMT */
           return set_handle_error(HandleType, Handle, "01S02",
-                                  "Unsuported option");
+                                  "Unsupported option");
           break;
             /* ignored */
             break;
@@ -191,7 +191,7 @@ get_constmt_attr(SQLSMALLINT  HandleType,
         case SQL_ATTR_QUERY_TIMEOUT:
           /* Do something only if the handle is STMT */
           return set_handle_error(HandleType, Handle, "01S02",
-                                  "Unsuported option");
+                                  "Unsupported option");
           break;
             break;
         case SQL_ATTR_RETRIEVE_DATA:

@@ -599,7 +599,7 @@ SQLRETURN DBC::getDESProcessPipes() {
   bool success = false;
 
   while (!success) {
-    this->driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_WRONLY);
+    this->driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_WRONLY | O_NONBLOCK);
     if (this->driver_to_des_in_wpipe != -1) {
       success = true;
     } else {
@@ -626,7 +626,7 @@ SQLRETURN DBC::getDESProcessPipes() {
   success = false;
 
   while (!success) {
-    this->driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_RDONLY);
+    this->driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_RDONLY | O_NONBLOCK);
     if (this->driver_to_des_out_rpipe != -1) {
       success = true;
     } else {
@@ -1198,11 +1198,22 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
 #else
   SharedMemoryUnix *shmem = this->shmem;
 #endif
-  if (shmem->exec_hash_int != 0 && shmem->exec_hash_int != this->exec_hash_int)
+  if (shmem->exec_hash_int != 0 &&
+      shmem->exec_hash_int != this->exec_hash_int) {
+    releaseSharedMemoryMutex();
     return this->set_error(
         "HY000",
         "Trying to access a DES global process launched from an executable "
         "different from the one specified");
+  }
+#ifdef _WIN32
+  if (shmem->connected_clients_struct.size == MAX_CLIENTS) {
+    releaseSharedMemoryMutex();
+    return this->set_error("HY000",
+                           "Cannot connect. Maximum number of clients reached");
+  }
+#endif
+    
 
   if (!this->shmem->des_process_created) {
     rc = this->createPipes();

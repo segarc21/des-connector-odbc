@@ -396,7 +396,6 @@ bool init_compiled_charsets(myf flags [[maybe_unused]]) {
   add_compiled_collation(&my_charset_utf8mb4_ru_0900_as_cs);
   add_compiled_collation(&my_charset_utf8mb4_zh_0900_as_cs);
 
-  /*
   add_compiled_collation(&my_charset_bin);
 
   
@@ -520,8 +519,6 @@ bool init_compiled_charsets(myf flags [[maybe_unused]]) {
   add_compiled_collation(&my_charset_utf32_sinhala_uca_ci);
   add_compiled_collation(&my_charset_utf32_unicode_520_ci);
   add_compiled_collation(&my_charset_utf32_vietnamese_ci);
-
-  */
 
   /* Copy compiled charsets */
   for (cs = compiled_charsets; cs->name; cs++) add_compiled_collation(cs);

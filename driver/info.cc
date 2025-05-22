@@ -390,8 +390,13 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
   case SQL_IDENTIFIER_CASE:
     MYINFO_SET_USHORT(SQL_IC_MIXED);
 
+  /*
+      DESODBC: ODBC applications need this identifier quote to send their
+      queries. We then put the standard SQL identifier `, that is both recognized
+      in DES default interpreter and DES-SQL.
+  */
   case SQL_IDENTIFIER_QUOTE_CHAR:
-    MYINFO_SET_STR("'");
+    MYINFO_SET_STR("`"); 
 
     //DES not support indexes.
     /*

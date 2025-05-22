@@ -224,7 +224,7 @@ DESCREC *desc_get_rec(DESC *desc, int recnum, my_bool expand)
       }
     }
     if (desc->bookmark2.size() > 0) //solving MyODBC bug
-        rec= &desc->bookmark2.back();
+    rec= &desc->bookmark2.back();
   }
   else if (recnum < 0)
   {
@@ -276,50 +276,6 @@ int desc_find_dae_rec(DESC *desc)
   }
   return -1;
 }
-
-
-/*
- * Check with the given descriptor contains any output streams
- * @param recnum[in,out] - pointer to 0-based record number to begin search from
-                           and to store found record number
- * @param res_col_num[in,out] - pointer to 0-based column number in output parameters resultset
- * Returns the found record or NULL.
- */
-DESCREC * desc_find_outstream_rec(STMT *stmt, uint *recnum, uint *res_col_num)
-{
-  int i, start= recnum != NULL ? *recnum + 1 : 0;
-  DESCREC *rec;
-  uint column= *res_col_num;
-
-/* No streams in iODBC */
-#ifndef USE_IODBC
-  for (i= start; i < stmt->ipd->rcount(); ++i)
-  {
-    rec= desc_get_rec(stmt->ipd, i, FALSE);
-    assert(rec);
-
-    if (rec->parameter_type == SQL_PARAM_INPUT_OUTPUT_STREAM
-     || rec->parameter_type == SQL_PARAM_OUTPUT_STREAM)
-    {
-      if (recnum != NULL)
-      {
-        *recnum= i;
-      }
-      *res_col_num= ++column;
-      /* Valuable information is in apd */
-      return desc_get_rec(stmt->apd, i, FALSE);
-    }
-    else if (rec->parameter_type == SQL_PARAM_INPUT_OUTPUT
-          || rec->parameter_type == SQL_PARAM_OUTPUT)
-    {
-      ++column;
-    }
-  }
-#endif
-
-  return NULL;
-}
-
 
 /*
  * Apply the actual value to the descriptor field.

@@ -567,7 +567,7 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   rc = dbc->releaseQueryMutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
-  if (catalog_name_str != "$des") {
+  if (catalog_name_str != "$des" && catalog_name_str != "") {
     stmt->set_error("01000",
                     "Some attributes of the given external database that are "
                     "not shared with DES might "
@@ -689,7 +689,7 @@ SQLRETURN SQL_API DES_SQLSpecialColumns(
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   rc = SQL_SUCCESS_WITH_INFO;
-  stmt->set_error("HY000",
+  stmt->set_error("01000",
                   "Primary indexes have been returned. Information regarding "
                   "indexes might have been omitted due "
                   "to DES capabilities");

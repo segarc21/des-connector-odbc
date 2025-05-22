@@ -360,6 +360,8 @@ enum enum_field_types
   DES_TYPE_TIMESTAMP,
   DES_TYPE_BLOB,  // needed somewhere, but I need to know why. TODO
   DES_TYPE_TINY,  // needed somewhere, but I need to know why. TODO
+  DES_TYPE_SHORT, //Needed for compatibility with MSAccess
+  DES_TYPE_LONG,   // Needed for compatibility with MSAccess
   DES_UNKNOWN_TYPE
 };
 
@@ -1814,14 +1816,14 @@ struct STMT;  // Forward declaration to let ResultTable have a STMT attribute
   {                                                                           \
     (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,               \
         DES_FIELD_DEF 5, 5, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), 0, \
-        0, DES_TYPE_INT, NULL                                                 \
+        0, DES_TYPE_SHORT, NULL                                                 \
   }
 
 #define DESODBC_FIELD_LONG(name, flags)                                      \
   {                                                                          \
     (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,              \
         DES_FIELD_DEF 11, 11, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), \
-        0, 0, DES_TYPE_INT, NULL                                             \
+        0, 0, DES_TYPE_LONG, NULL                                             \
   }
 
 #define DESODBC_FIELD_LONGLONG(name, flags)                                  \
