@@ -1,4 +1,6 @@
 # Copyright (c) 2007, 2024, Oracle and/or its affiliates.
+# Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>
+# (see the next block comment below).
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License, version 2.0,
@@ -21,6 +23,12 @@
 # along with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+# ---------------------------------------------------------
+# Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>,
+# hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+# work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+# System (DES) (see https://des.sourceforge.io/)
+# ---------------------------------------------------------
 ##########################################################################
 
 PROJECT(DES_Connector_ODBC)
@@ -510,14 +518,14 @@ IF(WIN32)
     ${PROJECT_BINARY_DIR}/bin/RelWithDebInfo/
     DESTINATION bin
     CONFIGURATIONS RelWithDebInfo
-    FILES_MATCHING PATTERN myodbc-installer.pdb
+    FILES_MATCHING PATTERN desodbc-installer.pdb
   )
 
   INSTALL(DIRECTORY
     ${PROJECT_BINARY_DIR}/bin/Debug/
     DESTINATION bin/Debug
     CONFIGURATIONS Debug
-    FILES_MATCHING PATTERN myodbc-installer.pdb
+    FILES_MATCHING PATTERN desodbc-installer.pdb
   )
 
   INSTALL(DIRECTORY

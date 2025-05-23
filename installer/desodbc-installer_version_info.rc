@@ -37,8 +37,8 @@
 
 
 VS_VERSION_INFO VERSIONINFO
-  FILEVERSION    1,0,0,0
-  PRODUCTVERSION 1,0,0,0
+  FILEVERSION    9,0,0,0
+  PRODUCTVERSION 9,0,0,0
   FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
   FILEFLAGS      VS_FF_DEBUG
   FILEOS         VOS__WINDOWS32
@@ -50,9 +50,9 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "originally Oracle Corporation\0"
             VALUE "ProductName", "DES Connector/ODBC\0"
-            VALUE "ProductVersion", "1.0.0.0\0"
-            VALUE "FileVersion", "1.0.0.0\0"
-            VALUE "LegalCopyright", "Copyright (c) 1995, 2025, Oracle and/or its affiliates.\0"
+            VALUE "ProductVersion", "9.0.0.0\0"
+            VALUE "FileVersion", "9.0.0.0\0"
+            VALUE "LegalCopyright", "Copyright (c) 1995, 2024, Oracle and/or its affiliates.\0"
             VALUE "LegalTrademarks", "Oracle(R), Java, MySQL, and NetSuite are registered trademarks of Oracle and/or its affiliates.\0"
             VALUE "OriginalFilename", "desodbc-installer.exe\0"
             VALUE "InternalName", "desodbc-installer\0"

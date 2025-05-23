@@ -399,9 +399,30 @@ FodyWeavers.xsd
 *.yaml
 *.yaml
 *.yaml
-CMakeFiles/CMakeConfigureLog.yaml
 
 # Visual studio
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+*.vcxproj
+*.filters
+
+# Some CMake files
+CPackConfig.cmake
+CPackSourceConfig.cmake
+CMakeFiles/
+*/CMakeFiles/
+cmake_install.cmake
+*/cmake_install.cmake
+*_version_info.rc
+
+INFO_BIN
+INFO_SRC
+
+# From the gitignore of mysql-connector-odbc
+driver/drivera.def
+driver/drivera.rc
+driver/driverw.def
+driver/driverw.rc
+include/mysql-8.0/my_config.h
+VersionInfo.h

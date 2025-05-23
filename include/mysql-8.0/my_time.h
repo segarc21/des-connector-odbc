@@ -28,10 +28,6 @@
 // hereinafter the DESODBC developer, in the context of the GPLv2 derivate
 // work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
 // System (DES) (see https://des.sourceforge.io/)
-//
-// The authorship of each section of this source file (comments,
-// functions and other symbols) belongs to MyODBC unless we
-// explicitly state otherwise.
 // ---------------------------------------------------------
 
 #ifndef MY_TIME_INCLUDED

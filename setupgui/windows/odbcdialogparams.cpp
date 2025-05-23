@@ -33,10 +33,6 @@
 // hereinafter the DESODBC developer, in the context of the GPLv2 derivate
 // work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
 // System (DES) (see https://des.sourceforge.io/)
-//
-// The authorship of each section of this source file (comments,
-// functions and other symbols) belongs to MyODBC unless we
-// explicitly state otherwise.
 // ---------------------------------------------------------
 
 /**
@@ -480,7 +476,7 @@ void btnWorkingBrowse_Click(HWND hwnd) {
 void btnAbout_Click (HWND hwnd)
 {
   ShellExecute(NULL, L"open",
-         L"https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-configuration-dsn-windows.html",
+         L"https://github.com/segarc21/des-connector-odbc/blob/main/README.md",
          NULL, NULL, SW_SHOWNORMAL);
 }
 

@@ -33,10 +33,6 @@
 // hereinafter the DESODBC developer, in the context of the GPLv2 derivate
 // work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
 // System (DES) (see https://des.sourceforge.io/)
-//
-// The authorship of each section of this source file (comments,
-// functions and other symbols) belongs to MyODBC unless we
-// explicitly state otherwise.
 // ---------------------------------------------------------
 
 /*!
@@ -72,6 +68,16 @@
     Modified by: DESODBC Developer
 */
 const char usage[] =
+"+---                                                                   \n"
+"| Copyright (c) 2000, 2024, Oracle and/or its affiliates.              \n"
+"|                                                                      \n"
+"| This program is a modification from myodbc-installer, a tool from    \n"
+"| MySQL Connector/ODBC Driver, which has been modified in 2025 by      \n"
+"| Sergio Miguel Garcia Jimenez <segarc21@ucm.es> in the context of the \n"
+"| GPLv2 derivate work DESODBC, an ODBC Driver of the open - source DBMS\n"
+"| Datalog Educational System (DES) (see https://des.sourceforge.io/)   \n"
+"|                                                                      \n"
+"| Please refer to the README and LICENSE files for more information.   \n"
 "+---                                                                   \n"
 "| desodbc-installer v" DESODBC_VERSION "                               \n"
 "+---                                                                   \n"
@@ -139,36 +145,45 @@ const char usage[] =
 "|                                                                      \n"
 #ifndef _WIN32
 "|    Register a Unicode driver (UNIX example)                          \n"
-"|    shell> desodbc-installer -d -a -n \"DES ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
-"|              -t \"DRIVER=/path/to/driver/libdesodbc" DESODBC_STRMAJOR_VERSION "w.so;SETUP=/path/to/gui/libdesodbc" DESODBC_STRMAJOR_VERSION "S.so\"\n"
+"|    shell> desodbc-installer -d -a -n \"DES ODBC Unicode Driver\" \\  \n"
+"|              -t \"DRIVER=/path/to/driver/libdesodbcw.so;SETUP=/path/to/gui/libdesodbcS.so\"\n"
 "|                                                                      \n"
 "|      Note                                                            \n"
 "|         * The /path/to/driver is /usr/lib for 32-bit systems and     \n"
 "|           some 64-bit systems, and /usr/lib64 for most 64-bit systems\n"
 "|                                                                      \n"
-"|         * driver_name is libdesodbc" DESODBC_STRMAJOR_VERSION "a.so for the ANSI version and    \n"
-"|           libdesodbc" DESODBC_STRMAJOR_VERSION "w.so for the Unicode version of DES ODBC Driver \n"
+"|         * driver_name is libdesodbca.so for the ANSI version and     \n"
+"|           libdesodbcw.so for the Unicode version of DES ODBC Driver  \n"
 "|                                                                      \n"
 "|         * The SETUP parameter is optional; it provides location of   \n"
-"|           the GUI module (libdesodbc" DESODBC_STRMAJOR_VERSION "S.so) for DSN setup, which      \n"
+"|           the GUI module (libdesodbcS.so) for DSN setup, which       \n"
 "|           is not supported on Solaris and Mac OSX systems            \n"
 "|                                                                      \n"
 #else
 "|    Register a Unicode driver (Windows example)                       \n"
-"|    shell> desodbc-installer -d -a -n \"DES ODBC " DESODBC_STRSERIES " Unicode Driver\" \\ \n"
-"|              -t \"DRIVER=desodbc" DESODBC_STRMAJOR_VERSION "w.dll;SETUP=desodbc" DESODBC_STRMAJOR_VERSION "S.dll\"\n"
+"|    shell> desodbc-installer.exe -d -a -n \"DESODBC Unicode Driver\" \\ \n"
+"|           -t \"DRIVER =C:\\Users\\segarc21\\desodbcw.dll;            \n"
+"|           SETUP=C:\\Users\\segarc21\\desodbcS.dll\"                  \n"
 "|                                                                      \n"
 "|      Note                                                            \n"
-"|         * driver_name is desodbc" DESODBC_STRMAJOR_VERSION "a.dll for the ANSI version and      \n"
-"|           desodbc" DESODBC_STRMAJOR_VERSION "w.dll for the Unicode version of DES ODBC Driver   \n"
+"|         * driver_name is desodbca.dll for the ANSI version and       \n"
+"|           desodbcw.dll for the Unicode version of DES ODBC Driver    \n"
 "|                                                                      \n"
 #endif
+#ifndef _WIN32
 "|    Add a new system data source name for Unicode driver              \n"
-"|    shell> desodbc-installer -s -a -c2 -n \"test\" \\                 \n"
-"|              -t \"DRIVER=DES ODBC " DESODBC_STRSERIES " Unicode Driver;DES_EXEC=C:\\des\\des.exe;DES_WORKING_DIR=C:\\des\"\n"
+"|    shell> sudo ./desodbc-installer -s -a -n \"DESODBC Data Source\"  \\ \n"
+"|             -t \"DRIVER=DESODBC Unicode Driver;DESCRIPTION=New data source;\n"
+"|                DES_EXEC=/path/to/des;DES_WORKING_DIR=/path/to/directory\"\n"
 "|                                                                      \n"
-"|    List data source name attributes for 'test'                       \n"
-"|    shell> desodbc-installer -s -l -c2 -n \"test\"                    \n"
+#else
+"|    Add a new system data source name for Unicode driver              \n"
+"|    shell> desodbc-installer.exe -s -a -n \"DESODBC Data Source\"       \n"
+"|           -t \"DRIVER=DESODBC Unicode Driver;                        \n"
+"|                DESCRIPTION=New data source;DES_EXEC=C:\\des\\des.exe;\n"
+"|                DES_WORKING_DIR=C:\\des\"                             \n"
+"|                                                                      \n"
+#endif
 "+---                                                                   \n";
 
 /* command line args */

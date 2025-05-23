@@ -54,13 +54,13 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE DIRECTORY FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/RelWithDebInfo/" FILES_MATCHING REGEX "/myodbc\\-installer\\.pdb$")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE DIRECTORY FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/RelWithDebInfo/" FILES_MATCHING REGEX "/desodbc\\-installer\\.pdb$")
   endif()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin/Debug" TYPE DIRECTORY FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/Debug/" FILES_MATCHING REGEX "/myodbc\\-installer\\.pdb$")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin/Debug" TYPE DIRECTORY FILES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/bin/Debug/" FILES_MATCHING REGEX "/desodbc\\-installer\\.pdb$")
   endif()
 endif()
 

@@ -122,8 +122,7 @@ on_cancel_clicked(GtkButton *button, gpointer user_data)
 
 void on_about_clicked(GtkButton *button, gpointer user_data)
 {
-  g_spawn_command_line_async ("xdg-open https://dev.mysql.com/doc/connector-odbc"
-                              "/en/connector-odbc-configuration.html",
+  g_spawn_command_line_async ("xdg-open https://github.com/segarc21/des-connector-odbc/blob/main/README.md",
                               NULL);
 }
 

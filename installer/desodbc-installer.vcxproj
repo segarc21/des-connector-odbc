@@ -392,7 +392,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\installer\myodbc-installer.cc" />
+    <ClCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\installer\desodbc-installer.cc" />
     <ResourceCompile Include="C:\Users\sergi\Desktop\mysql-connector-odbc-9.0.0\installer\desodbc-installer_version_info.rc" />
   </ItemGroup>
   <ItemGroup>
