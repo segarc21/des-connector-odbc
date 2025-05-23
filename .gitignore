@@ -415,6 +415,7 @@ CMakeFiles/
 cmake_install.cmake
 */cmake_install.cmake
 *_version_info.rc
+CMakeCache.txt
 
 INFO_BIN
 INFO_SRC
