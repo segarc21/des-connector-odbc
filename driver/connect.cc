@@ -57,6 +57,15 @@
 #include <winsock2.h>
 #endif
 
+#ifndef _WIN32
+// DESODBC: new headers to include in Unix-like systems
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <cstdio>
+#include <iostream>
+#endif
+
 #ifndef CLIENT_NO_SCHEMA
 #define CLIENT_NO_SCHEMA 16
 #endif
@@ -66,6 +75,92 @@ typedef BOOL (*PromptFunc)(SQLHWND, SQLWCHAR *, SQLUSMALLINT, SQLWCHAR *,
 
 fido_callback_func global_fido_callback = nullptr;
 std::mutex global_fido_mutex;
+
+#ifdef _WIN32
+/* DESODBC:
+  Original author: DESODBC Developer
+  */
+LPCSTR DBC::build_name(const char *name_base) {
+  std::string name_str = name_base;
+  name_str += "_";
+  name_str += this->connection_hash;
+
+  char *name = new char[name_str.size() + 1];
+  if (!name) throw std::bad_alloc();
+
+  memcpy(name, name_str.c_str(), name_str.size());
+  name[name_str.size()] = '\0';
+  return name;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+    */
+void DBC::get_concurrent_objects(const wchar_t *des_exec_path,
+                          const wchar_t *des_working_dir) {
+  std::wstring des_exec_path_wstr(des_exec_path);
+  std::wstring des_working_dir_wstr(des_working_dir);
+
+  this->connection_hash = std::to_string(wstr_hasher(des_working_dir_wstr));
+
+  this->exec_hash_int = wstr_hasher(des_exec_path_wstr);
+
+  this->SHARED_MEMORY_NAME = build_name(SHARED_MEMORY_NAME_BASE);
+  this->SHARED_MEMORY_MUTEX_NAME = build_name(SHARED_MEMORY_MUTEX_NAME_BASE);
+  this->QUERY_MUTEX_NAME = build_name(QUERY_MUTEX_NAME_BASE);
+  this->REQUEST_HANDLE_EVENT_NAME = build_name(REQUEST_HANDLE_EVENT_NAME_BASE);
+  this->REQUEST_HANDLE_MUTEX_NAME = build_name(REQUEST_HANDLE_MUTEX_NAME_BASE);
+  this->HANDLE_SENT_EVENT_NAME = build_name(HANDLE_SENT_EVENT_NAME_BASE);
+  this->FINISHING_EVENT_NAME = build_name(FINISHING_EVENT_NAME_BASE);
+}
+
+#else
+/* DESODBC:
+  Original author: DESODBC Developer
+  */
+const char * DBC::build_name(const char *name_base) {
+  std::string name_str = name_base;
+  name_str += "_";
+  name_str += std::to_string(this->connection_hash_int);
+
+  char *name = new char[name_str.size() + 1];
+  if (!name) throw std::bad_alloc();
+
+  memcpy(name, name_str.c_str(), name_str.size());
+  name[name_str.size()] = '\0';
+  return name;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+    */
+void DBC::get_concurrent_objects(const char *des_exec_path,
+                          const char *des_working_dir) {
+  std::string des_exec_path_str(des_exec_path);
+  std::string des_working_dir_str(des_working_dir);
+
+  this->connection_hash = std::to_string(str_hasher(des_working_dir_str));
+
+  this->connection_hash_int = 0;
+  for (int i = 0; i < this->connection_hash.size(); ++i) {
+    this->connection_hash_int =
+        this->connection_hash_int * 10 + (this->connection_hash[i] - '0');
+  }
+
+  this->exec_hash = std::to_string(str_hasher(des_exec_path_str));
+
+  this->exec_hash_int = 0;
+  for (int i = 0; i < this->exec_hash.size(); ++i) {
+    this->exec_hash_int = this->exec_hash_int * 10 + (this->exec_hash[i] - '0');
+  }
+
+  this->SHARED_MEMORY_NAME = build_name(SHARED_MEMORY_NAME_BASE);
+  this->SHARED_MEMORY_MUTEX_NAME = build_name(SHARED_MEMORY_MUTEX_NAME_BASE);
+  this->QUERY_MUTEX_NAME = build_name(QUERY_MUTEX_NAME_BASE);
+  this->IN_WPIPE_NAME = build_name(IN_WPIPE_NAME_BASE);
+  this->OUT_RPIPE_NAME = build_name(OUT_RPIPE_NAME_BASE);
+}
+#endif
 
 /* DESODBC:
   This function creates the pipes for the
@@ -172,586 +267,12 @@ SQLRETURN DBC::createPipes() {
 
 #ifdef _WIN32
 /* DESODBC:
-  This function removes a client from
-  the shared memory file, which is a necessary
-  step in the Windows version.
-
-  Original author: DESODBC Developer
-*/
-void DBC::remove_client_from_shmem(ConnectedClients &pids, size_t id) {
-  int index = 0;
-  while (index < pids.size) {
-    if (pids.connected_clients[index].id == id)
-      break;
-    else
-      index++;
-  }
-  if (index == pids.size) return;
-
-  pids.connected_clients[index].id = 0;
-  pids.connected_clients[index].pid = 0;
-
-  int i = index;
-
-  while (i + 1 < pids.size) {
-    pids.connected_clients[i] = pids.connected_clients[i + 1];
-    i++;
-  }
-
-  pids.size -= 1;
-}
-#endif
-
-#ifdef _WIN32
-/* DESODBC:
-  This function gets a generic mutex
-  in Windows.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::getMutex(HANDLE h, const std::string &name) {
-  DWORD ret = WaitForSingleObject(h, MUTEX_TIMEOUT);
-  if (ret == WAIT_TIMEOUT) {
-    return this->set_win_error("Mutex " + std::string(name) + " time-outed",
-                               false);
-  } else if (ret == WAIT_FAILED) {
-    return this->set_win_error(
-        "Fetching mutex " + std::string(name) + " failed", true);
-  } else if (ret == WAIT_ABANDONED) {
-    return this->set_win_error(
-        "Mutex " + std::string(name) + " in non-consistent state", false);
-  }
-  return SQL_SUCCESS;
-}
-#else
-/* DESODBC:
-  This function gets a generic mutex
-  in Unix-like systems.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::getMutex(sem_t *s, const std::string &name) {
-  timeval tv_start;
-  gettimeofday(&tv_start, nullptr);
-
-  bool success = false;
-
-  while (!success) {
-    if (sem_trywait(s) == 0) {
-      success = true;
-    } else {
-      timeval tv_end;
-      gettimeofday(&tv_end, nullptr);
-      long secs = tv_end.tv_sec - tv_start.tv_sec;
-      if (secs >= MUTEX_TIMEOUT_SECONDS) {
-        std::string msg = "Fetching mutex ";
-        msg += std::string(name);
-        msg +=
-            " timed-out. Perhaps a connection was closed unsafely. In that "
-            "case, a manual removal of this mutex may be required (try ";
-
-#ifdef __APPLE__
-        msg +=
-            "with unlink (2). In macOS, mutexes do not exist in the "
-            "filesystem)";
-#else
-        msg += "removing the corresponding V shared memory segment with ipcrm)";
-#endif
-        return this->set_unix_error(msg, false);
-      } else
-        usleep(100000);
-    }
-  }
-  return SQL_SUCCESS;
-}
-#endif
-
-#ifdef _WIN32
-/* DESODBC:
-  This function releases a generic
-  mutex in Windows.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::releaseMutex(HANDLE h, const std::string &name) {
-  DWORD ret = ReleaseMutex(h);
-  if (ret == 0) {
-    return this->set_win_error("Failed to release mutex " + std::string(name),
-                               true);
-  }
-  return SQL_SUCCESS;
-}
-#else
-/* DESODBC:
-  This function releases a generic
-  mutex in Windows.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::releaseMutex(sem_t *s, const std::string &name) {
-  if (sem_post(s) == -1) {
-    return this->set_unix_error("Failed to release mutex " + std::string(name),
-                                true);
-  }
-  return SQL_SUCCESS;
-}
-#endif
-
-#ifdef _WIN32
-/* DESODBC:
-  This function sets a generic event in
-  the context of Windows' event objects.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::setEvent(HANDLE h, const std::string &name) {
-  DWORD ret = SetEvent(h);
-  if (ret == 0) {
-    this->set_win_error("Failed to set event " + std::string(name), true);
-  }
-  return SQL_SUCCESS;
-}
-#endif
-
-/* DESODBC:
-  This function gets the shared memory
-  mutex.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::getSharedMemoryMutex() {
-#ifdef _WIN32
-  return getMutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
-#else
-#ifdef __APPLE__
-  return getMutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
-#else
-  return getMutex(&this->shmem->shared_memory_mutex, "shared memory");
-#endif
-#endif
-}
-
-/* DESODBC:
-  This function releases the shared
-  memory mutex.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::releaseSharedMemoryMutex() {
-#ifdef _WIN32
-  return releaseMutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
-#else
-#ifdef __APPLE__
-  return releaseMutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
-#else
-  return releaseMutex(&this->shmem->shared_memory_mutex, "shared memory");
-#endif
-#endif
-}
-
-#ifdef _WIN32
-/* DESODBC:
-  This function gets the request handle mutex,
-  which is only available in the Windows version.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::getRequestHandleMutex() {
-  return getMutex(this->request_handle_mutex, REQUEST_HANDLE_MUTEX_NAME);
-}
-
-/* DESODBC:
-  This function releases the request handle mutex,
-  which is only available in the Windows version.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::releaseRequestHandleMutex() {
-  return releaseMutex(this->request_handle_mutex, REQUEST_HANDLE_MUTEX_NAME);
-}
-#endif
-
-/* DESODBC:
-  This function gets the query mutex.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::getQueryMutex() {
-#ifdef _WIN32
-  return getMutex(this->query_mutex, QUERY_MUTEX_NAME);
-#else
-#ifdef __APPLE__
-  return getMutex(this->query_mutex, QUERY_MUTEX_NAME);
-#else
-  return getMutex(&this->shmem->query_mutex, "query");
-#endif
-#endif
-}
-
-/* DESODBC:
-  This function releases the query mutex.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::releaseQueryMutex() {
-#ifdef _WIN32
-  return releaseMutex(this->query_mutex, QUERY_MUTEX_NAME);
-#else
-#ifdef __APPLE__
-  return releaseMutex(this->query_mutex, QUERY_MUTEX_NAME);
-#else
-  return releaseMutex(&this->shmem->query_mutex, "query");
-#endif
-#endif
-}
-
-#ifdef _WIN32
-/* DESODBC:
-  This function sets a request handle event in
-  the context of Windows' event objects.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::setRequestHandleEvent() {
-  return setEvent(this->request_handle_event, REQUEST_HANDLE_EVENT_NAME);
-}
-
-/* DESODBC:
-  This function sets a finishing event in
-  the context of Windows' event objects.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::setFinishingEvent() {
-  return setEvent(this->finishing_event, FINISHING_EVENT_NAME);
-}
-#endif
-
-/* DESODBC:
-  This function gets the input/output
-  pipes from the already launched global DES process.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::getDESProcessPipes() {
-#ifdef _WIN32
-  bool finished = false;
-  SQLRETURN ret;
-  ret = getSharedMemoryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-  ret = getRequestHandleMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-    releaseSharedMemoryMutex();
-    return ret;
-  }
-
-  this->shmem->handle_sharing_info.handle_petitioner.pid =
-      GetCurrentProcessId();
-  this->shmem->handle_sharing_info.handle_petitioner.id = this->connection_id;
-
-  while (!finished) {
-    size_t random_id = -1;
-    if (this->shmem->connected_clients_struct.size == 0) {
-      releaseRequestHandleMutex();
-      releaseSharedMemoryMutex();
-      return this->set_error(
-          "HY000",
-          "Failed to get DES process pipes: no available clients to share "
-          "pipes. Perhaps the sharers do have different privileges than you?");
-    } else if (this->shmem->connected_clients_struct.size == 1)
-      random_id = this->shmem->connected_clients_struct.connected_clients[0].id;
-    else
-      random_id =
-          this->shmem->connected_clients_struct
-              .connected_clients[rand() %
-                                 (this->shmem->connected_clients_struct.size -
-                                  1)]
-              .id;  // we request the handles to a random peer
-    this->shmem->handle_sharing_info.handle_petitionee.id = random_id;
-
-    ret = releaseSharedMemoryMutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-      releaseRequestHandleMutex();
-      return ret;
-    }
-
-    ret = setRequestHandleEvent();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-      releaseRequestHandleMutex();
-      return ret;
-    }
-    DWORD handle_sent_event_signal =
-        WaitForSingleObject(this->handle_sent_event, EVENT_TIMEOUT);
-
-    ret = getSharedMemoryMutex();
-
-    switch (handle_sent_event_signal) {
-      case WAIT_ABANDONED:
-      case WAIT_TIMEOUT:
-        this->remove_client_from_shmem(
-            this->shmem->connected_clients_struct,
-            this->shmem->handle_sharing_info.handle_petitionee.id);
-        continue;
-      case WAIT_FAILED:
-        releaseSharedMemoryMutex();
-        releaseRequestHandleMutex();
-        return this->set_win_error(
-            "Failed to wait for event " + std::string(HANDLE_SENT_EVENT_NAME),
-            true);
-      default:
-        break;
-    }
-
-    this->driver_to_des_out_rpipe = this->shmem->handle_sharing_info.out_handle;
-    this->driver_to_des_in_wpipe = this->shmem->handle_sharing_info.in_handle;
-    if (!this->driver_to_des_out_rpipe || !this->driver_to_des_in_wpipe) {
-      int x;
-    }
-
-    // we reset the structure once we have saved the handles
-    this->shmem->handle_sharing_info.in_handle = NULL;
-    this->shmem->handle_sharing_info.out_handle = NULL;
-
-    this->shmem->handle_sharing_info.handle_petitionee.id = 0;
-    this->shmem->handle_sharing_info.handle_petitionee.pid = 0;
-    this->shmem->handle_sharing_info.handle_petitioner.id = 0;
-    this->shmem->handle_sharing_info.handle_petitioner.pid = 0;
-
-    finished = true;
-  }
-
-  ret = releaseRequestHandleMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-    releaseSharedMemoryMutex();
-    return ret;
-  }
-  ret = releaseSharedMemoryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-
-#else
-
-  timeval tv_start;
-  gettimeofday(&tv_start, nullptr);
-
-  bool success = false;
-
-  while (!success) {
-    this->driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_WRONLY | O_NONBLOCK);
-    if (this->driver_to_des_in_wpipe != -1) {
-      success = true;
-    } else {
-      timeval tv_end;
-      gettimeofday(&tv_end, nullptr);
-      long secs = tv_end.tv_sec - tv_start.tv_sec;
-      if (secs >= MUTEX_TIMEOUT_SECONDS) {
-        std::string msg = "Fetching pipe ";
-        msg += std::string(IN_WPIPE_NAME);
-        msg +=
-            " timed-out. Perhaps a connection was closed unsafely. In that "
-            "case, a manual removal of this named pipe may be required. If "
-            "not, the "
-            "problem must be in an old connection V shared memory segment that "
-            "was not deleted. "
-            "Try with ipcrm.";
-        return this->set_unix_error(msg, false);
-      } else
-        usleep(100000);
-    }
-  }
-
-  gettimeofday(&tv_start, nullptr);
-  success = false;
-
-  while (!success) {
-    this->driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_RDONLY | O_NONBLOCK);
-    if (this->driver_to_des_out_rpipe != -1) {
-      success = true;
-    } else {
-      timeval tv_end;
-      gettimeofday(&tv_end, nullptr);
-      long secs = tv_end.tv_sec - tv_start.tv_sec;
-      if (secs >= MUTEX_TIMEOUT_SECONDS) {
-        std::string msg = "Fetching pipe ";
-        msg += std::string(OUT_RPIPE_NAME);
-        msg +=
-            " timed-out. Perhaps a connection was closed unsafely. In that "
-            "case, a manual removal of this named pipe may be required. If "
-            "not, the "
-            "problem must be in an old connection V shared memory segment that "
-            "was not deleted. "
-            "Try with ipcrm.";
-        return this->set_unix_error(msg, false);
-      } else
-        usleep(100000);
-    }
-  }
-
-#endif
-
-  return SQL_SUCCESS;
-}
-
-#ifndef _WIN32
-/* DESODBC:
-  This function creates the DES global process in
-  Unix-like systems.
-
-  Original author: DESODBC Developer
-*/
-SQLRETURN DBC::createDESProcess(const char *des_exec_path,
-                                const char *des_working_dir) {
-  SQLRETURN ret = SQL_SUCCESS;
-
-  pid_t pid = fork();
-  if (pid == -1) {
-    return this->set_unix_error("Failed to fork to open DES", true);
-  } else if (pid == 0) {
-    this->driver_to_des_in_rpipe = open(IN_WPIPE_NAME, O_RDONLY);
-    if (this->driver_to_des_in_rpipe == -1) {
-      return this->set_unix_error("Failed to open DES input pipe", true);
-    }
-
-    this->driver_to_des_out_wpipe = open(OUT_RPIPE_NAME, O_WRONLY);
-    if (this->driver_to_des_out_wpipe == -1) {
-      ::close(this->driver_to_des_in_rpipe);
-      return this->set_unix_error("Failed to open DES output pipe", true);
-    }
-
-    if (dup2(this->driver_to_des_in_rpipe, STDIN_FILENO) == -1) {
-      ::close(this->driver_to_des_in_rpipe);
-      ::close(this->driver_to_des_out_wpipe);
-      return this->set_unix_error("Failed to dup2 on DES input pipe", true);
-    }
-
-    if (dup2(this->driver_to_des_out_wpipe, STDOUT_FILENO) == -1) {
-      ::close(this->driver_to_des_in_rpipe);
-      ::close(this->driver_to_des_out_wpipe);
-      return this->set_unix_error("Failed to dup2 on DES output pipe", true);
-    }
-
-    this->shmem->DES_pid = getpid();
-
-    if (chdir(des_working_dir) == -1) {
-      ::close(this->driver_to_des_in_rpipe);
-      ::close(this->driver_to_des_out_wpipe);
-      return this->set_unix_error("Failed to change dir on DES_WORKING_DIR",
-                                  true);
-    }
-
-    if (execlp(des_exec_path, des_exec_path, nullptr) == -1) {
-      ::close(this->driver_to_des_in_wpipe);
-      ::close(this->driver_to_des_out_rpipe);
-      return this->set_unix_error("Failed to launch DES", true);
-    }
-    return SQL_ERROR;
-  } else {
-    this->shmem->des_process_created = true;
-
-    ret = releaseSharedMemoryMutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-
-    ret = getDESProcessPipes();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-
-    char buffer[4096];
-    ssize_t bytes_read = 0;
-
-    bool finished_reading = false;
-    std::string complete_reading_str = "";
-    while (!finished_reading) {
-      int ms = 0;
-      while (ms < MAX_OUTPUT_WAIT_MS && bytes_read == 0) {
-        usleep(10000);
-        ioctl(this->driver_to_des_out_rpipe, FIONREAD, &bytes_read);
-        ms += 10;
-      }
-      if (bytes_read > 0) {
-        bytes_read =
-            read(this->driver_to_des_out_rpipe, buffer, sizeof(buffer));
-        if (bytes_read == -1) {
-          return this->set_unix_error("Failed to read DES output pipe", true);
-        }
-        buffer[bytes_read] =
-            '/0';  // we need it to be zero-terminated, as advised by a warning
-                   // when tring to assign the char[] to a new std::string
-        std::string buffer_str = buffer;
-
-        complete_reading_str += buffer_str;
-
-        finished_reading = (bytes_read < BUFFER_SIZE - 1);
-      } else
-        finished_reading = true;
-    }
-    this->shmem->des_process_created = true;
-  }
-
-  return SQL_SUCCESS;
-}
-#endif
-
-/* DESODBC:
-  This function modifies the working directory removing
-  the last '\' or '/' delimiter character if so.
-  (char version)
-
-  Original author: DESODBC Developer
-*/
-const char *prepare_working_dir(const char *working_dir) {
-  std::string working_dir_str(working_dir);
-  size_t pos;
-  if (working_dir_str.find("\\") != std::wstring::npos)
-    pos = working_dir_str.find_last_of("\\");
-  else
-    pos = working_dir_str.find_last_of("/");
-
-  if (pos != std::string::npos && pos == (working_dir_str.size() - 1)) {
-    std::string dir_str = working_dir_str.substr(0, pos);
-    size_t dir_size = dir_str.size();
-    char *dir = string_to_char_pointer(dir_str);
-
-    return dir;
-
-  } else {
-    return working_dir;
-  }
-}
-
-/* DESODBC:
-  This function modifies the working directory removing
-  the last '\' or '/' delimiter character if so.
-  (wchar version)
-
-  Original author: DESODBC Developer
-*/
-const wchar_t *prepare_working_dir(const wchar_t *working_dir) {
-  std::wstring working_dir_wstr(working_dir);
-  size_t pos;
-  if (working_dir_wstr.find(L"\\") != std::wstring::npos)
-    pos = working_dir_wstr.find_last_of(L"\\");
-  else
-    pos = working_dir_wstr.find_last_of(L"/");
-
-  if (pos != std::wstring::npos && pos == (working_dir_wstr.size() - 1)) {
-    std::wstring dir_wstr = working_dir_wstr.substr(0, pos);
-    size_t dir_size = dir_wstr.size();
-
-    wchar_t *dir = string_to_wchar_pointer(dir_wstr);
-
-    return dir;
-
-  } else {
-    return working_dir;
-  }
-}
-
-#ifdef _WIN32
-/* DESODBC:
   This function creates the DES global process in
   Windows.
 
   Original author: DESODBC Developer
 */
-SQLRETURN DBC::createDESProcess(SQLWCHAR *des_exec_path,
+SQLRETURN DBC::create_DES_process(SQLWCHAR *des_exec_path,
                                 SQLWCHAR *des_working_dir) {
   // Before creating the process, we need to create STARTUPINFO and
   // PROCESS_INFORMATION structures. Piece of code extracted from the
@@ -850,7 +371,267 @@ SQLRETURN DBC::createDESProcess(SQLWCHAR *des_exec_path,
   return SQL_SUCCESS;
 }
 
+#else
+/* DESODBC:
+  This function creates the DES global process in
+  Unix-like systems.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::create_DES_process(const char *des_exec_path,
+                                const char *des_working_dir) {
+  SQLRETURN ret = SQL_SUCCESS;
+
+  pid_t pid = fork();
+  if (pid == -1) {
+    return this->set_unix_error("Failed to fork to open DES", true);
+  } else if (pid == 0) {
+    this->driver_to_des_in_rpipe = open(IN_WPIPE_NAME, O_RDONLY);
+    if (this->driver_to_des_in_rpipe == -1) {
+      return this->set_unix_error("Failed to open DES input pipe", true);
+    }
+
+    this->driver_to_des_out_wpipe = open(OUT_RPIPE_NAME, O_WRONLY);
+    if (this->driver_to_des_out_wpipe == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      return this->set_unix_error("Failed to open DES output pipe", true);
+    }
+
+    if (dup2(this->driver_to_des_in_rpipe, STDIN_FILENO) == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      ::close(this->driver_to_des_out_wpipe);
+      return this->set_unix_error("Failed to dup2 on DES input pipe", true);
+    }
+
+    if (dup2(this->driver_to_des_out_wpipe, STDOUT_FILENO) == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      ::close(this->driver_to_des_out_wpipe);
+      return this->set_unix_error("Failed to dup2 on DES output pipe", true);
+    }
+
+    this->shmem->DES_pid = getpid();
+
+    if (chdir(des_working_dir) == -1) {
+      ::close(this->driver_to_des_in_rpipe);
+      ::close(this->driver_to_des_out_wpipe);
+      return this->set_unix_error("Failed to change dir on DES_WORKING_DIR",
+                                  true);
+    }
+
+    if (execlp(des_exec_path, des_exec_path, nullptr) == -1) {
+      ::close(this->driver_to_des_in_wpipe);
+      ::close(this->driver_to_des_out_rpipe);
+      return this->set_unix_error("Failed to launch DES", true);
+    }
+    return SQL_ERROR;
+  } else {
+    this->shmem->des_process_created = true;
+
+    ret = release_shared_memory_mutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+    ret = get_DES_process_pipes();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+    char buffer[4096];
+    ssize_t bytes_read = 0;
+
+    bool finished_reading = false;
+    std::string complete_reading_str = "";
+    while (!finished_reading) {
+      int ms = 0;
+      while (ms < MAX_OUTPUT_WAIT_MS && bytes_read == 0) {
+        usleep(10000);
+        ioctl(this->driver_to_des_out_rpipe, FIONREAD, &bytes_read);
+        ms += 10;
+      }
+      if (bytes_read > 0) {
+        bytes_read =
+            read(this->driver_to_des_out_rpipe, buffer, sizeof(buffer));
+        if (bytes_read == -1) {
+          return this->set_unix_error("Failed to read DES output pipe", true);
+        }
+        buffer[bytes_read] =
+            '/0';  // we need it to be zero-terminated, as advised by a warning
+                   // when tring to assign the char[] to a new std::string
+        std::string buffer_str = buffer;
+
+        complete_reading_str += buffer_str;
+
+        finished_reading = (bytes_read < BUFFER_SIZE - 1);
+      } else
+        finished_reading = true;
+    }
+    this->shmem->des_process_created = true;
+  }
+
+  return SQL_SUCCESS;
+}
 #endif
+
+/* DESODBC:
+  This function gets the input/output
+  pipes from the already launched global DES process.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::get_DES_process_pipes() {
+#ifdef _WIN32
+  bool finished = false;
+  SQLRETURN ret;
+  ret = get_shared_memory_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+  ret = getRequestHandleMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    release_shared_memory_mutex();
+    return ret;
+  }
+
+  this->shmem->handle_sharing_info.handle_petitioner.pid =
+      GetCurrentProcessId();
+  this->shmem->handle_sharing_info.handle_petitioner.id = this->connection_id;
+
+  while (!finished) {
+    size_t random_id = -1;
+    if (this->shmem->connected_clients_struct.size == 0) {
+      releaseRequestHandleMutex();
+      release_shared_memory_mutex();
+      return this->set_error(
+          "HY000",
+          "Failed to get DES process pipes: no available clients to share "
+          "pipes. Perhaps the sharers do have different privileges than you?");
+    } else if (this->shmem->connected_clients_struct.size == 1)
+      random_id = this->shmem->connected_clients_struct.connected_clients[0].id;
+    else
+      random_id =
+          this->shmem->connected_clients_struct
+              .connected_clients[rand() %
+                                 (this->shmem->connected_clients_struct.size -
+                                  1)]
+              .id;  // we request the handles to a random peer
+    this->shmem->handle_sharing_info.handle_petitionee.id = random_id;
+
+    ret = release_shared_memory_mutex();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      releaseRequestHandleMutex();
+      return ret;
+    }
+
+    ret = setRequestHandleEvent();
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+      releaseRequestHandleMutex();
+      return ret;
+    }
+    DWORD handle_sent_event_signal =
+        WaitForSingleObject(this->handle_sent_event, EVENT_TIMEOUT);
+
+    ret = get_shared_memory_mutex();
+
+    switch (handle_sent_event_signal) {
+      case WAIT_ABANDONED:
+      case WAIT_TIMEOUT:
+        this->remove_client_from_shmem(
+            this->shmem->connected_clients_struct,
+            this->shmem->handle_sharing_info.handle_petitionee.id);
+        continue;
+      case WAIT_FAILED:
+        release_shared_memory_mutex();
+        releaseRequestHandleMutex();
+        return this->set_win_error(
+            "Failed to wait for event " + std::string(HANDLE_SENT_EVENT_NAME),
+            true);
+      default:
+        break;
+    }
+
+    this->driver_to_des_out_rpipe = this->shmem->handle_sharing_info.out_handle;
+    this->driver_to_des_in_wpipe = this->shmem->handle_sharing_info.in_handle;
+    if (!this->driver_to_des_out_rpipe || !this->driver_to_des_in_wpipe) {
+      int x;
+    }
+
+    // we reset the structure once we have saved the handles
+    this->shmem->handle_sharing_info.in_handle = NULL;
+    this->shmem->handle_sharing_info.out_handle = NULL;
+
+    this->shmem->handle_sharing_info.handle_petitionee.id = 0;
+    this->shmem->handle_sharing_info.handle_petitionee.pid = 0;
+    this->shmem->handle_sharing_info.handle_petitioner.id = 0;
+    this->shmem->handle_sharing_info.handle_petitioner.pid = 0;
+
+    finished = true;
+  }
+
+  ret = releaseRequestHandleMutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    release_shared_memory_mutex();
+    return ret;
+  }
+  ret = release_shared_memory_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+#else
+
+  timeval tv_start;
+  gettimeofday(&tv_start, nullptr);
+
+  bool success = false;
+
+  while (!success) {
+    this->driver_to_des_in_wpipe = open(IN_WPIPE_NAME, O_WRONLY | O_NONBLOCK);
+    if (this->driver_to_des_in_wpipe != -1) {
+      success = true;
+    } else {
+      timeval tv_end;
+      gettimeofday(&tv_end, nullptr);
+      long secs = tv_end.tv_sec - tv_start.tv_sec;
+      if (secs >= MUTEX_TIMEOUT_SECONDS) {
+        std::string msg = "Fetching pipe ";
+        msg += std::string(IN_WPIPE_NAME);
+        msg +=
+            " timed-out. Perhaps a connection was closed unsafely. In that "
+            "case, a manual removal of this named pipe may be required. If "
+            "not, the "
+            "problem must be in an old connection V shared memory segment that "
+            "was not deleted. "
+            "Try with ipcrm.";
+        return this->set_unix_error(msg, false);
+      } else
+        usleep(100000);
+    }
+  }
+
+  gettimeofday(&tv_start, nullptr);
+  success = false;
+
+  while (!success) {
+    this->driver_to_des_out_rpipe = open(OUT_RPIPE_NAME, O_RDONLY | O_NONBLOCK);
+    if (this->driver_to_des_out_rpipe != -1) {
+      success = true;
+    } else {
+      timeval tv_end;
+      gettimeofday(&tv_end, nullptr);
+      long secs = tv_end.tv_sec - tv_start.tv_sec;
+      if (secs >= MUTEX_TIMEOUT_SECONDS) {
+        std::string msg = "Fetching pipe ";
+        msg += std::string(OUT_RPIPE_NAME);
+        msg +=
+            " timed-out. Perhaps a connection was closed unsafely. In that "
+            "case, a manual removal of this named pipe may be required. If "
+            "not, the "
+            "problem must be in an old connection V shared memory segment that "
+            "was not deleted. "
+            "Try with ipcrm.";
+        return this->set_unix_error(msg, false);
+      } else
+        usleep(100000);
+    }
+  }
+
+#endif
+
+  return SQL_SUCCESS;
+}
 
 #ifdef _WIN32
 /* DESODBC:
@@ -908,14 +689,312 @@ void DBC::sharePipes() {
 
 #endif
 
-#ifndef _WIN32
-// DESODBC: new headers to include in Unix-like systems
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <cstdio>
-#include <iostream>
+#ifdef _WIN32
+/* DESODBC:
+  This function gets a generic mutex
+  in Windows.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::get_mutex(HANDLE h, const std::string &name) {
+  DWORD ret = WaitForSingleObject(h, MUTEX_TIMEOUT);
+  if (ret == WAIT_TIMEOUT) {
+    return this->set_win_error("Mutex " + std::string(name) + " time-outed",
+                               false);
+  } else if (ret == WAIT_FAILED) {
+    return this->set_win_error(
+        "Fetching mutex " + std::string(name) + " failed", true);
+  } else if (ret == WAIT_ABANDONED) {
+    return this->set_win_error(
+        "Mutex " + std::string(name) + " in non-consistent state", false);
+  }
+  return SQL_SUCCESS;
+}
+
+/* DESODBC:
+  This function releases a generic
+  mutex in Windows.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::release_mutex(HANDLE h, const std::string &name) {
+  DWORD ret = ReleaseMutex(h);
+  if (ret == 0) {
+    return this->set_win_error("Failed to release mutex " + std::string(name),
+                               true);
+  }
+  return SQL_SUCCESS;
+}
+#else
+/* DESODBC:
+  This function gets a generic mutex
+  in Unix-like systems.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::get_mutex(sem_t *s, const std::string &name) {
+  timeval tv_start;
+  gettimeofday(&tv_start, nullptr);
+
+  bool success = false;
+
+  while (!success) {
+    if (sem_trywait(s) == 0) {
+      success = true;
+    } else {
+      timeval tv_end;
+      gettimeofday(&tv_end, nullptr);
+      long secs = tv_end.tv_sec - tv_start.tv_sec;
+      if (secs >= MUTEX_TIMEOUT_SECONDS) {
+        std::string msg = "Fetching mutex ";
+        msg += std::string(name);
+        msg +=
+            " timed-out. Perhaps a connection was closed unsafely. In that "
+            "case, a manual removal of this mutex may be required (try ";
+
+#ifdef __APPLE__
+        msg +=
+            "with unlink (2). In macOS, mutexes do not exist in the "
+            "filesystem)";
+#else
+        msg += "removing the corresponding V shared memory segment with ipcrm)";
 #endif
+        return this->set_unix_error(msg, false);
+      } else
+        usleep(100000);
+    }
+  }
+  return SQL_SUCCESS;
+}
+
+
+/* DESODBC:
+  This function releases a generic
+  mutex in Windows.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::release_mutex(sem_t *s, const std::string &name) {
+  if (sem_post(s) == -1) {
+    return this->set_unix_error("Failed to release mutex " + std::string(name),
+                                true);
+  }
+  return SQL_SUCCESS;
+}
+#endif
+
+#ifdef _WIN32
+
+/* DESODBC:
+  This function gets the request handle mutex,
+  which is only available in the Windows version.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::getRequestHandleMutex() {
+  return get_mutex(this->request_handle_mutex, REQUEST_HANDLE_MUTEX_NAME);
+}
+
+/* DESODBC:
+  This function releases the request handle mutex,
+  which is only available in the Windows version.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::releaseRequestHandleMutex() {
+  return release_mutex(this->request_handle_mutex, REQUEST_HANDLE_MUTEX_NAME);
+}
+
+/* DESODBC:
+  This function sets a generic event in
+  the context of Windows' event objects.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::setEvent(HANDLE h, const std::string &name) {
+  DWORD ret = SetEvent(h);
+  if (ret == 0) {
+    this->set_win_error("Failed to set event " + std::string(name), true);
+  }
+  return SQL_SUCCESS;
+}
+
+/* DESODBC:
+  This function sets a finishing event in
+  the context of Windows' event objects.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::setFinishingEvent() {
+  return setEvent(this->finishing_event, FINISHING_EVENT_NAME);
+}
+
+/* DESODBC:
+  This function sets a request handle event in
+  the context of Windows' event objects.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::setRequestHandleEvent() {
+  return setEvent(this->request_handle_event, REQUEST_HANDLE_EVENT_NAME);
+}
+
+/* DESODBC:
+  This function removes a client from
+  the shared memory file, which is a necessary
+  step in the Windows version.
+
+  Original author: DESODBC Developer
+*/
+void DBC::remove_client_from_shmem(ConnectedClients &pids, size_t id) {
+  int index = 0;
+  while (index < pids.size) {
+    if (pids.connected_clients[index].id == id)
+      break;
+    else
+      index++;
+  }
+  if (index == pids.size) return;
+
+  pids.connected_clients[index].id = 0;
+  pids.connected_clients[index].pid = 0;
+
+  int i = index;
+
+  while (i + 1 < pids.size) {
+    pids.connected_clients[i] = pids.connected_clients[i + 1];
+    i++;
+  }
+
+  pids.size -= 1;
+}
+#endif
+
+
+/* DESODBC:
+  This function gets the shared memory
+  mutex.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::get_shared_memory_mutex() {
+#ifdef _WIN32
+  return get_mutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
+#else
+#ifdef __APPLE__
+  return get_mutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
+#else
+  return get_mutex(&this->shmem->shared_memory_mutex, "shared memory");
+#endif
+#endif
+}
+
+/* DESODBC:
+  This function releases the shared
+  memory mutex.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::release_shared_memory_mutex() {
+#ifdef _WIN32
+  return release_mutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
+#else
+#ifdef __APPLE__
+  return release_mutex(this->shared_memory_mutex, SHARED_MEMORY_MUTEX_NAME);
+#else
+  return release_mutex(&this->shmem->shared_memory_mutex, "shared memory");
+#endif
+#endif
+}
+
+/* DESODBC:
+  This function gets the query mutex.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::get_query_mutex() {
+#ifdef _WIN32
+  return get_mutex(this->query_mutex, QUERY_MUTEX_NAME);
+#else
+#ifdef __APPLE__
+  return get_mutex(this->query_mutex, QUERY_MUTEX_NAME);
+#else
+  return get_mutex(&this->shmem->query_mutex, "query");
+#endif
+#endif
+}
+
+/* DESODBC:
+  This function releases the query mutex.
+
+  Original author: DESODBC Developer
+*/
+SQLRETURN DBC::release_query_mutex() {
+#ifdef _WIN32
+  return release_mutex(this->query_mutex, QUERY_MUTEX_NAME);
+#else
+#ifdef __APPLE__
+  return release_mutex(this->query_mutex, QUERY_MUTEX_NAME);
+#else
+  return release_mutex(&this->shmem->query_mutex, "query");
+#endif
+#endif
+}
+
+/* DESODBC:
+  This function modifies the working directory removing
+  the last '\' or '/' delimiter character if so.
+  (char version)
+
+  Original author: DESODBC Developer
+*/
+const char *prepare_working_dir(const char *working_dir) {
+  std::string working_dir_str(working_dir);
+  size_t pos;
+  if (working_dir_str.find("\\") != std::wstring::npos)
+    pos = working_dir_str.find_last_of("\\");
+  else
+    pos = working_dir_str.find_last_of("/");
+
+  if (pos != std::string::npos && pos == (working_dir_str.size() - 1)) {
+    std::string dir_str = working_dir_str.substr(0, pos);
+    size_t dir_size = dir_str.size();
+    char *dir = string_to_char_pointer(dir_str);
+
+    return dir;
+
+  } else {
+    return working_dir;
+  }
+}
+
+/* DESODBC:
+  This function modifies the working directory removing
+  the last '\' or '/' delimiter character if so.
+  (wchar version)
+
+  Original author: DESODBC Developer
+*/
+const wchar_t *prepare_working_dir(const wchar_t *working_dir) {
+  std::wstring working_dir_wstr(working_dir);
+  size_t pos;
+  if (working_dir_wstr.find(L"\\") != std::wstring::npos)
+    pos = working_dir_wstr.find_last_of(L"\\");
+  else
+    pos = working_dir_wstr.find_last_of(L"/");
+
+  if (pos != std::wstring::npos && pos == (working_dir_wstr.size() - 1)) {
+    std::wstring dir_wstr = working_dir_wstr.substr(0, pos);
+    size_t dir_size = dir_wstr.size();
+
+    wchar_t *dir = string_to_wchar_pointer(dir_wstr);
+
+    return dir;
+
+  } else {
+    return working_dir;
+  }
+}
 
 /* DESODBC:
   This function initializes the IPC objects.
@@ -991,7 +1070,7 @@ SQLRETURN DBC::initialize() {
         "Failed to create event " + std::string(FINISHING_EVENT_NAME), true);
   }
 
-  SQLRETURN ret = getSharedMemoryMutex();
+  SQLRETURN ret = get_shared_memory_mutex();
   if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 #else
   this->shm_id = shmget(this->connection_hash_int, sizeof(SharedMemoryUnix),
@@ -1040,7 +1119,7 @@ SQLRETURN DBC::initialize() {
   }
 #endif
 
-  SQLRETURN ret = getSharedMemoryMutex();
+  SQLRETURN ret = get_shared_memory_mutex();
   if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 
 #endif
@@ -1091,7 +1170,7 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
   const char *prepared_working_dir = prepare_working_dir(des_working_dir);
 #endif
 
-  this->getConcurrentObjects(des_exec_path, des_working_dir);
+  this->get_concurrent_objects(des_exec_path, des_working_dir);
 
   rc = this->initialize();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
@@ -1103,7 +1182,7 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
 #endif
   if (shmem->exec_hash_int != 0 &&
       shmem->exec_hash_int != this->exec_hash_int) {
-    releaseSharedMemoryMutex();
+    release_shared_memory_mutex();
     return this->set_error(
         "HY000",
         "Trying to access a DES global process launched from an executable "
@@ -1111,7 +1190,7 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
   }
 #ifdef _WIN32
   if (shmem->connected_clients_struct.size == MAX_CLIENTS) {
-    releaseSharedMemoryMutex();
+    release_shared_memory_mutex();
     return this->set_error("HY000",
                            "Cannot connect. Maximum number of clients reached");
   }
@@ -1122,18 +1201,18 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
     rc = this->createPipes();
     if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 #ifdef _WIN32
-    rc = this->createDESProcess(des_exec_path,
+    rc = this->create_DES_process(des_exec_path,
                                 &std::wstring(prepared_working_dir)[0]);
     if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 #else
-    rc = this->createDESProcess(des_exec_path, prepared_working_dir);
+    rc = this->create_DES_process(des_exec_path, prepared_working_dir);
     if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
     shmem->n_clients = 1;
 #endif
 
     shmem->exec_hash_int = this->exec_hash_int;
   } else {
-    rc = getDESProcessPipes();
+    rc = get_DES_process_pipes();
     if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 #ifndef _WIN32
     shmem->n_clients += 1;
@@ -1153,12 +1232,12 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
 
   shmem->connected_clients_struct.size += 1;
 
-  rc = releaseSharedMemoryMutex();
+  rc = release_shared_memory_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
 #else
 
-  rc = releaseSharedMemoryMutex();
+  rc = release_shared_memory_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
 #endif
@@ -1240,7 +1319,7 @@ SQLRETURN SQL_API DES_SQLConnect(SQLHDBC hdbc, SQLWCHAR *szDSN,
 
   Original author: DESODBC Developer
 */
-void safeCloseConnections() {
+void safe_close_connections() {
   for (auto hdbc : active_dbcs_global_var) {
     hdbc->close();
   }
@@ -1248,12 +1327,12 @@ void safeCloseConnections() {
 
 /* DESODBC:
   This function automatically calls
-  safeCloseConnections when destroying this
+  safe_close_connections when destroying this
   driver instance.
 
   Original author: DESODBC Developer
 */
-__attribute__((constructor)) void init() { atexit(safeCloseConnections); }
+__attribute__((constructor)) void init() { atexit(safe_close_connections); }
 
 /* DESODBC:
   This function corresponds to the
@@ -1325,9 +1404,6 @@ SQLRETURN SQL_API DES_SQLDriverConnect(
    If the connection string contains the DSN keyword, the driver retrieves
    the information for the specified data source (and merges it into the
    connection info with the provided connection info having precedence).
-
-
-
 
    This also allows us to get pszDRIVER (if not already given).
   */

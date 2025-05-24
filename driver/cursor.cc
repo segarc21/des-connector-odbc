@@ -607,7 +607,7 @@ SQLRETURN des_pos_delete_std(STMT *stmt, STMT *stmtParam, SQLUSMALLINT irow,
   if (!SQL_SUCCEEDED(nReturn)) return nReturn;
 
   /* DELETE the row(s) */
-  nReturn = stmt->dbc->getQueryMutex();
+  nReturn = stmt->dbc->get_query_mutex();
   if (nReturn != SQL_SUCCESS && nReturn != SQL_SUCCESS_WITH_INFO)
     return nReturn;
 
@@ -617,7 +617,7 @@ SQLRETURN des_pos_delete_std(STMT *stmt, STMT *stmtParam, SQLUSMALLINT irow,
     nReturn = update_status(stmtParam, SQL_ROW_DELETED);
   }
 
-  nReturn = stmt->dbc->releaseQueryMutex();
+  nReturn = stmt->dbc->release_query_mutex();
 
   return nReturn;
 }
@@ -799,7 +799,7 @@ static SQLRETURN setpos_delete_bookmark_std(STMT *stmt, std::string &query) {
     }
 
     /* execute our DELETE statement */
-    nReturn = stmt->dbc->getQueryMutex();
+    nReturn = stmt->dbc->get_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) {
       return nReturn;
     }
@@ -817,7 +817,7 @@ static SQLRETURN setpos_delete_bookmark_std(STMT *stmt, std::string &query) {
     }
     ++rowset_pos;
 
-    nReturn = stmt->dbc->releaseQueryMutex();
+    nReturn = stmt->dbc->release_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) {
       return nReturn;
     }
@@ -875,17 +875,17 @@ static SQLRETURN setpos_delete_std(STMT *stmt, SQLUSMALLINT irow,
     }
 
     /* execute our DELETE statement */
-    nReturn = stmt->dbc->getQueryMutex();
+    nReturn = stmt->dbc->get_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) {
       return nReturn;
     }
 
     if (!(nReturn = stmt->send_update_and_fetch_info(query).first)) {
       affected_rows += des_affected_rows(stmt);
-      stmt->dbc->releaseQueryMutex();
+      stmt->dbc->release_query_mutex();
     } else if (!SQL_SUCCEEDED(nReturn)) {
       stmt->error = stmt->dbc->error;
-      stmt->dbc->releaseQueryMutex();
+      stmt->dbc->release_query_mutex();
       return nReturn;
     }
 
@@ -958,7 +958,7 @@ static SQLRETURN setpos_update_bookmark_std(STMT *stmt, std::string &query) {
         build_where_clause_std(stmt, query, (SQLUSMALLINT)curr_bookmark_index);
     if (!SQL_SUCCEEDED(nReturn)) return nReturn;
 
-    nReturn = stmt->dbc->getQueryMutex();
+    nReturn = stmt->dbc->get_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) {
       return nReturn;
     }
@@ -969,7 +969,7 @@ static SQLRETURN setpos_update_bookmark_std(STMT *stmt, std::string &query) {
       affected += des_affected_rows(stmt);
     }
 
-    nReturn = stmt->dbc->releaseQueryMutex();
+    nReturn = stmt->dbc->release_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) {
       return nReturn;
     }
@@ -1042,7 +1042,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
     nReturn = build_where_clause_std(stmt, query, (SQLUSMALLINT)rowset_pos);
     if (!SQL_SUCCEEDED(nReturn)) return nReturn;
 
-    nReturn = stmt->dbc->getQueryMutex();
+    nReturn = stmt->dbc->get_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) return nReturn;
 
     nReturn = stmt->send_update_and_fetch_info(query).first;
@@ -1054,7 +1054,7 @@ static SQLRETURN setpos_update_std(STMT *stmt, SQLUSMALLINT irow,
 
     affected += des_affected_rows(stmt);
 
-    nReturn = stmt->dbc->releaseQueryMutex();
+    nReturn = stmt->dbc->release_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) return nReturn;
 
   } while (++rowset_pos <= rowset_end);
@@ -1229,16 +1229,16 @@ static SQLRETURN batch_insert_std(STMT *stmt, SQLULEN irow,
 
     query.erase(query.size() - 1);
 
-    SQLRETURN nReturn = stmt->dbc->getQueryMutex();
+    SQLRETURN nReturn = stmt->dbc->get_query_mutex();
     if (!SQL_SUCCEEDED(nReturn)) return nReturn;
 
     nReturn = stmt->send_update_and_fetch_info(query).first;
     if (!SQL_SUCCEEDED(nReturn)) {
-      stmt->dbc->releaseQueryMutex();
+      stmt->dbc->release_query_mutex();
       return nReturn;
     }
 
-    nReturn = stmt->dbc->releaseQueryMutex();
+    nReturn = stmt->dbc->release_query_mutex();
 
     if (!SQL_SUCCEEDED(nReturn)) return nReturn;
 

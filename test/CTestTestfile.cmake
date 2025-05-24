@@ -4,5 +4,5 @@
 # 
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
-add_test(tests "tests")
-set_tests_properties(tests PROPERTIES  _BACKTRACE_TRIPLES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/CMakeLists.txt;102;ADD_TEST;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/CMakeLists.txt;0;")
+add_test(desodbc_tests "desodbc_tests")
+set_tests_properties(desodbc_tests PROPERTIES  _BACKTRACE_TRIPLES "C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/CMakeLists.txt;92;ADD_TEST;C:/Users/sergi/Desktop/mysql-connector-odbc-9.0.0/test/CMakeLists.txt;0;")

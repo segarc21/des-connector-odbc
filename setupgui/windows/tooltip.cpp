@@ -163,6 +163,8 @@ LRESULT CALLBACK GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 
 /* DESODBC:
+    Removed the unnecessary fields of MyODBC's setup library
+    regarding DESODBC's needs and introduced the new ones.
     Original author: MyODBC
     Modified by: DESODBC Developer
 */

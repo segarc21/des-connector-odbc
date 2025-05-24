@@ -42,11 +42,6 @@
 
 #include "driver.h"
 
-
-#define NOT_IMPLEMENTED \
-  return SQL_ERROR
-
-
 SQLRETURN SQL_API
 SQLColAttributeImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
                     SQLUSMALLINT field, SQLPOINTER char_attr,
@@ -917,7 +912,8 @@ SQLGetDescRec(SQLHDESC hdesc, SQLSMALLINT record, SQLCHAR *name,
               SQLSMALLINT *subtype, SQLLEN *length, SQLSMALLINT *precision,
               SQLSMALLINT *scale, SQLSMALLINT *nullable)
 {
-  NOT_IMPLEMENTED;
+  return ((DESC *)hdesc)
+      ->set_error("IM001", "Driver does not support this function");
 }
 
 
@@ -937,7 +933,8 @@ SQLSetDescRec(SQLHDESC hdesc, SQLSMALLINT record, SQLSMALLINT type,
               SQLSMALLINT scale, SQLPOINTER data_ptr,
               SQLLEN *octet_length_ptr, SQLLEN *indicator_ptr)
 {
-  NOT_IMPLEMENTED;
+  return ((DESC *)hdesc)
+      ->set_error("IM001", "Driver does not support this function");
 }
 
 

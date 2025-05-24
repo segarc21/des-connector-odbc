@@ -220,7 +220,7 @@ DESCREC *desc_get_rec(DESC *desc, int recnum, my_bool expand)
       }
     }
     if (desc->bookmark2.size() > 0) //solving MyODBC bug
-    rec= &desc->bookmark2.back();
+      rec= &desc->bookmark2.back();
   }
   else if (recnum < 0)
   {

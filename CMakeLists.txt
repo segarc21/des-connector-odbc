@@ -481,6 +481,7 @@ ENDIF(NOT DISABLE_GUI)
 
 ADD_SUBDIRECTORY(dltest)
 ADD_SUBDIRECTORY(installer)
+ADD_SUBDIRECTORY(test)
 
 # The built-in sys and strings are used for static and dynamic linking now.
 ADD_SUBDIRECTORY(mysql_sys)
@@ -495,7 +496,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/README.txt")
   INSTALL(FILES README.txt    DESTINATION .)
 else()
   INSTALL(FILES README.md    DESTINATION .)
-  INSTALL(FILES CONTRIBUTING.md    DESTINATION .)
 endif()
 
 IF(WIN32)
@@ -541,10 +541,6 @@ IF(WIN32)
     CONFIGURATIONS Debug
     FILES_MATCHING PATTERN *.pdb
   )
-
-ELSE(WIN32)
-
-  INSTALL(FILES ChangeLog    DESTINATION .)
 
 ENDIF(WIN32)
 

@@ -2477,18 +2477,10 @@ std::vector<std::string> getLines(const std::string &str) {
   std::string line;
 
   while (std::getline(ss, line, '\n')) {
-#ifdef _WIN32
-    lines.push_back(line.substr(
-        0, line.size() - 1));  // to remove the char '/r' of each line
-#else
-    // For the UNIX version, we need to remove the characters CR and
-    // non-printing space
     line.erase(std::remove(line.begin(), line.end(), 13), line.end());  // CR
     line.erase(std::remove(line.begin(), line.end(), 32),
                line.end());  // non-printing space
-    lines.push_back(line);   // there seems that '/r' char isn't placed in the
-                             // DES unix version
-#endif
+    lines.push_back(line);
   }
   return lines;
 }

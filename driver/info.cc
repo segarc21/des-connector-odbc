@@ -247,24 +247,24 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 
   case SQL_DATABASE_NAME:
     if (is_connected(dbc)) {
-      SQLRETURN rc = dbc->getQueryMutex();
+      SQLRETURN rc = dbc->get_query_mutex();
       if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
       auto pair = dbc->send_query_and_read("/current_db");
       rc = pair.first;
       std::string current_db_output = pair.second;
       if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-        dbc->releaseQueryMutex();
+        dbc->release_query_mutex();
         return rc;
       }
-      rc = dbc->releaseQueryMutex();
+      rc = dbc->release_query_mutex();
       if (rc != SQL_SUCCESS &&
           rc != SQL_SUCCESS_WITH_INFO) {
         return rc;
       }
       std::string db = getLines(current_db_output)[0];
 
-      MYINFO_SET_STR(string_to_char_pointer(db)); //TODO: check memory leaks
+      MYINFO_SET_STR(string_to_char_pointer(db));
 
     } else {
       return dbc->set_error(

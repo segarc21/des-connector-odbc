@@ -47,7 +47,21 @@
 
 #define SQL_MY_PRIMARY_KEY 1212
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+DES_RESULT::DES_RESULT() {
+  this->internal_table = new ResultTable();
+  if (!this->internal_table) throw std::bad_alloc();
+}
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+DES_RESULT::DES_RESULT(STMT *stmt) {
+  this->internal_table = new ResultTable(stmt);
+  if (!this->internal_table) throw std::bad_alloc();
+}
 
 /* Verifies if C type is suitable for copying SQL_BINARY data
    http://msdn.microsoft.com/en-us/library/ms713559%28VS.85%29.aspx */
@@ -2376,23 +2390,6 @@ size_t ResultTable::row_count() {
 /* DESODBC:
     Original author: DESODBC Developer
 */
-std::string ResultTable::index_to_name_col(size_t index) {
-  return names_ordered[index - 1];
-}
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-void ResultTable::refresh_row(const int row_index) {
-  for (auto pair : columns) {
-    Column col = pair.second;
-    col.refresh_row(row_index);
-  }
-}
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
 void ResultTable::insert_col(const std::string &tableName,
                         const std::string &columnName,
                              const TypeAndLength &columnType,
@@ -2509,9 +2506,6 @@ DES_ROWS * Column::generate_DES_ROWS(int current_row) {
       ptr = ptr->next;
     } else
       ptr->next = nullptr;
-
-    // length doesn't seem to be modified, as I have verified debugging MySQL
-    // ODBC. TODO: research
   }
   return rows;
 }
@@ -2581,16 +2575,6 @@ Column::Column(const std::string &table_name, const std::string &col_name,
   this->field->max_length =
       0;  // the column right now is empty.
           // it will update when a function requires to know this value.
-}
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-void Column::refresh_row(const int row_index) {
-  /*
-string_to_char_pointer(values[row_index], (char *)target_value_binding);
-*str_len_or_ind_binding = values[row_index].size();
-*/
 }
 
 /* DESODBC:
@@ -2696,7 +2680,7 @@ DES_FIELD* ResultTable::get_DES_FIELD(int col_index) {
 /* DESODBC:
     Original author: DESODBC Developer
 */
-std::vector<ForeignKeyInfo> ResultTable::getForeignKeysFromTAPI(
+std::vector<ForeignKeyInfo> ResultTable::get_foreign_keys_from_TAPI(
     const std::vector<std::string> &lines, int &index) {
   std::vector<ForeignKeyInfo> result;
 
@@ -2744,7 +2728,7 @@ std::vector<ForeignKeyInfo> ResultTable::getForeignKeysFromTAPI(
 /* DESODBC:
     Original author: DESODBC Developer
 */
-DBSchemaRelationInfo ResultTable::getRelationInfo(
+DBSchemaRelationInfo ResultTable::get_relation_info(
     const std::vector<std::string> &lines,
                                int &index) {
   // We asume that the first given line by index is "$table" or "$view".
@@ -2833,7 +2817,7 @@ DBSchemaRelationInfo ResultTable::getRelationInfo(
         // now, it ideally points to FKs content; if not, to the bottom
         // delimiter of FK.
         if (lines[index] != "$")
-          relation_info.foreign_keys = getForeignKeysFromTAPI(
+          relation_info.foreign_keys = get_foreign_keys_from_TAPI(
               lines, index);  // this function updates the index by itself.
         else
           index++;
@@ -2931,7 +2915,7 @@ DBSchemaRelationInfo ResultTable::getRelationInfo(
 /* DESODBC:
     Original author: DESODBC Developer
 */
-std::unordered_map<std::string, DBSchemaRelationInfo> ResultTable::getAllRelationsInfo(
+std::unordered_map<std::string, DBSchemaRelationInfo> ResultTable::get_all_relations_info(
     const std::string &str) {
   // Table name -> DBSchemaRelationInfo structure
   std::unordered_map<std::string, DBSchemaRelationInfo> main_map;
@@ -2948,7 +2932,7 @@ std::unordered_map<std::string, DBSchemaRelationInfo> ResultTable::getAllRelatio
     }
     if (i == lines.size()) break;
 
-    relation_info = getRelationInfo(lines, i);
+    relation_info = get_relation_info(lines, i);
 
     main_map.insert({relation_info.name, relation_info});
   }
@@ -3055,7 +3039,7 @@ void ResultTable::build_table_SQLForeignKeys_PK() {
   std::string pk_table_name = this->params.pk_table_name;
 
   std::unordered_map<std::string, DBSchemaRelationInfo> tables_info =
-      getAllRelationsInfo(str);
+      get_all_relations_info(str);
 
   for (auto pair_name_table_info : tables_info) {
     std::string fk_table_name = pair_name_table_info.first;
@@ -3102,7 +3086,7 @@ void ResultTable::build_table_SQLForeignKeys_FK() {
   std::string table_name = this->params.fk_table_name;
 
   std::unordered_map<std::string, DBSchemaRelationInfo> tables_info =
-      getAllRelationsInfo(str);
+      get_all_relations_info(str);
 
   DBSchemaRelationInfo table_info = tables_info[table_name];
 
@@ -3148,7 +3132,7 @@ void ResultTable::build_table_SQLForeignKeys_PKFK() {
   std::string fk_table_name = this->params.fk_table_name;
 
   std::unordered_map<std::string, DBSchemaRelationInfo> tables_info =
-      getAllRelationsInfo(str);
+      get_all_relations_info(str);
 
   for (auto pair_name_table_info : tables_info) {
     std::string local_fk_table_name = pair_name_table_info.first;
@@ -3239,7 +3223,7 @@ void ResultTable::build_table_SQLColumns() {
     }
 
     std::unordered_map<std::string, DBSchemaRelationInfo> map =
-        getAllRelationsInfo(dbschema_str);
+        get_all_relations_info(dbschema_str);
 
     std::vector<std::string> dbschema_tables;
     for (auto pair : map) {
@@ -3358,7 +3342,7 @@ void ResultTable::build_table_SQLPrimaryKeys() {
   std::vector<std::string> lines = getLines(str);
 
   int i = 0;
-  DBSchemaRelationInfo table_info = getRelationInfo(lines, i);
+  DBSchemaRelationInfo table_info = get_relation_info(lines, i);
 
   if (table_info.primary_keys.size() == 0) return;
 
@@ -3456,7 +3440,7 @@ void ResultTable::build_table_SQLTables() {
       }
 
       std::unordered_map<std::string, DBSchemaRelationInfo> map =
-          getAllRelationsInfo(dbschema_query_output);
+          get_all_relations_info(dbschema_query_output);
 
       std::vector<std::string> dbschema_tables;
       for (auto pair : map) {
@@ -3654,7 +3638,7 @@ void ResultTable::build_table_SQLSpecialColumns() {
 
   std::vector<std::string> lines = getLines(main_output);
   int index = 0;
-  DBSchemaRelationInfo table_info = getRelationInfo(lines, index);
+  DBSchemaRelationInfo table_info = get_relation_info(lines, index);
 
   //We need the table so as to know the buffer length for character data types.
   std::string select_query = "select * from ";

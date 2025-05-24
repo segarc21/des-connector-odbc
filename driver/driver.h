@@ -89,7 +89,7 @@ using std::nullptr_t;
 
 #define MAX_OUTPUT_WAIT_MS 2000
 
-const int BUFFER_SIZE = 4096;
+#define BUFFER_SIZE 4096
 
 #define LOCK_STMT(S) \
   CHECK_HANDLE(S);   \
@@ -140,17 +140,22 @@ const int BUFFER_SIZE = 4096;
 #define DRIVER_NAME "DES ODBC " DESODBC_STRSERIES " Driver"
 #define DRIVER_NONDSN_TAG "DRIVER={DES ODBC " DESODBC_STRSERIES " Driver}"
 
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
 #if defined(__APPLE__)
 
-#define DRIVER_QUERY_LOGFILE "/tmp/myodbc.sql"
+#define DRIVER_QUERY_LOGFILE "/tmp/desodbc.sql"
 
 #elif defined(_UNIX_)
 
-#define DRIVER_QUERY_LOGFILE "/tmp/myodbc.sql"
+#define DRIVER_QUERY_LOGFILE "/tmp/desodbc.sql"
 
 #else
 
-#define DRIVER_QUERY_LOGFILE "myodbc.sql"
+#define DRIVER_QUERY_LOGFILE "desodbc.sql"
 
 #endif
 
@@ -317,15 +322,40 @@ extern std::mutex global_fido_mutex;
   DONT_USE_LOCALE_CHECK(STMT)    \
   __LOCALE_RESTORE()
 
+//The following are extracted from mysql header files.
+#define NAME_CHAR_LEN 64           /**< Field/table name length */
+#define SYSTEM_CHARSET_MBMAXLEN 3
+#define NAME_LEN (NAME_CHAR_LEN * SYSTEM_CHARSET_MBMAXLEN)
+
+/* DESODBC:
+    New symbols for DESODBC.
+    Original author: DESODBC Developer
+*/
+#define SHARED_MEMORY_NAME_BASE "DESODBC_SHMEM"
+#define SHARED_MEMORY_MUTEX_NAME_BASE "DESODBC_SHMEM_MUTEX"
+#define QUERY_MUTEX_NAME_BASE "DESODBC_QUERY_MUTEX"
+#define DES_MAX_STRLEN 255  // we are mimicring PostgreSQL's convention
+#ifdef _WIN32
+#define REQUEST_HANDLE_EVENT_NAME_BASE "DESODBC_REQUEST_HANDLE_EVENT"
+#define REQUEST_HANDLE_MUTEX_NAME_BASE "DESODBC_REQUEST_HANDLE_MUTEX"
+#define HANDLE_SENT_EVENT_NAME_BASE "DESODBC_HANDLE_SENT_EVENT"
+#define FINISHING_EVENT_NAME_BASE "DESODBC_FINISHING_EVENT"
+#define MAX_CLIENTS 256
+#define EVENT_TIMEOUT 5000
+#define MUTEX_TIMEOUT 2000
+#else
+#define IN_WPIPE_NAME_BASE "/tmp/DESODBC_IN_WPIPE"
+#define OUT_RPIPE_NAME_BASE "/tmp/DESODBC_OUT_RPIPE"
+#define MUTEX_TIMEOUT_SECONDS 10
+#endif
+
+
 typedef struct {
   int perms;
   SQLSMALLINT data_type; /* SQL_IS_SMALLINT, etc */
   fld_loc loc;
   size_t offset; /* offset of field in struct */
 } desc_field;
-
-/* descriptor */
-struct STMT;
 
 /* DESODBC:
     Original author: MyODBC
@@ -353,10 +383,10 @@ enum enum_field_types
   DES_TYPE_TIME,
   DES_TYPE_DATETIME,
   DES_TYPE_TIMESTAMP,
-  DES_TYPE_BLOB,  // needed somewhere, but I need to know why. TODO
-  DES_TYPE_TINY,  // needed somewhere, but I need to know why. TODO
-  DES_TYPE_SHORT, //Needed for compatibility with MSAccess
-  DES_TYPE_LONG,   // Needed for compatibility with MSAccess
+  DES_TYPE_BLOB,  // needed for compatibility with insert_param
+  DES_TYPE_TINY,  // needed for compatibility with insert_param
+  DES_TYPE_SHORT, // needed for compatibility with MSAccess
+  DES_TYPE_LONG,   // needed for compatibility with MSAccess
   DES_UNKNOWN_TYPE
 };
 
@@ -376,13 +406,13 @@ struct TypeAndLength {
     Modified by: DESODBC Developer
 */
 typedef struct DES_FIELD {
-  char *name;               /* Name of column */
-  char *org_name;           /* Original column name, if an alias */
-  char *table;              /* Table of column if column was a field */
-  char *org_table;          /* Org table name, if table was an alias */
-  char *db;                 /* Database for table */
-  char *catalog;            /* Catalog for table */
-  char *def;                /* Default value (set by mysql_list_fields) */
+  char *name = nullptr;     /* Name of column */
+  char *org_name = nullptr;  /* Original column name, if an alias */
+  char *table = nullptr;    /* Table of column if column was a field */
+  char *org_table = nullptr; /* Org table name, if table was an alias */
+  char *db = nullptr;       /* Database for table */
+  char *catalog = nullptr;  /* Catalog for table */
+  char *def = nullptr;                /* Default value (set by mysql_list_fields) */
   unsigned long length;     /* Width of column (create length) */
   unsigned long max_length; /* Max width for selected set */
   unsigned int name_length;
@@ -402,36 +432,36 @@ typedef struct DES_FIELD {
 struct DESCREC {
   /* ODBC spec fields */
   SQLINTEGER auto_unique_value; /* row only */
-  SQLCHAR *base_column_name;    /* row only */
-  SQLCHAR *base_table_name;     /* row only */
+  SQLCHAR *base_column_name = nullptr; /* row only */
+  SQLCHAR *base_table_name = nullptr;  /* row only */
   SQLINTEGER case_sensitive;    /* row only */
-  SQLCHAR *catalog_name;        /* row only */
+  SQLCHAR *catalog_name = nullptr;     /* row only */
   SQLSMALLINT concise_type;
   SQLPOINTER data_ptr;
   SQLSMALLINT datetime_interval_code;
   SQLINTEGER datetime_interval_precision;
   SQLLEN display_size; /* row only */
   SQLSMALLINT fixed_prec_scale;
-  SQLLEN *indicator_ptr;
-  SQLCHAR *label; /* row only */
+  SQLLEN *indicator_ptr = nullptr;
+  SQLCHAR *label = nullptr; /* row only */
   SQLULEN length;
-  SQLCHAR *literal_prefix; /* row only */
-  SQLCHAR *literal_suffix; /* row only */
-  SQLCHAR *local_type_name;
-  SQLCHAR *name;
+  SQLCHAR *literal_prefix = nullptr; /* row only */
+  SQLCHAR *literal_suffix = nullptr; /* row only */
+  SQLCHAR *local_type_name = nullptr;
+  SQLCHAR *name = nullptr;
   SQLSMALLINT nullable;
   SQLINTEGER num_prec_radix;
   SQLLEN octet_length;
-  SQLLEN *octet_length_ptr;
+  SQLLEN *octet_length_ptr = nullptr;
   SQLSMALLINT parameter_type; /* param only */
   SQLSMALLINT precision;
   SQLSMALLINT rowver;
   SQLSMALLINT scale;
-  SQLCHAR *schema_name;   /* row only */
+  SQLCHAR *schema_name = nullptr; /* row only */
   SQLSMALLINT searchable; /* row only */
-  SQLCHAR *table_name;    /* row only */
+  SQLCHAR *table_name = nullptr;  /* row only */
   SQLSMALLINT type;
-  SQLCHAR *type_name;
+  SQLCHAR *type_name = nullptr;
   SQLSMALLINT unnamed;
   SQLSMALLINT is_unsigned;
   SQLSMALLINT updatable; /* row only */
@@ -484,7 +514,7 @@ struct DESCREC {
 
   /* row-specific */
   struct row_struct {
-    DES_FIELD *field; /* Used *only* by IRD */
+    DES_FIELD *field = nullptr; /* Used *only* by IRD */
     ulong datalen;    /* actual length, maintained for *each* row */
     /* TODO ugly, but easiest way to handle memory */
     SQLCHAR type_name[40];
@@ -581,8 +611,8 @@ struct DESC {
   std::vector<DESCREC> records2;
 
   DESERROR error;
-  STMT *stmt;
-  DBC *dbc;
+  STMT *stmt = nullptr;
+  DBC *dbc = nullptr;
 
   /* DESODBC:
     Original author: MyODBC
@@ -650,32 +680,7 @@ struct STMT_OPTIONS {
   bool metadata_id = false;  //DESODBC: added by DESODBC
 };
 
-/* DESODBC:
-    New symbols for DESODBC.
-    Original author: DESODBC Developer
-*/
-#define SHARED_MEMORY_NAME_BASE "DESODBC_SHMEM"
-#define SHARED_MEMORY_MUTEX_NAME_BASE "DESODBC_SHMEM_MUTEX"
-#define QUERY_MUTEX_NAME_BASE "DESODBC_QUERY_MUTEX"
 #ifdef _WIN32
-#define REQUEST_HANDLE_EVENT_NAME_BASE "DESODBC_REQUEST_HANDLE_EVENT"
-#define REQUEST_HANDLE_MUTEX_NAME_BASE "DESODBC_REQUEST_HANDLE_MUTEX"
-#define HANDLE_SENT_EVENT_NAME_BASE "DESODBC_HANDLE_SENT_EVENT"
-#define FINISHING_EVENT_NAME_BASE "DESODBC_FINISHING_EVENT"
-#else
-#define IN_WPIPE_NAME_BASE "/tmp/DESODBC_IN_WPIPE"
-#define OUT_RPIPE_NAME_BASE "/tmp/DESODBC_OUT_RPIPE"
-#endif
-
-#ifdef _WIN32
-
-/* DESODBC:
-    New symbols for DESODBC.
-    Original author: DESODBC Developer
-*/
-#define MAX_CLIENTS 256
-#define EVENT_TIMEOUT 5000
-#define MUTEX_TIMEOUT 2000
 
 /* DESODBC:
     Original author: DESODBC Developer
@@ -739,11 +744,6 @@ struct SharedMemoryWin {
 #include <fstream>
 #include <iostream>
 #endif
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-#define MUTEX_TIMEOUT_SECONDS 10
 
 /* DESODBC:
     Original author: DESODBC Developer
@@ -873,8 +873,6 @@ struct DBC {
   int driver_to_des_in_rpipe;
   int driver_to_des_in_wpipe;
 
-  // std::unique_ptr<std::thread> orphan_dbc_checker_thread;
-
 #endif
 
   /* DESODBC:
@@ -917,267 +915,106 @@ struct DBC {
   DBC(ENV *p_env);
 
   /* DESODBC:
-    Original author: MyODBC
-    Modified by: DESODBC Developer
-*/
-  SQLRETURN set_error(const char *state, const char *msg);
-
-#ifdef _WIN32
-  /* DESODBC:
+    The following symbols relate to DESODBC's IPC
     Original author: DESODBC Developer
-    */
-  SQLRETURN getMutex(HANDLE h, const std::string &name);
-#else
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN getMutex(sem_t *s, const std::string &name);
-#endif
+  */
 
-#ifdef _WIN32
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN releaseMutex(HANDLE h, const std::string &name);
-#else
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN releaseMutex(sem_t *s, const std::string &name);
-#endif
+  #ifdef _WIN32
+  LPCSTR build_name(const char *name_base);
+  void get_concurrent_objects(const wchar_t *des_exec_path,
+                            const wchar_t *des_working_dir);
+  #else
+  const char *build_name(const char *name_base);
+  void get_concurrent_objects(const char *des_exec_path,
+                            const char *des_working_dir);
+  #endif
 
-#ifdef _WIN32
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN setEvent(HANDLE h, const std::string &name);
-#endif
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN getSharedMemoryMutex();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN releaseSharedMemoryMutex();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN getQueryMutex();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN releaseQueryMutex();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN getRequestHandleMutex();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN releaseRequestHandleMutex();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN setFinishingEvent();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN setRequestHandleEvent();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  std::pair<SQLRETURN, DES_RESULT *> send_query_and_get_results(
-      COMMAND_TYPE type, const std::string &query);
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  std::pair<SQLRETURN, std::string> send_query_and_read(
-      const std::string &query);
-
-#ifdef _WIN32
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  void remove_client_from_shmem(ConnectedClients &pids, size_t id);
-#endif
-
-#ifdef _WIN32
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  LPCSTR buildName(const char *name_base) {
-    std::string name_str = name_base;
-    name_str += "_";
-    name_str += this->connection_hash;
-
-    char *name = new char[name_str.size() + 1];
-    if (!name) throw std::bad_alloc();
-
-    memcpy(name, name_str.c_str(), name_str.size());
-    name[name_str.size()] = '\0';
-    return name;
-  }
-#else
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  const char *buildName(const char *name_base) {
-    std::string name_str = name_base;
-    name_str += "_";
-    name_str += std::to_string(this->connection_hash_int);
-
-    char *name = new char[name_str.size() + 1];
-    if (!name) throw std::bad_alloc();
-
-    memcpy(name, name_str.c_str(), name_str.size());
-    name[name_str.size()] = '\0';
-    return name;
-  }
-#endif
-
-#ifdef _WIN32
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  void getConcurrentObjects(const wchar_t *des_exec_path,
-                            const wchar_t *des_working_dir) {
-    std::wstring des_exec_path_wstr(des_exec_path);
-    std::wstring des_working_dir_wstr(des_working_dir);
-
-    this->connection_hash = std::to_string(wstr_hasher(des_working_dir_wstr));
-
-    this->exec_hash_int = wstr_hasher(des_exec_path_wstr);
-
-    this->SHARED_MEMORY_NAME = buildName(SHARED_MEMORY_NAME_BASE);
-    this->SHARED_MEMORY_MUTEX_NAME = buildName(SHARED_MEMORY_MUTEX_NAME_BASE);
-    this->QUERY_MUTEX_NAME = buildName(QUERY_MUTEX_NAME_BASE);
-    this->REQUEST_HANDLE_EVENT_NAME = buildName(REQUEST_HANDLE_EVENT_NAME_BASE);
-    this->REQUEST_HANDLE_MUTEX_NAME = buildName(REQUEST_HANDLE_MUTEX_NAME_BASE);
-    this->HANDLE_SENT_EVENT_NAME = buildName(HANDLE_SENT_EVENT_NAME_BASE);
-    this->FINISHING_EVENT_NAME = buildName(FINISHING_EVENT_NAME_BASE);
-  }
-#else
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  void getConcurrentObjects(const char *des_exec_path,
-                            const char *des_working_dir) {
-    std::string des_exec_path_str(des_exec_path);
-    std::string des_working_dir_str(des_working_dir);
-
-    this->connection_hash = std::to_string(str_hasher(des_working_dir_str));
-
-    this->connection_hash_int = 0;
-    for (int i = 0; i < this->connection_hash.size(); ++i) {
-      this->connection_hash_int =
-          this->connection_hash_int * 10 + (this->connection_hash[i] - '0');
-    }
-
-    this->exec_hash = std::to_string(str_hasher(des_exec_path_str));
-
-    this->exec_hash_int = 0;
-    for (int i = 0; i < this->exec_hash.size(); ++i) {
-      this->exec_hash_int =
-          this->exec_hash_int * 10 + (this->exec_hash[i] - '0');
-    }
-
-    this->SHARED_MEMORY_NAME = buildName(SHARED_MEMORY_NAME_BASE);
-    this->SHARED_MEMORY_MUTEX_NAME = buildName(SHARED_MEMORY_MUTEX_NAME_BASE);
-    this->QUERY_MUTEX_NAME = buildName(QUERY_MUTEX_NAME_BASE);
-    this->IN_WPIPE_NAME = buildName(IN_WPIPE_NAME_BASE);
-    this->OUT_RPIPE_NAME = buildName(OUT_RPIPE_NAME_BASE);
-  }
-
-#endif
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
   SQLRETURN initialize();
 
-#ifdef _WIN32
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  void sharePipes();
-#endif
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
   SQLRETURN createPipes();
+  
 
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN openPipes();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN getDESProcessPipes();
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN createDESProcess(const char *des_exec_path,
-                             const char *des_working_dir);
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  SQLRETURN createDESProcess(SQLWCHAR *des_exec_path,
+  #ifdef _WIN32
+  SQLRETURN create_DES_process(SQLWCHAR *des_exec_path,
                              SQLWCHAR *des_working_dir);
+  #else
+  SQLRETURN create_DES_process(const char *des_exec_path,
+                             const char *des_working_dir);
+  #endif
 
+  SQLRETURN get_DES_process_pipes();
 
+  #ifdef _WIN32
+  void sharePipes();
+  #endif
+
+  #ifdef _WIN32
+  SQLRETURN get_mutex(HANDLE h, const std::string &name);
+  SQLRETURN release_mutex(HANDLE h, const std::string &name);
+  #else
+  SQLRETURN get_mutex(sem_t *s, const std::string &name);
+  SQLRETURN release_mutex(sem_t *s, const std::string &name);
+  #endif
+
+  #ifdef _WIN32
+  SQLRETURN getRequestHandleMutex();
+  SQLRETURN releaseRequestHandleMutex();
+
+  SQLRETURN setEvent(HANDLE h, const std::string &name);
+  SQLRETURN setFinishingEvent();
+  SQLRETURN setRequestHandleEvent();
+
+  void remove_client_from_shmem(ConnectedClients &pids, size_t id);
+  #endif
+
+  SQLRETURN get_shared_memory_mutex();
+  SQLRETURN release_shared_memory_mutex();
+
+  SQLRETURN get_query_mutex();
+  SQLRETURN release_query_mutex();
+
+  
+  /*DESODBDC:
+    Functions related to sending queries and fetching data.
+    Original author: DESODBC
+  */
+
+  #ifdef _WIN32
+  std::pair<SQLRETURN, std::string> read_DES_output_win(
+      const std::string &query);
+  #else
+  std::pair<SQLRETURN, std::string> read_DES_output_unix(
+      const std::string &query);
+  #endif
+
+  std::pair<SQLRETURN, std::string> send_query_and_read(
+      const std::string &query);
+  std::pair<SQLRETURN, DES_RESULT *> send_query_and_get_results(
+      COMMAND_TYPE type, const std::string &query);
+  
+  // MyODBC functions:
   void free_explicit_descriptors();
   void free_connection_stmts();
   void add_desc(DESC *desc);
   void remove_desc(DESC *desc);
+
+  /* DESODBC: setting errors in the context of
+  * Windows or Unix Systems.
+  * Original author: DESODBC Developer
+  */
 #ifdef _WIN32
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
   SQLRETURN set_win_error(std::string err, bool show_win_err);
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  std::pair<SQLRETURN, std::string> read_DES_output_win(
-      const std::string &query);
 #else
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
   SQLRETURN set_unix_error(std::string err, bool show_unix_err);
-
-  /* DESODBC:
-    Original author: DESODBC Developer
-    */
-  std::pair<SQLRETURN, std::string> read_DES_output_unix(const std::string& query);
 #endif
 
   /* DESODBC:
     Original author: MyODBC
     Modified by: DESODBC Developer
     */
-  SQLRETURN set_error(char *state, const char *message);
+  SQLRETURN set_error(const char *state, const char *msg);
   SQLRETURN connect(DataSource *ds);
 
-  bool closed = false;
   SQLRETURN close();
   ~DBC();
 
@@ -1230,15 +1067,6 @@ struct DES_LIMIT_SCROLLER {
     offset_pos = query;
   }
 };
-
-#define NAME_CHAR_LEN 64 /**< Field/table name length */
-#define SYSTEM_CHARSET_MBMAXLEN 3
-#define NAME_LEN (NAME_CHAR_LEN * SYSTEM_CHARSET_MBMAXLEN)
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-#define DES_MAX_STRLEN 255 //we are mimicring PostgreSQL's convention
 
 /* DESODBC:
     Rename done.
@@ -1316,7 +1144,7 @@ struct GETDATA {
         dst_bytes(0),
         dst_offset(0) {}
 };
-class ResultTable;
+struct ResultTable;
 
 struct STMT;
 
@@ -1363,16 +1191,15 @@ enum enum_resultset_metadata {
     Original author: MySQL
     Modified by: DESODBC Developer
 */
-class DES_RESULT {
- public:
+struct DES_RESULT {
   uint64_t row_count;
   DES_FIELD *fields = nullptr;
   struct DES_DATA *data = nullptr;
   DES_ROWS *data_cursor = nullptr;
   unsigned long *lengths = nullptr; /* column lengths of current row */
   const struct DES_METHODS *methods = nullptr;
-  DES_ROW row;         /* If unbuffered read */
-  DES_ROW current_row; /* buffer to current row */
+  DES_ROW row = nullptr;         /* If unbuffered read */
+  DES_ROW current_row = nullptr; /* buffer to current row */
   ResultTable *internal_table = nullptr;
   unsigned int field_count, current_field;
   bool eof; /* Used by mysql_fetch_row */
@@ -1513,12 +1340,12 @@ struct xstring : public std::string {
     Modified by: DESODBC Developer
 */
 typedef struct DES_BIND {
-  unsigned long *length; /* output length pointer */
-  bool *is_null;         /* Pointer to null indicator */
-  void *buffer;          /* buffer to get/put data */
+  unsigned long *length = nullptr; /* output length pointer */
+  bool *is_null = nullptr;         /* Pointer to null indicator */
+  void *buffer = nullptr;          /* buffer to get/put data */
   /* set this if you want to track data truncations happened during fetch */
-  bool *error;
-  unsigned char *row_ptr; /* for the current data position */
+  bool *error = nullptr;
+  unsigned char *row_ptr = nullptr; /* for the current data position */
   void (*fetch_result)(struct DES_BIND *, DES_FIELD *, unsigned char **row);
   void (*skip_result)(struct DES_BIND *, DES_FIELD *, unsigned char **row);
   /* output buffer length, must be set when fetching str/binary */
@@ -1682,8 +1509,7 @@ class charPtrBuf {
     Internal representation of a column from a result view.
     Original author: DESODBC Developer
 */
-class Column {
- public:
+struct Column {
   DES_FIELD *field;
   std::vector<char *> values;
 
@@ -1707,7 +1533,6 @@ class Column {
   DES_FIELD *get_DES_FIELD();
   Column(const std::string &table_name, const std::string &col_name,
          const TypeAndLength &col_type, const SQLSMALLINT &col_nullable);
-  void refresh_row(const int row_index);
   void update_row(const int row_index, char *value);
   void remove_row(const int row_index);
   SQLSMALLINT get_decimal_digits();
@@ -1715,31 +1540,8 @@ class Column {
   void insert_value(char *value) { values.push_back(value); }
   std::string get_value(int index) const { return values[index - 1]; }
 
- private:
-  template <typename GenericString>
-  SQLRETURN copy(SQLPOINTER TargetValuePtr, SQLLEN *StrLen_or_IndPtr,
-                 SQLLEN BufferLength, SQLLEN BufferSize, GenericString str,
-                 size_t str_size) {
-    SQLRETURN rc = SQL_SUCCESS;
-    size_t size = str_size;
-    if (BufferSize < str_size) size = BufferSize;
-    if (str.size() >= BufferLength) {
-      rc = SQL_SUCCESS_WITH_INFO;  // there is a partial success: an
-                                   // informational message has to be generated.
-                                   // TODO: implement the consequences
-    }
-    std::memcpy(TargetValuePtr, str.c_str(), size);
-    *StrLen_or_IndPtr = str.size();
-
-    return rc;
-  }
 };
 
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-const std::string arbitrarily_long_output_commands[] = {"/process", "/select",
-                                                        "/pdg", "/dbschema"};
 /* DESODBC:
     Original author: DESODBC Developer
 */
@@ -1771,13 +1573,8 @@ struct STMT;  // Forward declaration to let ResultTable have a STMT attribute
 // are forward-declared. Then, STMT is defined, and then,
 // the functions are defined.
 
-#if LIBMYSQL_VERSION_ID == 80300
-#define DES_FIELD_DEF
-#define DES_FIELD_DEF_LENGTH
-#else
 #define DES_FIELD_DEF NullS,
 #define DES_FIELD_DEF_LENGTH 0,
-#endif
 
 /* A few character sets we care about. */
 #define ASCII_CHARSET_NUMBER 11
@@ -1855,11 +1652,10 @@ struct STMT_params_for_table {
 /* DESODBC:
     Original author: DESODBC Developer
 */
-class ResultTable {  // Internal representation of a result view.
- public:
+struct ResultTable {  // Internal representation of a result view.
   std::string table_name = "";
 
-  DBC *dbc;
+  DBC *dbc = nullptr;
 
   COMMAND_TYPE command_type;
 
@@ -1874,70 +1670,59 @@ class ResultTable {  // Internal representation of a result view.
   std::unordered_map<std::string, Column> columns;
 
   ResultTable() {}
+  ResultTable(STMT *stmt);
   ResultTable(COMMAND_TYPE type, const std::string &output);
+
+  size_t col_count();
+  size_t row_count();
+
+  void insert_col(const std::string &tableName, const std::string &columnName,
+                  const TypeAndLength &columnType,
+                  const SQLSMALLINT &columnNullable);
+  void insert_col(DES_FIELD *field);
+  void insert_cols(DES_FIELD array[], int array_size);
+
+  void insert_value(const std::string &columnName, char *value);
+  void insert_value(const std::string &columnName, const std::string &value);
 
   unsigned long *fetch_lengths(int current_row);
   DES_ROW generate_DES_ROW(const int index);
   DES_ROWS *generate_DES_ROWS(const int current_row);
   DES_FIELD *get_DES_FIELD(int col_index);
-  std::vector<ForeignKeyInfo> getForeignKeysFromTAPI(
+
+  std::vector<ForeignKeyInfo> get_foreign_keys_from_TAPI(
       const std::vector<std::string> &lines, int &index);
-  DBSchemaRelationInfo getRelationInfo(const std::vector<std::string> &lines,
+  DBSchemaRelationInfo get_relation_info(const std::vector<std::string> &lines,
                                        int &index);
-  std::unordered_map<std::string, DBSchemaRelationInfo> getAllRelationsInfo(
+  std::unordered_map<std::string, DBSchemaRelationInfo> get_all_relations_info(
       const std::string &str);
-  void insert_cols(DES_FIELD array[], int array_size);
-
-  void insert_metadata_cols();
-  void insert_SQLColumns_cols();
-  void insert_SQLPrimaryKeys_cols();
-  void insert_SQLForeignKeys_cols();
-  void insert_SQLGetTypeInfo_cols();
-  void insert_SQLStatistics_cols();
-  void insert_SQLSpecialColumns_cols();
-
-  ResultTable(STMT *stmt);
 
   void build_table();
-
-  void build_table_SQLGetTypeInfo();
-
-  void build_table_SQLStatistics();
-
-  void build_table_SQLSpecialColumns();
-
-  void build_table_SQLColumns();
-
-  void build_table_SQLForeignKeys_PK();
-
-  void build_table_SQLForeignKeys_FK();
-
-  void build_table_SQLForeignKeys_PKFK();
-
-  void build_table_SQLPrimaryKeys();
-
-  void build_table_SQLTables();
-
-  // Constructor of table from the parsing a TAPI-codified DES result.
   void build_table_select();
 
-  size_t col_count();
+  void insert_SQLGetTypeInfo_cols();
+  void build_table_SQLGetTypeInfo();
 
-  size_t row_count();
+  void insert_SQLStatistics_cols();
+  void build_table_SQLStatistics();
 
-  std::string index_to_name_col(size_t index);
+  void insert_SQLSpecialColumns_cols();
+  void build_table_SQLSpecialColumns();
 
-  void refresh_row(const int row_index);
+  void insert_SQLColumns_cols();
+  void build_table_SQLColumns();
 
-  void insert_col(const std::string &tableName, const std::string &columnName,
-                  const TypeAndLength &columnType,
-                  const SQLSMALLINT &columnNullable);
+  void insert_SQLPrimaryKeys_cols();
+  void build_table_SQLPrimaryKeys();
 
-  void insert_col(DES_FIELD *field);
+  void insert_SQLForeignKeys_cols();
+  void build_table_SQLForeignKeys_PK();
+  void build_table_SQLForeignKeys_FK();
+  void build_table_SQLForeignKeys_PKFK();
 
-  void insert_value(const std::string &columnName, char *value);
+  void insert_metadata_cols();
+  void build_table_SQLTables();
 
-  void insert_value(const std::string &columnName, const std::string &value);
 };
 
 typedef uint64_t my_ulonglong;
@@ -1947,13 +1732,13 @@ typedef uint64_t my_ulonglong;
     Modified by: DESODBC Developer
 */
 struct STMT {
-  DBC *dbc;
+  DBC *dbc = nullptr;
   my_bool fake_result;
   charPtrBuf array;
   charPtrBuf result_array;
-  DES_ROW current_values;
+  DES_ROW current_values = nullptr;
   DES_ROW (*fix_fields)(STMT *stmt, DES_ROW row);
-  DES_FIELD *fields;
+  DES_FIELD *fields = nullptr;
   DES_ROW_OFFSET end_of_set;
   tempBuf tempbuf;
   ROW_STORAGE m_row_storage;
@@ -1961,8 +1746,6 @@ struct STMT {
   DES_RESULT *result = new DES_RESULT(this);  //DESODBC: New attribute
 
   std::vector<SQLCHAR *> bookmarks;
-
-  SQLCHAR *des_query = NULL; //DESODBC: New attribute
 
   std::string last_output = ""; //DESODBC: New attribute
 
@@ -2036,6 +1819,11 @@ struct STMT {
   /* DESODBC:
     Original author: DESODBC
   */
+  int send_select_count(std::string query);
+
+  /* DESODBC:
+    Original author: DESODBC
+  */
   SQLRETURN build_results();
 
 
@@ -2089,11 +1877,6 @@ struct STMT {
   SQLRETURN set_error(const char *state, const char *errtext);
 
   void clear_attr_names() { query_attr_names.clear(); }
-
-  /* DESODBC:
-    Original author: DESODBC
-  */
-  int send_select_count(std::string query);
 
   STMT(DBC *d)
       : dbc(d),
@@ -2181,6 +1964,9 @@ inline static unsigned long *des_fetch_lengths(STMT *stmt) {
   return stmt->result->lengths;
 }
 
+//DESODBC: forward declaration due to call from des_store_result
+static inline void free_result(DES_RESULT *result);
+
 /* DESODBC:
     Original author: MySQL
     Modified by: DESODBC Developer
@@ -2191,7 +1977,7 @@ inline static DES_RESULT *des_store_result(STMT *stmt) {
 
   res->field_count = res->internal_table->col_count();
   if (res->field_count == 0) {
-    delete res;  // TODO: consider using the appropiate free function
+    free_result(res);
     return nullptr;
   }
 
@@ -2233,24 +2019,6 @@ inline static DES_RESULT *des_store_result(STMT *stmt) {
 /* DESODBC:
     Original author: DESODBC Developer
 */
-inline DES_RESULT::DES_RESULT() {
-  this->internal_table = new ResultTable();
-  if (!this->internal_table) throw std::bad_alloc();
-}
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-inline DES_RESULT::DES_RESULT(STMT *stmt) {
-  this->internal_table = new ResultTable(stmt);
-  if (!this->internal_table) throw std::bad_alloc();
-}
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-// TODO: provisional place for copy functions. We need to embed them into its
-// appropriate classes.
 inline static char *copy(char *old) {
   if (!old) return nullptr;
   char *cpy = new char[strlen(old) + 1];
@@ -2412,10 +2180,6 @@ inline static DES_RESULT *copy(DES_RESULT *old) {
   cpy->internal_table = copy(old->internal_table);
 
   return cpy;
-}
-
-
-static inline void free_result(DES_FIELD *field) {
 }
 
 static inline void free_result(ResultTable *table) {

@@ -30,7 +30,7 @@
 
 #include "odbctap.h"
 
-#define BUFFER_SIZE 256
+#define TEST_BUFFER_SIZE 256
 
 DECLARE_TEST(simple_select_standard)
 {
@@ -44,26 +44,26 @@ DECLARE_TEST(simple_select_standard)
   ok_sql(hstmt, "SELECT * FROM tabletest");
 
 
-  SQLCHAR buffer[BUFFER_SIZE];
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "1", 1);
-  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "foo", 3);
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "2", 1);
-  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "bar", 3);
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "3", 1);
-  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "baz", 3);
 
   //ok_stmt(hstmt, SQLFreeHandle(SQL_HANDLE_STMT, hstmt));
@@ -149,10 +149,10 @@ DECLARE_TEST(parameter_binding) {
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  SQLCHAR buffer[BUFFER_SIZE];
-  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
+  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "2", 1);
-  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "bar", 3);
 
   return OK;
@@ -167,8 +167,8 @@ DECLARE_TEST(application_variables) {
 
   ok_sql(hstmt, "SELECT * FROM tabletest");
 
-  char snd_column[BUFFER_SIZE];
-  ok_stmt(hstmt, SQLBindCol(hstmt, 2, SQL_C_CHAR, snd_column, BUFFER_SIZE, NULL));
+  char snd_column[TEST_BUFFER_SIZE];
+  ok_stmt(hstmt, SQLBindCol(hstmt, 2, SQL_C_CHAR, snd_column, TEST_BUFFER_SIZE, NULL));
 
   ok_stmt(hstmt, SQLFetch(hstmt));
   is_str(snd_column, "foo", 3);
@@ -204,6 +204,22 @@ DECLARE_TEST(type_conversion) {
 
   is_num(num, 123);
 
+  ok_stmt(hstmt, SQLCloseCursor(hstmt));
+
+  ok_sql(hstmt, "create or replace table birthdays(d date)");
+  ok_sql(hstmt, "insert into birthdays values(cast(\'2025-02-13\' as date))");
+  ok_sql(hstmt, "select * from birthdays");
+
+  ok_stmt(hstmt, SQLFetch(hstmt));
+  
+  SQLCHAR datebuf[TEST_BUFFER_SIZE];
+  SQLLEN len;
+
+  ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, datebuf, sizeof(datebuf),
+                   &len));
+
+  is_str("2025-02-13", datebuf, len);
+
   return OK;
 }
 
@@ -222,10 +238,10 @@ DECLARE_TEST(sqlcolumns) {
               SQL_NTS));  // we need to escape the first character _ so
                           // that it isn't recognised as pattern at that point.
 
-  SQLCHAR buffer[BUFFER_SIZE];
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
 
   is_str(buffer, "name", 4);
 
@@ -235,11 +251,11 @@ DECLARE_TEST(sqlcolumns) {
                              SQL_NTS, L"%", SQL_NTS));
 
   ok_stmt(hstmt, SQLFetch(hstmt));
-  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "id", 2);
 
   ok_stmt(hstmt, SQLFetch(hstmt));
-  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "name", 4);
 
   return OK;
@@ -250,7 +266,7 @@ DECLARE_TEST(sqlgettypeinfo) {
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  SQLCHAR buffer[BUFFER_SIZE];
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
   ok_stmt(hstmt, SQLGetData(hstmt, 1, SQL_C_CHAR, buffer, sizeof(buffer),
                             NULL));  // TYPE_NAME col (name of the data type in DES)
 
@@ -270,8 +286,8 @@ DECLARE_TEST(sqlprimarykeys) {
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  SQLCHAR buffer[BUFFER_SIZE];
-  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, BUFFER_SIZE,
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
+  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE,
                             NULL));  // COLUMN_NAME col
 
   is_str(buffer, "id", 2);
@@ -280,7 +296,7 @@ DECLARE_TEST(sqlprimarykeys) {
 }
 
 DECLARE_TEST(sqlforeignkeys) {
-  SQLCHAR buffer[BUFFER_SIZE];
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
 
   ok_sql(hstmt, "/process examples/SQLDebugger/awards1.sql");
 
@@ -293,14 +309,14 @@ DECLARE_TEST(sqlforeignkeys) {
                                  SQL_NTS, L"$des", SQL_NTS, L"", 0, L"", 0));
 
   ok_stmt(hstmt, SQLFetch(hstmt));
-  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "courses", 7);
-  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "id", 2);
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 7, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 7, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "registration", 12);
-  ok_stmt(hstmt, SQLGetData(hstmt, 8, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 8, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "course", 6);
 
   while (SQLFetch(hstmt) != SQL_NO_DATA)
@@ -311,14 +327,14 @@ DECLARE_TEST(sqlforeignkeys) {
                           SQL_NTS, L"", 0, L"registration", SQL_NTS));
 
   ok_stmt(hstmt, SQLFetch(hstmt));
-  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "courses", 7);
-  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "id", 2);
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 7, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 7, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "registration", 12);
-  ok_stmt(hstmt, SQLGetData(hstmt, 8, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 8, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "course", 6);
 
   ok_stmt(hstmt, SQLCloseCursor(hstmt));
@@ -327,14 +343,14 @@ DECLARE_TEST(sqlforeignkeys) {
           SQLForeignKeysW(hstmt, L"$des", SQL_NTS, L"", 0, L"courses", SQL_NTS,
                           L"$des", SQL_NTS, L"", 0, L"registration", SQL_NTS));
   ok_stmt(hstmt, SQLFetch(hstmt));
-  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "courses", 7);
-  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "id", 2);
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 7, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 7, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "registration", 12);
-  ok_stmt(hstmt, SQLGetData(hstmt, 8, SQL_C_CHAR, buffer, BUFFER_SIZE, NULL));
+  ok_stmt(hstmt, SQLGetData(hstmt, 8, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "course", 6);
 
   return OK;
@@ -354,8 +370,8 @@ DECLARE_TEST(sqlspecialcolumns) {
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  SQLCHAR buffer[BUFFER_SIZE];
-  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, BUFFER_SIZE,
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
+  ok_stmt(hstmt, SQLGetData(hstmt, 2, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE,
                             NULL));  // COLUMN_NAME col
 
   is_str(buffer, "id", 2);
@@ -378,12 +394,12 @@ DECLARE_TEST(sqlstatistics) {
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  SQLCHAR buffer[BUFFER_SIZE];
-  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, BUFFER_SIZE,
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
+  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE,
                             NULL));  // TABLE_NAME col
   is_str(buffer, "tabletest", 7);
 
-  ok_stmt(hstmt, SQLGetData(hstmt, 11, SQL_C_CHAR, buffer, BUFFER_SIZE,
+  ok_stmt(hstmt, SQLGetData(hstmt, 11, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE,
                             NULL));  // CARDINALITY col
   is_str(buffer, "3", 1);
 
@@ -400,8 +416,8 @@ DECLARE_TEST(sqltables) {
 
   ok_stmt(hstmt, SQLFetch(hstmt));
 
-  SQLCHAR buffer[BUFFER_SIZE];
-  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, BUFFER_SIZE,
+  SQLCHAR buffer[TEST_BUFFER_SIZE];
+  ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE,
                             NULL));  // TABLE_NAME col
   is_str(buffer, "tabletest", 7);
 
@@ -770,28 +786,59 @@ DECLARE_TEST(sqlfreehandle) {
 
 DECLARE_TEST(error_handling) {
 
-    expect_odbc(hstmt, SQL_HANDLE_STMT,
+  expect_odbc(hstmt, SQL_HANDLE_STMT,
       SQLExecDirect(hstmt, (SQLCHAR *)"select * from inexistent_table", SQL_NTS),
             SQL_ERROR);
 
-    SQLCHAR sql_state[1024];
-    SQLCHAR sql_msg[1024];
+  SQLCHAR sql_state[1024];
+  SQLCHAR sql_msg[1024];
 
-    ok_stmt(hstmt, SQLGetDiagRec(SQL_HANDLE_STMT, hstmt, 1, sql_state, NULL,
+  ok_stmt(hstmt, SQLGetDiagRec(SQL_HANDLE_STMT, hstmt, 1, sql_state, NULL,
                                  sql_msg, 1024, NULL));
 
-    const char *preffix = "Full TAPI output: $error";
-    size_t preffix_length = 24;
-    if (memcmp(sql_msg, preffix, preffix_length)) return FAIL;
+  const char *preffix = "Full TAPI output: $error";
+  size_t preffix_length = 24;
+  if (memcmp(sql_msg, preffix, preffix_length)) return FAIL;
 
-    return OK;
+  return OK;
 }
-/*
-DECLARE_TEST(sqlgetinfo) { return OK; }
-*/
+
+DECLARE_TEST(obtain_info) {
+
+  SQLCHAR current_catalog[TEST_BUFFER_SIZE];
+  SQLLEN len_curr_cat;
+
+  ok_sql(hstmt, "/open_db postgresql"); //available in my operating system.
+
+  ok_stmt(hdbc, SQLGetConnectAttr(hdbc, SQL_ATTR_CURRENT_CATALOG, current_catalog,
+                            sizeof(current_catalog), &len_curr_cat));
+
+  is_str(current_catalog, "postgresql", len_curr_cat);
+
+  SQLINTEGER arr_size;
+
+  ok_stmt(hstmt, SQLGetStmtAttr(hstmt, SQL_ATTR_ROW_ARRAY_SIZE,
+                                &arr_size, sizeof(SQLINTEGER), NULL));
+  is_num(arr_size, 1);
+
+  ok_stmt(hstmt, SQLSetStmtAttr(hstmt, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER)8,
+                                SQL_NTS));
+  ok_stmt(hstmt, SQLGetStmtAttr(hstmt, SQL_ATTR_ROW_ARRAY_SIZE, &arr_size,
+                                sizeof(SQLINTEGER), NULL));
+  is_num(arr_size, 8);
+
+  ok_sql(hstmt, "/use_db $des");
+
+  SQLCHAR db[TEST_BUFFER_SIZE];
+  SQLLEN len_db;
+  ok_stmt(hstmt, SQLGetInfo(hdbc, SQL_DATABASE_NAME, db, sizeof(db), &len_db));
+
+  is_str(db, "$des", len_db);
+  
+  return OK;
+}
 
 BEGIN_TESTS
-/*
 ADD_TEST(simple_select_standard)
 ADD_TEST(simple_select_block)
 ADD_TEST(parameter_binding)
@@ -803,17 +850,15 @@ ADD_TEST(sqlprimarykeys)
 ADD_TEST(sqlforeignkeys)
 ADD_TEST(sqlspecialcolumns)
 ADD_TEST(sqlstatistics)
-
 ADD_TEST(sqltables)
 ADD_TEST(sqlsetpos_standard)
 ADD_TEST(sqlsetpos_block)
-*/
 ADD_TEST(bookmarks)
 ADD_TEST(bulk_operations)
 ADD_TEST(sqldisconnect)
 ADD_TEST(sqlfreehandle)
 ADD_TEST(error_handling)
-//ADD_TEST(sqlgetinfo)
+ADD_TEST(obtain_info)
 END_TESTS
 
 

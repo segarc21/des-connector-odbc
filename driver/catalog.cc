@@ -241,7 +241,7 @@ SQLRETURN SQL_API DES_SQLTables(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   std::string catalog_name_str =
       get_prepared_arg(stmt, catalog_name, catalog_len);
 
-  rc = dbc->getQueryMutex();
+  rc = dbc->get_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   if (catalog_name) {
@@ -259,7 +259,7 @@ SQLRETURN SQL_API DES_SQLTables(SQLHSTMT hstmt, SQLCHAR *catalog_name,
 
   rc = stmt->build_results();
 
-  rc = dbc->releaseQueryMutex();
+  rc = dbc->release_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
@@ -361,14 +361,14 @@ SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   GET_NAME_LEN(stmt, column_name, column_len);
   CHECK_SCHEMA(stmt, schema_name, schema_len);
 
-  rc = dbc->getQueryMutex();
+  rc = dbc->get_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   pair = dbc->send_query_and_read("/current_db");
   rc = pair.first;
   std::string current_db_output = pair.second;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
   std::string previous_db = getLines(current_db_output)[0];
@@ -396,7 +396,7 @@ SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
     dbc->send_query_and_read(
         "/use_db " +
         previous_db);  // DESODBC: trying to revert the database change
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
@@ -414,18 +414,18 @@ SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   rc = stmt->build_results();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
   pair = dbc->send_query_and_read("/use_db " + previous_db);
   rc = pair.first;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
-  rc = dbc->releaseQueryMutex();
+  rc = dbc->release_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
@@ -504,14 +504,14 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
     if requested.
   */
 
-  rc = dbc->getQueryMutex();
+  rc = dbc->get_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   pair = dbc->send_query_and_read("/current_db");
   rc = pair.first;
   std::string current_db_output = pair.second;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
   std::string previous_db = getLines(current_db_output)[0];
@@ -536,7 +536,7 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
     dbc->send_query_and_read(
         "/use_db " +
         previous_db);  // DESODBC: trying to revert the database change
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
@@ -549,18 +549,18 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   rc = stmt->build_results();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
   pair = dbc->send_query_and_read("/use_db " + previous_db);
   rc = pair.first;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
-  rc = dbc->releaseQueryMutex();
+  rc = dbc->release_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   if (catalog_name_str != "$des" && catalog_name_str != "") {
@@ -641,14 +641,14 @@ SQLRETURN SQL_API DES_SQLSpecialColumns(
 
   dbc = ((STMT *)hstmt)->dbc;
 
-  rc = dbc->getQueryMutex();
+  rc = dbc->get_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   pair = dbc->send_query_and_read("/current_db");
   rc = pair.first;
   std::string current_db_output = pair.second;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
   std::string previous_db = getLines(current_db_output)[0];
@@ -659,7 +659,7 @@ SQLRETURN SQL_API DES_SQLSpecialColumns(
     dbc->send_query_and_read(
         "/use_db " +
         previous_db);  // DESODBC: trying to revert the database change
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
@@ -670,18 +670,18 @@ SQLRETURN SQL_API DES_SQLSpecialColumns(
   rc = stmt->build_results();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
     dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
   pair = dbc->send_query_and_read("/use_db " + previous_db);
   rc = pair.first;
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
-  rc = dbc->releaseQueryMutex();
+  rc = dbc->release_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   rc = SQL_SUCCESS_WITH_INFO;
@@ -756,7 +756,7 @@ SQLRETURN SQL_API DES_SQLPrimaryKeys(SQLHSTMT hstmt, SQLCHAR *catalog_name,
                            "DESODBC cannot retrieve primary or foreign keys "
                            "for external databases");
 
-  rc = dbc->getQueryMutex();
+  rc = dbc->get_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
@@ -773,7 +773,7 @@ SQLRETURN SQL_API DES_SQLPrimaryKeys(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   }
 
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
@@ -784,11 +784,11 @@ SQLRETURN SQL_API DES_SQLPrimaryKeys(SQLHSTMT hstmt, SQLCHAR *catalog_name,
 
   rc = stmt->build_results();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
-  rc = dbc->releaseQueryMutex();
+  rc = dbc->release_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;
@@ -969,18 +969,18 @@ SQLRETURN SQL_API DES_SQLForeignKeys(
   rc = pair.first;
   std::string main_output = pair.second;
 
-  rc = dbc->getQueryMutex();
+  rc = dbc->get_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   stmt->last_output = main_output;
 
   rc = stmt->build_results();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     return rc;
   }
 
-  rc = dbc->releaseQueryMutex();
+  rc = dbc->release_query_mutex();
   if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
   return rc;

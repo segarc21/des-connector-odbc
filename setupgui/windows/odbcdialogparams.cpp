@@ -470,6 +470,8 @@ void btnWorkingBrowse_Click(HWND hwnd) {
 }
 
 /* DESODBC:
+    Renamed Help to About and linked the DESODBC
+    readme file.
     Original author: MyODBC
     Modified by: DESODBC Developer
 */

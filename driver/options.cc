@@ -257,7 +257,7 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
   {
     case SQL_ATTR_CURRENT_CATALOG:
 
-      rc = dbc->getQueryMutex();
+      rc = dbc->get_query_mutex();
       if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
 
       query = "/use_db ";
@@ -270,11 +270,11 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
       output = pair.second;
 
       if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
-        dbc->releaseQueryMutex();
+        dbc->release_query_mutex();
         return rc;
       }
 
-      dbc->releaseQueryMutex();
+      dbc->release_query_mutex();
 
       //We do not want to return an error when receiving this message.
       if (!is_in_string(output, "Database already in use")) {
@@ -409,13 +409,13 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
 
   case SQL_ATTR_CONNECTION_DEAD:
     //We do a little test
-    result = dbc->getQueryMutex();
+    result = dbc->get_query_mutex();
     if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) return result;
 
     pair = dbc->send_query_and_read("/current_db");
     result = pair.first;
     current_db_output = pair.second;
-    dbc->releaseQueryMutex();
+    dbc->release_query_mutex();
     if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
       *((SQLUINTEGER *)num_attr) = SQL_CD_TRUE;
     } else
@@ -430,18 +430,18 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
   case SQL_ATTR_CURRENT_CATALOG:
 
     // We do a little test
-    result = dbc->getQueryMutex();
+    result = dbc->get_query_mutex();
     if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) return result;
 
     pair = dbc->send_query_and_read("/current_db");
     result = pair.first;
     current_db_output = pair.second;
     if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
-      dbc->releaseQueryMutex();
+      dbc->release_query_mutex();
       return result;
     }
 
-    result = dbc->releaseQueryMutex();
+    result = dbc->release_query_mutex();
 
     if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
       return result;

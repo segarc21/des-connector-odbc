@@ -48,132 +48,6 @@ const long long TIMEOUT = 1000;
 char buffer[BUFFER_SIZE];
 DWORD bytes_read = 0;
 
-#ifdef _WIN32
-DWORD WINAPI read_process(LPVOID lpParam) {
-  HANDLE read_pipe = (HANDLE)lpParam;
-
-  if (!ReadFile(read_pipe, buffer, sizeof(buffer) - sizeof(char), &bytes_read,
-                NULL)) {
-    DWORD err = GetLastError();
-    if (err == ERROR_OPERATION_ABORTED) {
-      return 0;  // forced abortion
-    } else {
-      return -1;  // real error
-    }
-  }
-
-  buffer[bytes_read] = '\0';
-  return 0;  // success
-}
-#endif
-
-/* DESODBC:
-  This function sends a query and buils the resulting
-  DES_RESULT* structure.
-
-  Original author: DESODBC Developer
-*/
-std::pair<SQLRETURN, DES_RESULT *> DBC::send_query_and_get_results(
-    COMMAND_TYPE type, const std::string &query) {
-  SQLRETURN ret = SQL_SUCCESS;
-  DES_RESULT *res = nullptr;
-
-  ret = this->getQueryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, nullptr};
-
-  auto pair = this->send_query_and_read(query);
-  ret = pair.first;
-  std::string tapi_output = pair.second;
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-    this->releaseQueryMutex();
-    return {ret, nullptr};
-  }
-
-  ret = this->releaseQueryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, nullptr};
-  /*
-   We do not have to worry to free memory, as it will be done automatically
-   thanks to the DBC* attribute.
- */
-  STMT *temp_stmt = new STMT(this);
-  temp_stmt->type = type;
-  temp_stmt->last_output = tapi_output;
-  temp_stmt->result = get_result_metadata(temp_stmt);
-  if (!temp_stmt->result) {
-    return {SQL_ERROR, nullptr};
-  } else {
-    res = copy(temp_stmt->result);
-  }
-
-  return {SQL_SUCCESS, res};
-}
-
-/* DESODBC:
-  This function sends a SELECT COUNT query and fetches
-  the number in the resulting output.
-
-  Original author: DESODBC Developer
-*/
-int STMT::send_select_count(std::string query) {
-  int ret = -1;  // if error
-
-  ret = this->dbc->getQueryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-
-  auto pair = this->dbc->send_query_and_read(query);
-  ret = pair.first;
-  std::string tapi_output = pair.second;
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-    this->dbc->releaseQueryMutex();
-    return ret;
-  }
-
-  ret = this->dbc->releaseQueryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-
-  if (tapi_output.find("$error") != std::string::npos)
-    return this->set_error("HY000", "Internal query error");
-
-  std::vector<std::string> lines = getLines(tapi_output);
-
-  ret = stoi(lines[4]);
-
-  return ret;
-}
-
-/* DESODBC:
-  This function sends a insert/update/delete query and acommodates
-  the number of rows affected into its affected rows attribute.
-
-  Original author: DESODBC Developer
-*/
-std::pair<SQLRETURN, std::string> STMT::send_update_and_fetch_info(
-    std::string query) {
-  SQLRETURN ret = SQL_SUCCESS;
-
-  ret = this->dbc->getQueryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
-
-  auto pair = this->dbc->send_query_and_read(query);
-  ret = pair.first;
-  std::string tapi_output = pair.second;
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-    this->dbc->releaseQueryMutex();
-    return {ret, tapi_output};
-  }
-
-  ret = this->dbc->releaseQueryMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
-
-  if (tapi_output.find("$error") != std::string::npos) {
-    return {SQL_ERROR, tapi_output};
-  } else {
-    this->affected_rows = stoll(tapi_output);
-    return {SQL_SUCCESS, tapi_output};
-  }
-  return {SQL_SUCCESS, tapi_output};
-}
-
 /* DESODBC:
   This function checks, given the output we have just read,
   whether we should stop or try to read more output.
@@ -207,8 +81,9 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
   }
 
   if (is_process) {
-    //The following messages will be fetched completely, as there are not sufficient delay
-    //between reading each of these characters (the pipe reads them at once)
+    // The following messages will be fetched completely, as there are not
+    // sufficient delay between reading each of these characters (the pipe reads
+    // them at once)
     if (is_in_string(tapi_output, "Info: Batch file processed.")) return true;
     if (is_in_string(tapi_output,
                      "Unknown command or incorrect number of arguments."))
@@ -228,7 +103,27 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
 }
 
 #ifdef _WIN32
-std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(const std::string& query) {
+DWORD WINAPI read_process(LPVOID lpParam) {
+  HANDLE read_pipe = (HANDLE)lpParam;
+
+  if (!ReadFile(read_pipe, buffer, sizeof(buffer) - sizeof(char), &bytes_read,
+                NULL)) {
+    DWORD err = GetLastError();
+    if (err == ERROR_OPERATION_ABORTED) {
+      return 0;  // forced abortion
+    } else {
+      return -1;  // real error
+    }
+  }
+
+  buffer[bytes_read] = '\0';
+  return 0;  // success
+}
+#endif
+
+#ifdef _WIN32
+std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(
+    const std::string &query) {
   SQLRETURN err = SQL_SUCCESS;
   std::string tapi_output = "";
   bool finished_reading = false;
@@ -248,8 +143,10 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(const std::string& qu
       Sleep(10);
       ms += 10;
 
-      //We will not handle errors for these because I/O is highly unpredictable.
-      CancelSynchronousIo(read_thread); //if it is reading actual data, it will not interrupt the reading pipe.
+      // We will not handle errors for these because I/O is highly
+      // unpredictable.
+      CancelSynchronousIo(read_thread);  // if it is reading actual data, it
+                                         // will not interrupt the reading pipe.
       WaitForSingleObject(read_thread, MUTEX_TIMEOUT);
 
       DWORD code;
@@ -259,7 +156,6 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(const std::string& qu
           return {err, ""};
         }
       }
-      
     }
     if (bytes_read > 0) {
       std::string buffer_str = buffer;
@@ -270,10 +166,12 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(const std::string& qu
     } else
       finished_reading = true;
   }
-    return {err, tapi_output};
+
+  return {err, tapi_output};
 }
 #else
-std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(const std::string& query) {
+std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(
+    const std::string &query) {
   SQLRETURN err = SQL_SUCCESS;
   std::string tapi_output = "";
   bool finished_reading = false;
@@ -289,7 +187,8 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(const std::string& q
     if (bytes_read > 0) {
       bytes_read = read(this->driver_to_des_out_rpipe, buffer, sizeof(buffer));
       if (bytes_read == -1) {
-        return {this->set_unix_error("Error reading DES output pipe", true), ""};
+        return {this->set_unix_error("Error reading DES output pipe", true),
+                ""};
       }
       buffer[bytes_read] = '\0';
       std::string buffer_str = buffer;
@@ -304,7 +203,6 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(const std::string& q
   }
 
   return {err, tapi_output};
-
 }
 #endif
 /* DESODBC:
@@ -334,7 +232,7 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
 
 #ifdef _WIN32
   while (!this->driver_to_des_in_wpipe || !this->driver_to_des_out_rpipe)
-    this->getDESProcessPipes();
+    this->get_DES_process_pipes();
   if (!WriteFile(this->driver_to_des_in_wpipe, full_query_arr,
                  strlen(full_query_arr), &bytes_written,
                  NULL)) {  // as we explained in the connection part,
@@ -356,21 +254,128 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
   // If we send /q, we cannot read anything after that.
   if (query == "/q") return {SQL_SUCCESS, ""};
 
-  /*
-      Same considerations as those we took when reading the startup DES message.
-      However, that output message had a fixed length and behavior. We introduce
-      some new logic when treating a command output.
-  */
+    /*
+        Same considerations as those we took when reading the startup DES
+       message. However, that output message had a fixed length and behavior. We
+       introduce some new logic when treating a command output.
+    */
 
-  #ifdef _WIN32
+#ifdef _WIN32
   auto pair = this->read_DES_output_win(query);
-  #else
+#else
   auto pair = this->read_DES_output_unix(query);
-  #endif
+#endif
   error = pair.first;
   tapi_output = pair.second;
 
   return {error, tapi_output};
+}
+
+/* DESODBC:
+  This function sends a query and buils the resulting
+  DES_RESULT* structure.
+
+  Original author: DESODBC Developer
+*/
+std::pair<SQLRETURN, DES_RESULT *> DBC::send_query_and_get_results(
+    COMMAND_TYPE type, const std::string &query) {
+  SQLRETURN ret = SQL_SUCCESS;
+  DES_RESULT *res = nullptr;
+
+  ret = this->get_query_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, nullptr};
+
+  auto pair = this->send_query_and_read(query);
+  ret = pair.first;
+  std::string tapi_output = pair.second;
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    this->release_query_mutex();
+    return {ret, nullptr};
+  }
+
+  ret = this->release_query_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, nullptr};
+  /*
+   We do not have to worry to free memory, as it will be done automatically
+   thanks to the DBC* attribute.
+ */
+  STMT *temp_stmt = new STMT(this);
+  temp_stmt->type = type;
+  temp_stmt->last_output = tapi_output;
+  temp_stmt->result = get_result_metadata(temp_stmt);
+  if (!temp_stmt->result) {
+    return {SQL_ERROR, nullptr};
+  } else {
+    res = copy(temp_stmt->result);
+  }
+
+  return {SQL_SUCCESS, res};
+}
+
+/* DESODBC:
+  This function sends a SELECT COUNT query and fetches
+  the number in the resulting output.
+
+  Original author: DESODBC Developer
+*/
+int STMT::send_select_count(std::string query) {
+  int ret = -1;  // if error
+
+  ret = this->dbc->get_query_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+  auto pair = this->dbc->send_query_and_read(query);
+  ret = pair.first;
+  std::string tapi_output = pair.second;
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    this->dbc->release_query_mutex();
+    return ret;
+  }
+
+  ret = this->dbc->release_query_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+
+  if (tapi_output.find("$error") != std::string::npos)
+    return this->set_error("HY000", "Internal query error");
+
+  std::vector<std::string> lines = getLines(tapi_output);
+
+  ret = stoi(lines[4]);
+
+  return ret;
+}
+
+/* DESODBC:
+  This function sends a insert/update/delete query and acommodates
+  the number of rows affected into its affected rows attribute.
+
+  Original author: DESODBC Developer
+*/
+std::pair<SQLRETURN, std::string> STMT::send_update_and_fetch_info(
+    std::string query) {
+  SQLRETURN ret = SQL_SUCCESS;
+
+  ret = this->dbc->get_query_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
+
+  auto pair = this->dbc->send_query_and_read(query);
+  ret = pair.first;
+  std::string tapi_output = pair.second;
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    this->dbc->release_query_mutex();
+    return {ret, tapi_output};
+  }
+
+  ret = this->dbc->release_query_mutex();
+  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
+
+  if (tapi_output.find("$error") != std::string::npos) {
+    return {SQL_ERROR, tapi_output};
+  } else {
+    this->affected_rows = stoll(tapi_output);
+    return {SQL_SUCCESS, tapi_output};
+  }
+  return {SQL_SUCCESS, tapi_output};
 }
 
 /* DESODBC:
@@ -410,7 +415,7 @@ SQLRETURN DES_do_query(STMT *stmt, std::string query) {
     goto exit;
   }
 
-  error = stmt->dbc->getQueryMutex();
+  error = stmt->dbc->get_query_mutex();
   if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) return error;
 
   switch (stmt->type) {
@@ -434,11 +439,11 @@ SQLRETURN DES_do_query(STMT *stmt, std::string query) {
   error = stmt->build_results();
 
   if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) {
-    stmt->dbc->releaseQueryMutex();
+    stmt->dbc->release_query_mutex();
     return error;
   }
 
-  release_mutex_err = stmt->dbc->releaseQueryMutex();
+  release_mutex_err = stmt->dbc->release_query_mutex();
   if (release_mutex_err != SQL_SUCCESS &&
       release_mutex_err != SQL_SUCCESS_WITH_INFO)
     return error;
@@ -1204,7 +1209,7 @@ SQLRETURN insert_param(STMT *stmt, DES_BIND *bind, DESC *apd, DESCREC *aprec,
     bind_param(bind, data, length, DES_TYPE_STRING);
   } else {
     bool put_quotes = is_character_sql_data_type(
-        iprec->concise_type);  // TODO: temporal solution.
+        iprec->concise_type);
     if (put_quotes) stmt->add_to_buffer("'", 1);
     /* Make sure we have room for a fully-escaped string. */
     if (!(stmt->extend_buffer(length * 2))) {
@@ -1360,7 +1365,6 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
 
   query = GET_QUERY(&pStmt->query);
 
-  // TODO: do this more elegantly.
   is_select_stmt = pStmt->query.is_select_statement();
   is_process_stmt = pStmt->query.is_process_statement();
   is_insert_stmt = pStmt->query.is_insert_statement();

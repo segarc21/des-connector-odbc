@@ -86,9 +86,9 @@ sudo cmake -G "Unix Makefiles" -DWITH_UNIXODBC=1
 sudo make
 ```
 
-To install, execute ```make install```.
+Parameter ```-DCMAKE_BUILD_TYPE``` (with for example```Debug``` or ```Release``` -check possible values in the CMakeCache.txt or MySQL documentation) specifies the type of build desired. Once the binaries are compiled, if an installation within the system is wanted, execute ```make install```.
 
-In some systems, and especially in macOS with ```ld```, linker errors can arise regarding finding unixODBC. Review the variables in ```CMakeCache.txt``` and append the neccessary additional parameter (for example, ```-DODBCINST_LIB_DIR=/usr/local/opt/unixodbc/lib```).
+It may be possible that CMake could not find some files regarding unixODBC. Make sure the environment variable ```ODBC_PATH``` points to the root directory of the unixODBC installation (commonly, ```/usr/local/opt/unixODBC```). An complete example of a compilation at this point would be ```sudo ODBC_PATH=/usr/local/opt/unixodbc cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release```.  In some systems, and especially in macOS with ```ld```, linker errors can arise regarding finding unixODBC libraries. Try to append an attribute in the lines of ```-DODBCINST_LIB_DIR=/usr/local/opt/unixodbc/lib```. Check [MySQL online manuals](https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-installation-source-unix.html) for complete guidelines.
 
 ### iODBC
  
@@ -100,6 +100,6 @@ sudo cmake -G "Unix Makefiles"
 sudo make
 ```
 
-To install, execute ```make install```.
+Parameter ```-DCMAKE_BUILD_TYPE``` (with for example```Debug``` or ```Release``` -check possible values in the CMakeCache.txt or MySQL documentation) specifies the type of build desired. Once the binaries are compilled, if an installation within the system is wanted, execute ```make install```.
 
-It may be possible that CMake could not find some files regarding iODBC. Review the variables in ```CMakeCache.txt``` and append the neccessary additional parameter (for example, ```-DODBC_CONFIG=/usr/local/iODBC/bin/iodbc-config```).
+It may be possible that CMake could not find some files regarding iODBC. Make sure the environment variable ```ODBC_PATH``` points to the root directory of the iODBC installation (commonly, ```/usr/local/iODBC```). An complete example of a compilation at this point would be ```sudo ODBC_PATH=/usr/local/iODBC cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release```. If linker errors arise try to troubleshoot based on the guidelines provided in the unixODBC installation. Check [MySQL online manuals](https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-installation-source-unix-macos.html) for complete guidelines.

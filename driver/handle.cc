@@ -136,9 +136,9 @@ void DBC::free_explicit_descriptors()
 */
 SQLRETURN DBC::close() {
   SQLRETURN ret;
-  if (!this->closed) {
+  if (this->connected) {
 #ifdef _WIN32
-    ret = getSharedMemoryMutex();
+    ret = get_shared_memory_mutex();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
       return ret;
     }
@@ -147,7 +147,7 @@ SQLRETURN DBC::close() {
 
     ret = setFinishingEvent();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-      releaseSharedMemoryMutex();
+      release_shared_memory_mutex();
       return ret;
     }
     if (share_pipes_thread != nullptr && share_pipes_thread.get()->joinable())
@@ -156,10 +156,10 @@ SQLRETURN DBC::close() {
 
     this->shmem->handle_sharing_info.handle_petitioner.id =
         0;  // we reset this field
-    ret = releaseSharedMemoryMutex();
+    ret = release_shared_memory_mutex();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 
-    ret = getSharedMemoryMutex();
+    ret = get_shared_memory_mutex();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
       return ret;
     }
@@ -199,7 +199,7 @@ SQLRETURN DBC::close() {
       }
     }
 
-    ret = releaseSharedMemoryMutex();
+    ret = release_shared_memory_mutex();
 
     try_close(query_mutex);
     try_close(shared_memory_mutex);
@@ -209,12 +209,12 @@ SQLRETURN DBC::close() {
     try_close(finishing_event);
 #else
 
-    ret = getSharedMemoryMutex();
+    ret = get_shared_memory_mutex();
     if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 
     this->shmem->n_clients -= 1;
     if (this->shmem->n_clients == 0) {
-      ret = releaseSharedMemoryMutex();
+      ret = release_shared_memory_mutex();
       if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 
       auto pair = this->send_query_and_read("/q");
@@ -253,7 +253,7 @@ SQLRETURN DBC::close() {
       unlink(OUT_RPIPE_NAME);
 
     } else {
-      ret = releaseSharedMemoryMutex();
+      ret = release_shared_memory_mutex();
 
 #ifdef __APPLE__
       if (sem_close(query_mutex) == -1) {
@@ -277,7 +277,6 @@ SQLRETURN DBC::close() {
 
 #endif
   }
-  this->closed = true;
   this->connected = false;
 
   return SQL_SUCCESS;
@@ -290,7 +289,7 @@ SQLRETURN DBC::close() {
 */
 DBC::~DBC()
 {
-  if (!closed)
+  if (this->connected)
       DBC::close();
   if (env)
     env->remove_dbc(this);

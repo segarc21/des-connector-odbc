@@ -44,11 +44,6 @@
 #include <sqlucode.h>
 #include <stdarg.h>
 
-
-#define NOT_IMPLEMENTED \
-  return SQL_ERROR
-
-
 /* Forward declarations. */
 SQLRETURN SQL_API
 SQLColAttributeWImpl(SQLHSTMT hstmt, SQLUSMALLINT column,
@@ -1202,7 +1197,7 @@ SQLGetDescRecW(SQLHDESC hdesc, SQLSMALLINT record, SQLWCHAR *name,
                SQLSMALLINT *subtype, SQLLEN *length, SQLSMALLINT *precision,
                SQLSMALLINT *scale, SQLSMALLINT *nullable)
 {
-  NOT_IMPLEMENTED;
+  return ((DESC*)hdesc)->set_error("IM001", "Driver does not support this function");
 }
 
 
@@ -1243,7 +1238,8 @@ SQLSetDescRecW(SQLHDESC hdesc, SQLSMALLINT record, SQLSMALLINT type,
                SQLSMALLINT scale, SQLPOINTER data_ptr,
                SQLLEN *octet_length_ptr, SQLLEN *indicator_ptr)
 {
-  NOT_IMPLEMENTED;
+  return ((DESC *)hdesc)
+      ->set_error("IM001", "Driver does not support this function");
 }
 
 

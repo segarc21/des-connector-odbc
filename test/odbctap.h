@@ -287,7 +287,7 @@ int main(int argc, char **argv) \
   SQLHSTMT hstmt = NULL; \
   int      i, num_tests, failcnt= 0; \
   ENABLE_ALARMS; \
-  Sleep(5000);\
+  sleep(5);\
 \
   mem_debug_init(); \
   mem_gc_init(); \
