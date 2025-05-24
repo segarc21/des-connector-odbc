@@ -33,7 +33,7 @@ Success
 Prerrequisites: unixODBC 2.2.14 or later, C++ runtime libraries (```libstdc++```). If you want to use the GTK2 or GTK3 setup libraries, install the correspoding GTK versions.
 
 ```
-> sudo ./desodbc-installer -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/home/segarc21/desodbca.so;SETUP=/home/segarc21/desodbcS.so"
+> sudo ./desodbc-installer -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/home/segarc21/libdesodbca.so;SETUP=/home/segarc21/libdesodbcS.so"
 Success: Usage count is 1
 > sudo ./desodbc-installer -s -a -n "DESODBC Data Source" -t "DRIVER=DESODBC ANSI Driver;DESCRIPTION=New data source;DES_EXEC=/home/segarc21/des/des;DES_WORKING_DIR=/home/segarc21/des"
 Success
@@ -46,7 +46,7 @@ If errors arise, make sure the environment ```ODBCINI``` points to the correct p
 Prerrequisites: unixODBC 2.2.14 or later / iODBC 3.52.12 or later, C++ runtime libraries (```libc++```).
 
 ```
-> sudo ./desodbc-installer -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/Users/segarc21/desodbca.so;SETUP=/Users/segarc21/desodbcS.so"
+> sudo ./desodbc-installer -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/Users/segarc21/libdesodbca.so;SETUP=/Users/segarc21/libdesodbcS.so"
 Success: Usage count is 1
 > sudo ./desodbc-installer -s -a -n "DESODBC Data Source" -t "DRIVER=DESODBC ANSI Driver;DESCRIPTION=New data source;DES_EXEC=/Users/segarc21/des/des;DES_WORKING_DIR=/Users/segarc21/des"
 Success
@@ -88,7 +88,7 @@ sudo make
 
 Parameter ```-DCMAKE_BUILD_TYPE``` (with for example```Debug``` or ```Release``` -check possible values in the CMakeCache.txt or MySQL documentation) specifies the type of build desired. Once the binaries are compiled, if an installation within the system is wanted, execute ```make install```.
 
-It may be possible that CMake could not find some files regarding unixODBC. Make sure the environment variable ```ODBC_PATH``` points to the root directory of the unixODBC installation (commonly, ```/usr/local/opt/unixODBC```). An complete example of a compilation at this point would be ```sudo ODBC_PATH=/usr/local/opt/unixodbc cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release```.  In some systems, and especially in macOS with ```ld```, linker errors can arise regarding finding unixODBC libraries. Try to append an attribute in the lines of ```-DODBCINST_LIB_DIR=/usr/local/opt/unixodbc/lib```. Check [MySQL online manuals](https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-installation-source-unix.html) for complete guidelines.
+It may be possible that CMake could not find some files regarding unixODBC. Make sure the environment variable ```ODBC_PATH``` points to the root directory of the unixODBC installation (commonly, ```/usr/local/opt/unixODBC```). An complete example of a compilation at this point would be ```sudo ODBC_PATH=/usr/local/opt/unixodbc cmake -G "Unix Makefiles" -DWITH_UNIXODBC=1 -DCMAKE_BUILD_TYPE=Release```.  In some systems, and especially in macOS with ```ld```, linker errors can arise regarding finding unixODBC libraries. Try to append an attribute in the lines of ```-DODBCINST_LIB_DIR=/usr/local/opt/unixodbc/lib```. Check [MySQL online manuals](https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-installation-source-unix.html) for complete guidelines.
 
 ### iODBC
  
