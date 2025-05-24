@@ -401,6 +401,9 @@ SQLGetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
 
   SQLRETURN rc= 0;
 
+  bool heap_allocated_value = false;
+  if (attribute == SQL_ATTR_CURRENT_CATALOG) heap_allocated_value = true;
+
   /*
     for numeric attributes value_max can be 0, so we must check for
     the valid output buffer to prevent crashes
@@ -455,6 +458,7 @@ SQLGetConnectAttrWImpl(SQLHDBC hdbc, SQLINTEGER attribute, SQLPOINTER value,
 
     x_free(wvalue);
   }
+  if (heap_allocated_value) x_free(char_value);
 
   return rc;
 }
@@ -697,6 +701,9 @@ SQLGetInfoW(SQLHDBC hdbc, SQLUSMALLINT type, SQLPOINTER value,
 
   CHECK_HANDLE(hdbc);
 
+  bool heap_allocated_value = false;
+  if (type == SQL_DATABASE_NAME) heap_allocated_value = true;
+
   rc= DESGetInfo(hdbc, type, &char_value, value, value_len);
 
   if (char_value)
@@ -731,6 +738,7 @@ SQLGetInfoW(SQLHDBC hdbc, SQLUSMALLINT type, SQLPOINTER value,
 
     x_free(wvalue);
   }
+  if (heap_allocated_value) x_free(char_value);
 
   return rc;
 }

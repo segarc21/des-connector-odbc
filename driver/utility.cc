@@ -2469,23 +2469,29 @@ BOOL myodbc_isnum(desodbc::CHARSET_INFO* cs, const char * begin, const char *end
 }
 
 /* DESODBC:
+* This function fetch the output of the TAPI and transforms it
+* into the list of lines. We also filter non-printing spaces and
+* carriage returns.
     Original author: DESODBC Developer
 */
 std::vector<std::string> getLines(const std::string &str) {
   std::vector<std::string> lines;
-  std::stringstream ss(str);
+  size_t first_pos = str.find_first_not_of(" \t\r");
+  std::string new_str = str.substr(first_pos, str.size() - first_pos);
+
+  std::stringstream ss(new_str);
   std::string line;
 
   while (std::getline(ss, line, '\n')) {
-    line.erase(std::remove(line.begin(), line.end(), 13), line.end());  // CR
-    line.erase(std::remove(line.begin(), line.end(), 32),
-               line.end());  // non-printing space
+    //Removing CR
+    line.erase(std::remove(line.begin(), line.end(), 13), line.end());
     lines.push_back(line);
   }
   return lines;
 }
 
 /* DESODBC:
+   "[a,b,c]" -> ["a", "b", "c"]
     Original author: DESODBC Developer
 */
 std::vector<std::string> convertArrayNotationToStringVector(std::string str) {
@@ -2815,74 +2821,10 @@ bool is_character_sql_data_type(SQLSMALLINT sql_type) {
       return true;
   }
 }
-#ifdef _WIN32
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-std::string GetLastWinErrMessage() {
-  DWORD errorCode = GetLastError();
-  LPSTR errorMsg = nullptr;
-
-  FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                     FORMAT_MESSAGE_IGNORE_INSERTS,
-                 nullptr, errorCode,
-                 0,
-                 (LPSTR)&errorMsg, 0, nullptr);
-
-  if (errorMsg)
-    return std::string(errorMsg);
-  else
-    return "";
-}
-#endif
-
-#ifdef _WIN32
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-void try_close(HANDLE h) {
-  if (h)
-      CloseHandle(h);
-}
-#else
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-void try_close(int fd) {
-  ::close(fd);
-}
-#endif
 
 /* DESODBC:
-    Original author: DESODBC Developer
-*/
-bool is_bulkable_statement(const std::string& query) {
-  bool bulkable = false;
-  std::string query_cp = query;
-  std::transform(query_cp.begin(), query_cp.end(), query_cp.begin(), [](unsigned char c){ return std::tolower(c); });
-  query_cp.erase(std::remove(query_cp.begin(), query_cp.end(), 13), query_cp.end());  // CR
-  query_cp.erase(std::remove(query_cp.begin(), query_cp.end(), 32), query_cp.end());  // non-printing space
-  query_cp.erase(std::remove(query_cp.begin(), query_cp.end(), ' '), query_cp.end());  // printing space
-
-  std::string keyword = query_cp.substr(0, 6); //position 0, 6 characters (all the words we check have six characters)
-  if (is_in_string(query_cp, "/sql")) {
-    std::string keyword = query_cp.substr(4, 6);
-  }
-
-  //bulkable |= (keyword == "select");
-  bulkable |= (keyword == "insert");
-  bulkable |= (keyword == "update");
-  bulkable |= (keyword == "delete");
-  bulkable |= (keyword == "create");
-  bulkable |= (keyword == "/dbsch");
-  bulkable |= (keyword == "/show_");
-  bulkable |= (keyword == "/curre");
-  //bulkable |= (keyword == "/use_d"); It is dangerous to not put delay in /use_db. Sometimes it has some computation time.
-
-  return bulkable;
-}
-
-/* DESODBC:
+* This function transform an ODBC search pattern into a
+* standard regex pattern (see commentaries regarding special characters).
     Original author: DESODBC Developer
 */
 std::string odbc_pattern_to_regex_pattern(const std::string &odbc_pattern) {
@@ -2917,6 +2859,8 @@ std::string odbc_pattern_to_regex_pattern(const std::string &odbc_pattern) {
 }
 
 /* DESODBC:
+* This function returns the filtered strings given an ODBC search pattern
+* and the candidate keys.
     Original author: DESODBC Developer
 */
 std::vector<std::string> search_odbc_pattern(const std::string &pattern,
@@ -2958,6 +2902,8 @@ std::vector<std::string> get_attrs(const std::string &str) {
 }
 
 /* DESODBC:
+* This function processes the argument if given as an identifier, in the
+* context of metadata_id parameter set to true.
     Original author: DESODBC Developer
 */
 std::string convert2identifier(const std::string &arg) {
@@ -2993,6 +2939,9 @@ std::string get_prepared_arg(STMT *stmt, SQLCHAR *name, SQLSMALLINT len) {
 }
 
 /* DESODBC:
+* This function generated the catalog name. If an empty string is set,
+* it must be interpreted as $des. This function should be called only in
+* functions where using $des database is compulsory.
     Original author: DESODBC Developer
 */
 std::string get_catalog(STMT *stmt, SQLCHAR *name, SQLSMALLINT len) {
@@ -3097,6 +3046,10 @@ SQLRETURN check_and_set_errors(SQLSMALLINT HandleType, SQLHANDLE Handle,
 }
 
 /* DESODBC:
+* This function gets a list of candidate words to filter given a search pattern.
+* If the search pattern is empty (for example, putting the catalog to an empty string)
+* must be interpreted as '%'. If the metadata_id attribute is set to true, we must interpret
+* the key as literally (no search pattern).
     Original author: DESODBC Developer
 */
 std::vector<std::string> filter_candidates(std::vector<std::string>& candidates, const std::string &key, bool metadata_id) {

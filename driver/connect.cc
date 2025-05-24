@@ -78,6 +78,8 @@ std::mutex global_fido_mutex;
 
 #ifdef _WIN32
 /* DESODBC:
+* This function builds an IPC name in Windows,
+* based on the hash of the working directory.
   Original author: DESODBC Developer
   */
 LPCSTR DBC::build_name(const char *name_base) {
@@ -94,8 +96,10 @@ LPCSTR DBC::build_name(const char *name_base) {
 }
 
 /* DESODBC:
-    Original author: DESODBC Developer
-    */
+* This function builds the IPC filenames in Windows,
+* based on the hash of the working directory.
+  Original author: DESODBC Developer
+*/
 void DBC::get_concurrent_objects(const wchar_t *des_exec_path,
                           const wchar_t *des_working_dir) {
   std::wstring des_exec_path_wstr(des_exec_path);
@@ -116,6 +120,8 @@ void DBC::get_concurrent_objects(const wchar_t *des_exec_path,
 
 #else
 /* DESODBC:
+* This function builds an IPC name in Unix,
+* based on the hash of the working directory.
   Original author: DESODBC Developer
   */
 const char * DBC::build_name(const char *name_base) {
@@ -132,8 +138,10 @@ const char * DBC::build_name(const char *name_base) {
 }
 
 /* DESODBC:
-    Original author: DESODBC Developer
-    */
+* This function builds the IPC filenames in Unix,
+* based on the hash of the working directory.
+  Original author: DESODBC Developer
+*/
 void DBC::get_concurrent_objects(const char *des_exec_path,
                           const char *des_working_dir) {
   std::string des_exec_path_str(des_exec_path);
@@ -470,8 +478,8 @@ SQLRETURN DBC::create_DES_process(const char *des_exec_path,
 #endif
 
 /* DESODBC:
-  This function gets the input/output
-  pipes from the already launched global DES process.
+  This function gets the input/output pipes
+  from the already launched global DES process.
 
   Original author: DESODBC Developer
 */

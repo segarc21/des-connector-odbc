@@ -103,25 +103,6 @@ typedef char * DYNAMIC_ELEMENT;
   Utility function prototypes that share among files
 */
 
-#ifdef _WIN32
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-void try_close(HANDLE h);
-#else
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-void try_close(int fd);
-#endif
-
-#ifdef _WIN32
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-std::string GetLastWinErrMessage();
-#endif
-
 /* DESODBC:
     Original author: DESODBC Developer
 */
@@ -204,11 +185,6 @@ char *sqlcharptr_to_charptr(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len);
     Original author: DESODBC Developer
 */
 std::string sqlcharptr_to_str(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len);
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-bool is_bulkable_statement(const std::string& query);
 
 /* DESODBC:
     Original author: DESODBC Developer

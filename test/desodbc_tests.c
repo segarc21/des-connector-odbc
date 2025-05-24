@@ -305,6 +305,8 @@ DECLARE_TEST(sqlforeignkeys) {
                               SQL_NTS, L"$des", SQL_NTS, L"", 0, L"", 0),
               SQL_ERROR);
 
+  ok_stmt(hstmt, SQLCloseCursor(hstmt));
+
   ok_stmt(hstmt, SQLForeignKeysW(hstmt, L"$des", SQL_NTS, L"", 0, L"courses",
                                  SQL_NTS, L"$des", SQL_NTS, L"", 0, L"", 0));
 
@@ -319,8 +321,9 @@ DECLARE_TEST(sqlforeignkeys) {
   ok_stmt(hstmt, SQLGetData(hstmt, 8, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
   is_str(buffer, "course", 6);
 
-  while (SQLFetch(hstmt) != SQL_NO_DATA)
-    ;
+  while (SQLFetch(hstmt) != SQL_NO_DATA);
+
+  ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
   ok_stmt(hstmt,
           SQLForeignKeysW(hstmt, L"$des", SQL_NTS, L"", 0, L"", 0, L"$des",

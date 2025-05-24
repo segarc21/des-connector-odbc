@@ -130,6 +130,20 @@ void DBC::free_explicit_descriptors()
   }
 }
 
+#ifdef _WIN32
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void try_close(HANDLE h) {
+  if (h) CloseHandle(h);
+}
+#else
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void try_close(int fd) { ::close(fd); }
+#endif
+
 /* DESODBC:
   Original author: MyODBC
   Modified by: DESODBC Developer
@@ -296,69 +310,6 @@ DBC::~DBC()
 
   free_explicit_descriptors();
 }
-
-#ifdef _WIN32
-/* DESODBC:
-    This function sets a Windows error.
-
-    Original author: DESODBC Developer
-*/
-SQLRETURN DBC::set_win_error(std::string err, bool show_win_err) {
-  if (show_win_err) {
-    err += ". Last Windows error message: ";
-    err += '\"';
-    err += GetLastWinErrMessage();
-    err += '\"';
-  }
-  return this->set_error("HY000", string_to_char_pointer(err));
-
-}
-#else
-/* DESODBC:
-    This function sets a Unix error.
-
-    Original author: DESODBC Developer
-*/
-SQLRETURN DBC::set_unix_error(std::string err, bool show_unix_err) {
-  if (show_unix_err) {
-    err += ". Last Unix-like error message: ";
-    err += '\"';
-    err += strerror(errno);
-    err += '\"';
-  }
-  return this->set_error("HY000", string_to_char_pointer(err));
-
-}
-#endif
-
-
-/* DESODBC:
-    Original author: DESODBC Developer
-*/
-SQLRETURN ENV::set_error(const char *state, const char *msg) {
-  error = DESERROR(state, msg);
-  return error.retcode;
-}
-
-/* DESODBC:
-    Original author: MyODBC
-    Modified by: DESODBC Developer
-*/
-SQLRETURN DBC::set_error(const char * state, const char * msg)
-{
-  error = DESERROR(state, msg);
-  return error.retcode;
-}
-
-/* DESODBC:
-    Original author: MyODBC
-    Modified by: DESODBC Developer
-*/
-SQLRETURN STMT::set_error(const char *state, const char *msg) {
-  error = DESERROR(state, msg);
-  return error.retcode;
-}
-
 
 /* DESODBC:
     Renamed from the original my_SQLAllocEnv()

@@ -355,9 +355,6 @@ std::pair<SQLRETURN, std::string> STMT::send_update_and_fetch_info(
     std::string query) {
   SQLRETURN ret = SQL_SUCCESS;
 
-  ret = this->dbc->get_query_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
-
   auto pair = this->dbc->send_query_and_read(query);
   ret = pair.first;
   std::string tapi_output = pair.second;
@@ -365,9 +362,6 @@ std::pair<SQLRETURN, std::string> STMT::send_update_and_fetch_info(
     this->dbc->release_query_mutex();
     return {ret, tapi_output};
   }
-
-  ret = this->dbc->release_query_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, ""};
 
   if (tapi_output.find("$error") != std::string::npos) {
     return {SQL_ERROR, tapi_output};

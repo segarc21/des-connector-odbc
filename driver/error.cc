@@ -53,6 +53,81 @@ DESERROR::DESERROR(const char* state, const char* msg)
   retcode = SQL_ERROR;
 }
 
+#ifdef _WIN32
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string GetLastWinErrMessage() {
+  DWORD errorCode = GetLastError();
+  LPSTR errorMsg = nullptr;
+
+  FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                     FORMAT_MESSAGE_IGNORE_INSERTS,
+                 nullptr, errorCode, 0, (LPSTR)&errorMsg, 0, nullptr);
+
+  if (errorMsg)
+    return std::string(errorMsg);
+  else
+    return "";
+}
+
+/* DESODBC:
+    This function sets a Windows error.
+
+    Original author: DESODBC Developer
+*/
+SQLRETURN DBC::set_win_error(std::string err, bool show_win_err) {
+  if (show_win_err) {
+    err += ". Last Windows error message: ";
+    err += '\"';
+    err += GetLastWinErrMessage();
+    err += '\"';
+  }
+  return this->set_error("HY000", string_to_char_pointer(err));
+}
+#else
+/* DESODBC:
+    This function sets a Unix error.
+
+    Original author: DESODBC Developer
+*/
+SQLRETURN DBC::set_unix_error(std::string err, bool show_unix_err) {
+  if (show_unix_err) {
+    err += ". Last Unix-like error message: ";
+    err += '\"';
+    err += strerror(errno);
+    err += '\"';
+  }
+  return this->set_error("HY000", string_to_char_pointer(err));
+}
+#endif
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+SQLRETURN ENV::set_error(const char *state, const char *msg) {
+  error = DESERROR(state, msg);
+  return error.retcode;
+}
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+SQLRETURN DBC::set_error(const char *state, const char *msg) {
+  error = DESERROR(state, msg);
+  return error.retcode;
+}
+
+/* DESODBC:
+    Original author: MyODBC
+    Modified by: DESODBC Developer
+*/
+SQLRETURN STMT::set_error(const char *state, const char *msg) {
+  error = DESERROR(state, msg);
+  return error.retcode;
+}
+
 /*
   @type    : myodbc3 internal
   @purpose : sets the descriptor level errors
