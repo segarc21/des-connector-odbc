@@ -28,6 +28,13 @@
 // along with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+// ---------------------------------------------------------
+// Modified in 2025 by Sergio Miguel Garcia Jimenez <segarc21@ucm.es>,
+// hereinafter the DESODBC developer, in the context of the GPLv2 derivate
+// work DESODBC, an ODBC Driver of the open-source DBMS Datalog Educational
+// System (DES) (see https://des.sourceforge.io/)
+// ---------------------------------------------------------
+
 #include "odbctap.h"
 
 #define TEST_BUFFER_SIZE 256
@@ -98,8 +105,6 @@ DECLARE_TEST(simple_select_block) {
 
   char col2[BLOCK_SIZE][256];
   SQLLEN col2_lens[BLOCK_SIZE];
-
-  ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
   ok_sql(hstmt, "SELECT * FROM tabletest");
 
@@ -182,11 +187,6 @@ DECLARE_TEST(application_variables) {
   return OK;
 }
 
-/*
-This test is not very useful as we extract the type conversion completely
-from MyODBC. We will see a transformation between a string and a uint64
-(DES' int)
-*/ 
 DECLARE_TEST(type_conversion) {
   ok_sql(hstmt, "DROP TABLE IF EXISTS tabletest");
 
@@ -304,8 +304,6 @@ DECLARE_TEST(sqlforeignkeys) {
               SQLForeignKeysW(hstmt, L"othercatalog", SQL_NTS, L"", 0, L"courses",
                               SQL_NTS, L"$des", SQL_NTS, L"", 0, L"", 0),
               SQL_ERROR);
-
-  ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
   ok_stmt(hstmt, SQLForeignKeysW(hstmt, L"$des", SQL_NTS, L"", 0, L"courses",
                                  SQL_NTS, L"$des", SQL_NTS, L"", 0, L"", 0));
@@ -756,22 +754,18 @@ DECLARE_TEST(sqlfreehandle) {
               SQLConnect(newhdbc, mydsn, SQL_NTS, NULL, SQL_NTS, NULL, SQL_NTS),
               SQL_SUCCESS);
 
-  expect_odbc(newhdbc, SQL_HANDLE_STMT,
+  expect_odbc(newhstmt, SQL_HANDLE_STMT,
               SQLAllocHandle(SQL_HANDLE_STMT, newhdbc, &newhstmt), SQL_SUCCESS);
 
   ok_sql(newhstmt, "DROP TABLE IF EXISTS tabletest");
-  ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
 
   ok_sql(newhstmt,
          "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
-  ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
 
   ok_sql(newhstmt,
          "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
-  ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
 
-  ok_sql(hstmt, "SELECT * FROM tabletest");
-  ok_stmt(newhstmt, SQLCloseCursor(newhstmt));
+  ok_sql(newhstmt, "SELECT * FROM tabletest");
 
   ok_stmt(newhstmt, SQLFreeHandle(SQL_HANDLE_STMT, newhstmt));
 
