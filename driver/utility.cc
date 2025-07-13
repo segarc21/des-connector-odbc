@@ -691,8 +691,8 @@ SQLRETURN wcopy_bit_result(STMT *stmt,
     Modified by: DESODBC Developer
 */
 std::map<std::string, int> sql_data_types_map = {
-    {"varchar", SQL_LONGVARCHAR},
-    {"string", SQL_LONGVARCHAR},
+    {"varchar", SQL_VARCHAR},
+    {"string", SQL_VARCHAR},
     {"char(N)", SQL_CHAR},
     {"varchar(N)", SQL_CHAR},
     {"char", SQL_CHAR},
@@ -728,10 +728,10 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
   switch (field->type) {
     case DES_TYPE_VARCHAR:
       if (buff) (void)desodbc_stpmov(buff, "varchar");
-      return SQL_LONGVARCHAR;
+      return SQL_VARCHAR;
     case DES_TYPE_STRING:
       if (buff) (void)desodbc_stpmov(buff, "string");
-      return SQL_LONGVARCHAR;
+      return SQL_VARCHAR;
     case DES_TYPE_CHAR_N:
       if (buff) (void)desodbc_stpmov(buff, "char");
       return SQL_CHAR;
@@ -2132,8 +2132,8 @@ void *ptr_offset_adjust(void *ptr, SQLULEN *bind_offset_ptr,
 SQLTypeMap SQL_TYPE_MAP_values[]=
 {
   /* SQL_CHAR= 1 */
-    {(SQLCHAR *)"varchar", 7, SQL_LONGVARCHAR, DES_TYPE_VARCHAR, 0, 0},
-    {(SQLCHAR *)"string", 6, SQL_LONGVARCHAR, DES_TYPE_STRING, 0, 0},
+    {(SQLCHAR *)"varchar", 7, SQL_VARCHAR, DES_TYPE_VARCHAR, 0, 0},
+    {(SQLCHAR *)"string", 6, SQL_VARCHAR, DES_TYPE_STRING, 0, 0},
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR_N, 0, 0},
     {(SQLCHAR *)"varchar", 7, SQL_CHAR, DES_TYPE_VARCHAR_N, 0, 0},
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR, 1, 0},
@@ -2704,9 +2704,9 @@ std::string des_type_2_str(enum_field_types des_type) {
 int des_type_2_sql_type(enum_field_types des_type) {
   switch (des_type) {
     case DES_TYPE_VARCHAR:
-      return SQL_LONGVARCHAR;
+      return SQL_VARCHAR;
     case DES_TYPE_STRING:
-      return SQL_LONGVARCHAR;
+      return SQL_VARCHAR;
     case DES_TYPE_CHAR_N:
       return SQL_CHAR;
     case DES_TYPE_VARCHAR_N:
