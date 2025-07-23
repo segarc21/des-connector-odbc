@@ -1501,7 +1501,7 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
 
       /* if we have anything but not SQL_SUCCESS for any paramset, we return
           SQL_SUCCESS_WITH_INFO as the whole operation result */
-      if (rc != SQL_SUCCESS) {
+      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
         one_of_params_not_succeded = 1;
       } else {
         all_parameters_failed = 0;

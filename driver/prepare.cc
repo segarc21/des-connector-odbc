@@ -155,8 +155,15 @@ SQLRETURN SQL_API DES_SQLBindParameter( SQLHSTMT     StatementHandle,
     iprec->reset_to_defaults();
 
     /* first, set apd fields */
-    if (ValueType == SQL_C_DEFAULT)
+    if (ValueType == SQL_C_DEFAULT) {
       ValueType = default_c_type(ParameterType);
+      /*
+        Access treats BIGINT as a string on linked tables.
+        The value is read correctly, but bound as a string.
+      */
+      if (ParameterType == SQL_BIGINT)
+        ValueType = SQL_C_CHAR;
+    }
 
     if (!SQL_SUCCEEDED(rc = stmt_SQLSetDescField(
                            stmt, stmt->apd, ParameterNumber,

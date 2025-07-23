@@ -696,8 +696,8 @@ std::map<std::string, int> sql_data_types_map = {
     {"char(N)", SQL_CHAR},
     {"varchar(N)", SQL_CHAR},
     {"char", SQL_CHAR},
-    {"integer_des", SQL_BIGINT},
-    {"int", SQL_BIGINT},
+    {"integer_des", SQL_INTEGER},
+    {"int", SQL_INTEGER},
     {"float", SQL_DOUBLE},
     {"real", SQL_DOUBLE},
     {"date", SQL_TYPE_DATE},
@@ -743,10 +743,10 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
       return SQL_CHAR;
     case DES_TYPE_INTEGER:
       if (buff) (void)desodbc_stpmov(buff, "integer_des");
-      return SQL_BIGINT;
+      return SQL_INTEGER;
     case DES_TYPE_INT:
       if (buff) (void)desodbc_stpmov(buff, "int");
-      return SQL_BIGINT;
+      return SQL_INTEGER;
     case DES_TYPE_SHORT:
       if (buff) (void)desodbc_stpmov(buff, "smallint");
       return SQL_SMALLINT;
@@ -866,7 +866,7 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
     return 1;
   case DES_TYPE_INTEGER:
   case DES_TYPE_INT:
-    return 19;
+    return 10;
   case DES_TYPE_SHORT:
     return 5;
   case DES_TYPE_LONG:
@@ -957,7 +957,7 @@ SQLLEN get_transfer_octet_length(TypeAndLength tal) {
       return 1;
     case DES_TYPE_INTEGER:
     case DES_TYPE_INT:
-      return 8;
+      return 4;
     case DES_TYPE_SHORT:
       return 2;
     case DES_TYPE_LONG:
@@ -1035,7 +1035,7 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),DES_FIELD *field)
       return 1;
     case DES_TYPE_INTEGER:
     case DES_TYPE_INT:
-      return 20;
+      return 11;
     case DES_TYPE_SHORT:
       return 5;
     case DES_TYPE_LONG:
@@ -1227,7 +1227,7 @@ int unireg_to_c_datatype(DES_FIELD *field)
         return SQL_C_UTINYINT;
       case DES_TYPE_INTEGER:
       case DES_TYPE_INT:
-        return SQL_C_SBIGINT;
+        return SQL_C_LONG;
       case DES_TYPE_FLOAT:
       case DES_TYPE_REAL:
         return SQL_C_DOUBLE;
@@ -2137,10 +2137,10 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR_N, 0, 0},
     {(SQLCHAR *)"varchar", 7, SQL_CHAR, DES_TYPE_VARCHAR_N, 0, 0},
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR, 1, 0},
-    {(SQLCHAR *)"integer_des", 7, SQL_BIGINT, DES_TYPE_INTEGER, 19, 1},
+    {(SQLCHAR *)"integer_des", 3, SQL_INTEGER, DES_TYPE_INTEGER, 10, 1},
     {(SQLCHAR *)"smallint", 7, SQL_SMALLINT, DES_TYPE_SHORT, 5, 1},
-    {(SQLCHAR *)"integer", 7, SQL_INTEGER, DES_TYPE_LONG, 8, 1},
-    {(SQLCHAR *)"int", 3, SQL_BIGINT, DES_TYPE_INT, 19, 1},
+    {(SQLCHAR *)"integer", 3, SQL_INTEGER, DES_TYPE_INT, 10, 1},
+    {(SQLCHAR *)"int", 3, SQL_INTEGER, DES_TYPE_INT, 10, 1},
     {(SQLCHAR *)"float", 5, SQL_DOUBLE, DES_TYPE_FLOAT, 53, 1},
     {(SQLCHAR *)"real", 4, SQL_DOUBLE, DES_TYPE_REAL, 53, 1},
     {(SQLCHAR *)"date", 4, SQL_TYPE_DATE, DES_TYPE_DATE, 10, 1},
@@ -2577,7 +2577,7 @@ SQLULEN get_type_size(enum_field_types type) {
   switch (type) {
     case DES_TYPE_INTEGER:
     case DES_TYPE_INT:
-      return 19;
+      return 10;
     case DES_TYPE_FLOAT:
     case DES_TYPE_REAL:
       return 59;
@@ -2715,7 +2715,7 @@ int des_type_2_sql_type(enum_field_types des_type) {
       return SQL_CHAR;
     case DES_TYPE_INTEGER:
     case DES_TYPE_INT:
-      return SQL_BIGINT;
+      return SQL_INTEGER;
     case DES_TYPE_FLOAT:
       return SQL_DOUBLE;
     case DES_TYPE_REAL:
