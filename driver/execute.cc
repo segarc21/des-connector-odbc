@@ -1371,6 +1371,8 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
     pStmt->type = PROCESS;
   else if (is_insert_stmt)
     pStmt->type = INSERT;
+  else if (is_update_stmt)
+    pStmt->type = UPDATE;
   else if (is_delete_stmt)
     pStmt->type = DEL;
   else
