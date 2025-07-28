@@ -331,6 +331,7 @@ extern std::mutex global_fido_mutex;
     New symbols for DESODBC.
     Original author: DESODBC Developer
 */
+#define DES_CATALOG_SEPARATOR_CHARACTER ":"
 #define SHARED_MEMORY_NAME_BASE "DESODBC_SHMEM"
 #define SHARED_MEMORY_MUTEX_NAME_BASE "DESODBC_SHMEM_MUTEX"
 #define QUERY_MUTEX_NAME_BASE "DESODBC_QUERY_MUTEX"

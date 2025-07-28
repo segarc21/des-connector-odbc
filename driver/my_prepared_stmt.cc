@@ -219,7 +219,7 @@ long STMT::compute_cur_row(unsigned fFetchType, SQLLEN irow) {
     current_row = -1; /* Before first row */
     rows_found_in_set = 0;
     data_seek(this, 0L);
-    throw DESERROR(SQL_NO_DATA_FOUND);
+    return SQL_NO_DATA_FOUND;
   }
   if (cur_row > max_row) {
     cur_row = max_row;

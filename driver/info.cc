@@ -146,9 +146,18 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     MYINFO_SET_STR("Y");
 
   case SQL_CATALOG_NAME_SEPARATOR:
-    MYINFO_SET_STR(":"); //the most common character is '.'. However,
-                                                        //in DES, it seems to be ':': for example,
-                                                        //catalog:table when calling /dbschema.
+      /*
+      The most appropriate catalog name separator for DES is ':' (i.e, /dbschema $des:employees)
+      However, in the case of LibreOffice Base, it tries to build a select query in the lines of
+      SELECT * FROM `$des`:`employee`. This should not be a problem because we can preprocess it
+      before sending it to DES; however, LibreOffice performs a previous syntax analysis of the
+      query before sending it to the ODBC Driver. Using the ':' character in this context throws
+      a syntax error, so we will return '.' in this case.
+      */
+      if (GetModuleHandle("soffice.bin") != NULL)
+          MYINFO_SET_STR(".");
+      else
+          MYINFO_SET_STR(DES_CATALOG_SEPARATOR_CHARACTER);
 
   case SQL_CATALOG_TERM:
     MYINFO_SET_STR("database");

@@ -3070,3 +3070,10 @@ std::vector<std::string> filter_candidates(std::vector<std::string>& candidates,
   }
   return res;
 }
+
+void remove_from_string(std::string &str, const std::string &search) {
+  size_t index = 0;
+  while ((index = str.find(search, index)) != std::string::npos) {
+    str.erase(index, search.length());
+  }
+}

@@ -1378,6 +1378,16 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
   else
     pStmt->type = UNKNOWN;
 
+  /*
+  * LibreOffice tries to build a SELECT query using the format
+  * SELECT * FROM `$des`.`employee`. However, DES does not support
+  * this format. We will then erase the "`$des`." substring.
+  */
+  if (GetModuleHandle("soffice.bin") != NULL) {
+      std::string calc_catalog_preffix = "`$des`.";
+      remove_from_string(query, calc_catalog_preffix);
+  }
+
   if (pStmt->ipd->rows_processed_ptr) {
     *pStmt->ipd->rows_processed_ptr = (SQLULEN)0;
   }

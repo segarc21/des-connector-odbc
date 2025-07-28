@@ -2100,6 +2100,8 @@ SQLRETURN SQL_API DES_SQLExtendedFetch( SQLHSTMT             hstmt,
     stmt->reset_getdata_position();
     stmt->current_values= 0;          /* For SQLGetData */
     cur_row = stmt->compute_cur_row(fFetchType, irow);
+    if (cur_row == SQL_NO_DATA_FOUND)
+        return SQL_NO_DATA_FOUND;
 
     rows_to_fetch = desodbc_min(max_row - cur_row, (long)stmt->ard->array_size);
 
