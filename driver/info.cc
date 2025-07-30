@@ -983,7 +983,9 @@ SQLUSMALLINT desodbc3_functions[] =
   SQL_API_SQLALLOCHANDLE,
   SQL_API_SQLBINDCOL,
   SQL_API_SQLBINDPARAM,
-  //SQL_API_SQLCANCEL,
+  SQL_API_SQLCANCEL, /* Technically, SQLCancel does not have meaning in the DES context.
+    However, SQL Server needs to call this function. Therefore, SQLCancel
+    will be a stub function that just returns SQL_SUCCESS. */
 #ifndef USE_IODBC
   //SQL_API_SQLCANCELHANDLE,
 #else

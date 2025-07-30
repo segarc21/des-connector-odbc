@@ -1820,6 +1820,11 @@ struct STMT {
   /* DESODBC:
     Original author: DESODBC
   */
+  SQLRETURN execute_metadata_query();
+
+  /* DESODBC:
+    Original author: DESODBC
+  */
   int send_select_count(std::string query);
 
   /* DESODBC:

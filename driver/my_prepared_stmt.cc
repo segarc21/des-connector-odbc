@@ -45,6 +45,36 @@
 #include "errmsg.h"
 
 
+/* DESODBC:
+    Original author: DESODBC
+  */
+SQLRETURN STMT::execute_metadata_query() {
+
+    if (this->query.is_select_statement()) {
+
+        this->type = SELECT;
+
+        std::string query = GET_QUERY(&this->query);
+
+        this->fake_result = false;
+
+        SQLRETURN error = this->dbc->get_query_mutex();
+        if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) return error;
+
+        std::string new_query = convert_into_metadata_query(query);
+
+        this->last_output = this->dbc->send_query_and_read(new_query).second;
+
+        this->build_results();
+
+        error = this->dbc->release_query_mutex();
+        if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) return error;
+    }
+
+    return SQL_SUCCESS;
+}
+
+
 void free_result_bind(STMT *stmt) {
   if (stmt->result_bind != NULL) {
     auto field_cnt = stmt->field_count();

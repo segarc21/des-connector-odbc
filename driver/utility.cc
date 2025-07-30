@@ -2540,8 +2540,7 @@ TypeAndLength get_Type_from_str(const std::string &str) {
   std::string type_str = str;
   SQLULEN size = -1;
 
-  std::transform(type_str.begin(), type_str.end(), type_str.begin(),
-               [](unsigned char c) { return std::tolower(c); });
+  to_lower_str(type_str);
 
   //Special cases in external databases.
   if (is_in_string(type_str, "integer(") ||
@@ -2917,8 +2916,9 @@ std::string convert2identifier(const std::string &arg) {
   if (cleaned_str.find_first_of("\'\"`") ==
       std::string::npos) {  // i.e., it is not quoted
     cleaned_str = cleaned_str.substr(0, last + 1);
-    std::transform(cleaned_str.begin(), cleaned_str.end(), cleaned_str.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
+
+    to_upper_str(cleaned_str);
+
   } else {
     cleaned_str = arg.substr(first + 1, last - first - 1);
   }
@@ -3071,9 +3071,59 @@ std::vector<std::string> filter_candidates(std::vector<std::string>& candidates,
   return res;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 void remove_from_string(std::string &str, const std::string &search) {
   size_t index = 0;
   while ((index = str.find(search, index)) != std::string::npos) {
     str.erase(index, search.length());
   }
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void to_upper_str(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(),
+        [](unsigned char c) { return std::toupper(c); });
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void to_lower_str(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::string convert_into_metadata_query(const std::string& query) {
+    /*
+    Algorithm: search for the end of the word next to the FROM keyword,
+    remove from there the remaining right substring, and append a 'where 0=1'
+    substring.
+    */
+
+    std::string old_query = query;
+    to_lower_str(old_query);
+
+    size_t pos = old_query.find("from");
+    if (pos == std::string::npos)
+        return query;
+
+    pos += std::string("from").size();
+
+    //Now we jump to the start of the next word.
+    while (pos < old_query.size() && std::isspace(old_query[pos]))
+        pos++;
+    while (pos < old_query.size() && !std::isspace(old_query[pos]))
+        pos++;
+
+    std::string new_query = old_query.substr(0, pos);
+    new_query += " where 0=1";
+
+    return new_query;
 }

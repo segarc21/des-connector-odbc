@@ -270,6 +270,21 @@ void remove_from_string(std::string &str, const std::string &search);
 /* DESODBC:
     Original author: DESODBC Developer
 */
+std::string convert_into_metadata_query(const std::string& query);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void to_upper_str(std::string& str);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void to_lower_str(std::string& str);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 inline const std::vector<enum_field_types> supported_types = {
     DES_TYPE_VARCHAR,  DES_TYPE_STRING,   DES_TYPE_CHAR_N,  DES_TYPE_VARCHAR_N,
     DES_TYPE_INTEGER,  DES_TYPE_CHAR,     DES_TYPE_INTEGER, DES_TYPE_INT,

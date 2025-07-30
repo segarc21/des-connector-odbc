@@ -1660,6 +1660,8 @@ SQLFreeStmt(hstmt, SQL_CLOSE).
 @return Standard ODBC result code
 */
 SQLRETURN SQL_API SQLCancel(SQLHSTMT hstmt) {
-  return ((STMT *)hstmt)
-      ->set_error("IM001", "DESODBC does not support this function");
+    /* Technically, SQLCancel does not have meaning in the DES context.
+    However, SQL Server needs to call this function. Therefore, SQLCancel
+    will be a stub function that just returns SQL_SUCCESS. */
+    return SQL_SUCCESS;
 }

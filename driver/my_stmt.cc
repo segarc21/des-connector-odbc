@@ -284,6 +284,17 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
 
   stmt->param_count = (uint)PARAM_COUNT(stmt->query);
 
+  /* SQL Server and in a lesser degree LibreOffice expect SQLPrepare to be 
+  able to calculate the number of columns that the query will return. MyODBC
+  considers this as obtaining the "result metadata". We need to execute the query with
+  some modifications, namely, appending the " where 0=1" substring so as to obtain only
+  the columns and not wasting much computing time. */
+
+  SQLRETURN metadata_err = stmt->execute_metadata_query();
+  if (metadata_err != SQL_SUCCESS && metadata_err != SQL_SUCCESS_WITH_INFO) {
+      return stmt->set_error("HY000", "Internal error executing the metadata query");
+  }
+
   {
     /* Creating desc records for each parameter */
     uint i;

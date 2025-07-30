@@ -3378,9 +3378,8 @@ void ResultTable::build_table_SQLTables() {
   std::vector<std::string> specified_table_types;
 
   if (table_type_param.size() > 0) {
-    std::transform(table_type_param.begin(), table_type_param.end(),
-                   table_type_param.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    to_lower_str(table_type_param);
+
     table_type_param.erase(
         std::remove(table_type_param.begin(), table_type_param.end(), '\''),
         table_type_param.end());
@@ -3488,10 +3487,8 @@ void ResultTable::build_table_SQLTables() {
         if (table_type_param != SQL_ALL_TABLE_TYPES &&
             table_type_param.size() > 0) {
             std::string table_type_lowered = TABLE_TYPE;
-            std::transform(table_type_lowered.begin(),
-                            table_type_lowered.end(),
-                            table_type_lowered.begin(),
-                            [](unsigned char c) { return std::tolower(c); });
+
+            to_lower_str(table_type_lowered);
 
             if (std::find(specified_table_types.begin(),
                         specified_table_types.end(),
