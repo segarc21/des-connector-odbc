@@ -154,8 +154,8 @@ const char * wstr4output(const wchar_t *wstr)
 SQLCHAR *mydriver= (SQLCHAR *)"{DES ODBC Unicode Driver}";
 SQLCHAR mydrv_nobrackets[255] = {'\0'}; /* mydriver value will be copied here */
 SQLCHAR *mydsn= (SQLCHAR *)"desodbc";
-SQLCHAR *myexec = (SQLCHAR *)"D:\\Portables\\des\\des.exe";
-SQLCHAR *mydir = (SQLCHAR *)"D:\\Portables\\des";
+SQLCHAR *myexec = (SQLCHAR *)"D:\\Portables\\des2\\des.exe";
+SQLCHAR *mydir = (SQLCHAR *)"D:\\Portables\\des2";
 SQLCHAR *odbcini = (SQLCHAR *)"ODBC.INI";
 
 SQLCHAR *test_db= (SQLCHAR *)"client_odbc_test";

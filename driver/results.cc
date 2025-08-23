@@ -694,8 +694,7 @@ sql_get_data(STMT *stmt, SQLSMALLINT fCType, uint column_number,
       }
     case SQL_C_TIME:
     case SQL_C_TYPE_TIME:
-      if (field->type == DES_TYPE_TIMESTAMP ||
-          field->type == DES_TYPE_DATETIME)
+      if (field->type == DES_TYPE_TIMESTAMP)
       {
         SQL_TIMESTAMP_STRUCT ts;
 
@@ -2463,7 +2462,7 @@ unsigned int Column::getDecimals() {
     Original author: DESODBC Developer
 */
 unsigned int Column::getColumnSize() {
-  if (type.len == 0)
+  if (type.len == -1)
     return get_type_size(type.simple_type);
   else
     return type.len;
@@ -2562,7 +2561,7 @@ Column::Column(const std::string &table_name, const std::string &col_name,
   this->field->def = nullptr;
   this->field->def_length = 0;
 
-  this->field->flags = col_nullable == 1 ? NOT_NULL_FLAG : 0;
+  this->field->flags = 128;
 
   this->field->decimals = 0;
 
@@ -2571,6 +2570,21 @@ Column::Column(const std::string &table_name, const std::string &col_name,
   this->field->extension = nullptr;
 
   this->field->type = col_type.simple_type;
+
+  /* DESODBC:
+      Temporal solution in the context of treating internal datetime cols as
+      VARCHAR cols when working with MSAccess, due to an obscure bug when
+      using datetime data types.
+  */
+#ifdef _WIN32
+  if (GetModuleHandle("msaccess.exe") != NULL) {
+      if (is_time_des_data_type(col_type.simple_type)) {
+          this->field->type = DES_TYPE_CHAR_N;
+          this->field->access_real_type = col_type.simple_type;
+      }
+          
+  }
+#endif
 
   this->field->length = get_Type_size(col_type);
 
@@ -3289,10 +3303,16 @@ void ResultTable::build_table_SQLColumns() {
         insert_value("COLUMN_SIZE", std::to_string(col.getColumnSize()));
 
         TypeAndLength tal = {col.get_simple_type(), col.getMaxLength()};
-        insert_value("BUFFER_LENGTH",
-                     std::to_string(get_transfer_octet_length(tal)));
 
-        insert_value("DECIMAL_DIGITS", std::to_string(field->decimals));
+        insert_value("BUFFER_LENGTH",
+            std::to_string(get_transfer_octet_length(tal)));
+
+        if (is_numeric_des_data_type(des_type)) {
+            insert_value("DECIMAL_DIGITS", std::to_string(field->decimals));
+        }
+        else
+            insert_value("DECIMAL_DIGITS", NULL_STR);
+        
 
         if (is_numeric_des_data_type(des_type)) {
           insert_value("NUM_PREC_RADIX", std::string("10"));
@@ -3301,27 +3321,28 @@ void ResultTable::build_table_SQLColumns() {
 
         insert_value("NULLABLE",
                      std::to_string(
-                         SQL_NULLABLE_UNKNOWN));
+                         SQL_NULLABLE));
         insert_value("REMARKS", std::string(""));
         insert_value(
             "COLUMN_DEF", std::string("NULL"));
-        if (sql_type == SQL_TYPE_DATE)
-          insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATETIME));
-        else
-          insert_value("SQL_DATA_TYPE", std::to_string(sql_type));
 
         if (sql_type == SQL_TYPE_DATE)
-          insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_DATE));
+            insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
         else if (sql_type == SQL_TYPE_TIME)
-          insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIME));
+            insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
         else if (sql_type == SQL_TYPE_TIMESTAMP)
-          insert_value("SQL_DATETIME_SUB", std::to_string(SQL_CODE_TIMESTAMP));
+            insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
         else
-          insert_value("SQL_DATETIME_SUB", std::to_string(0));
+            insert_value("SQL_DATA_TYPE", std::to_string(sql_type));
+
+        if (sql_type == SQL_TYPE_DATE || sql_type == SQL_TYPE_TIME || sql_type == SQL_TYPE_TIMESTAMP)
+          insert_value("SQL_DATETIME_SUB", std::to_string(sql_type));
+        else 
+          insert_value("SQL_DATETIME_SUB", NULL_STR);
 
         if (is_character_des_type(field))) {
-      insert_value("CHAR_OCTET_LENGTH", std::to_string(tal.len));
-    }
+          insert_value("CHAR_OCTET_LENGTH", std::to_string(tal.len));
+        }
         else
           insert_value("CHAR_OCTET_LENGTH", NULL_STR);
 
@@ -3721,7 +3742,7 @@ void ResultTable::build_table_SQLGetTypeInfo() {
 
         // TODO: check if the following is correct according
         // to DES policies
-        if (type_is_character_data && !type_is_time_data) {
+        if (type_is_character_data) {
         insert_value("SEARCHABLE", std::to_string(SQL_SEARCHABLE));
         } else {
         insert_value("SEARCHABLE", std::to_string(SQL_PRED_BASIC));
@@ -3732,13 +3753,16 @@ void ResultTable::build_table_SQLGetTypeInfo() {
         } else
         insert_value("UNSIGNED_ATTRIBUTE", std::to_string(SQL_FALSE));
 
-        if (type_requested == SQL_LONGVARCHAR)
         insert_value("FIXED_PREC_SCALE", std::to_string(SQL_FALSE));
+
+
+        if (type_is_character_data) {
+            insert_value("AUTO_UNIQUE_VALUE", NULL_STR);
+        }
         else
-        insert_value("FIXED_PREC_SCALE", std::to_string(SQL_TRUE));
-
-
-        insert_value("AUTO_UNIQUE_VALUE", std::to_string(SQL_FALSE));
+        {
+            insert_value("AUTO_UNIQUE_VALUE", std::to_string(SQL_FALSE));
+        }
 
         insert_value("LOCAL_TYPE_NAME", des_type_name);
 
@@ -3753,26 +3777,29 @@ void ResultTable::build_table_SQLGetTypeInfo() {
           insert_value("MAXIMUM_SCALE",
                        NULL_STR);
         }
-        
-        insert_value("SQL_DATATYPE", std::to_string(sql_data_type));
 
         if (type_is_time_data) {
             switch (sql_data_type) {
                 case SQL_TYPE_DATE:
-                insert_value("SQL_DATETIME_SUB", std::to_string(SQL_DATE));
+                insert_value("SQL_DATATYPE", std::to_string(SQL_DATE));
                 break;
                 case SQL_TYPE_TIME:
-                insert_value("SQL_DATETIME_SUB", std::to_string(SQL_TIME));
+                insert_value("SQL_DATATYPE", std::to_string(SQL_DATE));
                 break;
                 case SQL_TYPE_TIMESTAMP:
-                insert_value("SQL_DATETIME_SUB", std::to_string(SQL_TIMESTAMP));
+                insert_value("SQL_DATATYPE", std::to_string(SQL_DATE));
                 break;
                 default:
-                insert_value("SQL_DATETIME_SUB", NULL_STR);
+                insert_value("SQL_DATATYPE", NULL_STR);
                 break;
             }
         } else
-        insert_value("SQL_DATETIME_SUB", NULL_STR);
+        insert_value("SQL_DATATYPE", std::to_string(sql_data_type));
+
+        if (type_is_time_data)
+            insert_value("SQL_DATETIME_SUB", std::to_string(sql_data_type));
+        else
+            insert_value("SQL_DATETIME_SUB", NULL_STR);
 
         if (type_is_character_data)
         insert_value("NUM_PREC_RADIX", NULL_STR);

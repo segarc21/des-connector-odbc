@@ -326,6 +326,8 @@ SQLRETURN DBC::create_DES_process(SQLWCHAR *des_exec_path,
   - lpProcessInformation: the pointer to a PROCESS_INFORMATION structure
   */
 
+  this->get_query_mutex();
+
   if (!CreateProcessW(NULL, des_exec_path, NULL, NULL, TRUE,
                       DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP, NULL,
                       des_working_dir, &this->startup_info_unicode,
@@ -372,8 +374,10 @@ SQLRETURN DBC::create_DES_process(SQLWCHAR *des_exec_path,
 
     complete_reading_str += buffer_str;
 
-    finished_reading = (bytes_read < BUFFER_SIZE - 1);
+    finished_reading = is_in_string(complete_reading_str, ">");
   }
+
+  this->release_query_mutex();
 
   this->shmem->des_process_created = true;
   return SQL_SUCCESS;

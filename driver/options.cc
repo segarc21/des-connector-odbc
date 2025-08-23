@@ -131,6 +131,8 @@ static SQLRETURN set_constmt_attr(SQLSMALLINT  HandleType,
           break;
 
         case SQL_ATTR_QUERY_TIMEOUT:
+            return SQL_SUCCESS; /*This does not make sense in the context of DES
+                but other programs expect the ODBC Driver to behave like this.*/
         case SQL_ATTR_KEYSET_SIZE:
         case SQL_ATTR_CONCURRENCY:
         case SQL_ATTR_NOSCAN:
@@ -185,9 +187,8 @@ get_constmt_attr(SQLSMALLINT  HandleType,
             break;
 
         case SQL_ATTR_QUERY_TIMEOUT:
-          /* Do something only if the handle is STMT */
-          return set_handle_error(HandleType, Handle, "01S02",
-                                  "Unsupported option");
+            *((SQLULEN*)ValuePtr) = options->query_timeout; /*This does not make sense in the context of DES
+                                            but other programs expect the ODBC Driver to behave like this.*/
           break;
             break;
         case SQL_ATTR_RETRIEVE_DATA:
@@ -295,8 +296,8 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
       break;
 
     case SQL_ATTR_LOGIN_TIMEOUT:
-      return dbc->set_error("HYC00",
-                            "Unsupported option due to DES' characteristics");
+      return SQL_SUCCESS; /*This does not make sense in the context of DES
+      but other programs expect the ODBC Driver to behave like this.*/
       break;
 
     case SQL_ATTR_CONNECTION_TIMEOUT:
@@ -454,8 +455,8 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
     break;
 
   case SQL_ATTR_LOGIN_TIMEOUT:
-    return dbc->set_error("HYC00",
-                          "Unsupported option due to DES' characteristics");
+      *((SQLUINTEGER*)num_attr) = 0; /*This does not make sense in the context of DES
+      but other programs expect the ODBC Driver to behave like this.*/
     break;
 
   case SQL_ATTR_ODBC_CURSORS:

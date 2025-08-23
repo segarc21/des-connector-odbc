@@ -128,6 +128,24 @@ SQLRETURN STMT::set_error(const char *state, const char *msg) {
   return error.retcode;
 }
 
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+SQLRETURN DBC::set_fake_error(const char* state, const char* msg) {
+    error = DESERROR(state, msg);
+    error.retcode = SQL_SUCCESS_WITH_INFO;
+    return error.retcode;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+SQLRETURN STMT::set_fake_error(const char* state, const char* msg) {
+    error = DESERROR(state, msg);
+    error.retcode = SQL_SUCCESS_WITH_INFO;
+    return error.retcode;
+}
+
 /*
   @type    : myodbc3 internal
   @purpose : sets the descriptor level errors

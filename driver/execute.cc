@@ -130,9 +130,10 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(
 
   bytes_read = 0;
 
+  bool bytes_were_read = false;
   while (!finished_reading) {
     int ms = 0;
-    while (ms < MAX_OUTPUT_WAIT_MS && bytes_read == 0) {
+    while (ms < MAX_OUTPUT_WAIT_MS && ((!bytes_were_read && bytes_read == 0) || (bytes_read > 0))) {
       HANDLE read_thread = CreateThread(NULL, 0, read_process,
                                         this->driver_to_des_out_rpipe, 0, NULL);
       if (!read_thread) {
@@ -149,6 +150,12 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(
                                          // will not interrupt the reading pipe.
       WaitForSingleObject(read_thread, MUTEX_TIMEOUT);
 
+      if (bytes_read > 0) {
+          bytes_were_read = true;
+          std::string buffer_str = buffer;
+          tapi_output += buffer_str;
+      }
+
       DWORD code;
       if (GetExitCodeThread(read_thread, &code) != 0) {
         if (code == -1) {
@@ -157,10 +164,7 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(
         }
       }
     }
-    if (bytes_read > 0) {
-      std::string buffer_str = buffer;
-      tapi_output += buffer_str;
-
+    if (bytes_were_read) {
       finished_reading = check_stop(query, tapi_output);
       bytes_read = 0;
     } else
@@ -408,6 +412,18 @@ SQLRETURN DES_do_query(STMT *stmt, std::string query) {
     /* Probably error from insert_param */
     goto exit;
   }
+
+  /* DESODBC:
+    Temporal solution in the context of treating internal datetime cols as
+    VARCHAR cols when working with MSAccess, due to an obscure bug when
+    using datetime data types.
+*/
+#ifdef _WIN32
+  if (GetModuleHandle("msaccess.exe") != NULL) {
+      transform_datetime_query(stmt->dbc, stmt->type, query);
+  }
+#endif
+
 
   error = stmt->dbc->get_query_mutex();
   if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) return error;

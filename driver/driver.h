@@ -382,7 +382,6 @@ enum enum_field_types
   DES_TYPE_REAL,
   DES_TYPE_DATE,
   DES_TYPE_TIME,
-  DES_TYPE_DATETIME,
   DES_TYPE_TIMESTAMP,
   DES_TYPE_BLOB,  // needed for compatibility with insert_param
   DES_TYPE_TINY,  // needed for compatibility with insert_param
@@ -427,6 +426,11 @@ typedef struct DES_FIELD {
   unsigned int decimals;      /* Number of decimals in field */
   unsigned int charsetnr;     /* Character set */
   enum enum_field_types type; /* Type of field. See mysql_com.h for types */
+  enum enum_field_types access_real_type; /* DESODBC:
+    Temporal solution in the context of treating internal datetime cols as
+    VARCHAR cols when working with MSAccess, due to an obscure bug when
+    using datetime data types.
+*/
   void *extension;
 } DES_FIELD;
 
@@ -672,7 +676,7 @@ struct STMT_OPTIONS {
   SQLUINTEGER cursor_type = 0;
   SQLUINTEGER simulateCursor = 0;
   SQLULEN max_length = 0, max_rows = 0;
-  SQLULEN query_timeout = -1;
+  SQLULEN query_timeout = 60;
   SQLUSMALLINT *rowStatusPtr_ex = nullptr; /* set by SQLExtendedFetch */
   bool retrieve_data = true;
   SQLUINTEGER bookmarks = 0;
@@ -992,6 +996,7 @@ struct DBC {
       const std::string &query);
   std::pair<SQLRETURN, DES_RESULT *> send_query_and_get_results(
       COMMAND_TYPE type, const std::string &query);
+  std::pair<SQLRETURN, DES_RESULT*> execute_metadata_query(COMMAND_TYPE type, const std::string& query);
   
   // MyODBC functions:
   void free_explicit_descriptors();
@@ -1014,6 +1019,8 @@ struct DBC {
     Modified by: DESODBC Developer
     */
   SQLRETURN set_error(const char *state, const char *msg);
+  SQLRETURN set_fake_error(const char* state, const char* msg);
+
   SQLRETURN connect(DataSource *ds);
 
   SQLRETURN close();
@@ -1594,7 +1601,7 @@ struct STMT;  // Forward declaration to let ResultTable have a STMT attribute
     (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,                \
         DES_FIELD_DEF NAME_LEN, 0, 0, 0, 0, 0, 0, 0,                           \
         DES_FIELD_DEF_LENGTH(flags), 0, UTF8_CHARSET_NUMBER, DES_TYPE_VARCHAR, \
-        NULL                                                                   \
+        DES_TYPE_VARCHAR, NULL                                                 \
   }
 
 #define DESODBC_FIELD_STRING(name, len, flags)                                \
@@ -1602,28 +1609,28 @@ struct STMT;  // Forward declaration to let ResultTable have a STMT attribute
     (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,               \
         DES_FIELD_DEF(len *SYSTEM_CHARSET_MBMAXLEN), 0, 0, 0, 0, 0, 0, 0,     \
         DES_FIELD_DEF_LENGTH(flags), 0, UTF8_CHARSET_NUMBER, DES_TYPE_STRING, \
-        NULL                                                                  \
+        DES_TYPE_STRING, NULL                                                 \
   }
 
 #define DESODBC_FIELD_SHORT(name, flags)                                      \
   {                                                                           \
     (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,               \
         DES_FIELD_DEF 5, 5, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), 0, \
-        0, DES_TYPE_SHORT, NULL                                                 \
+        0, DES_TYPE_SHORT, DES_TYPE_SHORT, NULL                               \
   }
 
 #define DESODBC_FIELD_LONG(name, flags)                                      \
   {                                                                          \
     (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,              \
         DES_FIELD_DEF 11, 11, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), \
-        0, 0, DES_TYPE_LONG, NULL                                             \
+        0, 0, DES_TYPE_LONG, DES_TYPE_LONG, NULL                             \
   }
 
 #define DESODBC_FIELD_LONGLONG(name, flags)                                  \
   {                                                                          \
     (char *)(name), (char *)(name), NullS, NullS, NullS, NullS,              \
         DES_FIELD_DEF 20, 20, 0, 0, 0, 0, 0, 0, DES_FIELD_DEF_LENGTH(flags), \
-        0, 0, DES_TYPE_INT, NULL                                             \
+        0, 0, DES_TYPE_INT, DES_TYPE_INT, NULL                               \
   }
 
 /* DESODBC:
@@ -1881,6 +1888,7 @@ struct STMT {
     Original author: DESODBC
   */
   SQLRETURN set_error(const char *state, const char *errtext);
+  SQLRETURN set_fake_error(const char* state, const char* errtext);
 
   void clear_attr_names() { query_attr_names.clear(); }
 

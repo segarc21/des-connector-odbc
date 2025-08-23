@@ -52,6 +52,8 @@
 
 #include "field_types.h"
 
+SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& query);
+
 
 //Values extracted from mysql_com.h
 #define NOT_NULL_FLAG 1     /**< Field can't be NULL */
@@ -289,7 +291,7 @@ inline const std::vector<enum_field_types> supported_types = {
     DES_TYPE_VARCHAR,  DES_TYPE_STRING,   DES_TYPE_CHAR_N,  DES_TYPE_VARCHAR_N,
     DES_TYPE_INTEGER,  DES_TYPE_CHAR,     DES_TYPE_INTEGER, DES_TYPE_INT,
     DES_TYPE_FLOAT,    DES_TYPE_REAL,     DES_TYPE_DATE,    DES_TYPE_TIME,
-    DES_TYPE_DATETIME, DES_TYPE_TIMESTAMP};
+    DES_TYPE_TIMESTAMP};
 
 /* DESODBC:
     Original author: DESODBC Developer
@@ -300,14 +302,13 @@ inline const std::unordered_map<std::string, SQLSMALLINT> typestr_sqltype_map = 
     {"varchar", SQL_LONGVARCHAR},
     {"char", SQL_CHAR},  // we will use it with size_str=1
     {"char()", SQL_CHAR},
-    {"integer_des", SQL_BIGINT},
-    {"int", SQL_BIGINT},
+    {"integer_des", SQL_INTEGER},
+    {"int", SQL_INTEGER},
     {"float", SQL_DOUBLE},
     {"real", SQL_DOUBLE},
     {"date", SQL_TYPE_DATE},
     {"time", SQL_TYPE_TIME},
-    {"datetime", SQL_TYPE_TIMESTAMP},
-    {"timestamp", SQL_TYPE_TIMESTAMP}};
+    {"datetime", SQL_TYPE_TIMESTAMP}};
 
 /* DESODBC:
     Original author: DESODBC Developer
@@ -324,7 +325,7 @@ inline const std::unordered_map<std::string, enum_field_types> typestr_simpletyp
      //{"real", DES_TYPE_REAL},
      {"datetime(date)", DES_TYPE_DATE},
      {"datetime(time)", DES_TYPE_TIME},
-     {"datetime(datetime)", DES_TYPE_DATETIME}};
+     {"datetime(datetime)", DES_TYPE_TIMESTAMP}};
 
 /* DESODBC:
     Original author: DESODBC Developer

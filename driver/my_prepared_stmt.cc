@@ -44,6 +44,10 @@
 #include "driver.h"
 #include "errmsg.h"
 
+std::pair<SQLRETURN, DES_RESULT*> DBC::execute_metadata_query(COMMAND_TYPE type, const std::string& query) {
+    std::string new_query = convert_into_metadata_query(query);
+    return this->send_query_and_get_results(type, new_query);
+}
 
 /* DESODBC:
     Original author: DESODBC

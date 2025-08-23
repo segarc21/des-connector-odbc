@@ -165,7 +165,6 @@ void fix_result_types(STMT *stmt)
       /* FALLTHROUGH */
 
     case DES_TYPE_DATE:
-    case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
     case DES_TYPE_TIME:
       irrec->literal_prefix= (SQLCHAR *) "'";
@@ -702,8 +701,7 @@ std::map<std::string, int> sql_data_types_map = {
     {"real", SQL_DOUBLE},
     {"date", SQL_TYPE_DATE},
     {"time", SQL_TYPE_TIME},
-    {"datetime", SQL_DATETIME},
-    {"timestamp", SQL_TYPE_TIMESTAMP}
+    {"datetime", SQL_TYPE_TIMESTAMP}
 };
 
 /* DESODBC:
@@ -767,9 +765,6 @@ SQLSMALLINT get_sql_data_type(STMT *stmt, DES_FIELD *field, char *buff)
       if (buff) (void)desodbc_stpmov(buff, "time");
       if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3) return SQL_TYPE_TIME;
       return SQL_TIME;
-    case DES_TYPE_DATETIME:
-      if (buff) (void)desodbc_stpmov(buff, "datetime");
-      return SQL_DATETIME;
     case DES_TYPE_TIMESTAMP:
       if (buff) (void)desodbc_stpmov(buff, "timestamp");
       if (stmt->dbc->env->odbc_ver == SQL_OV_ODBC3) return SQL_TYPE_TIMESTAMP;
@@ -859,9 +854,10 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
 
   case DES_TYPE_VARCHAR:
   case DES_TYPE_STRING:  
+      return DES_MAX_STRLEN;
   case DES_TYPE_CHAR_N:
   case DES_TYPE_VARCHAR_N:
-    return DES_MAX_STRLEN;
+      return field->max_length;
   case DES_TYPE_CHAR:
     return 1;
   case DES_TYPE_INTEGER:
@@ -878,7 +874,6 @@ SQLULEN get_column_size(STMT *stmt, DES_FIELD *field)
     return 10;
   case DES_TYPE_TIME:
     return 8;
-  case DES_TYPE_DATETIME:
   case DES_TYPE_TIMESTAMP:
     return 19;
   }
@@ -916,9 +911,7 @@ SQLSMALLINT get_decimal_digits(STMT *stmt __attribute__((unused)),
     case DES_TYPE_INT:
     case DES_TYPE_SHORT:
     case DES_TYPE_LONG:
-    case DES_TYPE_DATE:
     case DES_TYPE_TIME:
-    case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
       return 0;
 
@@ -969,7 +962,6 @@ SQLLEN get_transfer_octet_length(TypeAndLength tal) {
       return sizeof(SQL_DATE_STRUCT);
     case DES_TYPE_TIME:
       return sizeof(SQL_TIME_STRUCT);
-    case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
       return sizeof(SQL_TIMESTAMP_STRUCT);
   }
@@ -1020,17 +1012,10 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),DES_FIELD *field)
   switch (field->type) {
     case DES_TYPE_VARCHAR:
     case DES_TYPE_STRING:
+        return DES_MAX_STRLEN;
     case DES_TYPE_CHAR_N:
-    case DES_TYPE_VARCHAR_N: {
-      unsigned long length;
-      if (field->charsetnr == BINARY_CHARSET_NUMBER)
-        length = field->length * 2;
-      else
-        length = field->length / mbmaxlen;
-
-      if (capint32 && length > INT_MAX32) length = INT_MAX32;
-      return length;
-    }
+    case DES_TYPE_VARCHAR_N:
+        return field->max_length;
     case DES_TYPE_CHAR:
       return 1;
     case DES_TYPE_INTEGER:
@@ -1047,7 +1032,6 @@ SQLLEN get_display_size(STMT *stmt __attribute__((unused)),DES_FIELD *field)
       return 10;
     case DES_TYPE_TIME:
       return 8;
-    case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
       return 19;
   }
@@ -1235,7 +1219,6 @@ int unireg_to_c_datatype(DES_FIELD *field)
         return SQL_C_DATE;
       case DES_TYPE_TIME:
         return SQL_C_TIME;
-      case DES_TYPE_DATETIME:
       case DES_TYPE_TIMESTAMP:
         return SQL_C_TIMESTAMP;
       case DES_TYPE_SHORT:
@@ -2134,8 +2117,8 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
   /* SQL_CHAR= 1 */
     {(SQLCHAR *)"varchar", 7, SQL_VARCHAR, DES_TYPE_VARCHAR, 0, 0},
     {(SQLCHAR *)"string", 6, SQL_VARCHAR, DES_TYPE_STRING, 0, 0},
-    {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR_N, 0, 0},
-    {(SQLCHAR *)"varchar", 7, SQL_CHAR, DES_TYPE_VARCHAR_N, 0, 0},
+    {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR_N, 255, 0},
+    {(SQLCHAR *)"varchar", 7, SQL_CHAR, DES_TYPE_VARCHAR_N, 255, 0},
     {(SQLCHAR *)"char", 4, SQL_CHAR, DES_TYPE_CHAR, 1, 0},
     {(SQLCHAR *)"integer_des", 3, SQL_INTEGER, DES_TYPE_INTEGER, 10, 1},
     {(SQLCHAR *)"smallint", 7, SQL_SMALLINT, DES_TYPE_SHORT, 5, 1},
@@ -2145,8 +2128,7 @@ SQLTypeMap SQL_TYPE_MAP_values[]=
     {(SQLCHAR *)"real", 4, SQL_DOUBLE, DES_TYPE_REAL, 53, 1},
     {(SQLCHAR *)"date", 4, SQL_TYPE_DATE, DES_TYPE_DATE, 10, 1},
     {(SQLCHAR *)"time", 4, SQL_TYPE_TIME, DES_TYPE_TIME, 8, 1},
-    {(SQLCHAR *)"datetime", 8, SQL_DATETIME, DES_TYPE_DATETIME, 19, 1},
-    {(SQLCHAR *)"timestamp", 9, SQL_TYPE_TIMESTAMP, DES_TYPE_TIMESTAMP, 19, 1}
+    {(SQLCHAR *)"datetime", 9, SQL_TYPE_TIMESTAMP, DES_TYPE_TIMESTAMP, 19, 1}
 };
 
 
@@ -2584,13 +2566,14 @@ SQLULEN get_type_size(enum_field_types type) {
       return 10;
     case DES_TYPE_TIME:
       return 8;
-    case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
       return 19;
     // "Variable-length string of up to the maximum length of the underlying Prolog atom."
     // which is infinite. Therefore, I will pick the standard 255 (inspired by PostgreSQL)
     case DES_TYPE_VARCHAR:
     case DES_TYPE_STRING:
+    case DES_TYPE_VARCHAR_N:
+    case DES_TYPE_CHAR_N:
       return DES_MAX_STRLEN;
     default:
       return 0;
@@ -2631,11 +2614,10 @@ std::string Type_to_type_str(TypeAndLength type) {
     Original author: DESODBC Developer
 */
 SQLULEN get_Type_size(TypeAndLength type) {
-  SQLULEN small_type_size = get_type_size(type.simple_type);
-  if (type.len != -1) {
-    return small_type_size * SYSTEM_CHARSET_MBMAXLEN;
-  } else
-    return small_type_size;
+    if (type.len == -1)
+        return get_type_size(type.simple_type);
+    else
+        return type.len;
 }
 
 /* DESODBC:
@@ -2723,8 +2705,6 @@ int des_type_2_sql_type(enum_field_types des_type) {
       return SQL_TYPE_DATE;
     case DES_TYPE_TIME:
       return SQL_TYPE_TIME;
-    case DES_TYPE_DATETIME:
-      return SQL_DATETIME;
     case DES_TYPE_TIMESTAMP:
       return SQL_TYPE_TIMESTAMP;
     case DES_TYPE_SHORT:
@@ -2778,7 +2758,6 @@ bool is_character_des_data_type(enum_field_types type) {
     case DES_TYPE_STRING:
     case DES_TYPE_DATE:
     case DES_TYPE_TIME:
-    case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
       return true;
     default:
@@ -2793,7 +2772,6 @@ bool is_time_des_data_type(enum_field_types type) {
   switch (type) {
     case DES_TYPE_DATE:
     case DES_TYPE_TIME:
-    case DES_TYPE_DATETIME:
     case DES_TYPE_TIMESTAMP:
       return true;
     default:
@@ -3005,9 +2983,9 @@ SQLRETURN set_error_from_tapi_output(SQLSMALLINT HandleType, SQLHANDLE Handle,
       ((DBC *)Handle)->set_error("HY000", msg);
   } else {
     if (HandleType == SQL_HANDLE_STMT)
-      ((STMT *)Handle)->set_error("01000", msg);
+      ((STMT *)Handle)->set_fake_error("01000", msg);
     else if (HandleType == SQL_HANDLE_DBC)
-      ((DBC *)Handle)->set_error("01000", msg);
+      ((DBC *)Handle)->set_fake_error("01000", msg);
   }
 
   delete msg;
@@ -3037,9 +3015,9 @@ SQLRETURN check_and_set_errors(SQLSMALLINT HandleType, SQLHANDLE Handle,
     msg_str += tapi_output;
     const char *msg = string_to_char_pointer(msg_str);
     if (HandleType == SQL_HANDLE_STMT)
-      ((STMT *)Handle)->set_error("01000", msg);
+      ((STMT *)Handle)->set_fake_error("01000", msg);
     else if (HandleType == SQL_HANDLE_DBC)
-      ((DBC *)Handle)->set_error("01000", msg);
+      ((DBC *)Handle)->set_fake_error("01000", msg);
     delete msg;
     return SQL_SUCCESS_WITH_INFO;
   }
@@ -3107,23 +3085,513 @@ std::string convert_into_metadata_query(const std::string& query) {
     substring.
     */
 
-    std::string old_query = query;
-    to_lower_str(old_query);
+    std::string new_query = query;
 
-    size_t pos = old_query.find("from");
-    if (pos == std::string::npos)
+    /*
+  * LibreOffice tries to build a SELECT query using the format
+  * SELECT * FROM `$des`.`employee`. However, DES does not support
+  * this format. We will then erase the "`$des`." substring.
+  */
+    if (GetModuleHandle("soffice.bin") != NULL) {
+        std::string calc_catalog_preffix = "`$des`.";
+        remove_from_string(new_query, calc_catalog_preffix);
+    }
+
+    std::string dirty_query = new_query;
+    to_lower_str(dirty_query);
+
+    size_t pos = dirty_query.find("from");
+    if (pos == std::string::npos) {
         return query;
-
+    }
+        
     pos += std::string("from").size();
 
     //Now we jump to the start of the next word.
-    while (pos < old_query.size() && std::isspace(old_query[pos]))
+    while (pos < new_query.size() && std::isspace(new_query[pos]))
         pos++;
-    while (pos < old_query.size() && !std::isspace(old_query[pos]))
+    while (pos < new_query.size() && !std::isspace(new_query[pos]))
         pos++;
 
-    std::string new_query = old_query.substr(0, pos);
+    new_query = new_query.substr(0, pos);
     new_query += " where 0=1";
 
     return new_query;
+}
+
+/* DESODBC:
+    Temporal solution in the context of treating internal datetime cols as
+    VARCHAR cols when working with MSAccess, due to an obscure bug when
+    using datetime data types.
+    Original author: DESODBC Developer
+*/
+SQLRETURN transform_select_datetime_query(DBC* dbc, std::string& query) {
+    std::string where_substr = " where ";
+    std::string lowered_query = query;
+    to_lower_str(lowered_query);
+
+    if (!is_in_string(lowered_query, where_substr))
+        return SQL_SUCCESS;
+
+    size_t where_end_pos = lowered_query.find(where_substr);
+    where_end_pos += where_substr.size();
+
+    auto pair = dbc->execute_metadata_query(SELECT, query);
+    if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
+        return dbc->set_error("HY000", "Internal error executing the metadata query");
+    }
+
+    DES_RESULT* metadata_result = pair.second;
+
+    std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
+
+    for (auto datetimecol_type : metadata_result->internal_table->columns) {
+        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+    }
+
+    for (auto datetimecol_type : datetimecols_types_map) {
+        size_t pos = where_end_pos;
+        while ((pos = query.find("`" + datetimecol_type.first + "`", pos)) != std::string::npos) {
+
+            pos += 1 + datetimecol_type.first.size() + 1;
+            if (query.substr(pos, std::string(" IS NULL").size()) == " IS NULL") {
+                pos += std::string(" IS NULL").size();
+                continue;
+            }
+            else
+                pos += 3;
+
+            std::string left_str_to_insert = "cast(";
+
+            query.insert(pos, left_str_to_insert);
+            pos += std::string(left_str_to_insert).size() + 1; // "cast('"
+            pos = query.find("'", pos);
+            pos += 1;
+
+            std::string right_str_to_insert;
+            switch (datetimecol_type.second) {
+            case DES_TYPE_DATE:
+                right_str_to_insert = " as date)";
+                break;
+            case DES_TYPE_TIME:
+                right_str_to_insert = " as time)";
+                break;
+            case DES_TYPE_TIMESTAMP:
+                right_str_to_insert = " as datetime)";
+                break;
+            }
+
+            query.insert(pos, right_str_to_insert);
+            pos += std::string(right_str_to_insert).size();
+        }
+    }
+
+    return SQL_SUCCESS;
+}
+
+/* DESODBC:
+    Temporal solution in the context of treating internal datetime cols as
+    VARCHAR cols when working with MSAccess, due to an obscure bug when
+    using datetime data types.
+    Original author: DESODBC Developer
+*/
+SQLRETURN transform_delete_datetime_query(DBC* dbc, std::string& query) {
+
+    size_t pos;
+
+    std::string where_substr = " where ";
+    std::string lowered_query = query;
+    to_lower_str(lowered_query);
+
+    if (!is_in_string(lowered_query, where_substr))
+        return SQL_SUCCESS;
+
+    size_t where_end_pos = lowered_query.find(where_substr);
+    where_end_pos += where_substr.size();
+
+    size_t table_name_start_pos = std::string("DELETE FROM `").size();
+    size_t table_name_end_pos = query.find("`", table_name_start_pos);
+
+    std::string table_name = query.substr(table_name_start_pos, table_name_end_pos - table_name_start_pos);
+
+    std::string metadata_query = "select * from " + table_name + " where 0=1";
+    auto pair = dbc->send_query_and_get_results(SELECT, metadata_query);
+    if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
+        return dbc->set_error("HY000", "Internal error executing the metadata query");
+    }
+
+    DES_RESULT* metadata_result = pair.second;
+
+    std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
+
+    for (auto datetimecol_type : metadata_result->internal_table->columns) {
+        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+    }
+
+    for (auto datetimecol_type : datetimecols_types_map) {
+        pos = where_end_pos;
+        while ((pos = query.find("`" + datetimecol_type.first + "`", pos)) != std::string::npos) {
+
+            pos += 1 + datetimecol_type.first.size() + 1;
+            if (query.substr(pos, std::string(" IS NULL").size()) == " IS NULL") {
+                pos += std::string(" IS NULL").size();
+                continue;
+            }
+            else
+                pos += 3;
+
+            std::string left_str_to_insert = "cast(";
+
+            query.insert(pos, left_str_to_insert);
+            pos += std::string(left_str_to_insert).size() + 1; // "cast('"
+            pos = query.find("'", pos);
+            pos += 1;
+
+            std::string right_str_to_insert;
+            switch (datetimecol_type.second) {
+            case DES_TYPE_DATE:
+                right_str_to_insert = " as date)";
+                break;
+            case DES_TYPE_TIME:
+                right_str_to_insert = " as time)";
+                break;
+            case DES_TYPE_TIMESTAMP:
+                right_str_to_insert = " as datetime)";
+                break;
+            }
+
+            query.insert(pos, right_str_to_insert);
+            pos += std::string(right_str_to_insert).size();
+        }
+    }
+
+    return SQL_SUCCESS;
+}
+
+/* DESODBC:
+    Temporal solution in the context of treating internal datetime cols as
+    VARCHAR cols when working with MSAccess, due to an obscure bug when
+    using datetime data types.
+    Original author: DESODBC Developer
+*/
+SQLRETURN transform_insert_datetime_query(DBC* dbc, std::string& query) {
+
+    std::string values_substr = " values ";
+    std::string lowered_query = query;
+    to_lower_str(lowered_query);
+
+    if (!is_in_string(lowered_query, values_substr))
+        return SQL_SUCCESS;
+
+    size_t values_end_pos = lowered_query.find(values_substr);
+    values_end_pos += values_substr.size();
+
+
+    size_t table_name_start_pos = std::string("INSERT INTO  `").size();
+    size_t table_name_end_pos = query.find("`", table_name_start_pos);
+
+    std::string table_name = query.substr(table_name_start_pos, table_name_end_pos - table_name_start_pos);
+
+    std::vector<std::string> names_ordered;
+    size_t pos = table_name_end_pos;
+    pos += std::string("`  (`").size();
+
+    bool end = false;
+    while (!end) {
+        size_t start_word = pos;
+        size_t end_word = query.find('`', start_word);
+
+        names_ordered.push_back(query.substr(start_word, end_word-start_word));
+
+        pos = end_word;
+        pos += 1; // skip `
+
+        if (query[pos] == ')')
+            end = true;
+        else
+            pos += 2; //skip comma and `
+    }
+
+    std::string metadata_query = "select ";
+    for (int i = 0; i < names_ordered.size(); ++i) {
+        metadata_query += names_ordered[i];
+        if (i != names_ordered.size() - 1)
+            metadata_query += ",";
+    }
+    metadata_query += " from " + table_name + " where 0 = 1";
+    
+    auto pair = dbc->send_query_and_get_results(SELECT, metadata_query);
+    if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
+        return dbc->set_error("HY000", "Internal error executing the metadata query");
+    }
+
+    DES_RESULT* metadata_result = pair.second;
+
+    std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
+
+    for (auto datetimecol_type : metadata_result->internal_table->columns) {
+        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+    }
+
+    pos = values_end_pos;
+    pos += 1; //first parenthesis
+
+    int col_index = 0;
+
+    end = false;
+    while (!end) {
+
+        bool skip = false;
+
+        std::string right_str_to_insert;
+        switch (datetimecols_types_map[names_ordered[col_index]]) {
+        case DES_TYPE_DATE:
+            right_str_to_insert = " as date)";
+            break;
+        case DES_TYPE_TIME:
+            right_str_to_insert = " as time)";
+            break;
+        case DES_TYPE_TIMESTAMP:
+            right_str_to_insert = " as datetime)";
+            break;
+        default:
+            skip = true;
+            break;
+        }
+
+        if (skip) {
+            size_t next_comma_pos = query.find(",", pos);
+            size_t next_parenthesis_pos = query.find(")", pos);
+
+            if (next_comma_pos == std::string::npos)
+            {
+                pos = next_parenthesis_pos;
+                end = true;
+            }
+            else {
+                if (next_comma_pos < next_parenthesis_pos) {
+                    pos = next_comma_pos;
+                    pos++;
+                }
+                else {
+                    pos = next_parenthesis_pos;
+                    end = true;
+                }
+            }
+        }
+        else {
+            std::string left_str_to_insert = "cast(";
+
+            query.insert(pos, left_str_to_insert);
+            pos += std::string(left_str_to_insert).size() + 1; // "cast('"
+            pos = query.find("'", pos);
+            pos += 1;
+
+
+            query.insert(pos, right_str_to_insert);
+            pos += std::string(right_str_to_insert).size();
+
+            if (query[pos] == ')')
+                end = true;
+            else
+                pos++; //skip comma
+        }
+
+        col_index++;
+    }
+
+    return SQL_SUCCESS;
+
+}
+
+/* DESODBC:
+    Temporal solution in the context of treating internal datetime cols as
+    VARCHAR cols when working with MSAccess, due to an obscure bug when
+    using datetime data types.
+    Original author: DESODBC Developer
+*/
+SQLRETURN transform_update_datetime_query(DBC* dbc, std::string& query) {
+
+    std::string where_substr = " where ";
+    std::string lowered_query = query;
+    to_lower_str(lowered_query);
+
+    if (!is_in_string(lowered_query, where_substr))
+        return SQL_SUCCESS;
+
+    size_t where_end_pos = lowered_query.find(where_substr);
+    where_end_pos += where_substr.size();
+
+    size_t table_name_start_pos = std::string("UPDATE `").size();
+    size_t table_name_end_pos = query.find("`", table_name_start_pos);
+
+    std::string table_name = query.substr(table_name_start_pos, table_name_end_pos - table_name_start_pos);
+
+    std::vector<std::string> names_ordered;
+    size_t pos = where_end_pos;
+    pos += 1;
+
+    bool end = false;
+    while (!end) {
+        size_t start_word = pos;
+        size_t end_word = query.find('`', start_word);
+
+        names_ordered.push_back(query.substr(start_word, end_word - start_word));
+
+        pos = end_word;
+        pos += 1; // skip `
+
+        pos = query.find('`', pos);
+
+        if (pos == std::string::npos)
+            end = true;
+        else
+            pos += 1; // skip `
+    }
+
+    std::string metadata_query = "select ";
+    for (int i = 0; i < names_ordered.size(); ++i) {
+        metadata_query += names_ordered[i];
+        if (i != names_ordered.size() - 1)
+            metadata_query += ",";
+    }
+    metadata_query += " from " + table_name + " where 0 = 1";
+
+    auto pair = dbc->send_query_and_get_results(SELECT, metadata_query);
+    if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
+        return dbc->set_error("HY000", "Internal error executing the metadata query");
+    }
+
+    DES_RESULT* metadata_result = pair.second;
+
+    std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
+
+    for (auto datetimecol_type : metadata_result->internal_table->columns) {
+        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+    }
+
+    for (auto datetimecol_type : datetimecols_types_map) {
+        size_t pos = where_end_pos;
+        while ((pos = query.find("`" + datetimecol_type.first + "`", pos)) != std::string::npos) {
+
+            pos += 1 + datetimecol_type.first.size() + 1;
+            if (query.substr(pos, std::string(" IS NULL").size()) == " IS NULL") {
+                pos += std::string(" IS NULL").size();
+                continue;
+            }
+            else
+                pos += 3;
+
+            std::string left_str_to_insert = "cast(";
+
+            query.insert(pos, left_str_to_insert);
+            pos += std::string(left_str_to_insert).size() + 1; // "cast('"
+            pos = query.find("'", pos);
+            pos += 1;
+
+            std::string right_str_to_insert;
+            switch (datetimecol_type.second) {
+            case DES_TYPE_DATE:
+                right_str_to_insert = " as date)";
+                break;
+            case DES_TYPE_TIME:
+                right_str_to_insert = " as time)";
+                break;
+            case DES_TYPE_TIMESTAMP:
+                right_str_to_insert = " as datetime)";
+                break;
+            }
+
+            query.insert(pos, right_str_to_insert);
+            pos += std::string(right_str_to_insert).size();
+        }
+    }
+
+    pos = table_name_end_pos;
+    pos += std::string("` SET `").size();
+
+    end = false;
+    while (!end) {
+
+        size_t next_quote = query.find("`", pos);
+
+        std::string name = query.substr(pos, next_quote - pos);
+        pos += name.size() + 2; //name + `=
+
+        bool skip = false;
+
+        std::string right_str_to_insert;
+        switch (datetimecols_types_map[name]) {
+        case DES_TYPE_DATE:
+            right_str_to_insert = " as date)";
+            break;
+        case DES_TYPE_TIME:
+            right_str_to_insert = " as time)";
+            break;
+        case DES_TYPE_TIMESTAMP:
+            right_str_to_insert = " as datetime)";
+            break;
+        default:
+            skip = true;
+            break;
+        }
+
+        if (skip)
+        {
+            size_t next_comma_pos = query.find(",", pos);
+
+            if (next_comma_pos == std::string::npos) {
+                end = true;
+            } else{
+                pos = next_comma_pos;
+                pos += 2; //skip comma and `
+            }
+        }
+        else {
+
+            std::string left_str_to_insert = "cast(";
+
+            query.insert(pos, left_str_to_insert);
+            pos += std::string(left_str_to_insert).size() + 1; // "cast('"
+            pos = query.find("'", pos);
+            pos += 1;
+
+
+
+            query.insert(pos, right_str_to_insert);
+            pos += std::string(right_str_to_insert).size();
+
+            if (query[pos] == ',')
+                pos += 2; //skip comma and `
+            else
+                end = true;
+        }
+    }
+
+    return SQL_SUCCESS;
+}
+
+/* DESODBC:
+    Temporal solution in the context of treating internal datetime cols as
+    VARCHAR cols when working with MSAccess, due to an obscure bug when
+    using datetime data types.
+    Original author: DESODBC Developer
+*/
+SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& query) {
+
+    if (type == SELECT)
+        return transform_select_datetime_query(dbc, query);
+    else if (type == DEL)
+        return transform_delete_datetime_query(dbc, query);
+    else if (type == INSERT)
+        return transform_insert_datetime_query(dbc, query);
+    else if (type == UPDATE)
+        return transform_update_datetime_query(dbc, query);
+    else
+        return SQL_SUCCESS;
+    
 }
