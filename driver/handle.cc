@@ -153,14 +153,14 @@ SQLRETURN DBC::close() {
   if (this->connected) {
 #ifdef _WIN32
     ret = get_shared_memory_mutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    if (!SQL_SUCCEEDED(ret)) {
       return ret;
     }
 
     this->shmem->handle_sharing_info.handle_petitioner.id = this->connection_id;
 
     ret = setFinishingEvent();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    if (!SQL_SUCCEEDED(ret)) {
       release_shared_memory_mutex();
       return ret;
     }
@@ -171,23 +171,16 @@ SQLRETURN DBC::close() {
     this->shmem->handle_sharing_info.handle_petitioner.id =
         0;  // we reset this field
     ret = release_shared_memory_mutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+    if (!SQL_SUCCEEDED(ret)) return ret;
 
     ret = get_shared_memory_mutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    if (!SQL_SUCCEEDED(ret)) {
       return ret;
     }
     remove_client_from_shmem(this->shmem->connected_clients_struct,
                              this->connection_id);
     if (this->shmem->connected_clients_struct.size == 0) {
       DWORD pid = this->shmem->DES_pid;
-
-      HANDLE des_process_handle = OpenProcess(PROCESS_TERMINATE, false, pid);
-      if (des_process_handle == NULL) {
-        ret = this->set_win_error(
-            "Failed to access DES process with PID " + std::to_string(pid),
-            true);
-      }
 
       auto pair = this->send_query_and_read("/q");
       if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
@@ -224,12 +217,12 @@ SQLRETURN DBC::close() {
 #else
 
     ret = get_shared_memory_mutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+    if (!SQL_SUCCEEDED(ret)) return ret;
 
     this->shmem->n_clients -= 1;
     if (this->shmem->n_clients == 0) {
       ret = release_shared_memory_mutex();
-      if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+      if (!SQL_SUCCEEDED(ret)) return ret;
 
       auto pair = this->send_query_and_read("/q");
       if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {

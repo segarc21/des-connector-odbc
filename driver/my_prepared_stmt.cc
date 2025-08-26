@@ -67,6 +67,11 @@ SQLRETURN STMT::execute_metadata_query() {
 
         std::string new_query = convert_into_metadata_query(query);
 
+        auto pair = this->dbc->send_query_and_read(new_query);
+
+        if (!SQL_SUCCEEDED(pair.first))
+            return pair.first;
+
         this->last_output = this->dbc->send_query_and_read(new_query).second;
 
         this->build_results();

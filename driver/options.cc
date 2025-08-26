@@ -259,7 +259,7 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
     case SQL_ATTR_CURRENT_CATALOG:
 
       rc = dbc->get_query_mutex();
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+      if (!SQL_SUCCEEDED(rc)) return rc;
 
       query = "/use_db ";
       catalog = sqlcharptr_to_str((SQLCHAR *)ValuePtr, StringLengthPtr);
@@ -270,7 +270,7 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
       rc = pair.first;
       output = pair.second;
 
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      if (!SQL_SUCCEEDED(rc)) {
         dbc->release_query_mutex();
         return rc;
       }
@@ -282,7 +282,7 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
         rc = check_and_set_errors(SQL_HANDLE_DBC, dbc, output);
       }
 
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      if (!SQL_SUCCEEDED(rc)) {
         return rc;
       }
       break;

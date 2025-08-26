@@ -257,12 +257,12 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
   case SQL_DATABASE_NAME:
     if (is_connected(dbc)) {
       SQLRETURN rc = dbc->get_query_mutex();
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+      if (!SQL_SUCCEEDED(rc)) return rc;
 
       auto pair = dbc->send_query_and_read("/current_db");
       rc = pair.first;
       std::string current_db_output = pair.second;
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      if (!SQL_SUCCEEDED(rc)) {
         dbc->release_query_mutex();
         return rc;
       }

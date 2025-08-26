@@ -440,10 +440,10 @@ SQLRETURN DBC::create_DES_process(const char *des_exec_path,
     this->shmem->des_process_created = true;
 
     ret = release_shared_memory_mutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+    if (!SQL_SUCCEEDED(ret)) return ret;
 
     ret = get_DES_process_pipes();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+    if (!SQL_SUCCEEDED(ret)) return ret;
 
     char buffer[4096];
     ssize_t bytes_read = 0;
@@ -491,19 +491,22 @@ SQLRETURN DBC::get_DES_process_pipes() {
 #ifdef _WIN32
   bool finished = false;
   SQLRETURN ret;
-  ret = get_shared_memory_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
-  ret = getRequestHandleMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-    release_shared_memory_mutex();
-    return ret;
-  }
-
-  this->shmem->handle_sharing_info.handle_petitioner.pid =
-      GetCurrentProcessId();
-  this->shmem->handle_sharing_info.handle_petitioner.id = this->connection_id;
 
   while (!finished) {
+
+    ret = get_shared_memory_mutex();
+    if (!SQL_SUCCEEDED(ret)) return ret;
+
+    ret = getRequestHandleMutex();
+    if (!SQL_SUCCEEDED(ret)) {
+        release_shared_memory_mutex();
+        return ret;
+    }
+
+    this->shmem->handle_sharing_info.handle_petitioner.pid =
+        GetCurrentProcessId();
+    this->shmem->handle_sharing_info.handle_petitioner.id = this->connection_id;
+
     size_t random_id = -1;
     if (this->shmem->connected_clients_struct.size == 0) {
       releaseRequestHandleMutex();
@@ -524,13 +527,13 @@ SQLRETURN DBC::get_DES_process_pipes() {
     this->shmem->handle_sharing_info.handle_petitionee.id = random_id;
 
     ret = release_shared_memory_mutex();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    if (!SQL_SUCCEEDED(ret)) {
       releaseRequestHandleMutex();
       return ret;
     }
 
     ret = setRequestHandleEvent();
-    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+    if (!SQL_SUCCEEDED(ret)) {
       releaseRequestHandleMutex();
       return ret;
     }
@@ -545,9 +548,10 @@ SQLRETURN DBC::get_DES_process_pipes() {
         this->remove_client_from_shmem(
             this->shmem->connected_clients_struct,
             this->shmem->handle_sharing_info.handle_petitionee.id);
+        releaseRequestHandleMutex();
+        release_shared_memory_mutex();
         continue;
       case WAIT_FAILED:
-        release_shared_memory_mutex();
         releaseRequestHandleMutex();
         return this->set_win_error(
             "Failed to wait for event " + std::string(HANDLE_SENT_EVENT_NAME),
@@ -559,7 +563,9 @@ SQLRETURN DBC::get_DES_process_pipes() {
     this->driver_to_des_out_rpipe = this->shmem->handle_sharing_info.out_handle;
     this->driver_to_des_in_wpipe = this->shmem->handle_sharing_info.in_handle;
     if (!this->driver_to_des_out_rpipe || !this->driver_to_des_in_wpipe) {
-      int x;
+        releaseRequestHandleMutex();
+        release_shared_memory_mutex();
+        continue;
     }
 
     // we reset the structure once we have saved the handles
@@ -575,12 +581,11 @@ SQLRETURN DBC::get_DES_process_pipes() {
   }
 
   ret = releaseRequestHandleMutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
-    release_shared_memory_mutex();
+  if (!SQL_SUCCEEDED(ret)) {
     return ret;
   }
   ret = release_shared_memory_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+  if (!SQL_SUCCEEDED(ret)) return ret;
 
 #else
 
@@ -670,26 +675,52 @@ void DBC::sharePipes() {
         shmem->handle_sharing_info.handle_petitioner.pid != 0 &&
         shmem->handle_sharing_info.handle_petitionee.id ==
             this->connection_id) {
+
+        
+       ret = get_shared_memory_mutex();
+       if (!SQL_SUCCEEDED(ret)) {
+           release_shared_memory_mutex();
+           ResetEvent(this->request_handle_event);
+           SetEvent(this->handle_sent_event);  // we notify the petitioner
+           break;
+       }
       HANDLE petitioner_process_handle =
           OpenProcess(PROCESS_DUP_HANDLE, TRUE,
                       shmem->handle_sharing_info.handle_petitioner.pid);
 
-      if (petitioner_process_handle == NULL) break;
+      if (petitioner_process_handle == NULL) {
+          release_shared_memory_mutex();
+          ResetEvent(this->request_handle_event);
+          SetEvent(this->handle_sent_event);  // we notify the petitioner
+          break;
+      }
 
       ret = DuplicateHandle(GetCurrentProcess(), this->driver_to_des_out_rpipe,
                             petitioner_process_handle,
                             &shmem->handle_sharing_info.out_handle, 0, TRUE,
                             DUPLICATE_SAME_ACCESS);
-      if (ret == 0) break;
+      if (ret == 0) {
+          release_shared_memory_mutex();
+          ResetEvent(this->request_handle_event);
+          SetEvent(this->handle_sent_event);  // we notify the petitioner
+          break;
+      }
 
       ret = DuplicateHandle(GetCurrentProcess(), this->driver_to_des_in_wpipe,
                             petitioner_process_handle,
                             &shmem->handle_sharing_info.in_handle, 0, TRUE,
                             DUPLICATE_SAME_ACCESS);
-      if (ret == 0) break;
+      if (ret == 0) {
+          release_shared_memory_mutex();
+          ResetEvent(this->request_handle_event);
+          SetEvent(this->handle_sent_event);  // we notify the petitioner
+          break;
+      }
 
+      release_shared_memory_mutex();
       ResetEvent(this->request_handle_event);
       SetEvent(this->handle_sent_event);  // we notify the petitioner
+
     } else if (wait_event ==
                WAIT_OBJECT_0 + 1) {  // i.e. "finishing" has been signaled
       if (this->shmem->handle_sharing_info.handle_petitioner.id ==
@@ -1082,8 +1113,6 @@ SQLRETURN DBC::initialize() {
         "Failed to create event " + std::string(FINISHING_EVENT_NAME), true);
   }
 
-  SQLRETURN ret = get_shared_memory_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
 #else
   this->shm_id = shmget(this->connection_hash_int, sizeof(SharedMemoryUnix),
                         0666 | IPC_CREAT);
@@ -1132,7 +1161,7 @@ SQLRETURN DBC::initialize() {
 #endif
 
   SQLRETURN ret = get_shared_memory_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+  if (!SQL_SUCCEEDED(ret)) return ret;
 
 #endif
 
@@ -1185,7 +1214,10 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
   this->get_concurrent_objects(des_exec_path, des_working_dir);
 
   rc = this->initialize();
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+  if (!SQL_SUCCEEDED(rc)) return rc;
+
+  rc = get_shared_memory_mutex();
+  if (!SQL_SUCCEEDED(rc)) return rc;
 
 #ifdef _WIN32
   SharedMemoryWin *shmem = this->shmem;
@@ -1211,21 +1243,28 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
 
   if (!this->shmem->des_process_created) {
     rc = this->createPipes();
-    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+    if (!SQL_SUCCEEDED(rc)) return rc;
 #ifdef _WIN32
     rc = this->create_DES_process(des_exec_path,
                                 &std::wstring(prepared_working_dir)[0]);
-    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+    if (!SQL_SUCCEEDED(rc)) return rc;
 #else
     rc = this->create_DES_process(des_exec_path, prepared_working_dir);
-    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+    if (!SQL_SUCCEEDED(rc)) return rc;
     shmem->n_clients = 1;
 #endif
 
     shmem->exec_hash_int = this->exec_hash_int;
+
+    rc = release_shared_memory_mutex();
+    if (!SQL_SUCCEEDED(rc)) return rc;
+
   } else {
+    rc = release_shared_memory_mutex();
+    if (!SQL_SUCCEEDED(rc)) return rc;
+
     rc = get_DES_process_pipes();
-    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+    if (!SQL_SUCCEEDED(rc)) return rc;
 #ifndef _WIN32
     shmem->n_clients += 1;
 #endif
@@ -1236,6 +1275,9 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
       std::unique_ptr<std::thread>(new std::thread(&DBC::sharePipes, this));
   if (!this->share_pipes_thread) throw std::bad_alloc();
 
+  rc = get_shared_memory_mutex();
+  if (!SQL_SUCCEEDED(rc)) return rc;
+
   Client client;
   client.id = this->connection_id;
   client.pid = GetCurrentProcessId();
@@ -1245,12 +1287,12 @@ SQLRETURN DBC::connect(DataSource *dsrc) {
   shmem->connected_clients_struct.size += 1;
 
   rc = release_shared_memory_mutex();
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+  if (!SQL_SUCCEEDED(rc)) return rc;
 
 #else
 
   rc = release_shared_memory_mutex();
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) return rc;
+  if (!SQL_SUCCEEDED(rc)) return rc;
 
 #endif
   this->connected = true;
@@ -1613,7 +1655,7 @@ SQLRETURN SQL_API DES_SQLDriverConnect(
 
   rc = dbc->connect(&ds);
 
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(rc)) {
     goto error;
   }
 

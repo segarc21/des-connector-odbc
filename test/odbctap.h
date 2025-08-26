@@ -398,7 +398,7 @@ do { \
   print_diag(rc, SQL_HANDLE_STMT, (statement), \
              "SQLExecDirect(" #statement ", \"" query "\", SQL_NTS)",\
              __FILE__, __LINE__); \
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) \
+  if (!SQL_SUCCEEDED(rc)) \
     TEST_RETURN_FAIL; \
 } while (0)
 
@@ -453,7 +453,7 @@ do { \
 do { \
   SQLRETURN rc= (call); \
   print_diag(rc, SQL_HANDLE_DESC, (desc), #call, __FILE__, __LINE__); \
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) \
+  if (!SQL_SUCCEEDED(rc)) \
     TEST_RETURN_FAIL; \
 } while (0)
 

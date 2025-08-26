@@ -291,8 +291,8 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
   the columns and not wasting much computing time. */
 
   SQLRETURN metadata_err = stmt->execute_metadata_query();
-  if (metadata_err != SQL_SUCCESS && metadata_err != SQL_SUCCESS_WITH_INFO) {
-      return stmt->set_error("HY000", "Internal error executing the metadata query");
+  if (!SQL_SUCCEEDED(metadata_err)) {
+      return metadata_err;
   }
 
   {

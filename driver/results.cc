@@ -3216,7 +3216,7 @@ void ResultTable::build_table_SQLColumns() {
   auto pair = dbc->send_query_and_read("/show_dbs");
   SQLRETURN rc = pair.first;
   std::string dbs_str = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(rc)) {
     return;
   }
 
@@ -3234,7 +3234,7 @@ void ResultTable::build_table_SQLColumns() {
     auto pair = this->dbc->send_query_and_read(query_dbschema);
     SQLRETURN rc = pair.first;
     std::string dbschema_str = pair.second;
-    if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+    if (!SQL_SUCCEEDED(rc)) {
       return;
     }
 
@@ -3270,7 +3270,7 @@ void ResultTable::build_table_SQLColumns() {
       pair = dbc->send_query_and_read(select_query);
       rc = pair.first;
       std::string select_query_output = pair.second;
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      if (!SQL_SUCCEEDED(rc)) {
         return;
       }
 
@@ -3418,7 +3418,7 @@ void ResultTable::build_table_SQLTables() {
   auto pair = dbc->send_query_and_read("/show_dbs");
   SQLRETURN rc = pair.first;
   std::string dbs_str = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(rc)) {
     return;
   }
 
@@ -3457,7 +3457,7 @@ void ResultTable::build_table_SQLTables() {
       auto pair = dbc->send_query_and_read(dbschema_query);
       SQLRETURN rc = pair.first;
       std::string dbschema_query_output = pair.second;
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      if (!SQL_SUCCEEDED(rc)) {
         return;
       }
 
@@ -3618,7 +3618,7 @@ void ResultTable::build_table_SQLStatistics() {
   auto pair = dbc->send_query_and_read(select_query);
   SQLRETURN rc = pair.first;
   std::string select_query_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(rc)) {
     return;
   }
   ResultTable select_table(SELECT, select_query_output);
@@ -3652,7 +3652,7 @@ void ResultTable::build_table_SQLSpecialColumns() {
   auto pair = dbc->send_query_and_read(main_query);
   SQLRETURN rc = pair.first;
   std::string main_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(rc)) {
     return;
   }
 
@@ -3666,7 +3666,7 @@ void ResultTable::build_table_SQLSpecialColumns() {
   pair = dbc->send_query_and_read(select_query);
   rc = pair.first;
   std::string select_query_output = pair.second;
-  if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(rc)) {
     return;
   }
 

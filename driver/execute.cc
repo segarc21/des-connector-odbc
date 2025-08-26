@@ -271,18 +271,18 @@ std::pair<SQLRETURN, DES_RESULT *> DBC::send_query_and_get_results(
   DES_RESULT *res = nullptr;
 
   ret = this->get_query_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, nullptr};
+  if (!SQL_SUCCEEDED(ret)) return {ret, nullptr};
 
   auto pair = this->send_query_and_read(query);
   ret = pair.first;
   std::string tapi_output = pair.second;
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(ret)) {
     this->release_query_mutex();
     return {ret, nullptr};
   }
 
   ret = this->release_query_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return {ret, nullptr};
+  if (!SQL_SUCCEEDED(ret)) return {ret, nullptr};
   /*
    We do not have to worry to free memory, as it will be done automatically
    thanks to the DBC* attribute.
@@ -310,18 +310,18 @@ int STMT::send_select_count(std::string query) {
   int ret = -1;  // if error
 
   ret = this->dbc->get_query_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+  if (!SQL_SUCCEEDED(ret)) return ret;
 
   auto pair = this->dbc->send_query_and_read(query);
   ret = pair.first;
   std::string tapi_output = pair.second;
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(ret)) {
     this->dbc->release_query_mutex();
     return ret;
   }
 
   ret = this->dbc->release_query_mutex();
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) return ret;
+  if (!SQL_SUCCEEDED(ret)) return ret;
 
   if (tapi_output.find("$error") != std::string::npos)
     return this->set_error("HY000", "Internal query error");
@@ -346,7 +346,7 @@ std::pair<SQLRETURN, std::string> STMT::send_update_and_fetch_info(
   auto pair = this->dbc->send_query_and_read(query);
   ret = pair.first;
   std::string tapi_output = pair.second;
-  if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+  if (!SQL_SUCCEEDED(ret)) {
     this->dbc->release_query_mutex();
     return {ret, tapi_output};
   }
@@ -1513,7 +1513,7 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
 
       /* if we have anything but not SQL_SUCCESS for any paramset, we return
           SQL_SUCCESS_WITH_INFO as the whole operation result */
-      if (rc != SQL_SUCCESS && rc != SQL_SUCCESS_WITH_INFO) {
+      if (!SQL_SUCCEEDED(rc)) {
         one_of_params_not_succeded = 1;
       } else {
         all_parameters_failed = 0;
