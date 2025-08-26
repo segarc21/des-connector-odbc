@@ -73,12 +73,21 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
     and connects to a DES process which connects to an external database.
   */
 
-  bool is_process = is_in_string(query, "/process");
-  bool is_dbschema = is_in_string(query, "/dbschema");
+  std::string lowered_query = query;
+  to_lower_str(lowered_query);
 
-  if (!is_process && !is_dbschema && bytes_read < BUFFER_SIZE - 1) {
-    return true;
-  }
+  bool is_common_operation = is_in_string(lowered_query, "insert") || is_in_string(lowered_query, "delete") || is_in_string(lowered_query, "update");
+  if (is_common_operation) {
+      if (is_in_string(tapi_output, "$error"))
+          return is_in_string(tapi_output, "$eot");
+      else
+          return true;
+  } 
+
+  bool is_current_db = is_in_string(lowered_query, "/current_db");
+  if (is_current_db) return true;
+
+  bool is_process = is_in_string(lowered_query, "/process");
 
   if (is_process) {
     // The following messages will be fetched completely, as there are not
@@ -94,30 +103,24 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
      * input doesn't end with $eot (check /ls). There are even some commands
      * that do not have a sentinel (i.e. /write $computation_time$).*/
   }
-
-  if (is_dbschema) {
-    if (is_in_string(tapi_output, "$eot")) return true;
+  else {
+      if (is_in_string(tapi_output, "$eot")) return true;
+      if (is_in_string(tapi_output, "$success")) return true;
   }
 
   return false;
 }
 
 #ifdef _WIN32
-DWORD WINAPI read_process(LPVOID lpParam) {
-  HANDLE read_pipe = (HANDLE)lpParam;
+void read_process(HANDLE read_pipe) {
 
   if (!ReadFile(read_pipe, buffer, sizeof(buffer) - sizeof(char), &bytes_read,
                 NULL)) {
-    DWORD err = GetLastError();
-    if (err == ERROR_OPERATION_ABORTED) {
-      return 0;  // forced abortion
-    } else {
-      return -1;  // real error
-    }
+      return;
   }
 
   buffer[bytes_read] = '\0';
-  return 0;  // success
+  
 }
 #endif
 
@@ -129,46 +132,27 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(
   bool finished_reading = false;
 
   bytes_read = 0;
-
   bool bytes_were_read = false;
   while (!finished_reading) {
-    int ms = 0;
-    while (ms < MAX_OUTPUT_WAIT_MS && ((!bytes_were_read && bytes_read == 0) || (bytes_read > 0))) {
-      HANDLE read_thread = CreateThread(NULL, 0, read_process,
-                                        this->driver_to_des_out_rpipe, 0, NULL);
-      if (!read_thread) {
-        err = this->set_win_error("Failed to peek DES output", true);
-        return {err, ""};
+
+      std::thread reading_thread(read_process, this->driver_to_des_out_rpipe);
+
+      if (WaitForSingleObject(reading_thread.native_handle(), MUTEX_TIMEOUT) == WAIT_TIMEOUT) {
+          CancelIoEx(this->driver_to_des_out_rpipe, NULL);
+          reading_thread.join();
+          break;
       }
 
-      Sleep(10);
-      ms += 10;
-
-      // We will not handle errors for these because I/O is highly
-      // unpredictable.
-      CancelSynchronousIo(read_thread);  // if it is reading actual data, it
-                                         // will not interrupt the reading pipe.
-      WaitForSingleObject(read_thread, MUTEX_TIMEOUT);
+      reading_thread.join();
 
       if (bytes_read > 0) {
           bytes_were_read = true;
           std::string buffer_str = buffer;
           tapi_output += buffer_str;
-      }
 
-      DWORD code;
-      if (GetExitCodeThread(read_thread, &code) != 0) {
-        if (code == -1) {
-          err = this->set_win_error("Failed to read DES output", true);
-          return {err, ""};
-        }
+          finished_reading = check_stop(query, tapi_output);
+          bytes_read = 0;
       }
-    }
-    if (bytes_were_read) {
-      finished_reading = check_stop(query, tapi_output);
-      bytes_read = 0;
-    } else
-      finished_reading = true;
   }
 
   return {err, tapi_output};
@@ -265,9 +249,9 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
     */
 
 #ifdef _WIN32
-  auto pair = this->read_DES_output_win(query);
+  auto pair = this->read_DES_output_win(full_query);
 #else
-  auto pair = this->read_DES_output_unix(query);
+  auto pair = this->read_DES_output_unix(full_query);
 #endif
   error = pair.first;
   tapi_output = pair.second;

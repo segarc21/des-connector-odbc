@@ -3386,10 +3386,15 @@ SQLRETURN transform_insert_datetime_query(DBC* dbc, std::string& query) {
             std::string left_str_to_insert = "cast(";
 
             query.insert(pos, left_str_to_insert);
-            pos += std::string(left_str_to_insert).size() + 1; // "cast('"
-            pos = query.find("'", pos);
-            pos += 1;
-
+            pos += std::string(left_str_to_insert).size(); // "cast("
+            if (query[pos] != '\'') { //then, it is NULL
+                pos += std::string("NULL").size();
+            }
+            else {
+                pos += 1;
+                pos = query.find("'", pos);
+                pos += 1;
+            }
 
             query.insert(pos, right_str_to_insert);
             pos += std::string(right_str_to_insert).size();
