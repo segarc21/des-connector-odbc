@@ -1533,6 +1533,7 @@ struct Column {
 
   enum_field_types get_simple_type() { return field->type; }
 
+  std::string get_name();
   unsigned int getDecimals();
   unsigned long getLength(int row);
   unsigned int getColumnSize();
@@ -1670,12 +1671,10 @@ struct ResultTable {  // Internal representation of a result view.
   STMT_params_for_table params;
 
   std::string str = "";  // last TAPI output (from stmt)
-  // Vector of column names, ordered by insertion time.
-  std::vector<std::string> names_ordered;
+  
 
-  // Some calls are given to the driver using only the
-  // column name. We need therefore to search the column given its name.
-  std::unordered_map<std::string, Column> columns;
+  // Vector of column names, ordered by insertion time.
+  std::vector<Column> columns;
 
   ResultTable() {}
   ResultTable(STMT *stmt);
@@ -1683,6 +1682,8 @@ struct ResultTable {  // Internal representation of a result view.
 
   size_t col_count();
   size_t row_count();
+
+  std::vector<std::string> get_cols_names();
 
   void insert_col(const std::string &tableName, const std::string &columnName,
                   const TypeAndLength &columnType,
@@ -1692,6 +1693,8 @@ struct ResultTable {  // Internal representation of a result view.
 
   void insert_value(const std::string &columnName, char *value);
   void insert_value(const std::string &columnName, const std::string &value);
+  void insert_value(const int index, const std::string& value);
+  void insert_value(const int index, char* value);
 
   unsigned long *fetch_lengths(int current_row);
   DES_ROW generate_DES_ROW(const int index);
@@ -2142,12 +2145,10 @@ inline static ResultTable *copy(ResultTable *old) {
   cpy->table_name = old->table_name;
   cpy->command_type = old->command_type;
   cpy->str = old->str;
-  cpy->names_ordered = old->names_ordered;
   cpy->columns = old->columns;
 
   // Making the undone deep copies
-  for (auto pair : cpy->columns) {
-    Column col = pair.second;
+  for (auto col : cpy->columns) {
     col.field = copy(col.field);
     for (int i = 0; i < col.values.size(); ++i) {
       char *old_ptr = col.values[i];
@@ -2201,8 +2202,8 @@ static inline void free_result(ResultTable *table) {
         ResultTable itself does not have attributes in heap (except
         DBC, but we must not delete it), but Column does.
     */
-  for (int i = 0; i < table->names_ordered.size(); ++i) {
-      Column col = table->columns[table->names_ordered[i]];
+  for (int i = 0; i < table->columns.size(); ++i) {
+    Column col = table->columns[i];
     if (col.field && col.new_heap_used) {
       delete col.field->name;
       col.field->name = nullptr;

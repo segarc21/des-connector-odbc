@@ -3146,8 +3146,8 @@ SQLRETURN transform_select_datetime_query(DBC* dbc, std::string& query) {
     std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
 
     for (auto datetimecol_type : metadata_result->internal_table->columns) {
-        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
-            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+        if (is_time_des_data_type(datetimecol_type.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.get_name(), datetimecol_type.field->access_real_type});
     }
 
     for (auto datetimecol_type : datetimecols_types_map) {
@@ -3226,8 +3226,8 @@ SQLRETURN transform_delete_datetime_query(DBC* dbc, std::string& query) {
     std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
 
     for (auto datetimecol_type : metadata_result->internal_table->columns) {
-        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
-            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+        if (is_time_des_data_type(datetimecol_type.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.get_name(), datetimecol_type.field->access_real_type});
     }
 
     for (auto datetimecol_type : datetimecols_types_map) {
@@ -3332,8 +3332,8 @@ SQLRETURN transform_insert_datetime_query(DBC* dbc, std::string& query) {
     std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
 
     for (auto datetimecol_type : metadata_result->internal_table->columns) {
-        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
-            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+        if (is_time_des_data_type(datetimecol_type.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.get_name(), datetimecol_type.field->access_real_type});
     }
 
     pos = values_end_pos;
@@ -3475,8 +3475,8 @@ SQLRETURN transform_update_datetime_query(DBC* dbc, std::string& query) {
     std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
 
     for (auto datetimecol_type : metadata_result->internal_table->columns) {
-        if (is_time_des_data_type(datetimecol_type.second.field->access_real_type))
-            datetimecols_types_map.insert({ datetimecol_type.first, datetimecol_type.second.field->access_real_type });
+        if (is_time_des_data_type(datetimecol_type.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.get_name(), datetimecol_type.field->access_real_type});
     }
 
     for (auto datetimecol_type : datetimecols_types_map) {

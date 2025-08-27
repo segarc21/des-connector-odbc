@@ -2376,16 +2376,27 @@ SQLRETURN SQL_API SQLFetch(SQLHSTMT StatementHandle) {
 /* DESODBC:
     Original author: DESODBC Developer
 */
-size_t ResultTable::col_count() { return names_ordered.size(); }
+size_t ResultTable::col_count() { return columns.size(); }
 
 /* DESODBC:
     Original author: DESODBC Developer
 */
 size_t ResultTable::row_count() {
-  if (names_ordered.size() != 0)
-    return columns[names_ordered[0]].values.size();
+  if (columns.size() != 0)
+    return columns[0].values.size();
   else
     return 0;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+std::vector<std::string> ResultTable::get_cols_names() {
+    std::vector<std::string> names;
+    for (int i = 0; i < columns.size(); ++i) {
+        names.push_back(columns[i].get_name());
+    }
+    return names;
 }
 
 /* DESODBC:
@@ -2395,25 +2406,24 @@ void ResultTable::insert_col(const std::string &tableName,
                         const std::string &columnName,
                              const TypeAndLength &columnType,
                              const SQLSMALLINT &columnNullable) {
-  names_ordered.push_back(columnName);
-  columns[columnName] =
-      Column(tableName, columnName, columnType, columnNullable);
+  columns.push_back(Column(tableName, columnName, columnType, columnNullable));
 }
 
 /* DESODBC:
     Original author: DESODBC Developer
 */
 void ResultTable::insert_col(DES_FIELD *field) {
-  std::string name = field->name;
-  names_ordered.push_back(name);
-  columns[name] = Column(field);
+  columns.push_back(Column(field));
 }
 
 /* DESODBC:
     Original author: DESODBC Developer
 */
 void ResultTable::insert_value(const std::string &columnName, char *value) {
-  columns[columnName].insert_value(value);
+    for (int i = 0; i < columns.size(); ++i) {
+        if (columns[i].get_name() == columnName)
+            columns[i].insert_value(value);
+    }
 }
 
 /* DESODBC:
@@ -2421,7 +2431,22 @@ void ResultTable::insert_value(const std::string &columnName, char *value) {
 */
 void ResultTable::insert_value(const std::string &columnName,
                                const std::string &value) {
-  columns[columnName].insert_value(string_to_char_pointer(value));
+  this->insert_value(columnName, string_to_char_pointer(value));
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void ResultTable::insert_value(const int index,
+    const std::string& value) {
+    columns[index].insert_value(string_to_char_pointer(value));
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+void ResultTable::insert_value(const int index, char* value) {
+    columns[index].insert_value(value);
 }
 
 /* DESODBC:
@@ -2509,6 +2534,10 @@ DES_ROWS * Column::generate_DES_ROWS(int current_row) {
       ptr->next = nullptr;
   }
   return rows;
+}
+
+std::string Column::get_name() {
+    return std::string(this->field->name);
 }
 
 /* DESODBC:
@@ -2624,15 +2653,15 @@ SQLSMALLINT Column::get_decimal_digits() {
 */
 unsigned long *ResultTable::fetch_lengths(int current_row) {
   unsigned long *lengths =
-      (unsigned long *)malloc(names_ordered.size() * sizeof(unsigned long));
+      (unsigned long *)malloc(columns.size() * sizeof(unsigned long));
 
   if (!lengths) {
     throw std::bad_alloc();
   }
 
-  for (int i = 0; i < names_ordered.size(); ++i) {
+  for (int i = 0; i < columns.size(); ++i) {
     unsigned long *length = lengths + i;
-    *length = columns[names_ordered[i]].getLength(current_row);
+    *length = columns[i].getLength(current_row);
   }
 
   return lengths;
@@ -2642,14 +2671,14 @@ unsigned long *ResultTable::fetch_lengths(int current_row) {
     Original author: DESODBC Developer
 */
 DES_ROW ResultTable::generate_DES_ROW(const int index) {
-  int n_cols = names_ordered.size();
+  int n_cols = columns.size();
   DES_ROW row = new char *[n_cols];
 
   if (!row)
     throw std::bad_alloc();
 
   for (int i = 0; i < n_cols; ++i) {
-    row[i] = columns[names_ordered[i]].values[index];
+    row[i] = columns[i].values[index];
   }
 
   return row;
@@ -2667,7 +2696,7 @@ DES_ROWS *ResultTable::generate_DES_ROWS(const int current_row) {
 
   DES_ROWS *ptr = rows;
   int n_rows =
-      columns[names_ordered[0]].values.size(); //there will always be a column (the metadata ones)
+      columns[0].values.size(); //there will always be a column (the metadata ones)
 
   for (int i = 0; current_row + i < n_rows; ++i) {
     ptr->data = generate_DES_ROW(current_row + i);
@@ -2690,7 +2719,7 @@ DES_ROWS *ResultTable::generate_DES_ROWS(const int current_row) {
     Original author: DESODBC Developer
 */
 DES_FIELD* ResultTable::get_DES_FIELD(int col_index) {
-  return columns[names_ordered[col_index]].get_DES_FIELD();
+  return columns[col_index].get_DES_FIELD();
 }
 
 /* DESODBC:
@@ -3283,12 +3312,21 @@ void ResultTable::build_table_SQLColumns() {
 
       ResultTable table(SELECT, select_query_output);
 
-      std::vector<std::string> col_names = table.names_ordered;
+      std::vector<std::string> col_names = table.get_cols_names();
       col_names = filter_candidates(col_names, column_name_search,
                                     this->params.metadata_id);
 
-      for (int j = 0; j < col_names.size(); ++j) {
-        Column col = table.columns[col_names[j]];
+      std::vector<int> col_indexes;
+      for (int i = 0; i < col_names.size(); ++i) {
+          for (int j = 0; j < table.columns.size(); ++j) {
+              if (col_names[i] == table.columns[j].get_name())
+                  col_indexes.push_back(j);
+          }
+      }
+      
+
+      for (int j = 0; j < col_indexes.size(); ++j) {
+        Column col = table.columns[col_indexes[j]];
         DES_FIELD *field = col.get_DES_FIELD();
         insert_value("TABLE_CAT", dbs[i]);
         insert_value("TABLE_SCHEM", NULL_STR);
@@ -3580,11 +3618,10 @@ void ResultTable::build_table_select() {
     std::string aux = lines[i];
     while (aux != "$eot") {
       for (int j = 0; j < column_names.size(); ++j) {
-        std::string name_col = column_names[j];
         std::string value = lines[i];
 
         if (value == "null")
-          insert_value(name_col, nullptr);
+          insert_value(j, nullptr);
         else {
           // When we reach a varchar value, we remove the " ' " characters
           // provided by the TAPI.
@@ -3592,7 +3629,7 @@ void ResultTable::build_table_select() {
             value = value.substr(1, value.size() - 2);
           }
 
-          insert_value(name_col, value);
+          insert_value(j, value);
         }
 
         i++;
@@ -3674,22 +3711,27 @@ void ResultTable::build_table_SQLSpecialColumns() {
 
   for (int i = 0; i < table_info.primary_keys.size(); ++i) {
     std::string primary_key = table_info.primary_keys[i];
-    TypeAndLength type = table_info.columns_type_map.at(primary_key);
-    insert_value("SCOPE", std::to_string(SQL_SCOPE_SESSION));
-    insert_value("COLUMN_NAME", primary_key);
-    insert_value("DATA_TYPE", std::to_string(type.simple_type));
-    insert_value("TYPE_NAME", Type_to_type_str(type));
-    insert_value("COLUMN_SIZE", std::to_string(get_Type_size(type)));
+    for (int j = 0; j < table.columns.size(); ++j) {
+        if (table.columns[j].get_name() == primary_key) {
+            TypeAndLength type = table_info.columns_type_map.at(primary_key);
+            insert_value("SCOPE", std::to_string(SQL_SCOPE_SESSION));
+            insert_value("COLUMN_NAME", primary_key);
+            insert_value("DATA_TYPE", std::to_string(type.simple_type));
+            insert_value("TYPE_NAME", Type_to_type_str(type));
+            insert_value("COLUMN_SIZE", std::to_string(get_Type_size(type)));
 
-    if (is_character_des_data_type(type.simple_type) && type.len == UINT64_MAX) {
-      insert_value("BUFFER_LENGTH",
-                   std::to_string(table.columns[primary_key].getMaxLength()));
-    } else
-      insert_value("BUFFER_LENGTH",
-                   std::to_string(get_transfer_octet_length(type)));
-      
-    insert_value("DECIMAL_DIGITS", NULL_STR);
-    insert_value("PSEUDO_COLUMN", std::to_string(SQL_PC_NOT_PSEUDO));
+            if (is_character_des_data_type(type.simple_type) && type.len == UINT64_MAX) {
+                insert_value("BUFFER_LENGTH",
+                    std::to_string(table.columns[j].getMaxLength()));
+            }
+            else
+                insert_value("BUFFER_LENGTH",
+                    std::to_string(get_transfer_octet_length(type)));
+
+            insert_value("DECIMAL_DIGITS", NULL_STR);
+            insert_value("PSEUDO_COLUMN", std::to_string(SQL_PC_NOT_PSEUDO));
+        }
+    }
   }
 }
 
