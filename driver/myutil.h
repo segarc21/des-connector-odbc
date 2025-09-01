@@ -323,7 +323,13 @@ inline const std::unordered_map<std::string, enum_field_types> typestr_simpletyp
      {"int", DES_TYPE_INT},
      {"float", DES_TYPE_FLOAT},
      //{"real", DES_TYPE_REAL},
-     {"datetime(date)", DES_TYPE_DATE},
+
+    //For PostgreSQL.
+    {"date()", DES_TYPE_DATE},
+    {"time()", DES_TYPE_TIME},
+    {"datetime()", DES_TYPE_TIMESTAMP},
+
+    {"datetime(date)", DES_TYPE_DATE},
      {"datetime(time)", DES_TYPE_TIME},
      {"datetime(datetime)", DES_TYPE_TIMESTAMP}};
 

@@ -193,6 +193,46 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(
   return {err, tapi_output};
 }
 #endif
+
+bool DBC::is_query_of_empty_output(const std::string& query) {
+    // If we send /q, we cannot read anything after that.
+    if (query == "/q")
+        return true;
+    else if (is_in_string(query, "/save_ddb"))
+        return true;
+
+    /* When changing from one connection to another one that is opened,
+    DES will not throw any output. */
+    if (is_in_string(query, "/use_db")) {
+
+        std::string current_db = send_query_and_read("/current_db").second;
+        current_db = getLines(current_db)[0];
+
+        std::string requested_db;
+        int ini_pos = std::string("/use_db").size() + 1; // "/use_db "
+        int pos = ini_pos;
+        while (pos < query.size() && query[pos] != ' ') {
+            pos++;
+        }
+        requested_db = query.substr(ini_pos, pos - ini_pos);
+
+        auto pair = send_query_and_read("/list_dbs");
+        std::vector<std::string> lines = getLines(pair.second);
+
+        int i = 0;
+        while (lines[i] != "$eot") {
+            if (lines[i] == requested_db && current_db != requested_db)
+                return true;
+            i++;
+        }
+
+        return false;
+    }
+    
+
+    return false;
+}
+
 /* DESODBC:
   This function sends a query and reads the output. It returns the output
   and whether there was a success or not.
@@ -203,7 +243,7 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
     const std::string &query) {
   int error = SQL_ERROR, native_error = 0;
   bool read_success = false;
-  bool finished_reading = false;
+  bool empty_output_query = false;
   char *full_query_arr = nullptr;
   std::string tapi_output = "";
   std::string full_query = "";
@@ -217,6 +257,8 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
                sizeof(char)];  // we hold a final char for the delimiter '\0'
   std::copy(full_query.begin(), full_query.end(), full_query_arr);
   full_query_arr[full_query.size()] = '\0';
+
+  empty_output_query = this->is_query_of_empty_output(query);
 
 #ifdef _WIN32
   while (!this->driver_to_des_in_wpipe || !this->driver_to_des_out_rpipe)
@@ -239,24 +281,25 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
   delete[] full_query_arr;
   full_query_arr = nullptr;
 
-  // If we send /q, we cannot read anything after that.
-  if (query == "/q") return {SQL_SUCCESS, ""};
-
     /*
         Same considerations as those we took when reading the startup DES
        message. However, that output message had a fixed length and behavior. We
        introduce some new logic when treating a command output.
     */
 
+  if (empty_output_query)
+      return { SQL_SUCCESS, "" };
+  else {
 #ifdef _WIN32
-  auto pair = this->read_DES_output_win(full_query);
+      auto pair = this->read_DES_output_win(full_query);
 #else
-  auto pair = this->read_DES_output_unix(full_query);
+      auto pair = this->read_DES_output_unix(full_query);
 #endif
-  error = pair.first;
-  tapi_output = pair.second;
+      error = pair.first;
+      tapi_output = pair.second;
 
-  return {error, tapi_output};
+      return { error, tapi_output };
+  }
 }
 
 /* DESODBC:

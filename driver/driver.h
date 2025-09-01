@@ -984,6 +984,8 @@ struct DBC {
     Original author: DESODBC
   */
 
+  bool is_query_of_empty_output(const std::string& query);
+
   #ifdef _WIN32
   std::pair<SQLRETURN, std::string> read_DES_output_win(
       const std::string &query);

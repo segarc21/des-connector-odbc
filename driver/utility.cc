@@ -2531,7 +2531,7 @@ TypeAndLength get_Type_from_str(const std::string &str) {
 
   size_t first_parenthesis_pos = type_str.find('(', 0);
   size_t pos = first_parenthesis_pos;
-  if (pos != std::string::npos && !is_in_string(type_str, "datetime")) {
+  if (pos != std::string::npos && type_str != "datetime(date)" && type_str != "datetime(datetime)" && type_str != "datetime(time)") {
     std::string size_str = "";
 
     pos++;
@@ -2960,20 +2960,48 @@ SQLRETURN set_error_from_tapi_output(SQLSMALLINT HandleType, SQLHANDLE Handle,
   */
 
   bool real_error = false;
+  bool warning = false;
+  bool info = false;
+  std::string tapi_supported_msg = "";
   int i = 0;
   while (i < lines.size()) {
     if (i + 1 < lines.size()) {
-      if (lines[i] == "$error" && lines[i + 1] == "0") {
-        real_error = true;
-        break;
-      }
-      
+        if (lines[i] == "$error") {
+            if (lines[i + 1] == "0")
+                real_error = true;
+            else if (lines[i + 1] == "1")
+                warning = true;
+            else if (lines[i + 1] == "2")
+                info = true;
+
+            if (i + 2 < lines.size())
+                tapi_supported_msg = lines[i + 2];
+        }
     }
     i += 1;
   }
+  
+  bool display_tapi_supported_msg = (real_error || warning || info) && (tapi_supported_msg.size() > 0);
 
-  std::string msg_str = "Full TAPI output: ";
-  msg_str += tapi_output;
+  std::string msg_str;
+  if (display_tapi_supported_msg) {
+      /* If various of them have been found, we will show only one and these are the priorities. */
+      if (real_error) {
+          msg_str = "Error: ";
+      }
+      else if (warning) {
+          msg_str = "Warning: ";
+      }
+      else {
+          msg_str = "Info: ";
+      }
+      msg_str += tapi_supported_msg;
+  }
+  else {
+      msg_str = "Full TAPI output: ";
+      msg_str += tapi_output;
+  }
+  
   const char *msg = string_to_char_pointer(msg_str);
 
   if (real_error) {
