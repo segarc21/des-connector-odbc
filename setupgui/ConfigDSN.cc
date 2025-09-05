@@ -67,6 +67,13 @@ BOOL Driver_Prompt(HWND hWnd, SQLWCHAR *instr, SQLUSMALLINT completion,
   SQLWSTRING out;
   size_t copy_len = 0;
   is_unicode = unicode_flag;
+
+  if (!utf8_charset_info) {
+    my_sys_init();
+    utf8_charset_info =
+      desodbc::get_charset_by_csname(transport_charset, MYF(MY_CS_PRIMARY), MYF(0));
+  }
+
   /*
      parse the attr string, dsn lookup will have already been
      done in the driver

@@ -168,8 +168,8 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(
   while (!finished_reading) {
     int ms = 0;
     while (ms < MAX_OUTPUT_WAIT_MS && bytes_read == 0) {
-      usleep(10000);
-      ms += 10;
+      usleep(1000);
+      ms += 1;
       ioctl(this->driver_to_des_out_rpipe, FIONREAD, &bytes_read);
     }
     if (bytes_read > 0) {
@@ -1420,13 +1420,16 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
     pStmt->type = DEL;
   else
     pStmt->type = UNKNOWN;
-
   /*
   * LibreOffice tries to build a SELECT query using the format
   * SELECT * FROM `$des`.`employee`. However, DES does not support
   * this format. We will then erase the "`$des`." substring.
   */
+#ifdef _WIN32
   if (GetModuleHandle("soffice.bin") != NULL) {
+#else
+  if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that libreoffice loads.
+#endif
       std::string calc_catalog_preffix = "`$des`.";
       remove_from_string(query, calc_catalog_preffix);
   }

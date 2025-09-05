@@ -154,7 +154,11 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
       query before sending it to the ODBC Driver. Using the ':' character in this context throws
       a syntax error, so we will return '.' in this case.
       */
+#ifdef _WIN32
       if (GetModuleHandle("soffice.bin") != NULL)
+#else
+      if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) //specific library that libreoffice loads.
+#endif
           MYINFO_SET_STR(".");
       else
           MYINFO_SET_STR(DES_CATALOG_SEPARATOR_CHARACTER);

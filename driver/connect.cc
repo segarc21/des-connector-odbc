@@ -1159,10 +1159,6 @@ SQLRETURN DBC::initialize() {
       return this->set_unix_error("Failed to create query mutex", true);
   }
 #endif
-
-  SQLRETURN ret = get_shared_memory_mutex();
-  if (!SQL_SUCCEEDED(ret)) return ret;
-
 #endif
 
   return SQL_SUCCESS;
@@ -1187,7 +1183,7 @@ SQL_SUCCESS_WITH_INFO, a connection has been established.
 SQLRETURN DBC::connect(DataSource *dsrc) {
   SQLRETURN rc = SQL_SUCCESS;
 
-  this->cxn_charset_info = desodbc::get_charset(48, MYF(0));  // DESODBC: latin1
+  this->cxn_charset_info = desodbc::get_charset(45, MYF(0));  // DESODBC: utf8mb4
 
 #ifdef _WIN32
 

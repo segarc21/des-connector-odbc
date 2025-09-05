@@ -2594,7 +2594,7 @@ Column::Column(const std::string &table_name, const std::string &col_name,
 
   this->field->decimals = 0;
 
-  this->field->charsetnr = 48; //latin1
+  this->field->charsetnr = 45; //utf8mb4
 
   this->field->extension = nullptr;
 

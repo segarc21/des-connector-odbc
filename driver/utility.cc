@@ -3120,7 +3120,11 @@ std::string convert_into_metadata_query(const std::string& query) {
   * SELECT * FROM `$des`.`employee`. However, DES does not support
   * this format. We will then erase the "`$des`." substring.
   */
-    if (GetModuleHandle("soffice.bin") != NULL) {
+#ifdef _WIN32
+      if (GetModuleHandle("soffice.bin") != NULL) {
+#else
+      if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that libreoffice loads.
+#endif
         std::string calc_catalog_preffix = "`$des`.";
         remove_from_string(new_query, calc_catalog_preffix);
     }
