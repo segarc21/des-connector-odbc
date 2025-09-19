@@ -2637,6 +2637,19 @@ bool is_in_string(const std::string &str, const std::string &search) {
 /* DESODBC:
     Original author: DESODBC Developer
 */
+bool is_first_keyword(const std::string& str, const std::string& search) {
+    int pos = 0;
+    while (pos < str.size() && str[pos] == ' ') //ignoring first blank spaces
+        pos++;
+    if (pos < str.size())
+        return pos == str.find(search, pos);
+    else
+        return false;
+}
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 char *sqlcharptr_to_charptr(SQLCHAR* sql_str, SQLUSMALLINT sql_str_len) {
   char *charptr = new char[sql_str_len+1];
   memcpy(charptr, sql_str, sql_str_len);
@@ -3123,7 +3136,7 @@ std::string convert_into_metadata_query(const std::string& query) {
 #ifdef _WIN32
       if (GetModuleHandle("soffice.bin") != NULL) {
 #else
-      if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that libreoffice loads.
+      if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that LibreOffice loads.
 #endif
         std::string calc_catalog_preffix = "`$des`.";
         remove_from_string(new_query, calc_catalog_preffix);

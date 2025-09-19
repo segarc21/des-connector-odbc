@@ -157,7 +157,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 #ifdef _WIN32
       if (GetModuleHandle("soffice.bin") != NULL)
 #else
-      if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) //specific library that libreoffice loads.
+      if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) //specific library that LibreOffice loads.
 #endif
           MYINFO_SET_STR(".");
       else

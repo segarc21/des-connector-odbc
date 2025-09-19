@@ -793,8 +793,8 @@ DECLARE_TEST(error_handling) {
   ok_stmt(hstmt, SQLGetDiagRec(SQL_HANDLE_STMT, hstmt, 1, sql_state, NULL,
                                  sql_msg, 1024, NULL));
 
-  const char *preffix = "Full TAPI output: $error";
-  size_t preffix_length = 24;
+  const char *preffix = "Error: Unknown table or view";
+  size_t preffix_length = 28;
   if (memcmp(sql_msg, preffix, preffix_length)) return FAIL;
 
   return OK;

@@ -76,7 +76,10 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
   std::string lowered_query = query;
   to_lower_str(lowered_query);
 
-  bool is_common_operation = is_in_string(lowered_query, "insert") || is_in_string(lowered_query, "delete") || is_in_string(lowered_query, "update");
+  //We ignore the "/tapi " preffix.
+  lowered_query = lowered_query.substr(std::string("/tapi ").size(), lowered_query.size() - std::string("/tapi ").size());
+
+  bool is_common_operation = is_first_keyword(lowered_query, "insert") || is_first_keyword(lowered_query, "delete") || is_first_keyword(lowered_query, "update");
   if (is_common_operation) {
       if (is_in_string(tapi_output, "$error"))
           return is_in_string(tapi_output, "$eot");
@@ -84,12 +87,43 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
           return true;
   } 
 
-  bool is_current_db = is_in_string(lowered_query, "/current_db");
-  if (is_current_db) return true;
+  if (is_first_keyword(lowered_query, "/current_db")) return true;
 
-  bool is_process = is_in_string(lowered_query, "/process");
+  if (is_first_keyword(lowered_query, "/use_db")) {
+      if (is_in_string(tapi_output, "$error")) {
 
-  if (is_process) {
+          /*
+          * The /use_db that throws an output has two scenarios:
+          * - If the requested db is available, the message ends
+          * with a success.
+          * - If not, the message ends
+          *   after the second $eot.
+          */
+
+          if (is_in_string(tapi_output, "$success"))
+              return true;
+
+          int number_eots = 0;
+          int pos = tapi_output.find("$eot", 0);
+
+          while (pos != std::string::npos) {
+              number_eots++;
+              pos = tapi_output.find("$eot", pos + std::string("$eot").size());
+          }
+
+          if (number_eots == 1 && is_in_string(tapi_output, "Database already in use"))
+              return true;
+
+          if (number_eots == 2)
+              return true;
+
+          return false;
+
+      }
+      else return false;
+  }
+
+  if (is_first_keyword(lowered_query, "/process")) {
     // The following messages will be fetched completely, as there are not
     // sufficient delay between reading each of these characters (the pipe reads
     // them at once)
@@ -102,11 +136,13 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
      * commands: in some commands it doesn't appear, and in some others the
      * input doesn't end with $eot (check /ls). There are even some commands
      * that do not have a sentinel (i.e. /write $computation_time$).*/
+
+    return false;
   }
-  else {
-      if (is_in_string(tapi_output, "$eot")) return true;
-      if (is_in_string(tapi_output, "$success")) return true;
-  }
+  
+  if (is_in_string(tapi_output, "$eot"))
+      return true;
+  if (is_in_string(tapi_output, "$success")) return true;
 
   return false;
 }
@@ -198,7 +234,9 @@ bool DBC::is_query_of_empty_output(const std::string& query) {
     // If we send /q, we cannot read anything after that.
     if (query == "/q")
         return true;
-    else if (is_in_string(query, "/save_ddb"))
+
+
+    if (is_in_string(query, "/save_ddb"))
         return true;
 
     /* When changing from one connection to another one that is opened,
@@ -228,7 +266,27 @@ bool DBC::is_query_of_empty_output(const std::string& query) {
 
         return false;
     }
+
+    if (is_in_string(query, "/duplicates on") || is_in_string(query, "/duplicates off")) {
+        std::string current_duplicates = send_query_and_read("/duplicates").second;
+
+        if (is_in_string(query, "/duplicates on") && is_in_string(current_duplicates, "are off"))
+            return true;
+
+        if (is_in_string(query, "/duplicates off") && is_in_string(current_duplicates, "are on"))
+            return true;
+
+        return false;
+    }
     
+    std::string query_lowered = query;
+    to_lower_str(query_lowered);
+
+    if (is_in_string(query_lowered, "drop table if exists"))
+        return true;
+
+    if (is_in_string(query_lowered, "drop view if exists"))
+        return true;
 
     return false;
 }
@@ -337,7 +395,7 @@ std::pair<SQLRETURN, DES_RESULT *> DBC::send_query_and_get_results(
   if (!temp_stmt->result) {
     return {SQL_ERROR, nullptr};
   } else {
-    res = copy(temp_stmt->result);
+    res = temp_stmt->result;
   }
 
   return {SQL_SUCCESS, res};
@@ -1428,7 +1486,7 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
 #ifdef _WIN32
   if (GetModuleHandle("soffice.bin") != NULL) {
 #else
-  if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that libreoffice loads.
+  if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that LibreOffice loads.
 #endif
       std::string calc_catalog_preffix = "`$des`.";
       remove_from_string(query, calc_catalog_preffix);

@@ -3310,23 +3310,23 @@ void ResultTable::build_table_SQLColumns() {
       rc = pair.first;
       if (!SQL_SUCCEEDED(rc)) return;
 
-      ResultTable table(SELECT, select_query_output);
+      ResultTable* table = new ResultTable(SELECT, select_query_output);
 
-      std::vector<std::string> col_names = table.get_cols_names();
+      std::vector<std::string> col_names = table->get_cols_names();
       col_names = filter_candidates(col_names, column_name_search,
                                     this->params.metadata_id);
 
       std::vector<int> col_indexes;
       for (int i = 0; i < col_names.size(); ++i) {
-          for (int j = 0; j < table.columns.size(); ++j) {
-              if (col_names[i] == table.columns[j].get_name())
+          for (int j = 0; j < table->columns.size(); ++j) {
+              if (col_names[i] == table->columns[j].get_name())
                   col_indexes.push_back(j);
           }
       }
       
 
       for (int j = 0; j < col_indexes.size(); ++j) {
-        Column col = table.columns[col_indexes[j]];
+        Column col = table->columns[col_indexes[j]];
         DES_FIELD *field = col.get_DES_FIELD();
         insert_value("TABLE_CAT", dbs[i]);
         insert_value("TABLE_SCHEM", NULL_STR);
@@ -3387,6 +3387,8 @@ void ResultTable::build_table_SQLColumns() {
         insert_value("ORDINAL_POSITION", std::to_string(j + 1));
         insert_value("IS_NULLABLE", std::string("YES"));
       }
+
+      free_result(table);
     }
 
   }
@@ -3658,7 +3660,8 @@ void ResultTable::build_table_SQLStatistics() {
   if (!SQL_SUCCEEDED(rc)) {
     return;
   }
-  ResultTable select_table(SELECT, select_query_output);
+
+  ResultTable* select_table = new ResultTable(SELECT, select_query_output);
 
   insert_value("TABLE_CAT", catalog_name);
   insert_value("TABLE_SCHEM", NULL_STR);
@@ -3670,10 +3673,11 @@ void ResultTable::build_table_SQLStatistics() {
   insert_value("ORDINAL_POSITION", NULL_STR);
   insert_value("COLUMN_NAME", NULL_STR);
   insert_value("ASC_OR_DESC", NULL_STR);
-  insert_value("CARDINALITY", std::to_string(select_table.row_count()));
+  insert_value("CARDINALITY", std::to_string(select_table->row_count()));
   insert_value("PAGES", NULL_STR);
   insert_value("FILTER_CONDITION", NULL_STR);
   
+  free_result(select_table);
 }
 
 /* DESODBC:
@@ -3707,12 +3711,12 @@ void ResultTable::build_table_SQLSpecialColumns() {
     return;
   }
 
-  ResultTable table(SELECT, select_query_output);
+  ResultTable* table = new ResultTable(SELECT, select_query_output);
 
   for (int i = 0; i < table_info.primary_keys.size(); ++i) {
     std::string primary_key = table_info.primary_keys[i];
-    for (int j = 0; j < table.columns.size(); ++j) {
-        if (table.columns[j].get_name() == primary_key) {
+    for (int j = 0; j < table->columns.size(); ++j) {
+        if (table->columns[j].get_name() == primary_key) {
             TypeAndLength type = table_info.columns_type_map.at(primary_key);
             insert_value("SCOPE", std::to_string(SQL_SCOPE_SESSION));
             insert_value("COLUMN_NAME", primary_key);
@@ -3722,7 +3726,7 @@ void ResultTable::build_table_SQLSpecialColumns() {
 
             if (is_character_des_data_type(type.simple_type) && type.len == UINT64_MAX) {
                 insert_value("BUFFER_LENGTH",
-                    std::to_string(table.columns[j].getMaxLength()));
+                    std::to_string(table->columns[j].getMaxLength()));
             }
             else
                 insert_value("BUFFER_LENGTH",
@@ -3733,6 +3737,9 @@ void ResultTable::build_table_SQLSpecialColumns() {
         }
     }
   }
+
+  free_result(table);
+
 }
 
 /* DESODBC:

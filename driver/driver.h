@@ -2200,10 +2200,6 @@ inline static DES_RESULT *copy(DES_RESULT *old) {
 }
 
 static inline void free_result(ResultTable *table) {
-    /*
-        ResultTable itself does not have attributes in heap (except
-        DBC, but we must not delete it), but Column does.
-    */
   for (int i = 0; i < table->columns.size(); ++i) {
     Column col = table->columns[i];
     if (col.field && col.new_heap_used) {

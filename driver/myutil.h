@@ -191,6 +191,11 @@ std::string sqlcharptr_to_str(SQLCHAR *sql_str, SQLUSMALLINT sql_str_len);
 /* DESODBC:
     Original author: DESODBC Developer
 */
+bool is_first_keyword(const std::string& str, const std::string& search);
+
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
 bool is_in_string(const std::string &str, const std::string &search);
 
 /* DESODBC:
