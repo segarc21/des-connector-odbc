@@ -27,7 +27,7 @@
 # 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 SET(CONNECTOR_MAJOR "1")
-SET(CONNECTOR_MINOR "0")
+SET(CONNECTOR_MINOR "1")
 SET(CONNECTOR_PATCH "0")
 
 SET(CONNECTOR_MAJOR_PREV "0")
@@ -47,11 +47,7 @@ set(COPYRIGHT_YEAR 2025)
 # Set other variables that are about the version
 # ----------------------------------------------------------------------
 
-IF(CONNECTOR_MINOR LESS 10)
-  SET(CONNECTOR_MINOR_PADDED "0${CONNECTOR_MINOR}")
-ELSE(CONNECTOR_MINOR LESS 10)
-  SET(CONNECTOR_MINOR_PADDED "${CONNECTOR_MINOR}")
-ENDIF(CONNECTOR_MINOR LESS 10)
+SET(CONNECTOR_MINOR_PADDED "${CONNECTOR_MINOR}")
 
 # If driver survives 100th patch this has to be changed
 IF(CONNECTOR_PATCH LESS 10)
