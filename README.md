@@ -1,10 +1,12 @@
-# DESODBC - DES Connector/ODBC Driver
+# DESODBC v1.1.0 - DES Connector/ODBC Driver
 
 DESODBC is an ODBC Driver of Datalog Educational System (DES) (https://des.sourceforge.io/), an open-source database management system developed and maintained by Fernando Saenz-Perez. This project is a GPLv2 derivate work of MySQL Connector/ODBC Driver 9.0.0, the ODBC Driver for MySQL ([mysql-connector-odbc](https://github.com/mysql/mysql-connector-odbc)). The modifications that have resulted in this final work have been done by Sergio Miguel Garcia Jimenez (https://github.com/segarc21). Attributions regarding original authorship and modifications are properly placed in the source files.
 
 Binaries ```desodbc-installer``` correspond to the DESODBC installer; ```w``` corresponds to the Unicode and ```a``` to the ANSI version of the driver; ```S``` to the setup libraries.
 
 The released binaries have been compiled in Windows 10 22H2, Debian 10.10.0 (GLIBC 2.28) and macOS Big Sur 11.0.1.
+
+Document ```DESODBC v1.1 SDD.pdf``` presents the Software Design Description of this project.
 
 ## Licensing
 
@@ -103,3 +105,13 @@ sudo make
 Parameter ```-DCMAKE_BUILD_TYPE``` (with for example```Debug``` or ```Release``` -check possible values in the CMakeCache.txt or MySQL documentation) specifies the type of build desired. Once the binaries are compilled, if an installation within the system is wanted, execute ```make install```.
 
 It may be possible that CMake could not find some files regarding iODBC. Make sure the environment variable ```ODBC_PATH``` points to the root directory of the iODBC installation (commonly, ```/usr/local/iODBC```). An complete example of a compilation at this point would be ```sudo ODBC_PATH=/usr/local/iODBC cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release```. If linker errors arise try to troubleshoot based on the guidelines provided in the unixODBC installation. Check [MySQL online manuals](https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-installation-source-unix-macos.html) for complete guidelines.
+
+## Support on third-party apps
+
+DESODBC v1.1.0 presents complete support in ```Microsoft Access```, ```LibreOffice Base```, ```DES```, and support in importing tables to ```Microsoft SQL Server```.
+
+### Notes on Microsoft SQL Server Support
+
+The SQL Server support has a number of subtleties that are also present in MyODBC. [This excellent video by Billy Thomas](https://www.youtube.com/watch?v=t86rg47yD-s) explains how to import a table into SQL Server using MyODBC, but in summary, it's about building it from a SELECT query inside the ```SQL Import / Export Wizard```. Namely, we need to specify ```.Net Framework Data Provider for Odbc``` as the source from which to copy data (and selecting our data source), to destination ```Microsoft OLE DB Provider for SQL Server``` (and selecting the specific database in SQL Server). Then, we write a SELECT query to specify the data to transfer.
+
+As with MyODBC, some import operations may fail to recognize data types properly (such as ```time```), in which case you must manually select the data type of the problematic column in ```Edit Mappings```, in the ```Select Source Tables and Views``` screen.

@@ -1,0 +1,8 @@
+Release v1.1.0:
+- Performance speedup in Windows.
+- Complete support in MSAccess, LibreOffice Base, DES.
+- Support in importing tables to SQL Server.
+- Solved bugs on:
+	- Windows mutexes
+	- Inconsistencies in data types
+	- Multiple columns with shared name
