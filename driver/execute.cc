@@ -504,7 +504,7 @@ SQLRETURN DES_do_query(STMT *stmt, std::string query) {
     using datetime data types.
 */
 #ifdef _WIN32
-  if (GetModuleHandle("msaccess.exe") != NULL) {
+  if (GetModuleHandle("msaccess.exe") != NULL || GetModuleHandle("MSQRY32.EXE") != NULL || GetModuleHandle("EXCEL.EXE") != NULL) {
       transform_datetime_query(stmt->dbc, stmt->type, query);
   }
 #endif
@@ -1491,6 +1491,13 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
       std::string calc_catalog_preffix = "`$des`.";
       remove_from_string(query, calc_catalog_preffix);
   }
+  
+#ifdef _WIN32
+  if (GetModuleHandle("MSQRY32.EXE") != NULL || GetModuleHandle("EXCEL.EXE") != NULL) {
+      std::string excel_catalog_preffix = "`$des`" + std::string(DES_CATALOG_SEPARATOR_CHARACTER);
+      remove_from_string(query, excel_catalog_preffix);
+  }
+#endif
 
   if (pStmt->ipd->rows_processed_ptr) {
     *pStmt->ipd->rows_processed_ptr = (SQLULEN)0;
@@ -1658,6 +1665,17 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
       return SQL_SUCCESS_WITH_INFO;
     }
   }
+
+#ifdef _WIN32
+  if (GetModuleHandle("MSQRY32.EXE") != NULL || GetModuleHandle("EXCEL.EXE") != NULL) {
+      /*
+      * MSQuery/MSExcel does not tolerate any other return code than
+      * SQL_SUCCESS when previewing a column.
+      */
+      if (rc == SQL_SUCCESS_WITH_INFO)
+          rc = SQL_SUCCESS;
+  }
+#endif
 
   return rc;
 }

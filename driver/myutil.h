@@ -52,9 +52,6 @@
 
 #include "field_types.h"
 
-SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& query);
-
-
 //Values extracted from mysql_com.h
 #define NOT_NULL_FLAG 1     /**< Field can't be NULL */
 #define PRI_KEY_FLAG 2      /**< Field is part of a primary key */
@@ -288,6 +285,13 @@ void to_upper_str(std::string& str);
     Original author: DESODBC Developer
 */
 void to_lower_str(std::string& str);
+
+#ifdef _WIN32
+/* DESODBC:
+    Original author: DESODBC Developer
+*/
+SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& query);
+#endif
 
 /* DESODBC:
     Original author: DESODBC Developer

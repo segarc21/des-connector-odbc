@@ -3164,13 +3164,14 @@ std::string convert_into_metadata_query(const std::string& query) {
     return new_query;
 }
 
+#ifdef _WIN32
 /* DESODBC:
     Temporal solution in the context of treating internal datetime cols as
     VARCHAR cols when working with MSAccess, due to an obscure bug when
     using datetime data types.
     Original author: DESODBC Developer
 */
-SQLRETURN transform_select_datetime_query(DBC* dbc, std::string& query) {
+SQLRETURN transform_select_datetime_query_access(DBC* dbc, std::string& query) {
     std::string where_substr = " where ";
     std::string lowered_query = query;
     to_lower_str(lowered_query);
@@ -3206,6 +3207,98 @@ SQLRETURN transform_select_datetime_query(DBC* dbc, std::string& query) {
             }
             else
                 pos += 3;
+
+            std::string left_str_to_insert = "cast(";
+
+            query.insert(pos, left_str_to_insert);
+            pos += std::string(left_str_to_insert).size() + 1; // "cast('"
+            pos = query.find("'", pos);
+            pos += 1;
+
+            std::string right_str_to_insert;
+            switch (datetimecol_type.second) {
+            case DES_TYPE_DATE:
+                right_str_to_insert = " as date)";
+                break;
+            case DES_TYPE_TIME:
+                right_str_to_insert = " as time)";
+                break;
+            case DES_TYPE_TIMESTAMP:
+                right_str_to_insert = " as datetime)";
+                break;
+            }
+
+            query.insert(pos, right_str_to_insert);
+            pos += std::string(right_str_to_insert).size();
+        }
+    }
+
+    return SQL_SUCCESS;
+}
+
+/* DESODBC:
+    Temporal solution in the context of reinterpreting datetime cols
+    named by MSQuery/MSExcel as in DES syntax.
+    Original author: DESODBC Developer
+*/
+SQLRETURN transform_select_datetime_query_excel(DBC* dbc, std::string& query) {
+
+    /*
+    This function places the casts when needed, and only does that.
+    If we find a cast in our query, that means that the query has been done
+    manually (available possibility within MSQRY32.EXE that uses MSExcel), so
+    we do not need to "fix" anything the user has consciously put.
+    */
+    if (is_in_string(query, "cast(")) {
+        return SQL_SUCCESS;
+    }
+    std::string where_substr = " where ";
+    std::string lowered_query = query;
+    to_lower_str(lowered_query);
+
+    if (!is_in_string(lowered_query, where_substr))
+        return SQL_SUCCESS;
+
+    size_t where_end_pos = lowered_query.find(where_substr);
+    where_end_pos += where_substr.size();
+
+    auto pair = dbc->execute_metadata_query(SELECT, query);
+    if (pair.first != SQL_SUCCESS && pair.first != SQL_SUCCESS_WITH_INFO) {
+        return dbc->set_error("HY000", "Internal error executing the metadata query");
+    }
+
+    DES_RESULT* metadata_result = pair.second;
+
+    std::unordered_map<std::string, enum_field_types> datetimecols_types_map;
+
+    for (auto datetimecol_type : metadata_result->internal_table->columns) {
+        if (is_time_des_data_type(datetimecol_type.field->access_real_type))
+            datetimecols_types_map.insert({ datetimecol_type.get_name(), datetimecol_type.field->access_real_type });
+    }
+
+    for (auto datetimecol_type : datetimecols_types_map) {
+        size_t pos = where_end_pos;
+        while ((pos = query.find(metadata_result->internal_table->table_name + "." + datetimecol_type.first, pos)) != std::string::npos) {
+
+            if (query.find(")", pos) == std::string::npos) {
+                /*Then, we are outside the WHERE clauses. We are in a place such as
+                ORDER BY, GROUP BY... and we should not place any casting there. */
+                break;
+            
+            }
+
+            pos += metadata_result->internal_table->table_name.size() + std::string(".").size() + datetimecol_type.first.size();
+
+            if (query.substr(pos, std::string(" Is Null").size()) == " Is Null") {
+                pos += std::string(" Is Null").size();
+                continue;
+            }
+            else if (query.substr(pos, std::string(" Is Not Null").size()) == " Is Not Null") {
+                pos += std::string(" Is Not Null").size();
+                continue;
+            }
+
+            pos = query.find("'", pos);
 
             std::string left_str_to_insert = "cast(";
 
@@ -3633,8 +3726,14 @@ SQLRETURN transform_update_datetime_query(DBC* dbc, std::string& query) {
 */
 SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& query) {
 
-    if (type == SELECT)
-        return transform_select_datetime_query(dbc, query);
+    if (type == SELECT) {
+        if (GetModuleHandle("msaccess.exe") != NULL)
+            return transform_select_datetime_query_access(dbc, query);
+        else if (GetModuleHandle("MSQRY32.EXE") != NULL || GetModuleHandle("EXCEL.EXE") != NULL)
+            return transform_select_datetime_query_excel(dbc, query); //only MSQuery/MSExcel scenario in all of the function.
+        else
+            return SQL_SUCCESS; //imposible case, placeholder
+    }
     else if (type == DEL)
         return transform_delete_datetime_query(dbc, query);
     else if (type == INSERT)
@@ -3645,3 +3744,5 @@ SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& que
         return SQL_SUCCESS;
     
 }
+
+#endif

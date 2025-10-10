@@ -5,6 +5,8 @@
 
 DES_Connector_ODBC.sln
 *.sln
+test/odbc.ini
+test/odbcinst.ini
 
 # User-specific files
 *.rsuser

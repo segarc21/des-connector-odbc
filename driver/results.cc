@@ -2606,7 +2606,7 @@ Column::Column(const std::string &table_name, const std::string &col_name,
       using datetime data types.
   */
 #ifdef _WIN32
-  if (GetModuleHandle("msaccess.exe") != NULL) {
+  if (GetModuleHandle("msaccess.exe") != NULL || GetModuleHandle("MSQRY32.EXE") != NULL || GetModuleHandle("EXCEL.EXE") != NULL) {
       if (is_time_des_data_type(col_type.simple_type)) {
           this->field->type = DES_TYPE_CHAR_N;
           this->field->access_real_type = col_type.simple_type;

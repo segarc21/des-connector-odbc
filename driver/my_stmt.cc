@@ -271,6 +271,21 @@ SQLRETURN prepare(STMT *stmt, char * query, SQLINTEGER query_length,
   {
     query_length = query ? (SQLINTEGER)strlen(query) : 0;
   }
+  
+#ifdef _WIN32
+  if (GetModuleHandle("MSQRY32.EXE") != NULL || GetModuleHandle("EXCEL.EXE") != NULL) {
+      // MSQuery/MSExcel breaks the queries into
+      // several lines, which the DES command-line interface
+      // interprets as several queries. We must then reinterpret
+      // these line breaks as spaces.
+      int pos = 0;
+      while (pos < query_length) {
+          if (query[pos] == '\n' || query[pos] == '\r')
+              query[pos] = ' ';
+          pos++;
+      }
+  }
+#endif
 
   stmt->query.reset(query, query + query_length,
                     stmt->dbc->cxn_charset_info);

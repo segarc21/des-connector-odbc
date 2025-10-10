@@ -150,12 +150,11 @@ const char * wstr4output(const wchar_t *wstr)
 #define _MY_NEWLINE "\n"
 #endif
 
-//DESODBC: put your own system DSN and data sources.
-SQLCHAR *mydriver= (SQLCHAR *)"{DES ODBC Unicode Driver}";
+SQLCHAR *mydriver= (SQLCHAR *)"{DES ODBC " DESODBC_STRSERIES " Driver}";
 SQLCHAR mydrv_nobrackets[255] = {'\0'}; /* mydriver value will be copied here */
-SQLCHAR *mydsn= (SQLCHAR *)"desodbc";
-SQLCHAR *myexec = (SQLCHAR *)"D:\\Portables\\des2\\des.exe";
-SQLCHAR *mydir = (SQLCHAR *)"D:\\Portables\\des2";
+SQLCHAR *mydsn = (SQLCHAR*)"";
+SQLCHAR *myexec = (SQLCHAR*)"";
+SQLCHAR *mydir = (SQLCHAR*)"";
 SQLCHAR *odbcini = (SQLCHAR *)"ODBC.INI";
 
 SQLCHAR *test_db= (SQLCHAR *)"client_odbc_test";
@@ -297,34 +296,16 @@ int main(int argc, char **argv) \
   SQLHSTMT hstmt = NULL; \
   int      i, num_tests, failcnt= 0; \
   ENABLE_ALARMS; \
-  sleep(5);\
 \
   mem_debug_init(); \
   mem_gc_init(); \
 \
-  /* Set from environment, possibly overrided by command line */ \
-  if (getenv("TEST_DSN")) \
-    mydsn=  (SQLCHAR *)getenv("TEST_DSN"); \
-  if (getenv("TEST_DRIVER")) \
-    mydriver=  (SQLCHAR *)getenv("TEST_DRIVER"); \
-  size_t drvlen = strlen((const char*)mydriver); \
-  if (mydriver[0] == '{') {\
-    memcpy(mydrv_nobrackets, mydriver + 1, sizeof(SQLCHAR)*(drvlen-2)); \
-    mydrv_nobrackets[drvlen-2] = '\0'; \
-  } else { \
-    memcpy(mydrv_nobrackets, mydriver, sizeof(SQLCHAR)*drvlen); \
-  } \
-  if (getenv("TEST_DES_EXEC")) \
-    myexec=  (SQLCHAR *)getenv("TEST_DES_EXEC"); \
-  if (getenv("TEST_DES_WORKING_DIR")) \
-    mydir=  (SQLCHAR *)getenv("TEST_DES_WORKING_DIR"); \
-\
   if (argc > 1) \
     mydsn= (SQLCHAR *)argv[1]; \
-  if (argc > 2) \
-    myexec= (SQLCHAR *)argv[2]; \
-  if (argc > 3) \
-    mydir= (SQLCHAR *)argv[3]; \
+  else {\
+    printf("Usage: desodbc_tests DSN_to_test\nPlease provide the DSN to test in the first argument.");\
+    exit(1);\
+  } \
 
 #define RUN_TESTS_ONCE \
   setbuf(stdout, NULL); \
@@ -1234,8 +1215,8 @@ SQLCHAR *make_conn_str(const SQLCHAR *dsn, const SQLCHAR *exec,
   else
     snprintf((char *)dsn_buf, sizeof(dsn_buf), "DSN=%s", (char *)dsn);
 
-  snprintf((char *)connIn, sizeof(connIn), "%s;DES_EXEC=%s;DES_WORKING_DIR=%s;",
-           (char *)dsn_buf, (char *)exec, (char *)dir);
+  snprintf((char *)connIn, sizeof(connIn), "%s;",
+           (char *)dsn_buf);
 
   return connIn;
 }
