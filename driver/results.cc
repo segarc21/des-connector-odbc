@@ -3470,6 +3470,22 @@ void ResultTable::build_table_SQLTables() {
   dbs = filter_candidates(candidate_dbs, catalog_name_param,
                           this->params.metadata_id);
 
+  /*
+    In this version we do not allow for third-party apps to look into other catalogs,
+    as they need to consciously use /use_db when needed to execute queries.
+    */
+#ifdef _WIN32
+  if (GetModuleHandle("EXCEL.EXE") ||
+      GetModuleHandle("msaccess.exe") ||
+      GetModuleHandle("MSQRY32.EXE") ||
+      GetModuleHandle("soffice.bin")) {
+      dbs = { "$des" };
+  }
+#else
+  if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that LibreOffice loads.
+      dbs = { "$des" };
+  }
+#endif
 
   if (catalog_name_param == SQL_ALL_CATALOGS && table_name_param.size() == 0) {
     for (int i = 0; i < dbs.size(); ++i) {
