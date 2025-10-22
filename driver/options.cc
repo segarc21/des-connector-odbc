@@ -430,27 +430,7 @@ DESGetConnectAttr(SQLHDBC hdbc, SQLINTEGER attrib, SQLCHAR **char_attr,
 
   case SQL_ATTR_CURRENT_CATALOG:
 
-    // We do a little test
-    result = dbc->get_query_mutex();
-    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) return result;
-
-    pair = dbc->send_query_and_read("/current_db");
-    result = pair.first;
-    current_db_output = pair.second;
-    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
-      dbc->release_query_mutex();
-      return result;
-    }
-
-    result = dbc->release_query_mutex();
-
-    if (result != SQL_SUCCESS && result != SQL_SUCCESS_WITH_INFO) {
-      return result;
-    }
-
-    current_db = getLines(current_db_output)[0];
-
-    *char_attr = str_to_sqlcharptr(current_db);
+    *char_attr = str_to_sqlcharptr(DES_DEFAULT_DATABASE);
     *((SQLUINTEGER *)num_attr) = 1;
     break;
 

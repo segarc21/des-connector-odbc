@@ -331,6 +331,7 @@ extern std::mutex global_fido_mutex;
     New symbols for DESODBC.
     Original author: DESODBC Developer
 */
+#define DES_DEFAULT_DATABASE "$des"
 #define DES_CATALOG_SEPARATOR_CHARACTER ":"
 #define SHARED_MEMORY_NAME_BASE "DESODBC_SHM"
 #define SHARED_MEMORY_MUTEX_NAME_BASE "DESODBC_SHM_MTX"
@@ -806,6 +807,18 @@ enum COMMAND_TYPE {
 
 struct DES_RESULT;
 
+
+/* DESODBC:
+    Attributes for query caching.
+*/
+#define QUERY_CACHE_TIME_MS 500
+
+struct QueryCacheEntry {
+    SQLRETURN error;
+    std::string output;
+    long long last_time_ms;
+};
+
 /* DESODBC:
     Added new attributes to support IPC.
     Original author: MyODBC
@@ -819,6 +832,8 @@ struct DBC {
    New DESODBC attributes
     */
   size_t connection_id;
+
+  std::unordered_map<std::string, QueryCacheEntry> query_cache;
 
   std::hash<std::string> str_hasher;
   std::hash<std::wstring> wstr_hasher;

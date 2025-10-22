@@ -1,3 +1,12 @@
+Release v1.2.0:
+- Performance speedup in all systems due to query output caching,
+  necessary due to intrinsic delays in IPC processes.
+- The ability to access external (non-DES) databases from DESODBC is
+  removed due to its lack of utility and unsolvable consistency and
+  performance issues.
+- Solved bugs on:
+	- Queries with "with" clauses
+
 Release v1.1.0:
 - Performance speedup in Windows.
 - Complete support in MSAccess, LibreOffice Base, DES.

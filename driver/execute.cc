@@ -299,13 +299,19 @@ bool DBC::is_query_of_empty_output(const std::string& query) {
 */
 std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
     const std::string &query) {
-  int error = SQL_ERROR, native_error = 0;
+  SQLRETURN error = SQL_ERROR, native_error = 0;
   bool read_success = false;
   bool empty_output_query = false;
   char *full_query_arr = nullptr;
   std::string tapi_output = "";
   std::string full_query = "";
   DWORD bytes_written;
+
+  if (this->query_cache.find(query) != this->query_cache.end()) {
+      QueryCacheEntry entry = query_cache[query];
+      if (current_time_ms() - entry.last_time_ms <= QUERY_CACHE_TIME_MS)
+          return { entry.error, entry.output };
+  }
 
   full_query = "/tapi " + query + '\n';  // query for the launched DES process
 
@@ -345,8 +351,10 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
        introduce some new logic when treating a command output.
     */
 
-  if (empty_output_query)
-      return { SQL_SUCCESS, "" };
+  if (empty_output_query) {
+      error = SQL_SUCCESS;
+      tapi_output = "";
+  }
   else {
 #ifdef _WIN32
       auto pair = this->read_DES_output_win(full_query);
@@ -355,9 +363,15 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
 #endif
       error = pair.first;
       tapi_output = pair.second;
-
-      return { error, tapi_output };
   }
+
+
+  if (is_cacheable_query(query)) {
+      QueryCacheEntry cache_entry = { error, tapi_output, current_time_ms() };
+      this->query_cache[query] = cache_entry;
+  }
+  
+  return { error, tapi_output };
 }
 
 /* DESODBC:
@@ -1488,13 +1502,13 @@ SQLRETURN DES_SQLExecute(STMT *pStmt) {
 #else
   if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that LibreOffice loads.
 #endif
-      std::string calc_catalog_preffix = "`$des`.";
+      std::string calc_catalog_preffix = "`" + std::string(DES_DEFAULT_DATABASE) + "`.";
       remove_from_string(query, calc_catalog_preffix);
   }
   
 #ifdef _WIN32
   if (GetModuleHandle("MSQRY32.EXE") != NULL || GetModuleHandle("EXCEL.EXE") != NULL) {
-      std::string excel_catalog_preffix = "`$des`" + std::string(DES_CATALOG_SEPARATOR_CHARACTER);
+      std::string excel_catalog_preffix = "`" + std::string(DES_DEFAULT_DATABASE) + "`" + std::string(DES_CATALOG_SEPARATOR_CHARACTER);
       remove_from_string(query, excel_catalog_preffix);
   }
 #endif

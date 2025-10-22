@@ -413,6 +413,9 @@ int is_set_names_statement(const char *query)
 Detect if a statement is a SELECT statement.
 */
 bool DES_PARSED_QUERY::is_select_statement() {
+  if (query_type == desqtOther) {
+    return find_query_type_if_with_clause(this->query) == desqtSelect;
+  }
   return query_type == desqtSelect;
 }
 
@@ -428,6 +431,9 @@ bool DES_PARSED_QUERY::is_process_statement() {
     Original author: DESODBC Developer
 */
 bool DES_PARSED_QUERY::is_update_statement() {
+    if (query_type == desqtOther) {
+        return find_query_type_if_with_clause(this->query) == desqtUpdate;
+    }
   return query_type == desqtUpdate;
 }
 
@@ -435,6 +441,9 @@ bool DES_PARSED_QUERY::is_update_statement() {
     Original author: DESODBC Developer
 */
 bool DES_PARSED_QUERY::is_insert_statement() {
+    if (query_type == desqtOther) {
+        return find_query_type_if_with_clause(this->query) == desqtInsert;
+    }
   return query_type == desqtInsert;
 }
 
@@ -442,6 +451,9 @@ bool DES_PARSED_QUERY::is_insert_statement() {
     Original author: DESODBC Developer
 */
 bool DES_PARSED_QUERY::is_delete_statement() {
+    if (query_type == desqtOther) {
+        return find_query_type_if_with_clause(this->query) == desqtDelete;
+    }
   return query_type == desqtDelete;
 }
 

@@ -293,6 +293,22 @@ void to_lower_str(std::string& str);
 SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& query);
 #endif
 
+/*DESODBC:
+Current time in ms since Epoch.
+Original author: DESODBC Developer
+*/
+long long current_time_ms();
+
+/*DESODBC:
+Original author: DESODBC Developer
+*/
+bool is_cacheable_query(const std::string& query);
+
+/*DESODBC:
+Original author: DESODBC Developer
+*/
+desodbcQueryType find_query_type_if_with_clause(std::string query);
+
 /* DESODBC:
     Original author: DESODBC Developer
 */

@@ -260,24 +260,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 
   case SQL_DATABASE_NAME:
     if (is_connected(dbc)) {
-      SQLRETURN rc = dbc->get_query_mutex();
-      if (!SQL_SUCCEEDED(rc)) return rc;
-
-      auto pair = dbc->send_query_and_read("/current_db");
-      rc = pair.first;
-      std::string current_db_output = pair.second;
-      if (!SQL_SUCCEEDED(rc)) {
-        dbc->release_query_mutex();
-        return rc;
-      }
-      rc = dbc->release_query_mutex();
-      if (rc != SQL_SUCCESS &&
-          rc != SQL_SUCCESS_WITH_INFO) {
-        return rc;
-      }
-      std::string db = getLines(current_db_output)[0];
-
-      MYINFO_SET_STR(string_to_char_pointer(db));
+      MYINFO_SET_STR(string_to_char_pointer(DES_DEFAULT_DATABASE));
 
     } else {
       return dbc->set_error(

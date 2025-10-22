@@ -2579,7 +2579,7 @@ Column::Column(const std::string &table_name, const std::string &col_name,
   this->field->table_length = table_name.size();
   this->field->org_table_length = table_name.size();
 
-  this->field->db = "$des";  /*It does not matter whether it comes from
+  this->field->db = DES_DEFAULT_DATABASE;  /*It does not matter whether it comes from
                                                      another database. This value will not be shown
                                                      to the user*/
   this->field->db_length = 4;
@@ -3241,80 +3241,43 @@ void ResultTable::build_table_SQLColumns() {
 
   std::string column_name_search = this->params.column_name;
 
-  std::vector<std::string> dbs;
-  auto pair = dbc->send_query_and_read("/show_dbs");
+  std::string query_dbschema = "/dbschema ";
+  query_dbschema += DES_DEFAULT_DATABASE;
+  auto pair = this->dbc->send_query_and_read(query_dbschema);
   SQLRETURN rc = pair.first;
-  std::string dbs_str = pair.second;
+  std::string dbschema_str = pair.second;
   if (!SQL_SUCCEEDED(rc)) {
-    return;
+      return;
   }
 
-  std::vector<std::string> candidate_dbs = getLines(dbs_str);
-  candidate_dbs.erase(
-      std::remove(candidate_dbs.begin(), candidate_dbs.end(), "$eot"),
-      candidate_dbs.end());
+  std::unordered_map<std::string, DBSchemaRelationInfo> map =
+      get_all_relations_info(dbschema_str);
 
-  dbs = filter_candidates(candidate_dbs, catalog_name_param,
-                          this->params.metadata_id);
-
-  for (int i = 0; i < dbs.size(); ++i) {
-    std::string query_dbschema = "/dbschema ";
-    query_dbschema += dbs[i];
-    auto pair = this->dbc->send_query_and_read(query_dbschema);
-    SQLRETURN rc = pair.first;
-    std::string dbschema_str = pair.second;
-    if (!SQL_SUCCEEDED(rc)) {
-      return;
-    }
-
-    std::unordered_map<std::string, DBSchemaRelationInfo> map =
-        get_all_relations_info(dbschema_str);
-
-    std::vector<std::string> dbschema_tables;
-    for (auto pair : map) {
+  std::vector<std::string> dbschema_tables;
+  for (auto pair : map) {
       if (pair.second.is_table)  // we only deal with tables in SQLColumns.
-        dbschema_tables.push_back(pair.first);
-    }
+          dbschema_tables.push_back(pair.first);
+  }
 
-    std::vector<std::string> dbschema_table_names = filter_candidates(
-        dbschema_tables, table_name_search, this->params.metadata_id);
+  std::vector<std::string> dbschema_table_names = filter_candidates(
+      dbschema_tables, table_name_search, this->params.metadata_id);
 
-    for (auto dbschema_table_name : dbschema_table_names) {
-
-      pair = this->dbc->send_query_and_read("/current_db");
-      rc = pair.first;
-      if (!SQL_SUCCEEDED(rc)) return;
-
-      std::string current_db_output = pair.second;
-      std::string previous_db = getLines(current_db_output)[0];
-
-      std::string query_usedb = "/use_db ";
-      query_usedb += dbs[i];
-
-      pair = this->dbc->send_query_and_read(query_usedb);
-      rc = pair.first;
-      if (!SQL_SUCCEEDED(rc)) return;
+  for (auto dbschema_table_name : dbschema_table_names) {
 
       std::string select_query = "select * from " + dbschema_table_name;
       pair = dbc->send_query_and_read(select_query);
       rc = pair.first;
       std::string select_query_output = pair.second;
       if (!SQL_SUCCEEDED(rc)) {
-        return;
+          return;
       }
 
-      std::string query_usepreviousdb = "/use_db ";
-      query_usepreviousdb += previous_db;
-
-      pair = this->dbc->send_query_and_read(query_usepreviousdb);
-      rc = pair.first;
-      if (!SQL_SUCCEEDED(rc)) return;
 
       ResultTable* table = new ResultTable(SELECT, select_query_output);
 
       std::vector<std::string> col_names = table->get_cols_names();
       col_names = filter_candidates(col_names, column_name_search,
-                                    this->params.metadata_id);
+          this->params.metadata_id);
 
       std::vector<int> col_indexes;
       for (int i = 0; i < col_names.size(); ++i) {
@@ -3323,74 +3286,73 @@ void ResultTable::build_table_SQLColumns() {
                   col_indexes.push_back(j);
           }
       }
-      
+
 
       for (int j = 0; j < col_indexes.size(); ++j) {
-        Column col = table->columns[col_indexes[j]];
-        DES_FIELD *field = col.get_DES_FIELD();
-        insert_value("TABLE_CAT", dbs[i]);
-        insert_value("TABLE_SCHEM", NULL_STR);
-        insert_value("TABLE_NAME", dbschema_table_name);
-        insert_value("COLUMN_NAME", col_names[j]);
+          Column col = table->columns[col_indexes[j]];
+          DES_FIELD* field = col.get_DES_FIELD();
+          insert_value("TABLE_CAT", std::string(DES_DEFAULT_DATABASE));
+          insert_value("TABLE_SCHEM", NULL_STR);
+          insert_value("TABLE_NAME", dbschema_table_name);
+          insert_value("COLUMN_NAME", col_names[j]);
 
-        enum_field_types des_type = field->type;
-        int sql_type = des_type_2_sql_type(des_type);
-        insert_value("DATA_TYPE", std::to_string(sql_type));
-        insert_value("TYPE_NAME", des_type_2_str(des_type));
+          enum_field_types des_type = field->type;
+          int sql_type = des_type_2_sql_type(des_type);
+          insert_value("DATA_TYPE", std::to_string(sql_type));
+          insert_value("TYPE_NAME", des_type_2_str(des_type));
 
-        insert_value("COLUMN_SIZE", std::to_string(col.getColumnSize()));
+          insert_value("COLUMN_SIZE", std::to_string(col.getColumnSize()));
 
-        TypeAndLength tal = {col.get_simple_type(), col.getMaxLength()};
+          TypeAndLength tal = { col.get_simple_type(), col.getMaxLength() };
 
-        insert_value("BUFFER_LENGTH",
-            std::to_string(get_transfer_octet_length(tal)));
+          insert_value("BUFFER_LENGTH",
+              std::to_string(get_transfer_octet_length(tal)));
 
-        if (is_numeric_des_data_type(des_type)) {
-            insert_value("DECIMAL_DIGITS", std::to_string(field->decimals));
+          if (is_numeric_des_data_type(des_type)) {
+              insert_value("DECIMAL_DIGITS", std::to_string(field->decimals));
+          }
+          else
+              insert_value("DECIMAL_DIGITS", NULL_STR);
+
+
+          if (is_numeric_des_data_type(des_type)) {
+              insert_value("NUM_PREC_RADIX", std::string("10"));
+          }
+          else
+              insert_value("NUM_PREC_RADIX", NULL_STR);
+
+          insert_value("NULLABLE",
+              std::to_string(
+                  SQL_NULLABLE));
+          insert_value("REMARKS", std::string(""));
+          insert_value(
+              "COLUMN_DEF", std::string("NULL"));
+
+          if (sql_type == SQL_TYPE_DATE)
+              insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
+          else if (sql_type == SQL_TYPE_TIME)
+              insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
+          else if (sql_type == SQL_TYPE_TIMESTAMP)
+              insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
+          else
+              insert_value("SQL_DATA_TYPE", std::to_string(sql_type));
+
+          if (sql_type == SQL_TYPE_DATE || sql_type == SQL_TYPE_TIME || sql_type == SQL_TYPE_TIMESTAMP)
+              insert_value("SQL_DATETIME_SUB", std::to_string(sql_type));
+          else
+              insert_value("SQL_DATETIME_SUB", NULL_STR);
+
+          if (is_character_des_type(field))) {
+              insert_value("CHAR_OCTET_LENGTH", std::to_string(tal.len));
         }
-        else
-            insert_value("DECIMAL_DIGITS", NULL_STR);
-        
+          else
+              insert_value("CHAR_OCTET_LENGTH", NULL_STR);
 
-        if (is_numeric_des_data_type(des_type)) {
-          insert_value("NUM_PREC_RADIX", std::string("10"));
-        } else
-          insert_value("NUM_PREC_RADIX", NULL_STR);
-
-        insert_value("NULLABLE",
-                     std::to_string(
-                         SQL_NULLABLE));
-        insert_value("REMARKS", std::string(""));
-        insert_value(
-            "COLUMN_DEF", std::string("NULL"));
-
-        if (sql_type == SQL_TYPE_DATE)
-            insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
-        else if (sql_type == SQL_TYPE_TIME)
-            insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
-        else if (sql_type == SQL_TYPE_TIMESTAMP)
-            insert_value("SQL_DATA_TYPE", std::to_string(SQL_DATE));
-        else
-            insert_value("SQL_DATA_TYPE", std::to_string(sql_type));
-
-        if (sql_type == SQL_TYPE_DATE || sql_type == SQL_TYPE_TIME || sql_type == SQL_TYPE_TIMESTAMP)
-          insert_value("SQL_DATETIME_SUB", std::to_string(sql_type));
-        else 
-          insert_value("SQL_DATETIME_SUB", NULL_STR);
-
-        if (is_character_des_type(field))) {
-          insert_value("CHAR_OCTET_LENGTH", std::to_string(tal.len));
-        }
-        else
-          insert_value("CHAR_OCTET_LENGTH", NULL_STR);
-
-        insert_value("ORDINAL_POSITION", std::to_string(j + 1));
-        insert_value("IS_NULLABLE", std::string("YES"));
+          insert_value("ORDINAL_POSITION", std::to_string(j + 1));
+          insert_value("IS_NULLABLE", std::string("YES"));
       }
 
       free_result(table);
-    }
-
   }
 
 }
@@ -3454,47 +3416,12 @@ void ResultTable::build_table_SQLTables() {
     }
   }
 
-  std::vector<std::string> dbs;
-  auto pair = dbc->send_query_and_read("/show_dbs");
-  SQLRETURN rc = pair.first;
-  std::string dbs_str = pair.second;
-  if (!SQL_SUCCEEDED(rc)) {
-    return;
-  }
-
-  std::vector<std::string> candidate_dbs = getLines(dbs_str);
-  candidate_dbs.erase(
-      std::remove(candidate_dbs.begin(), candidate_dbs.end(), "$eot"),
-      candidate_dbs.end());
-
-  dbs = filter_candidates(candidate_dbs, catalog_name_param,
-                          this->params.metadata_id);
-
-  /*
-    In this version we do not allow for third-party apps to look into other catalogs,
-    as they need to consciously use /use_db when needed to execute queries.
-    */
-#ifdef _WIN32
-  if (GetModuleHandle("EXCEL.EXE") ||
-      GetModuleHandle("msaccess.exe") ||
-      GetModuleHandle("MSQRY32.EXE") ||
-      GetModuleHandle("soffice.bin")) {
-      dbs = { "$des" };
-  }
-#else
-  if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that LibreOffice loads.
-      dbs = { "$des" };
-  }
-#endif
-
   if (catalog_name_param == SQL_ALL_CATALOGS && table_name_param.size() == 0) {
-    for (int i = 0; i < dbs.size(); ++i) {
-      insert_value("TABLE_CAT", dbs[i]);
+      insert_value("TABLE_CAT", std::string(DES_DEFAULT_DATABASE));
       insert_value("TABLE_SCHEM", NULL_STR);
       insert_value("TABLE_NAME", NULL_STR);
       insert_value("TABLE_TYPE", NULL_STR);
       insert_value("REMARKS", NULL_STR);
-    }
 
   } else if (table_type_param == SQL_ALL_TABLE_TYPES &&
              table_name_param.size() == 0 && catalog_name_param.size() == 0) {
@@ -3507,56 +3434,55 @@ void ResultTable::build_table_SQLTables() {
     }
 
   } else { //standard case
-    for (int i = 0; i < dbs.size(); ++i) {
-      std::string dbschema_query = "/dbschema ";
-      dbschema_query += dbs[i];
-      auto pair = dbc->send_query_and_read(dbschema_query);
-      SQLRETURN rc = pair.first;
-      std::string dbschema_query_output = pair.second;
-      if (!SQL_SUCCEEDED(rc)) {
+    std::string dbschema_query = "/dbschema ";
+    dbschema_query += DES_DEFAULT_DATABASE;
+    auto pair = dbc->send_query_and_read(dbschema_query);
+    SQLRETURN rc = pair.first;
+    std::string dbschema_query_output = pair.second;
+    if (!SQL_SUCCEEDED(rc)) {
         return;
-      }
+    }
 
-      std::unordered_map<std::string, DBSchemaRelationInfo> map =
-          get_all_relations_info(dbschema_query_output);
+    std::unordered_map<std::string, DBSchemaRelationInfo> map =
+        get_all_relations_info(dbschema_query_output);
 
-      std::vector<std::string> dbschema_tables;
-      for (auto pair : map) {
+    std::vector<std::string> dbschema_tables;
+    for (auto pair : map) {
         dbschema_tables.push_back(pair.first);
-      }
+    }
 
-      std::vector<std::string> dbschema_table_names = filter_candidates(
-          dbschema_tables, table_name_param, this->params.metadata_id);
+    std::vector<std::string> dbschema_table_names = filter_candidates(
+        dbschema_tables, table_name_param, this->params.metadata_id);
 
-      std::vector<std::string> lines = getLines(dbschema_query_output);
+    std::vector<std::string> lines = getLines(dbschema_query_output);
 
-      int j = 0;
+    int j = 0;
 
-      while (j < lines.size()) {
+    while (j < lines.size()) {
         if (lines[j] == "$eot") break;
-        std::string TABLE_CAT = dbs[i];
+        std::string TABLE_CAT = DES_DEFAULT_DATABASE;
         std::string TABLE_SCHEM = "";
         std::string TABLE_NAME = "";
         std::string TABLE_TYPE = "";
         std::string REMARKS = "";
 
         if (lines[j] == "$table") {
-          TABLE_TYPE = "TABLE";
-          j++;
-          TABLE_NAME = lines[j];
+            TABLE_TYPE = "TABLE";
+            j++;
+            TABLE_NAME = lines[j];
         } else if (lines[j] == "$view") {
-          TABLE_TYPE = "VIEW";
-          j += 2;
-          TABLE_NAME = lines[j];
+            TABLE_TYPE = "VIEW";
+            j += 2;
+            TABLE_NAME = lines[j];
         } else
-          break;
+            break;
 
         bool table_in_requested_tables = true;
         if (table_name_param.size() > 0) {
-          table_in_requested_tables =
-              (std::find(dbschema_table_names.begin(),
-                         dbschema_table_names.end(),
-                         TABLE_NAME) != dbschema_table_names.end());
+            table_in_requested_tables =
+                (std::find(dbschema_table_names.begin(),
+                            dbschema_table_names.end(),
+                            TABLE_NAME) != dbschema_table_names.end());
         }
 
         bool type_compatible = true;
@@ -3575,15 +3501,14 @@ void ResultTable::build_table_SQLTables() {
         }
 
         if (type_compatible && table_in_requested_tables) {
-          insert_value("TABLE_CAT", TABLE_CAT);
-          insert_value("TABLE_SCHEM", NULL_STR);
-          insert_value("TABLE_NAME", TABLE_NAME);
-          insert_value("TABLE_TYPE", TABLE_TYPE);
-          insert_value("REMARKS", REMARKS);
+            insert_value("TABLE_CAT", TABLE_CAT);
+            insert_value("TABLE_SCHEM", NULL_STR);
+            insert_value("TABLE_NAME", TABLE_NAME);
+            insert_value("TABLE_TYPE", TABLE_TYPE);
+            insert_value("REMARKS", REMARKS);
         }
 
         while (lines[j].size() <= 1 || lines[j][0] != '$') j++;
-      }
     }
   }
   

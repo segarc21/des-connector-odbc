@@ -2937,7 +2937,7 @@ std::string get_prepared_arg(STMT *stmt, SQLCHAR *name, SQLSMALLINT len) {
 */
 std::string get_catalog(STMT *stmt, SQLCHAR *name, SQLSMALLINT len) {
   if (!name || !(*name) || len == 0)
-    return "$des";
+    return DES_DEFAULT_DATABASE;
   else
     return get_prepared_arg(stmt, name, len);
 }
@@ -3138,7 +3138,7 @@ std::string convert_into_metadata_query(const std::string& query) {
 #else
       if (dlopen("libstorelo.so", RTLD_NOW | RTLD_NOLOAD)) { //specific library that LibreOffice loads.
 #endif
-        std::string calc_catalog_preffix = "`$des`.";
+        std::string calc_catalog_preffix = "`" + std::string(DES_DEFAULT_DATABASE) + "`.";
         remove_from_string(new_query, calc_catalog_preffix);
     }
 
@@ -3746,3 +3746,72 @@ SQLRETURN transform_datetime_query(DBC* dbc, COMMAND_TYPE type, std::string& que
 }
 
 #endif
+
+/*DESODBC:
+Current time in ms since Epoch.
+Original author: DESODBC Developer
+*/
+long long current_time_ms() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+/*DESODBC:
+Original author: DESODBC Developer
+*/
+bool is_cacheable_query(const std::string& query) {
+    std::string query_cpy = query;
+    to_lower_str(query_cpy);
+
+    /* This is actually the best way to do this
+    because identifying an insert/update/delete
+    from a simple query can be highly complex.
+    It does not really matter whether we make
+    false positives: we just may make extra
+    queries in very specific scenarios on account
+    of not caching the query. */
+
+    if (is_in_string(query_cpy, "insert"))
+        return false;
+    if (is_in_string(query_cpy, "update"))
+        return false;
+    if (is_in_string(query_cpy, "delete"))
+        return false;
+
+    return true;
+}
+
+/*DESODBC:
+Original author: DESODBC Developer
+*/
+desodbcQueryType find_query_type_if_with_clause(std::string query) {
+    int max_feasible_pos = -1;
+    desodbcQueryType type = desqtOther;
+
+    if (!is_first_keyword(query, "with"))
+        return type;
+
+    to_lower_str(query);
+    int pos_select = query.rfind("select");
+    int pos_insert = query.rfind("insert");
+    int pos_update = query.rfind("update");
+    int pos_delete = query.rfind("delete");
+    if (pos_select > max_feasible_pos && pos_select < query.size()) {
+        type = desqtSelect;
+        max_feasible_pos = pos_select;
+    }  
+    if (pos_insert > max_feasible_pos && pos_insert < query.size()) {
+        type = desqtInsert;
+        max_feasible_pos = pos_insert;
+    }
+    if (pos_update > max_feasible_pos && pos_update < query.size()) {
+        type = desqtUpdate;
+        max_feasible_pos = pos_update;
+    }
+    if (pos_delete > max_feasible_pos && pos_delete < query.size()) {
+        type = desqtDelete;
+        max_feasible_pos = pos_delete;
+    }
+
+    return type;
+        
+}

@@ -239,7 +239,11 @@ SQLRETURN SQL_API DES_SQLTables(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   CHECK_SCHEMA(stmt, schema_name, schema_len);
 
   std::string catalog_name_str =
-      get_prepared_arg(stmt, catalog_name, catalog_len);
+      get_catalog(stmt, catalog_name, catalog_len);
+  if (catalog_name_str != DES_DEFAULT_DATABASE && (sqlcharptr_to_str(catalog_name, catalog_len) != "%")) {
+      return stmt->set_error("HYC00",
+          "This version of DESODBC cannot retrieve information of DES external databases");
+  }
 
   rc = dbc->get_query_mutex();
   if (!SQL_SUCCEEDED(rc)) return rc;
@@ -364,40 +368,13 @@ SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   rc = dbc->get_query_mutex();
   if (!SQL_SUCCEEDED(rc)) return rc;
 
-  pair = dbc->send_query_and_read("/current_db");
-  rc = pair.first;
-  std::string current_db_output = pair.second;
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->release_query_mutex();
-    return rc;
-  }
-  std::string previous_db = getLines(current_db_output)[0];
 
   std::string catalog_name_str =
-      get_prepared_arg(stmt, catalog_name, catalog_len);
+      get_catalog(stmt, catalog_name, catalog_len);
   
-  std::string use_db_query = "/use_db ";
-  if (catalog_name_str.size() == 0) use_db_query += "$des";
-  else
-    use_db_query += catalog_name_str;
-
-  pair = dbc->send_query_and_read(use_db_query);
-  rc = pair.first;
-  std::string use_db_output = pair.second;
-
-  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
-    // We do not want to return an error when receiving this message.
-    if (!is_in_string(use_db_output, "Database already in use")) {
-      rc = check_and_set_errors(SQL_HANDLE_STMT, stmt, use_db_output);
-    }
-  }
-
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->send_query_and_read(
-        "/use_db " +
-        previous_db);  // DESODBC: trying to revert the database change
-    dbc->release_query_mutex();
-    return rc;
+  if (catalog_name_str != DES_DEFAULT_DATABASE && (sqlcharptr_to_str(catalog_name, catalog_len) != "%")) {
+      return stmt->set_error("HYC00",
+          "This version of DESODBC cannot retrieve information of DES external databases");
   }
 
   std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
@@ -412,14 +389,6 @@ SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   stmt->params_for_table.catalog_name = catalog_name_str;
 
   rc = stmt->build_results();
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->release_query_mutex();
-    return rc;
-  }
-
-  pair = dbc->send_query_and_read("/use_db " + previous_db);
-  rc = pair.first;
   if (!SQL_SUCCEEDED(rc)) {
     dbc->release_query_mutex();
     return rc;
@@ -507,39 +476,12 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   rc = dbc->get_query_mutex();
   if (!SQL_SUCCEEDED(rc)) return rc;
 
-  pair = dbc->send_query_and_read("/current_db");
-  rc = pair.first;
-  std::string current_db_output = pair.second;
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->release_query_mutex();
-    return rc;
-  }
-  std::string previous_db = getLines(current_db_output)[0];
-
   std::string catalog_name_str = get_catalog(stmt, catalog_name, catalog_len);
-
-  std::string use_db_query = "/use_db ";
-  use_db_query += catalog_name_str;
-
-  pair = dbc->send_query_and_read(use_db_query);
-  rc = pair.first;
-  std::string use_db_output = pair.second;
-
-  if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) {
-    // We do not want to return an error when receiving this message.
-    if (!is_in_string(use_db_output, "Database already in use")) {
-      rc = check_and_set_errors(SQL_HANDLE_STMT, stmt, use_db_output);
-    }
+  if (catalog_name_str != DES_DEFAULT_DATABASE && (sqlcharptr_to_str(catalog_name, catalog_len) != "%")) {
+      return stmt->set_error("HYC00",
+          "This version of DESODBC cannot retrieve information of DES external databases");
   }
-
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->send_query_and_read(
-        "/use_db " +
-        previous_db);  // DESODBC: trying to revert the database change
-    dbc->release_query_mutex();
-    return rc;
-  }
-
+  
   std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
 
   stmt->params_for_table.catalog_name = catalog_name_str;
@@ -547,29 +489,10 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   stmt->type = SQLSTATISTICS;
 
   rc = stmt->build_results();
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->release_query_mutex();
-    return rc;
-  }
-
-  pair = dbc->send_query_and_read("/use_db " + previous_db);
-  rc = pair.first;
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->release_query_mutex();
-    return rc;
-  }
 
   rc = dbc->release_query_mutex();
   if (!SQL_SUCCEEDED(rc)) return rc;
 
-  if (catalog_name_str != "$des" && catalog_name_str != "") {
-    stmt->set_error("01000",
-                    "Some attributes of the given external database that are "
-                    "not shared with DES might "
-                    "have been omitted");
-    return SQL_SUCCESS_WITH_INFO;
-  }
   return rc;
 }
 
@@ -634,48 +557,21 @@ SQLRETURN SQL_API DES_SQLSpecialColumns(
   */
 
   std::string catalog_name_str = get_catalog(stmt, catalog, catalog_len);
-  if (catalog_name_str != "$des")
-    return stmt->set_error("HYC00",
-                           "DESODBC cannot retrieve primary keys for external "
-                           "databases, nor indexing or pseudocolumns");
+  if (catalog_name_str != DES_DEFAULT_DATABASE && (sqlcharptr_to_str(catalog, catalog_len) != "%")) {
+      return stmt->set_error("HYC00",
+          "This version of DESODBC cannot retrieve information of DES external databases");
+  }
 
   dbc = ((STMT *)hstmt)->dbc;
 
   rc = dbc->get_query_mutex();
   if (!SQL_SUCCEEDED(rc)) return rc;
 
-  pair = dbc->send_query_and_read("/current_db");
-  rc = pair.first;
-  std::string current_db_output = pair.second;
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->release_query_mutex();
-    return rc;
-  }
-  std::string previous_db = getLines(current_db_output)[0];
-
-  pair = dbc->send_query_and_read("/use_db $des");
-  rc = pair.first;
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->send_query_and_read(
-        "/use_db " +
-        previous_db);  // DESODBC: trying to revert the database change
-    dbc->release_query_mutex();
-    return rc;
-  }
-
   std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
   stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLSPECIALCOLUMNS;
 
   rc = stmt->build_results();
-  if (!SQL_SUCCEEDED(rc)) {
-    dbc->send_query_and_read("/use_db " + previous_db);
-    dbc->release_query_mutex();
-    return rc;
-  }
-
-  pair = dbc->send_query_and_read("/use_db " + previous_db);
-  rc = pair.first;
   if (!SQL_SUCCEEDED(rc)) {
     dbc->release_query_mutex();
     return rc;
@@ -751,10 +647,10 @@ SQLRETURN SQL_API DES_SQLPrimaryKeys(SQLHSTMT hstmt, SQLCHAR *catalog_name,
 
   std::string catalog_name_str = get_catalog(stmt, catalog_name, catalog_len);
 
-  if (catalog_name_str != "$des")
-    return stmt->set_error("HYC00",
-                           "DESODBC cannot retrieve primary or foreign keys "
-                           "for external databases");
+  if (catalog_name_str != DES_DEFAULT_DATABASE && (sqlcharptr_to_str(catalog_name, catalog_len) != "%")) {
+      return stmt->set_error("HYC00",
+          "This version of DESODBC cannot retrieve information of DES external databases");
+  }
 
   rc = dbc->get_query_mutex();
   if (!SQL_SUCCEEDED(rc)) return rc;
@@ -900,10 +796,9 @@ SQLRETURN SQL_API DES_SQLForeignKeys(
   std::string fk_catalog_str =
       get_catalog(stmt, fk_catalog_name, fk_catalog_len);
 
-  if (pk_catalog_str != "$des" || fk_catalog_str != "$des")
+  if (pk_catalog_str != DES_DEFAULT_DATABASE || fk_catalog_str != DES_DEFAULT_DATABASE)
     return stmt->set_error("HYC00",
-                           "DESODBC cannot retrieve primary or foreign keys "
-                           "for external databases");
+        "This version of DESODBC cannot retrieve information of DES external databases");
 
   /* DESODBC:
     Important comments for the implementation of this function:
