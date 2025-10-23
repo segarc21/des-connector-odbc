@@ -1,10 +1,10 @@
-# DESODBC v1.1.0 - DES Connector/ODBC Driver
+# DESODBC v1.2.0 - DES Connector/ODBC Driver
 
 ```DESODBC``` is an ODBC Driver of Datalog Educational System (DES) (https://des.sourceforge.io/), an open-source database management system developed and maintained by Fernando Saenz-Perez. This project is a GPLv2 derivate work of MySQL Connector/ODBC Driver 9.0.0, the ODBC Driver for MySQL ([mysql-connector-odbc](https://github.com/mysql/mysql-connector-odbc)). The modifications that have resulted in this final work have been done by Sergio Miguel Garcia Jimenez (https://github.com/segarc21). Attributions regarding original authorship and modifications are properly placed in the source files.
 
-Not only does ```DESODBC v1.1.0``` provide support for the majority of ODBC API functions, but it is also available for ```Microsoft Excel```/```Microsoft Query```, ```Microsoft Access```, ```LibreOffice Base```, ```DES```, and provides support in importing DES tables into ```Microsoft SQL Server```. See notes on [Support on third-party apps](#support-on-third-party-apps).
+Not only does ```DESODBC v1.2.0``` provide support for the majority of ODBC API functions, but it is also available for ```Microsoft Excel```/```Microsoft Query```, ```Microsoft Access```, ```LibreOffice Base```, ```DES```, and provides support in importing DES tables into ```Microsoft SQL Server```. See notes on [Support on third-party apps](#support-on-third-party-apps).
 
-Document ```DESODBC v1.1 SDD.pdf``` presents the Software Design Description of this project.
+Document ```DESODBC v1.2 SDD.pdf``` presents the Software Design Description of this project. 
 
 ## Licensing
 
