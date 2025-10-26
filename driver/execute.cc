@@ -366,12 +366,36 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
   }
 
 
-  if (is_cacheable_query(query)) {
-      QueryCacheEntry cache_entry = { error, tapi_output, current_time_ms() };
-      this->query_cache[query] = cache_entry;
-  }
+  this->modify_cache_entries(query, error, tapi_output);
   
   return { error, tapi_output };
+}
+
+/*DESODBC:
+Original author: DESODBC Developer
+*/
+void DBC::modify_cache_entries(const std::string& query, SQLRETURN error, const std::string& tapi_output) {
+    if (is_cacheable_query(query)) {
+        QueryCacheEntry cache_entry = { error, tapi_output, current_time_ms() };
+        this->query_cache[query] = cache_entry;
+    }
+
+    std::string lowered_query = query;
+    to_lower_str(lowered_query);
+
+    //If we have created/dropped a view or a table, dbschemas
+    //may have changed. We must erase them from the cache.
+    if (is_first_keyword(lowered_query, "create") || is_first_keyword(lowered_query, "drop")) {
+        auto it = this->query_cache.begin();
+        while (it != this->query_cache.end()) {
+            if (is_in_string(it->first, "/dbschema")) {
+                it = query_cache.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+    }
 }
 
 /* DESODBC:

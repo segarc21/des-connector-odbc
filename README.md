@@ -26,13 +26,15 @@ Prerrequisites: Visual C++ Redistributables for Visual Studio (Visual C++ Runtim
 
 Start an admin-privileged session in the command line interface. An abstract general installation would be:
 ```
-> desodbc-installer.exe -d -a -n "DESODBC ANSI Driver" -t "DRIVER=path\to\desodbc{a}{w}.dll;SETUP=path\to\desodbcS.dll"
+> desodbc-installer-v1.2.0-windows.exe -d -a -n "DESODBC ANSI Driver" -t "DRIVER=path\to\desodbc{a}{w}-v1.2.0-windows.dll;SETUP=path\to\desodbcS-v1.2.0-windows.dll"
 Success: Usage count is 1
-> desodbc-installer.exe -s -a -n "DESODBC Data Source" -t "DRIVER=DESODBC ANSI Driver;DESCRIPTION=New data source;DES_EXEC=path\to\des.exe;DES_WORKING_DIR=path\to\working\directory"
+> desodbc-installer-v1.2.0-windows.exe -s -a -n "DESODBC Data Source" -t "DRIVER=DESODBC ANSI Driver;DESCRIPTION=New data source;DES_EXEC=path\to\des.exe;DES_WORKING_DIR=path\to\working\directory"
 Success
 ```
 
-where ```path\to\desodbc{a}{w}.dll``` is the path of the driver (file included) ```desodbca.dll``` (ANSI) or ```desodbcw.dll``` (Unicode), ```path\to\desodbcS.dll``` is the path of the setup library (file included), ```path\to\des.exe``` is the path of the DES executable (file included), and ```path\to\working\directory``` is the path of the working directory in which DES should operate (for example, the folder in which DES is installed).
+where ```path\to\desodbc{a}{w}-v1.2.0-windows.dll``` is the path of the driver (file included) ```desodbca-v1.2.0-windows.dll``` (ANSI) or ```desodbcw-v1.2.0-windows.dll``` (Unicode), ```path\to\desodbcS-v1.2.0-windows.dll``` is the path of the setup library (file included), ```path\to\des.exe``` is the path of the DES executable (file included), and ```path\to\working\directory``` is the path of the working directory in which DES should operate (for example, the folder in which DES is installed).
+
+When finishing an install, usage count refers to the number of times the driver has been installed under the specified name.
 
 ### GNU/Linux
 
@@ -41,15 +43,17 @@ Prerrequisites: unixODBC 2.2.14 or later, C++ runtime libraries (```libstdc++```
 An abstract general installation would be:
 
 ```
-> sudo ./desodbc-installer -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/path/to/libdesodbc{a}{w}.so;SETUP=/path/to/libdesodbcS{-gtk2}{-gtk3}.so"
+> sudo ./desodbc-installer-v1.2.0-linux -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/path/to/libdesodbc{a}{w}-v1.2.0-linux.so;SETUP=/path/to/libdesodbcS{-gtk2}{-gtk3}-v1.2.0-linux.so"
 Success: Usage count is 1
-> sudo ./desodbc-installer -s -a -n "DESODBC Data Source" -t "DRIVER=DESODBC ANSI Driver;DESCRIPTION=New data source;DES_EXEC=/path/to/des/des;DES_WORKING_DIR=/path/to/working/directory"
+> sudo ./desodbc-installer-v1.2.0-linux -s -a -n "DESODBC Data Source" -t "DRIVER=DESODBC ANSI Driver;DESCRIPTION=New data source;DES_EXEC=/path/to/des/des;DES_WORKING_DIR=/path/to/working/directory"
 Success
 ```
 
-where ```/path/to/libdesodbc{a}{w}.so``` is the path of the driver (file included) ```libdesodbca.so``` (ANSI) or ```libdesodbcw.so``` (Unicode), ```libdesodbcS{-gtk}{-gtk3}.dll``` is the path of the specified setup library (file included), ```/path/to/des/des``` is the path of the DES executable (file included), and ```/path/to/working/directory``` is the path of the working directory in which DES should operate (for example, the folder in which DES is installed).
+where ```/path/to/libdesodbc{a}{w}-v1.2.0-linux.so``` is the path of the driver (file included) ```libdesodbca-v1.2.0-linux.so``` (ANSI) or ```libdesodbcw-v1.2.0-linux.so``` (Unicode), ```libdesodbcS{-gtk}{-gtk3}-v1.2.0-linux.dll``` is the path of the specified setup library (file included), ```/path/to/des/des``` is the path of the DES executable (file included), and ```/path/to/working/directory``` is the path of the working directory in which DES should operate (for example, the folder in which DES is installed).
 
 If errors arise, make sure the environment ```ODBCINI``` points to the correct path that contains ```odbc.ini```.
+
+When finishing an install, usage count refers to the number of times the driver has been installed under the specified name.
 
 ### macOS
 
@@ -58,15 +62,17 @@ Prerrequisites: unixODBC 2.2.14 or later / iODBC 3.52.12 or later, C++ runtime l
 An abstract general installation would be:
 
 ```
-> sudo ./desodbc-installer -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/path/to/libdesodbc{a}{w}.so;SETUP=/path/to/libdesodbcS.so"
+> sudo ./desodbc-installer-v1.2.0-macOS-{ODBC} -d -a -n "DESODBC ANSI Driver" -t "DRIVER=/path/to/libdesodbc{a}{w}-v1.2.0-macOS-{ODBC}.so"
 Success: Usage count is 1
 > sudo ./desodbc-installer -s -a -n "DESODBC Data Source" -t "DRIVER=DESODBC ANSI Driver;DESCRIPTION=New data source;DES_EXEC=/path/to/des/des;DES_WORKING_DIR=/path/to/working/directory"
 Success
 ```
 
-where ```/path/to/libdesodbc{a}{w}.so``` is the path of the driver (file included) ```libdesodbca.so``` (ANSI) or ```libdesodbcw.so``` (Unicode), ```libdesodbcS.dll``` is the path of the setup library (file included), ```/path/to/des/des``` is the path of the DES executable (file included), and ```/path/to/working/directory``` is the path of the working directory in which DES should operate (for example, the folder in which DES is installed).
+where ```{ODBC}``` refers to the ODBC implementation (```iODBC``` or ```unixODBC```), ```/path/to/libdesodbc{a}{w}-v1.2.0-macOS-{ODBC}.so``` is the path of the driver (file included) ```libdesodbca-v1.2.0-macOS-{ODBC}.so``` (ANSI) or ```libdesodbcw-v1.2.0-macOS-{ODBC}.so``` (Unicode), ```/path/to/des/des``` is the path of the DES executable (file included), and ```/path/to/working/directory``` is the path of the working directory in which DES should operate (for example, the folder in which DES is installed).
 
 If errors arise, make sure the environment ```ODBCINI``` points to the correct path that contains ```odbc.ini```. If the unixODBC version of the installer is used, make sure unixODBC is located in a usual folder like ```/usr/local/opt/unixodbc```. If the iODBC version is used, iODBC should be installed in a usual path like ```/usr/local/iODBC```.
+
+When finishing an install, usage count refers to the number of times the driver has been installed under the specified name.
 
 ## Compilation from sources
 

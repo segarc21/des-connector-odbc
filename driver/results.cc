@@ -3254,9 +3254,13 @@ void ResultTable::build_table_SQLColumns() {
       get_all_relations_info(dbschema_str);
 
   std::vector<std::string> dbschema_tables;
+  /*
+    Dbschema map includes both tables and views: SQLColumns uses
+    the generic term 'tables' for both of them. Therefore, we do
+    not filter out views.
+  */
   for (auto pair : map) {
-      if (pair.second.is_table)  // we only deal with tables in SQLColumns.
-          dbschema_tables.push_back(pair.first);
+      dbschema_tables.push_back(pair.first);
   }
 
   std::vector<std::string> dbschema_table_names = filter_candidates(

@@ -3769,7 +3769,10 @@ bool is_cacheable_query(const std::string& query) {
     false positives: we just may make extra
     queries in very specific scenarios on account
     of not caching the query. */
-
+    if (is_in_string(query_cpy, "create"))
+        return false;
+    if (is_in_string(query_cpy, "drop"))
+        return false;
     if (is_in_string(query_cpy, "insert"))
         return false;
     if (is_in_string(query_cpy, "update"))

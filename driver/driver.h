@@ -1001,6 +1001,8 @@ struct DBC {
 
   bool is_query_of_empty_output(const std::string& query);
 
+  void modify_cache_entries(const std::string& query, SQLRETURN error, const std::string& tapi_output);
+
   #ifdef _WIN32
   std::pair<SQLRETURN, std::string> read_DES_output_win(
       const std::string &query);
