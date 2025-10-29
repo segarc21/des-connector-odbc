@@ -3010,7 +3010,6 @@ void ResultTable::build_table() {
       build_table_SQLTables();
       break;
     case PROCESS:
-      insert_metadata_cols();
       break;
     case SQLPRIMARYKEYS:
       build_table_SQLPrimaryKeys();
@@ -3037,7 +3036,6 @@ void ResultTable::build_table() {
       build_table_SQLColumns();
       break;
     default:
-      insert_metadata_cols();
       break;
   }
 
@@ -3396,7 +3394,7 @@ void ResultTable::build_table_SQLPrimaryKeys() {
     Original author: DESODBC Developer
 */
 void ResultTable::build_table_SQLTables() {
-  insert_metadata_cols();
+  insert_SQLTables_cols();
 
   std::string table_name_param = this->params.table_name;
   std::string catalog_name_param = this->params.catalog_name;
@@ -3584,8 +3582,6 @@ void ResultTable::build_table_select() {
       aux = lines[i];
       i++;  // to skip $ or $eot
     }
-  } else {  // if it is not possible, we create the default metadata table.
-    insert_metadata_cols();
   }
 }
 

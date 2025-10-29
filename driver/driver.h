@@ -1750,7 +1750,7 @@ struct ResultTable {  // Internal representation of a result view.
   void build_table_SQLForeignKeys_FK();
   void build_table_SQLForeignKeys_PKFK();
 
-  void insert_metadata_cols();
+  void insert_SQLTables_cols();
   void build_table_SQLTables();
 
 };

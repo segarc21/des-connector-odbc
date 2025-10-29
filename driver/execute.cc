@@ -508,7 +508,7 @@ std::pair<SQLRETURN, std::string> STMT::send_update_and_fetch_info(
 SQLRETURN STMT::build_results() {
   if (!get_result_metadata(this)) {
     this->state = ST_EXECUTED;
-    return SQL_SUCCESS;
+    return check_and_set_errors(SQL_HANDLE_STMT, this, this->last_output);
   } else
     fix_result_types(this);
 

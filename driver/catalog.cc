@@ -205,7 +205,7 @@ DES_FIELD SQLTABLES_fields[] = {
 
     Original author: DESODBC Developer
 */
-void ResultTable::insert_metadata_cols() {
+void ResultTable::insert_SQLTables_cols() {
   insert_cols(SQLTABLES_fields, array_elements(SQLTABLES_fields));
 }
 
