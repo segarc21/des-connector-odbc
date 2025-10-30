@@ -259,8 +259,9 @@ DECLARE_TEST(sqlcolumns) {
 
     ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
+    //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
-        SQLColumnsW(hstmt, W(L"nonexistentcatalog"), SQL_NTS, W(L""), 0,
+        SQLColumnsW(hstmt, W(L"othercatalog"), SQL_NTS, W(L""), 0,
             W(L"t_b%"),
             SQL_NTS, W(L"name"), SQL_NTS), SQL_ERROR);
     ok_stmt(hstmt,
@@ -310,9 +311,9 @@ DECLARE_TEST(sqlgettypeinfo) {
 DECLARE_TEST(sqlprimarykeys) {
     ok_sql(hstmt, "/process examples/SQLDebugger/awards1.sql");
 
+    //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
         SQLPrimaryKeysW(hstmt, W(L"nonexistent_catalog"), SQL_NTS, "", 0, W(L"courses"), SQL_NTS), SQL_ERROR);
-
 
     unsigned short y[] = { '$', 'd', 'e', 's', '\0' };
     ok_stmt(hstmt,
@@ -335,6 +336,7 @@ DECLARE_TEST(sqlforeignkeys) {
 
     ok_sql(hstmt, "/process examples/SQLDebugger/awards1.sql");
 
+    //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
         SQLForeignKeysW(hstmt, W(L"othercatalog"), SQL_NTS, W(L""), 0, W(L"courses"),
             SQL_NTS, W(L"$des"), SQL_NTS, W(L""), 0, W(L""), 0),
@@ -397,6 +399,7 @@ DECLARE_TEST(sqlforeignkeys) {
 DECLARE_TEST(sqlspecialcolumns) {
     ok_sql(hstmt, "/process examples/SQLDebugger/awards1.sql");
 
+    //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(
         hstmt, SQL_HANDLE_STMT,
         SQLSpecialColumnsW(hstmt, SQL_BEST_ROWID, W(L"othercatalog"), SQL_NTS, W(L""), 0,
@@ -426,8 +429,9 @@ DECLARE_TEST(sqlstatistics) {
 
     ok_sql(hstmt, "INSERT INTO tabletest VALUES (1,'foo'),(2,'bar'),(3,'baz')");
 
+    //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
-        SQLStatisticsW(hstmt, W(L"nonexistentcatalog"), SQL_NTS, W(L""), 0, W(L"tabletest"),
+        SQLStatisticsW(hstmt, W(L"othercatalog"), SQL_NTS, W(L""), 0, W(L"tabletest"),
             SQL_NTS, SQL_INDEX_ALL, SQL_ENSURE), SQL_ERROR);
 
 
@@ -845,14 +849,6 @@ DECLARE_TEST(error_handling) {
 DECLARE_TEST(obtain_info) {
 
     SQLCHAR current_catalog[TEST_BUFFER_SIZE];
-    SQLLEN len_curr_cat;
-
-    ok_sql(hstmt, "/open_db postgresql"); //available in my operating system.
-
-    ok_stmt(hdbc, SQLGetConnectAttr(hdbc, SQL_ATTR_CURRENT_CATALOG, current_catalog,
-        sizeof(current_catalog), &len_curr_cat));
-
-    is_str(current_catalog, "postgresql", len_curr_cat);
 
     SQLINTEGER arr_size;
 
@@ -865,8 +861,6 @@ DECLARE_TEST(obtain_info) {
     ok_stmt(hstmt, SQLGetStmtAttr(hstmt, SQL_ATTR_ROW_ARRAY_SIZE, &arr_size,
         sizeof(SQLINTEGER), NULL));
     is_num(arr_size, 8);
-
-    ok_sql(hstmt, "/use_db $des");
 
     SQLCHAR db[TEST_BUFFER_SIZE];
     SQLLEN len_db;

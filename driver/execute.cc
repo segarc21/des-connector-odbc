@@ -127,7 +127,7 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
     // The following messages will be fetched completely, as there are not
     // sufficient delay between reading each of these characters (the pipe reads
     // them at once)
-    if (is_in_string(tapi_output, "Info: Batch file processed.")) return true;
+    if (is_in_string(tapi_output, "Info: Batch file processed.\nDES>")) return true;
     if (is_in_string(tapi_output,
                      "Unknown command or incorrect number of arguments."))
       return true;
