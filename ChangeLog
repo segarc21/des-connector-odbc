@@ -1,3 +1,8 @@
+Release v1.2.1:
+- Solved bug on displaying affected rows when working with DES-SWI.
+- Solved query-caching bugs.
+- Solved query mutex inconsistencies in SQLColumns and SQLStatistics.
+
 Release v1.2.0:
 - Performance speedup in all systems due to query output caching,
   necessary due to intrinsic delays in IPC processes.
