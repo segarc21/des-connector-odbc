@@ -374,6 +374,21 @@ std::pair<SQLRETURN, std::string> DBC::send_query_and_read(
 /*DESODBC:
 Original author: DESODBC Developer
 */
+void DBC::remove_entry_caches_containing(const std::string& keyword) {
+    auto it = this->query_cache.begin();
+    while (it != this->query_cache.end()) {
+        if (is_in_string(it->first, keyword)) {
+            it = query_cache.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+/*DESODBC:
+Original author: DESODBC Developer
+*/
 void DBC::modify_cache_entries(const std::string& query, SQLRETURN error, const std::string& tapi_output) {
     if (is_cacheable_query(query)) {
         QueryCacheEntry cache_entry = { error, tapi_output, current_time_ms() };
@@ -383,19 +398,23 @@ void DBC::modify_cache_entries(const std::string& query, SQLRETURN error, const 
     std::string lowered_query = query;
     to_lower_str(lowered_query);
 
-    //If we have created/dropped a view or a table, dbschemas
-    //may have changed. We must erase them from the cache.
+    /*
+        These will be coarse detections and cache entries removal
+        with likely high false positives; however, it does not matter
+        since accurately knowing to identify which entries we should remove
+        can be highly complex. It does not really matter whether we make
+        false positives: we just may make extra
+        queries in very specific scenarios on account
+        of not caching the query.
+    */
     if (is_first_keyword(lowered_query, "create") || is_first_keyword(lowered_query, "drop")) {
-        auto it = this->query_cache.begin();
-        while (it != this->query_cache.end()) {
-            if (is_in_string(it->first, "/dbschema")) {
-                it = query_cache.erase(it);
-            }
-            else {
-                ++it;
-            }
-        }
+        this->remove_entry_caches_containing("/dbschema");
+        //this->remove_entry_caches_containing("select");
     }
+
+    if (is_first_keyword(lowered_query, "insert") || is_first_keyword(lowered_query, "update") || is_first_keyword(lowered_query, "delete"))
+        this->remove_entry_caches_containing("select");
+
 }
 
 /* DESODBC:

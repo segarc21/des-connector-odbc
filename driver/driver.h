@@ -999,6 +999,8 @@ struct DBC {
     Original author: DESODBC
   */
 
+  void remove_entry_caches_containing(const std::string& keyword);
+
   bool is_query_of_empty_output(const std::string& query);
 
   void modify_cache_entries(const std::string& query, SQLRETURN error, const std::string& tapi_output);

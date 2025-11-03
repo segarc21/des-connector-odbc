@@ -245,9 +245,6 @@ SQLRETURN SQL_API DES_SQLTables(SQLHSTMT hstmt, SQLCHAR *catalog_name,
           "This version of DESODBC cannot retrieve information of DES external databases");
   }
 
-  rc = dbc->get_query_mutex();
-  if (!SQL_SUCCEEDED(rc)) return rc;
-
   if (catalog_name) {
     stmt->params_for_table.catalog_name = catalog_name_str;
   }
@@ -260,6 +257,9 @@ SQLRETURN SQL_API DES_SQLTables(SQLHSTMT hstmt, SQLCHAR *catalog_name,
     stmt->params_for_table.table_type = table_type_str;
   }
   stmt->type = SQLTABLES;
+
+  rc = dbc->get_query_mutex();
+  if (!SQL_SUCCEEDED(rc)) return rc;
 
   rc = stmt->build_results();
 
@@ -365,10 +365,6 @@ SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   GET_NAME_LEN(stmt, column_name, column_len);
   CHECK_SCHEMA(stmt, schema_name, schema_len);
 
-  rc = dbc->get_query_mutex();
-  if (!SQL_SUCCEEDED(rc)) return rc;
-
-
   std::string catalog_name_str =
       get_catalog(stmt, catalog_name, catalog_len);
   
@@ -387,6 +383,9 @@ SQLRETURN SQL_API DES_SQLColumns(SQLHSTMT hstmt, SQLCHAR *catalog_name,
 
   stmt->type = SQLCOLUMNS;
   stmt->params_for_table.catalog_name = catalog_name_str;
+
+  rc = dbc->get_query_mutex();
+  if (!SQL_SUCCEEDED(rc)) return rc;
 
   rc = stmt->build_results();
   if (!SQL_SUCCEEDED(rc)) {
@@ -473,9 +472,6 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
     if requested.
   */
 
-  rc = dbc->get_query_mutex();
-  if (!SQL_SUCCEEDED(rc)) return rc;
-
   std::string catalog_name_str = get_catalog(stmt, catalog_name, catalog_len);
   if (catalog_name_str != DES_DEFAULT_DATABASE && (sqlcharptr_to_str(catalog_name, catalog_len) != "%")) {
       return stmt->set_error("HYC00",
@@ -487,6 +483,9 @@ SQLRETURN SQL_API DES_SQLStatistics(SQLHSTMT hstmt, SQLCHAR *catalog_name,
   stmt->params_for_table.catalog_name = catalog_name_str;
   stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLSTATISTICS;
+
+  rc = dbc->get_query_mutex();
+  if (!SQL_SUCCEEDED(rc)) return rc;
 
   rc = stmt->build_results();
 
@@ -564,12 +563,12 @@ SQLRETURN SQL_API DES_SQLSpecialColumns(
 
   dbc = ((STMT *)hstmt)->dbc;
 
-  rc = dbc->get_query_mutex();
-  if (!SQL_SUCCEEDED(rc)) return rc;
-
   std::string table_name_str = get_prepared_arg(stmt, table_name, table_len);
   stmt->params_for_table.table_name = table_name_str;
   stmt->type = SQLSPECIALCOLUMNS;
+
+  rc = dbc->get_query_mutex();
+  if (!SQL_SUCCEEDED(rc)) return rc;
 
   rc = stmt->build_results();
   if (!SQL_SUCCEEDED(rc)) {
@@ -857,15 +856,15 @@ SQLRETURN SQL_API DES_SQLForeignKeys(
   } else
     return stmt->set_error("HY000", "Not any tables have been specified");
 
+  rc = dbc->get_query_mutex();
+  if (!SQL_SUCCEEDED(rc)) return rc;
+
   std::string main_query = "/dbschema ";
   main_query += pk_catalog_str;  // DESODBC: could also be fk_catalog_str. Both
                                  // values are "$des".
   pair = dbc->send_query_and_read(main_query);
   rc = pair.first;
   std::string main_output = pair.second;
-
-  rc = dbc->get_query_mutex();
-  if (!SQL_SUCCEEDED(rc)) return rc;
 
   stmt->last_output = main_output;
 
