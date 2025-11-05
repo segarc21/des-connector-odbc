@@ -401,6 +401,25 @@ SQLRemoveDriverW(const MyODBC_LPCWSTR lpszDriver, BOOL fRemoveDSN,
 }
 #endif
 
+/*
+ * Handler for "remove driver" command (-d -a -n drivername)
+ */
+int remove_driver(Driver* driver)
+{
+    DWORD usage_count;
+
+    do {
+        if (SQLRemoveDriverW(driver->name, FALSE, &usage_count) != TRUE)
+        {
+            print_installer_error();
+            return 1;
+        }
+    } while (usage_count > 0);
+    
+    printf("Success. If the uninstallation has not actually been carried out, check if command was executed with admin privileges\n");
+
+    return 0;
+}
 
 /*
  * Handler for "add driver" command (-d -a -n drivername -t attrs)
@@ -427,6 +446,16 @@ int add_driver(Driver *driver, const SQLWCHAR *attrs)
     return 1;
   }
 
+
+  //We uninstall previously if there is an already installed
+  //driver with same name.
+  do {
+      if (SQLRemoveDriverW(driver->name, FALSE, &usage_count) != TRUE)
+      {
+          break;
+      }
+  } while (usage_count > 0);
+
   if (SQLInstallDriverExW(attrs_null, NULL, prevpath, 256, NULL,
                           ODBC_INSTALL_COMPLETE, &usage_count) != TRUE)
   {
@@ -434,26 +463,7 @@ int add_driver(Driver *driver, const SQLWCHAR *attrs)
     return 1;
   }
 
-  printf("Success: Usage count is %d\n", usage_count);
-
-  return 0;
-}
-
-
-/*
- * Handler for "remove driver" command (-d -a -n drivername)
- */
-int remove_driver(Driver *driver)
-{
-  DWORD usage_count;
-
-  if (SQLRemoveDriverW(driver->name, FALSE, &usage_count) != TRUE)
-  {
-    print_installer_error();
-    return 1;
-  }
-
-  printf("Success: Usage count is %d\n", usage_count);
+  printf("Success. If the installation has not actually been carried out, check if command was executed with admin privileges\n");
 
   return 0;
 }
