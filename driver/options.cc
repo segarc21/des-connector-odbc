@@ -292,7 +292,8 @@ DESSetConnectAttr(SQLHDBC hdbc, SQLINTEGER Attribute,
       break;
 
     case SQL_ATTR_AUTOCOMMIT:
-      return dbc->set_error("HYC00", "Unsupported option due to DES' characteristics");
+      return SQL_SUCCESS; /*This does not make sense in the context of DES
+      but other programs expect the ODBC Driver to behave like this.*/
       break;
 
     case SQL_ATTR_LOGIN_TIMEOUT:

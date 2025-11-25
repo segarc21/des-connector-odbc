@@ -309,6 +309,11 @@ Original author: DESODBC Developer
 */
 desodbcQueryType find_query_type_if_with_clause(std::string query);
 
+/*DESODBC:
+Original author: DESODBC Developer
+*/
+void change_intermediate_endlines_into_spaces(std::string& query);
+
 /* DESODBC:
     Original author: DESODBC Developer
 */

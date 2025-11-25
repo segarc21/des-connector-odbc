@@ -3818,3 +3818,13 @@ desodbcQueryType find_query_type_if_with_clause(std::string query) {
     return type;
         
 }
+
+/*DESODBC:
+Original author: DESODBC Developer
+*/
+void change_intermediate_endlines_into_spaces(std::string& query) {
+    for (int i = 0; i < query.size() - 1; ++i) {
+        if (query[i] == '\n')
+            query[i] = ' ';
+    }
+}

@@ -173,7 +173,7 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_win(
 
       std::thread reading_thread(read_process, this->driver_to_des_out_rpipe);
 
-      if (WaitForSingleObject(reading_thread.native_handle(), MUTEX_TIMEOUT) == WAIT_TIMEOUT) {
+      if (WaitForSingleObject(reading_thread.native_handle(), INFINITE) != WAIT_OBJECT_0) {
           CancelIoEx(this->driver_to_des_out_rpipe, NULL);
           reading_thread.join();
           break;
@@ -202,10 +202,8 @@ std::pair<SQLRETURN, std::string> DBC::read_DES_output_unix(
   bytes_read = 0;
 
   while (!finished_reading) {
-    int ms = 0;
-    while (ms < MAX_OUTPUT_WAIT_MS && bytes_read == 0) {
+    while (bytes_read == 0) {
       usleep(1000);
-      ms += 1;
       ioctl(this->driver_to_des_out_rpipe, FIONREAD, &bytes_read);
     }
     if (bytes_read > 0) {
@@ -566,6 +564,7 @@ SQLRETURN DES_do_query(STMT *stmt, std::string query) {
   }
 #endif
 
+  change_intermediate_endlines_into_spaces(query);
 
   error = stmt->dbc->get_query_mutex();
   if (error != SQL_SUCCESS && error != SQL_SUCCESS_WITH_INFO) return error;
