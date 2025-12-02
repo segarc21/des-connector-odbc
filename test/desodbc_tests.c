@@ -63,9 +63,9 @@ unsigned short* cast_wchar_as_ushort(const wchar_t* wstr) {
     return usht;
 }
 
-#define W(v) cast_wchar_as_ushort(v)
+#define W2S(v) cast_wchar_as_ushort(v)
 #else
-#define W(v) v //do nothing
+#define W2S(v) v //do nothing
 #endif
 
 
@@ -261,12 +261,12 @@ DECLARE_TEST(sqlcolumns) {
 
     //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
-        SQLColumnsW(hstmt, W(L"othercatalog"), SQL_NTS, W(L""), 0,
-            W(L"t_b%"),
-            SQL_NTS, W(L"name"), SQL_NTS), SQL_ERROR);
+        SQLColumnsW(hstmt, W2S(L"othercatalog"), SQL_NTS, W2S(L""), 0,
+            W2S(L"t_b%"),
+            SQL_NTS, W2S(L"name"), SQL_NTS), SQL_ERROR);
     ok_stmt(hstmt,
         SQLColumnsW(
-            hstmt, W(L"$des"), SQL_NTS, W(L""), 0, W(L"t_b%"), SQL_NTS, W(L"name"),
+            hstmt, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L"t_b%"), SQL_NTS, W2S(L"name"),
             SQL_NTS));  // we need to escape the first character _ so
     // that it isn't recognised as pattern at that point.
 
@@ -280,8 +280,8 @@ DECLARE_TEST(sqlcolumns) {
     ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
 
-    ok_stmt(hstmt, SQLColumnsW(hstmt, W(L"$des"), SQL_NTS, W(L""), 0, W(L"tabletest"),
-        SQL_NTS, W(L"%"), SQL_NTS));
+    ok_stmt(hstmt, SQLColumnsW(hstmt, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L"tabletest"),
+        SQL_NTS, W2S(L"%"), SQL_NTS));
 
     ok_stmt(hstmt, SQLFetch(hstmt));
     ok_stmt(hstmt, SQLGetData(hstmt, 4, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
@@ -313,11 +313,11 @@ DECLARE_TEST(sqlprimarykeys) {
 
     //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
-        SQLPrimaryKeysW(hstmt, W(L"nonexistent_catalog"), SQL_NTS, "", 0, W(L"courses"), SQL_NTS), SQL_ERROR);
+        SQLPrimaryKeysW(hstmt, W2S(L"nonexistent_catalog"), SQL_NTS, "", 0, W2S(L"courses"), SQL_NTS), SQL_ERROR);
 
     unsigned short y[] = { '$', 'd', 'e', 's', '\0' };
     ok_stmt(hstmt,
-        SQLPrimaryKeysW(hstmt, W(L"$des"), SQL_NTS, "", 0, W(L"courses"), SQL_NTS));
+        SQLPrimaryKeysW(hstmt, W2S(L"$des"), SQL_NTS, "", 0, W2S(L"courses"), SQL_NTS));
 
 
     ok_stmt(hstmt, SQLFetch(hstmt));
@@ -338,13 +338,13 @@ DECLARE_TEST(sqlforeignkeys) {
 
     //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
-        SQLForeignKeysW(hstmt, W(L"othercatalog"), SQL_NTS, W(L""), 0, W(L"courses"),
-            SQL_NTS, W(L"$des"), SQL_NTS, W(L""), 0, W(L""), 0),
+        SQLForeignKeysW(hstmt, W2S(L"othercatalog"), SQL_NTS, W2S(L""), 0, W2S(L"courses"),
+            SQL_NTS, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L""), 0),
         SQL_ERROR);
 
 
-    ok_stmt(hstmt, SQLForeignKeysW(hstmt, W(L"$des"), SQL_NTS, W(L""), 0, W(L"courses"),
-        SQL_NTS, W(L"$des"), SQL_NTS, W(L""), 0, W(L""), 0));
+    ok_stmt(hstmt, SQLForeignKeysW(hstmt, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L"courses"),
+        SQL_NTS, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L""), 0));
 
 
     ok_stmt(hstmt, SQLFetch(hstmt));
@@ -363,8 +363,8 @@ DECLARE_TEST(sqlforeignkeys) {
     ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
     ok_stmt(hstmt,
-        SQLForeignKeysW(hstmt, W(L"$des"), SQL_NTS, W(L""), 0, W(L""), 0, W(L"$des"),
-            SQL_NTS, W(L""), 0, W(L"registration"), SQL_NTS));
+        SQLForeignKeysW(hstmt, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L""), 0, W2S(L"$des"),
+            SQL_NTS, W2S(L""), 0, W2S(L"registration"), SQL_NTS));
 
     ok_stmt(hstmt, SQLFetch(hstmt));
     ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
@@ -380,8 +380,8 @@ DECLARE_TEST(sqlforeignkeys) {
     ok_stmt(hstmt, SQLCloseCursor(hstmt));
 
     ok_stmt(hstmt,
-        SQLForeignKeysW(hstmt, W(L"$des"), SQL_NTS, W(L""), 0, W(L"courses"), SQL_NTS,
-            W(L"$des"), SQL_NTS, W(L""), 0, W(L"registration"), SQL_NTS));
+        SQLForeignKeysW(hstmt, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L"courses"), SQL_NTS,
+            W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L"registration"), SQL_NTS));
     ok_stmt(hstmt, SQLFetch(hstmt));
     ok_stmt(hstmt, SQLGetData(hstmt, 3, SQL_C_CHAR, buffer, TEST_BUFFER_SIZE, NULL));
     is_str(buffer, "courses", 7);
@@ -402,13 +402,13 @@ DECLARE_TEST(sqlspecialcolumns) {
     //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(
         hstmt, SQL_HANDLE_STMT,
-        SQLSpecialColumnsW(hstmt, SQL_BEST_ROWID, W(L"othercatalog"), SQL_NTS, W(L""), 0,
-            W(L"courses"), SQL_NTS, SQL_SCOPE_SESSION, SQL_NULLABLE), SQL_ERROR);
+        SQLSpecialColumnsW(hstmt, SQL_BEST_ROWID, W2S(L"othercatalog"), SQL_NTS, W2S(L""), 0,
+            W2S(L"courses"), SQL_NTS, SQL_SCOPE_SESSION, SQL_NULLABLE), SQL_ERROR);
 
 
     ok_stmt(hstmt,
-        SQLSpecialColumnsW(hstmt, SQL_BEST_ROWID, W(L"$des"), SQL_NTS, W(L""), 0,
-            W(L"courses"), SQL_NTS, SQL_SCOPE_SESSION, SQL_NULLABLE));
+        SQLSpecialColumnsW(hstmt, SQL_BEST_ROWID, W2S(L"$des"), SQL_NTS, W2S(L""), 0,
+            W2S(L"courses"), SQL_NTS, SQL_SCOPE_SESSION, SQL_NULLABLE));
 
 
     ok_stmt(hstmt, SQLFetch(hstmt));
@@ -431,11 +431,11 @@ DECLARE_TEST(sqlstatistics) {
 
     //Check that we cannot access other external databases (programmed intentionally).
     expect_odbc(hstmt, SQL_HANDLE_STMT,
-        SQLStatisticsW(hstmt, W(L"othercatalog"), SQL_NTS, W(L""), 0, W(L"tabletest"),
+        SQLStatisticsW(hstmt, W2S(L"othercatalog"), SQL_NTS, W2S(L""), 0, W2S(L"tabletest"),
             SQL_NTS, SQL_INDEX_ALL, SQL_ENSURE), SQL_ERROR);
 
 
-    ok_stmt(hstmt, SQLStatisticsW(hstmt, W(L"$des"), SQL_NTS, W(L""), 0, W(L"tabletest"), SQL_NTS, SQL_INDEX_ALL, SQL_ENSURE));
+    ok_stmt(hstmt, SQLStatisticsW(hstmt, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L"tabletest"), SQL_NTS, SQL_INDEX_ALL, SQL_ENSURE));
 
 
     ok_stmt(hstmt, SQLFetch(hstmt));
@@ -458,7 +458,7 @@ DECLARE_TEST(sqltables) {
     ok_sql(hstmt, "CREATE TABLE tabletest (id INT PRIMARY KEY, name VARCHAR(20))");
 
 
-    ok_stmt(hstmt, SQLTablesW(hstmt, W(L"$des"), SQL_NTS, W(L""), 0, W(L"%"), SQL_NTS, W(L"%"),
+    ok_stmt(hstmt, SQLTablesW(hstmt, W2S(L"$des"), SQL_NTS, W2S(L""), 0, W2S(L"%"), SQL_NTS, W2S(L"%"),
         SQL_NTS));
 
     ok_stmt(hstmt, SQLFetch(hstmt));

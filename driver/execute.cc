@@ -79,6 +79,20 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
   //We ignore the "/tapi " preffix.
   lowered_query = lowered_query.substr(std::string("/tapi ").size(), lowered_query.size() - std::string("/tapi ").size());
 
+  if (is_first_keyword(lowered_query, "select")) {
+      if (is_in_string(tapi_output, "$error\r\n2")) {
+          int answer_pos = tapi_output.find("answer\r\n");
+          if (answer_pos == std::string::npos) {
+              return false;
+          }
+          else {
+              //after getting the answer keyword, now we must wait for the final $eot.
+              return tapi_output.find("$eot", answer_pos) != std::string::npos;
+          }
+      }
+      else
+          return is_in_string(tapi_output, "$eot");
+  }
   bool is_common_operation = is_first_keyword(lowered_query, "insert") || is_first_keyword(lowered_query, "delete") || is_first_keyword(lowered_query, "update");
   if (is_common_operation) {
       if (is_in_string(tapi_output, "$error"))
@@ -127,7 +141,7 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
     // The following messages will be fetched completely, as there are not
     // sufficient delay between reading each of these characters (the pipe reads
     // them at once)
-    if (is_in_string(tapi_output, "Info: Batch file processed.\nDES>")) return true;
+    if (is_in_string(tapi_output, "Info: Batch file processed.\r\nDES>")) return true;
     if (is_in_string(tapi_output,
                      "Unknown command or incorrect number of arguments."))
       return true;

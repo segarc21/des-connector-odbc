@@ -186,7 +186,7 @@ BOOL INSTAPI ConfigDSNW(HWND hWnd, WORD nRequest, LPCWSTR pszDriver,
     // it will allow editing a CHARSET option, which normally should be
     // disabled for Unicode version of the driver.
     if (static_cast<std::string>(driver.lib).find(
-          "desodbcw."
+          "desodbcw"
         ) != std::string::npos)
     {
       is_unicode = 1;

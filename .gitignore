@@ -432,3 +432,4 @@ driver/driverw.def
 driver/driverw.rc
 include/mysql-8.0/my_config.h
 VersionInfo.h
+setupgui/desodbcS.def

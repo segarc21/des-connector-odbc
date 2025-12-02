@@ -3526,18 +3526,20 @@ void ResultTable::build_table_select() {
 
   std::vector<std::string> column_names;
 
-  // We ignore the first line, that contains the keywords success/answer.
-  int i = 1;
-
-  //No columns: we are dealing with an empty table.
-  if (lines[i] == "$")
-      return;
+  int i = 0;
+  while (i < lines.size() && lines[i] != "answer")
+      i += 1;
 
   // If the first message is not answer, we can be sure that the output
   // originates from a non-select query. We then create the default
   // metadata table on the else clause.
-  if (lines.size() >= 1 && lines[0] == "answer") {
+  if (lines.size() >= 1 && lines[i] == "answer") {
     bool checked_cols = false;
+
+    i++; //we skip "answer"
+    //No columns: we are dealing with an empty table.
+    if (lines[i] == "$")
+        return;
 
     while (!checked_cols && lines[i] != "$eot") {
       // For each column, TAPI gives in a line its name and then its type.

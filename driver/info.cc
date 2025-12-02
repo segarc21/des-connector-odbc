@@ -276,7 +276,7 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
     MYINFO_SET_STR("DES");
 
   case SQL_DBMS_VER:
-    MYINFO_SET_STR("6.7");
+    MYINFO_SET_STR("6.9");
 
     //DES does not support indexes
   /*
@@ -291,17 +291,33 @@ DESGetInfo(SQLHDBC hdbc, SQLUSMALLINT fInfoType,
 
   case SQL_DRIVER_NAME:
 #ifdef MYODBC_UNICODEDRIVER
-# ifdef WIN32
-    MYINFO_SET_STR("desodbc" DESODBC_STRMAJOR_VERSION "w.dll");
-# else
-    MYINFO_SET_STR("libdesodbc" DESODBC_STRMAJOR_VERSION "w.so");
-# endif
+    #ifdef WIN32
+    MYINFO_SET_STR("desodbcw-v" DESODBC_CONN_ATTR_VER "-windows.dll");
+    #else
+      #ifdef __APPLE__
+        #ifdef WITH_UNIXODBC
+        MYINFO_SET_STR("libdesodbcw-v" DESODBC_CONN_ATTR_VER "-macOS-unixODBC.dll");
+        #else
+        MYINFO_SET_STR("libdesodbcw-v" DESODBC_CONN_ATTR_VER "-macOS-unixODBC.dll");
+      #endif
+      #else
+      MYINFO_SET_STR("libdesodbcw-v" DESODBC_STRMAJOR_VERSION "-linux.so");
+      #endif
+    #endif
 #else
-# ifdef WIN32
-    MYINFO_SET_STR("desodbc" DESODBC_STRMAJOR_VERSION "a.dll");
-# else
-    MYINFO_SET_STR("libdesodbc" DESODBC_STRMAJOR_VERSION "a.so");
-# endif
+    #ifdef WIN32
+          MYINFO_SET_STR("desodbcw-v" DESODBC_CONN_ATTR_VER "-windows.dll");
+    #else
+        #ifdef __APPLE__
+            #ifdef WITH_UNIXODBC
+                  MYINFO_SET_STR("libdesodbcw-v" DESODBC_CONN_ATTR_VER "-macOS-unixODBC.dll");
+            #else
+                  MYINFO_SET_STR("libdesodbcw-v" DESODBC_CONN_ATTR_VER "-macOS-unixODBC.dll");
+            #endif
+        #else
+              MYINFO_SET_STR("libdesodbcw-v" DESODBC_STRMAJOR_VERSION "-linux.so");
+        #endif
+    #endif
 #endif
   case SQL_DRIVER_ODBC_VER:
     MYINFO_SET_STR("03.80");
