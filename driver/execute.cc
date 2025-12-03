@@ -55,23 +55,6 @@ DWORD bytes_read = 0;
   Original author: DESODBC Developer
 */
 bool check_stop(const std::string &query, const std::string &tapi_output) {
-  /*
-    Note: doing something like "if bytes_read < BUFFER_SIZE - 1  --> true" when
-    not calling /process, is not problematic. The read pipe ensure reading while
-    there are no sensible time gaps between the printing characteres. For
-    instance, executing /ls may have a enormous output; however, it will read it
-    at once since there will not be any "pauses". However, /process is an
-    exception to this rule. In between some parts of the output, it can wait the
-    enough time necessary so that the pipe thinks that the output is already
-    fetched. Fortunately, the /process output ensures a sentinel: that of "Info:
-    Batch file processed.", "Unknown command or incorrect number of arguments.",
-    "When processing file". Note: "$eot" is not a valid sentinel: it appears at
-    the end when there was an error, but it appears early at the beginning when
-    the command is correct, before all the processing.
-
-    In /dbschema occurs the same when the ODBC application is DES itself,
-    and connects to a DES process which connects to an external database.
-  */
 
   std::string lowered_query = query;
   to_lower_str(lowered_query);
@@ -141,7 +124,10 @@ bool check_stop(const std::string &query, const std::string &tapi_output) {
     // The following messages will be fetched completely, as there are not
     // sufficient delay between reading each of these characters (the pipe reads
     // them at once)
-    if (is_in_string(tapi_output, "Info: Batch file processed.\r\nDES>")) return true;
+    int info_pos = tapi_output.find("Info: Batch file processed");
+    if (info_pos != std::string::npos) {
+        return tapi_output.find("DES>", info_pos) != std::string::npos; //We must wait for the final "DES>".
+    }
     if (is_in_string(tapi_output,
                      "Unknown command or incorrect number of arguments."))
       return true;

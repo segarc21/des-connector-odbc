@@ -141,10 +141,10 @@ endif()
 
 if(use_gtk)
 
-  set(GTK3_target "$desodbcS-v${CONNECTOR_MAJOR}.${CONNECTOR_MINOR}.${CONNECTOR_PATCH}-gtk3-linux")
+  set(GTK3_target desodbcS-v${CONNECTOR_MAJOR}.${CONNECTOR_MINOR}.${CONNECTOR_PATCH}-gtk3-linux)
   set(GTK3_pkg_name gtk+-3.0)
 
-  set(GTK2_target "$desodbcS-v${CONNECTOR_MAJOR}.${CONNECTOR_MINOR}.${CONNECTOR_PATCH}-gtk2-linux")
+  set(GTK2_target desodbcS-v${CONNECTOR_MAJOR}.${CONNECTOR_MINOR}.${CONNECTOR_PATCH}-gtk2-linux)
   set(GTK2_pkg_name gtk+-2.0)
 
   include(FindPkgConfig)

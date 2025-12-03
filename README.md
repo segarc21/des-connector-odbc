@@ -4,6 +4,8 @@
 
 Not only does ```DESODBC v1.2.2``` provide support for the majority of ODBC API functions, but it is also available for ```Microsoft Excel```/```Microsoft Query```, ```Microsoft Access```, ```LibreOffice Base```, ```pyODBC```, ```DES```, and provides support in importing DES tables into ```Microsoft SQL Server```. See notes on [Support on third-party apps](#support-on-third-party-apps).
 
+```DESODBC v1.2.2``` is supported for ```DES V6.9```, ```V6.8```, ```V6.7```.
+
 Document ```DESODBC v1.2 SDD.pdf``` presents the Software Design Description of this project. 
 
 ## Licensing
