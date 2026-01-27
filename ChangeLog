@@ -1,6 +1,5 @@
 Release v1.2.2:
 - Support for new version DES V6.9.
-- Support for pyodbc.
 - Removed timeout for the reading pipe to support long calculations.
 - Solved bug on reading output from /process queries.
 
